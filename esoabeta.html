@@ -42,23 +42,20 @@
             display: flex;
             justify-content: center;
             overflow-x: hidden;
-            transition: background-color 0.3s ease, background-image 0.3s ease;
-            background-position: center;
-            background-size: cover;
-            background-attachment: fixed;
+            transition: background-color 0.3s ease;
         }
 
         body.copy-flash {
             background-color: var(--primary);
         }
 
-        /* Peer Active Hub Matrix Display */
+        /* Left-aligned Active Users Hub Panel */
         .peer-active-hub {
             position: fixed;
             top: 20px;
             left: 20px;
             display: flex;
-            gap: 12px;
+            gap: 6px;
             align-items: center;
             z-index: 3000;
         }
@@ -66,62 +63,42 @@
         .peer-wrapper {
             position: relative;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            cursor: pointer;
         }
 
         .peer-avatar-bubble {
-            width: 44px;
-            height: 44px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 8px rgba(0,0,0,0.4);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .peer-wrapper:hover .peer-avatar-bubble {
-            border-color: #fff;
-            transform: scale(1.1);
-            box-shadow: 0 0 12px var(--primary);
+        .peer-avatar-bubble:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
         }
 
-        /* Special Dedicated Public Global Chat Head Style Match */
-        .global-chat-head-btn .peer-avatar-bubble {
-            background: #1e0b00;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-        }
-        .global-chat-head-btn:hover .peer-avatar-bubble {
-            color: #000;
-            background: var(--primary);
-        }
-
+        /* Notification Dot overlay on sender avatar */
         .peer-notif-dot {
             position: absolute;
             top: -2px;
             right: -2px;
             width: 12px;
             height: 12px;
-            background-color: #10b981;
+            background-color: var(--primary);
             border: 2px solid var(--surface);
             border-radius: 50%;
+            display: none;
             z-index: 3010;
+            box-shadow: 0 0 8px var(--primary);
         }
 
         .peer-wrapper.has-unread .peer-notif-dot {
-            background-color: var(--primary);
-            animation: pulseNotif 1.5s infinite;
-        }
-
-        @keyframes pulseNotif {
-            0% { box-shadow: 0 0 0 0 rgba(255,115,0,0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(255,115,0,0); }
-            100% { box-shadow: 0 0 0 0 rgba(255,115,0,0); }
+            display: block;
         }
 
         .peer-name-hover {
@@ -147,7 +124,7 @@
             transform: translateX(-50%) translateY(2px);
         }
 
-        /* Top Bar Actions and Global Nav Controllers */
+        /* Glassmorphic Translucent Blur Top Navigation */
         .top-nav {
             position: fixed;
             top: 20px;
@@ -185,6 +162,7 @@
             transform: translateY(-2px);
         }
 
+        /* Dedicated Integrated User Profile Deck Segment */
         .user-identity-card {
             display: flex;
             flex-direction: column;
@@ -221,16 +199,16 @@
             white-space: nowrap;
         }
 
-        /* Retaining Original Fixed Layout Location coordinates for Chat Frameworks */
+        /* Real-time Session Dock Panel Styles */
         .chat-docking-panel {
             position: fixed;
             bottom: 26vh;
             right: 20px;
-            width: 340px;
-            height: 440px;
+            width: 320px;
+            height: 400px;
             background: var(--modal-bg);
             border: 1px solid var(--glass);
-            border-radius: 24px;
+            border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
             display: none;
             flex-direction: column;
@@ -240,7 +218,7 @@
 
         .chat-header-bar {
             background: rgba(0, 0, 0, 0.4);
-            padding: 14px;
+            padding: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -252,7 +230,6 @@
             font-weight: 800;
             color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .chat-close-trigger {
@@ -260,182 +237,147 @@
             border: none;
             color: #666;
             cursor: pointer;
-            transition: color 0.2s;
         }
-        .chat-close-trigger:hover { color: var(--primary); }
 
         .chat-scroller-view {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
-        /* Unified Message Stream UI Components */
-        .message-row {
+        /* Message Layout Wrapper to support Reactions Side-by-Side without overlapping */
+        .msg-layout-wrapper {
             display: flex;
-            gap: 10px;
             align-items: flex-end;
-            max-width: 85%;
-        }
-        .message-row.incoming { align-self: flex-start; }
-        .message-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
-
-        .msg-profile-badge {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1.5px solid var(--primary);
-            background: #1e293b;
-            flex-shrink: 0;
-        }
-
-        .msg-packet-wrapper {
-            display: flex;
-            flex-direction: column;
+            gap: 6px;
+            width: 100%;
             position: relative;
         }
 
-        .msg-author-meta {
-            font-size: 0.65rem;
-            color: #64748b;
-            font-weight: 800;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .msg-layout-wrapper.outgoing {
+            flex-direction: row-reverse;
+            align-self: flex-end;
         }
-        .message-row.outgoing .msg-author-meta { text-align: right; }
 
-        /* Significantly expanded safe padding zone context preventing accidental mouse leave closures */
-        .msg-interactive-container {
-            position: relative;
-            padding-top: 32px;
-            margin-top: -32px;
-            padding-bottom: 4px;
+        .msg-layout-wrapper.incoming {
+            flex-direction: row;
+            align-self: flex-start;
         }
 
         .msg-bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
+            padding: 8px 12px;
+            border-radius: 12px;
             font-size: 0.85rem;
-            line-height: 1.4;
+            max-width: 70%;
             word-wrap: break-word;
+            cursor: pointer;
             position: relative;
-            z-index: 5;
+            user-select: none;
         }
 
-        .message-row.incoming .msg-bubble {
+        .msg-bubble.incoming {
             background: rgba(255, 255, 255, 0.06);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            border-top-left-radius: 4px;
         }
 
-        .message-row.outgoing .msg-bubble {
-            background: var(--glass);
-            border: 1px solid var(--primary);
-            color: #fff;
-            border-top-right-radius: 4px;
+        .msg-bubble.outgoing {
+            background: var(--primary);
+            color: #000;
+            font-weight: 600;
         }
 
-        .msg-time-stamp {
-            font-size: 0.6rem;
-            color: #475569;
-            margin-top: 3px;
-            align-self: flex-end;
-        }
-        .message-row.outgoing .msg-time-stamp { align-self: flex-start; }
-
-        /* Secure Hyper-Extended Selection Anchoring Deck Layouts */
-        .reaction-menu-deck {
-            position: absolute;
-            top: -12px;
-            background: #110700;
-            border: 1px solid var(--primary);
-            border-radius: 20px;
-            padding: 6px 10px;
+        /* Non-overlapping Side Reaction Pill Configuration */
+        .msg-side-reaction-pill {
             display: flex;
-            gap: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-            z-index: 100;
+            align-items: center;
+            gap: 3px;
+            background: #23120b;
+            border: 1px solid var(--glass);
+            padding: 3px 6px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: var(--text-main);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            user-select: none;
+            cursor: pointer;
+            height: fit-content;
+            margin-bottom: 2px;
             opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.15s ease, transform 0.15s ease;
             pointer-events: none;
-            transform: translateY(6px) scale(0.95);
-            transition: opacity 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
-        .message-row.incoming .reaction-menu-deck { left: 4px; }
-        .message-row.outgoing .reaction-menu-deck { right: 4px; }
 
-        /* Hover selection window locks open cleanly with extended tracking borders */
-        .msg-interactive-container:hover .reaction-menu-deck {
+        .msg-side-reaction-pill.active {
             opacity: 1;
+            transform: scale(1);
             pointer-events: auto;
-            transform: translateY(0) scale(1);
         }
 
-        .reaction-node {
+        .msg-side-reaction-pill:hover {
+            border-color: var(--primary);
+        }
+
+        /* Mini Context Popover Picker Panel */
+        .reaction-mini-picker {
+            position: absolute;
+            bottom: calc(100% + 4px);
+            background: #1f0d04;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 4px;
+            display: flex;
+            gap: 6px;
+            z-index: 3600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: none;
+        }
+
+        .reaction-mini-picker span {
             font-size: 1.1rem;
             cursor: pointer;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            padding: 2px;
-        }
-        .reaction-node:hover {
-            transform: scale(1.4);
+            transition: transform 0.1s ease;
         }
 
-        /* Condensed Metrics Reaction badge display layout structure rules */
-        .active-reaction-badge-pod {
-            position: absolute;
-            bottom: -8px;
-            background: #1c0b00;
-            border: 1px solid var(--glass);
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 0.65rem;
-            display: none;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            z-index: 20;
+        .reaction-mini-picker span:hover {
+            transform: scale(1.25);
         }
-        .message-row.incoming .active-reaction-badge-pod { right: -6px; }
-        .message-row.outgoing .active-reaction-badge-pod { left: -6px; }
 
         .chat-input-row {
-            padding: 12px;
+            padding: 10px;
             display: flex;
             gap: 8px;
             background: rgba(0, 0, 0, 0.5);
-            border-top: 1px solid var(--glass);
         }
 
         .chat-input-row input {
             flex: 1;
             background: #000;
             border: 1px solid rgba(255, 115, 0, 0.2);
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
-            padding: 10px;
+            padding: 8px;
             font-size: 0.85rem;
             outline: none;
         }
 
-        .chat-input-row input:focus { border-color: var(--primary); }
+        .chat-input-row input:focus {
+            border-color: var(--primary);
+        }
 
         .chat-input-row button {
             background: var(--primary);
             color: #000;
             border: none;
-            border-radius: 10px;
-            padding: 0 16px;
+            border-radius: 8px;
+            padding: 0 14px;
             font-weight: 800;
             cursor: pointer;
-            transition: transform 0.2s;
         }
-        .chat-input-row button:hover { transform: scale(1.02); }
 
         .container {
             position: relative;
@@ -483,9 +425,19 @@
             transition: all 0.3s ease;
         }
 
-        .item-row:hover { background: rgba(255, 255, 255, 0.03); }
-        .text-content { font-size: 0.95rem; font-weight: 500; }
-        .text-active { color: var(--primary); text-shadow: 0 0 12px var(--primary); }
+        .item-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .text-content {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .text-active {
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary);
+        }
 
         .add-btn-circle {
             width: 38px;
@@ -508,6 +460,7 @@
             transform: scale(1.1);
         }
 
+        /* Broadened & Flattened Normal Sized Aspect Copy Engine Keyhole */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -562,7 +515,9 @@
             50% { transform: translate(0, -5px); }
         }
 
-        .btn-main-copy.idle { animation: idleFloat 3.5s ease-in-out infinite; }
+        .btn-main-copy.idle {
+            animation: idleFloat 3.5s ease-in-out infinite;
+        }
 
         .modal-overlay {
             position: fixed;
@@ -652,9 +607,23 @@
             outline: none;
         }
 
-        .modal-content input:focus { border-color: var(--primary); }
-        .modal-result { margin: 25px 0; padding: 20px; background: var(--glass); border-radius: 20px; border: 1px dashed var(--primary); }
-        #finalDiscount { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
+        .modal-content input:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-result {
+            margin: 25px 0;
+            padding: 20px;
+            background: var(--glass);
+            border-radius: 20px;
+            border: 1px dashed var(--primary);
+        }
+
+        #finalDiscount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
 
         .modal-copy-zone {
             height: 60px;
@@ -669,8 +638,20 @@
             transition: 0.2s;
         }
 
-        .modal-copy-zone.success-state { background: var(--primary); color: #fff; }
-        .modal-close-btn { margin-top: 20px; background: transparent; border: none; color: #666; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
+        .modal-copy-zone.success-state {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .modal-close-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -679,40 +660,24 @@
     <div class="peer-active-hub" id="peerActiveHub"></div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button> 
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
         <button class="top-btn" title="Next" onclick="nextFocus()"><i data-lucide="chevron-down"></i></button>
 
         <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node"
-                src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar"
-                onclick="window.location.href='customization.html'">
+            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
             <span id="userDisplayName" class="name-string">Sync...</span>
-        </div>
-    </div>
-
-    <div class="chat-docking-panel" id="globalGroupDock">
-        <div class="chat-header-bar">
-            <span>Public Group Chat</span>
-            <button class="chat-close-trigger" onclick="toggleGlobalGroupWindow(false)"><i data-lucide="x"></i></button>
-        </div>
-        <div class="chat-scroller-view" id="groupChatScroller"></div>
-        <div class="chat-input-row">
-            <input type="text" id="groupMsgInput" placeholder="Broadcast to group chat..."
-                onkeydown="if(event.key === 'Enter') sendGroupBroadcastPayload()">
-            <button onclick="sendGroupBroadcastPayload()">Send</button>
         </div>
     </div>
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
-            <span id="chatTargetName">Direct Messaging Channel</span>
+            <span id="chatTargetName">Active Session Chat</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Type a private message..."
-                onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <input type="text" id="chatMsgInput" placeholder="Transient text node..." onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
     </div>
@@ -748,22 +713,35 @@
         <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
+        <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
+        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
+        <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
+        <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
+        <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
+        <div class="item-row" data-val="X-RAY"><span class="text-content">X-RAY</span></div>
+        <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
 
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
-        <button class="btn-main-copy" id="magnetBtn"></button> 
+    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()">
+        <button class="btn-main-copy" id="magnetBtn"></button>
     </div>
 
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
-            <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> </div>
-            <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> </div>
+            <div class="input-group">
+                <label>HOSPITAL CHARGES</label>
+                <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()">
+            </div>
+            <div class="input-group">
+                <label>CASE RATE (PHIC)</label>
+                <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()">
+            </div>
             <div class="modal-result">
                 <div id="finalDiscount">0.00</div>
             </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> 
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div>
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
@@ -771,7 +749,7 @@
     <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="listTitle">SELECT ITEM</h3>
-            <div id="listContainer"></div> 
+            <div id="listContainer"></div>
             <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
@@ -779,7 +757,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, push, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -797,15 +775,13 @@
         const rtdb = getDatabase(app);
 
         const userId = localStorage.getItem("userId");
-        if (!userId) { window.location.href = "login.html"; }
+        if (!userId) {
+            window.location.href = "login.html";
+        }
 
         let selectedActiveChatPartnerId = null;
         let transientChatListenerRemoveHook = null;
         const mappedRouteTrackingHooks = {};
-        
-        let currentUserGlobalName = "Operator";
-        let currentUserGlobalAvatar = "";
-
         const premium3dAssets = {
             'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
             'avatar-m2': 'https://api.dicebear.com/7.x/notionists/svg?seed=Jack',
@@ -821,7 +797,15 @@
             'animal-m3': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Rex',
             'plant-1': 'https://api.dicebear.com/7.x/shapes/svg?seed=Rose',
             'plant-2': 'https://api.dicebear.com/7.x/shapes/svg?seed=Fern',
-            'plant-3': 'https://api.dicebear.com/7.x/shapes/svg?seed=Ivy'
+            'plant-3': 'https://api.dicebear.com/7.x/shapes/svg?seed=Ivy',
+            'bg-theme-1': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
+            'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+            'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+            'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+            'btn-theme-1': 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300',
+            'btn-theme-2': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300',
+            'btn-theme-3': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300',
+            'btn-theme-4': 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300'
         };
 
         function hexToRgb(hex) {
@@ -835,22 +819,20 @@
             return "255,115,0";
         }
 
-        // Global User Realtime Configuration Engine Hydration
         const userDocRef = doc(db, "accounts", userId);
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
-                currentUserGlobalName = data.customName || "Operator";
-                document.getElementById('userDisplayName').innerText = currentUserGlobalName;
+                document.getElementById('userDisplayName').innerText = data.customName || "Operator";
 
                 const matchedAvatar = premium3dAssets[data.avatarUrl] || data.avatarUrl || premium3dAssets['avatar-m1'];
-                currentUserGlobalAvatar = matchedAvatar;
                 document.getElementById('userDisplayAvatar').src = matchedAvatar;
 
                 if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
 
                 if (data.bgMode === "image") {
-                    document.body.style.backgroundImage = `url('${data.bgValue}')`;
+                    const bgImg = premium3dAssets[data.bgValue] || data.bgValue;
+                    document.body.style.backgroundImage = `url('${bgImg}')`;
                     document.body.style.backgroundSize = "cover";
                     document.body.style.backgroundAttachment = "fixed";
                 } else if (data.bgValue) {
@@ -859,47 +841,32 @@
                 }
 
                 const magnetBtn = document.getElementById('magnetBtn');
-                if (data.btnValue) {
+                if (data.btnMode === "image") {
+                    const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
+                    magnetBtn.style.backgroundImage = `url('${btnImg}')`;
+                    magnetBtn.style.backgroundColor = "transparent";
+                } else if (data.btnValue) {
+                    magnetBtn.style.backgroundImage = "none";
                     document.documentElement.style.setProperty('--primary', data.btnValue);
-                    const parsedRgb = hexToRgb(data.btnValue.startsWith('#') ? data.btnValue : "#ff7300");
+                    const parsedRgb = hexToRgb(data.btnValue);
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
-                    name: currentUserGlobalName,
+                    name: data.customName || "User Room",
                     avatar: data.avatarUrl || 'avatar-m1',
                     timestamp: Date.now()
                 });
+            } else {
+                window.location.href = "login.html";
             }
         });
 
-        // Online Peering Framework Tracking Active Profiles
         const presenceRef = ref(rtdb, 'presence');
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
             hub.innerHTML = '';
-            
-            // Build Permanent Public Group Chat Bubble Toggle Button Node Frame
-            const globalNodeWrapper = document.createElement('div');
-            globalNodeWrapper.className = 'peer-wrapper global-chat-head-btn';
-            
-            const globalImgNode = document.createElement('div');
-            globalImgNode.className = 'peer-avatar-bubble';
-            globalImgNode.innerHTML = '<i data-lucide="users" style="width:20px;height:20px;"></i>';
-            globalImgNode.onclick = () => {
-                const currentDisplay = document.getElementById('globalGroupDock').style.display;
-                toggleGlobalGroupWindow(currentDisplay !== 'flex');
-            };
-            
-            const globalNameTag = document.createElement('div');
-            globalNameTag.className = 'peer-name-hover';
-            globalNameTag.innerText = "Public Chat";
-            
-            globalNodeWrapper.appendChild(globalImgNode);
-            globalNodeWrapper.appendChild(globalNameTag);
-            hub.appendChild(globalNodeWrapper);
-
             if (snapshot.exists()) {
                 const users = snapshot.val();
                 Object.keys(users).forEach(uid => {
@@ -914,14 +881,7 @@
                     const imgNode = document.createElement('img');
                     imgNode.className = 'peer-avatar-bubble';
                     imgNode.src = cleanAvatarSrc;
-                    imgNode.onclick = () => {
-                        const directDock = document.getElementById('chatDock');
-                        if (selectedActiveChatPartnerId === peer.uid && directDock.style.display === 'flex') {
-                            closeChatSession();
-                        } else {
-                            initTransientChatChannel(peer.uid, peer.name);
-                        }
-                    };
+                    imgNode.onclick = () => initTransientChatChannel(peer.uid, peer.name);
 
                     const dotNode = document.createElement('div');
                     dotNode.className = 'peer-notif-dot';
@@ -937,23 +897,15 @@
                     bindBackgroundNotifListener(peer.uid);
                 });
             }
-            lucide.createIcons();
         });
 
-        // Toggle Public Group Chat Visibility Controller
-        window.toggleGlobalGroupWindow = function(show) {
-            const globalDock = document.getElementById('globalGroupDock');
-            if (show) {
-                document.getElementById('chatDock').style.display = 'none'; // Closes direct workspace overlap
-                globalDock.style.display = 'flex';
-                const scroller = document.getElementById('groupChatScroller');
-                scroller.scrollTop = scroller.scrollHeight;
-            } else {
-                globalDock.style.display = 'none';
-            }
-        };
+        function hexToUniqueEmojis(msgId) {
+            const emojis = ["❤️", "👍", "🔥", "😂", "😮", "😢", "👏"];
+            let code = 0;
+            for (let i = 0; i < msgId.length; i++) code += msgId.charCodeAt(i);
+            return [emojis[code % emojis.length], emojis[(code + 2) % emojis.length]];
+        }
 
-        // Direct Messaging Real-time Execution Pipeline
         function bindBackgroundNotifListener(partnerId) {
             if (mappedRouteTrackingHooks[partnerId]) return;
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -967,7 +919,9 @@
                     const msg = childSnap.val();
                     if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
                         const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-                        if (peerContainer) peerContainer.classList.add('has-unread');
+                        if (peerContainer) {
+                            peerContainer.classList.add('has-unread');
+                        }
                     }
                 }
             });
@@ -975,14 +929,15 @@
         }
 
         function initTransientChatChannel(partnerId, partnerName) {
-            document.getElementById('globalGroupDock').style.display = 'none'; // Clear window view stack
             selectedActiveChatPartnerId = partnerId;
             document.getElementById('chatTargetName').innerText = `Chat with ${partnerName}`;
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
 
             const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-            if (peerContainer) peerContainer.classList.remove('has-unread');
+            if (peerContainer) {
+                peerContainer.classList.remove('has-unread');
+            }
 
             if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -991,16 +946,7 @@
             transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
-                    const msgId = childSnap.key;
-                    let senderName = msg.senderName || partnerName;
-                    let senderAvatar = msg.senderAvatar || premium3dAssets['avatar-m1'];
-                    
-                    if (msg.sender === userId) {
-                        senderName = "You";
-                        senderAvatar = currentUserGlobalAvatar;
-                    }
-                    
-                    appendBubbleToScroller('chatScroller', msgId, msg.text, msg.sender === userId ? 'outgoing' : 'incoming', senderName, senderAvatar, msg.timestamp, `sessions/${channelSessionKey}`);
+                    appendBubbleWithSideReaction(childSnap.key, msg, channelSessionKey);
                 }
             });
         }
@@ -1013,149 +959,86 @@
             const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
 
-            push(chatRouteRef, {
-                sender: userId,
-                senderName: currentUserGlobalName,
-                senderAvatar: currentUserGlobalAvatar,
-                text: text,
-                timestamp: Date.now()
-            });
+            const newMsgRef = push(chatRouteRef);
+            set(newMsgRef, { sender: userId, text: text, timestamp: Date.now() });
             input.value = '';
         };
 
-        // Persistent Public Group Chat Matrix Logic Runtime
-        const globalGroupRouteRef = ref(rtdb, `public_group_chat`);
-        onChildAdded(globalGroupRouteRef, (childSnap) => {
-            if (childSnap.exists()) {
-                const msg = childSnap.val();
-                const msgId = childSnap.key;
-                const direction = msg.sender === userId ? 'outgoing' : 'incoming';
-                appendBubbleToScroller('groupChatScroller', msgId, msg.text, direction, msg.senderName, msg.senderAvatar, msg.timestamp, `public_group_chat`);
-            }
-        });
+        function appendBubbleWithSideReaction(msgId, msgObj, sessionKey) {
+            const view = document.getElementById('chatScroller');
+            const direction = msgObj.sender === userId ? 'outgoing' : 'incoming';
 
-        window.sendGroupBroadcastPayload = function() {
-            const input = document.getElementById('groupMsgInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            push(globalGroupRouteRef, {
-                sender: userId,
-                senderName: currentUserGlobalName,
-                senderAvatar: currentUserGlobalAvatar,
-                text: text,
-                timestamp: Date.now()
-            });
-            input.value = '';
-        };
-
-        // One-reaction-per-user enforcement routing updates
-        window.processReactionClick = function(dataLocationPath, msgId, selectedEmoji) {
-            const listRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions`);
-            
-            onValue(listRef, (snapshot) => {
-                const updates = {};
-                if (snapshot.exists()) {
-                    const currentReactions = snapshot.val();
-                    Object.keys(currentReactions).forEach(emoji => {
-                        if (currentReactions[emoji] && currentReactions[emoji][userId]) {
-                            updates[`${emoji}/${userId}`] = null; // Mark previous reactions for deletion
-                        }
-                    });
-                }
-                updates[`${selectedEmoji}/${userId}`] = true; // Inject updated choice target entry
-                update(listRef, updates);
-            }, { onlyOnce: true });
-        };
-
-        // Consolidated and condensed UI component renderer node maps
-        function appendBubbleToScroller(targetScrollerId, msgId, text, direction, authorName, avatarUrl, timestamp, dataLocationPath) {
-            const view = document.getElementById(targetScrollerId);
-            
-            const msgRow = document.createElement('div');
-            msgRow.className = `message-row ${direction}`;
-            msgRow.id = `msg-node-${msgId}`;
-
-            const avatarImg = document.createElement('img');
-            avatarImg.className = 'msg-profile-badge';
-            avatarImg.src = avatarUrl || "https://api.dicebear.com/7.x/notionists/svg?seed=Felix";
-
-            const packetWrapper = document.createElement('div');
-            packetWrapper.className = 'msg-packet-wrapper';
-
-            const authorMeta = document.createElement('div');
-            authorMeta.className = 'msg-author-meta';
-            authorMeta.innerText = authorName;
-
-            const interactiveContainer = document.createElement('div');
-            interactiveContainer.className = 'msg-interactive-container';
-
-            const reactionDeck = document.createElement('div');
-            reactionDeck.className = 'reaction-menu-deck';
-            
-            ['😂', '😢', '😡', '🖕'].forEach(emoji => {
-                const node = document.createElement('span');
-                node.className = 'reaction-node';
-                node.innerText = emoji;
-                node.onclick = () => processReactionClick(dataLocationPath, msgId, emoji);
-                reactionDeck.appendChild(node);
-            });
+            const layoutWrapper = document.createElement('div');
+            layoutWrapper.className = `msg-layout-wrapper ${direction}`;
+            layoutWrapper.id = `wrapper-${msgId}`;
 
             const bbl = document.createElement('div');
-            bbl.className = 'msg-bubble';
-            bbl.innerText = text;
+            bbl.className = `msg-bubble ${direction}`;
+            bbl.innerText = msgObj.text;
 
-            const badgePod = document.createElement('div');
-            badgePod.className = 'active-reaction-badge-pod';
+            const pill = document.createElement('div');
+            pill.className = 'msg-side-reaction-pill';
+            pill.id = `pill-${msgId}`;
 
-            interactiveContainer.appendChild(reactionDeck);
-            interactiveContainer.appendChild(bbl);
-            interactiveContainer.appendChild(badgePod);
+            const autoEmojis = hexToUniqueEmojis(msgId);
+            const totalCount = msgObj.reactionCount || 0;
 
-            const timeString = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const timeMeta = document.createElement('div');
-            timeMeta.className = 'msg-time-stamp';
-            timeMeta.innerText = timeString;
+            if (totalCount > 0) {
+                pill.innerText = `${autoEmojis[0]}${autoEmojis[1]} ${totalCount}`;
+                pill.classList.add('active');
+            }
 
-            packetWrapper.appendChild(authorMeta);
-            packetWrapper.appendChild(interactiveContainer);
-            packetWrapper.appendChild(timeMeta);
+            const picker = document.createElement('div');
+            picker.className = 'reaction-mini-picker';
+            picker.id = `picker-${msgId}`;
 
-            msgRow.appendChild(avatarImg);
-            msgRow.appendChild(packetWrapper);
-            
-            view.appendChild(msgRow);
+            const pickerList = ["🔥", "❤️", "👍", "😂"];
+            pickerList.forEach(emo => {
+                const span = document.createElement('span');
+                span.innerText = emo;
+                span.onclick = (e) => {
+                    e.stopPropagation();
+                    const nextCount = totalCount + 1;
+                    update(ref(rtdb, `sessions/${sessionKey}/${msgId}`), { reactionCount: nextCount });
+                    picker.style.display = 'none';
+                };
+                picker.appendChild(span);
+            });
+
+            bbl.onclick = (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.reaction-mini-picker').forEach(p => {
+                    if (p.id !== `picker-${msgId}`) p.style.display = 'none';
+                });
+                picker.style.display = (picker.style.display === 'flex') ? 'none' : 'flex';
+            };
+
+            pill.onclick = (e) => {
+                e.stopPropagation();
+                const nextCount = totalCount + 1;
+                update(ref(rtdb, `sessions/${sessionKey}/${msgId}`), { reactionCount: nextCount });
+            };
+
+            layoutWrapper.appendChild(bbl);
+            layoutWrapper.appendChild(pill);
+            bbl.appendChild(picker);
+            view.appendChild(layoutWrapper);
             view.scrollTop = view.scrollHeight;
 
-            // Instantiating Condensed Reaction Synchronization Observer Channels
-            const reactionWatcherRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions`);
-            onValue(reactionWatcherRef, (snapshot) => {
-                if(snapshot.exists()) {
-                    const rxData = snapshot.val();
-                    const summaryArray = [];
-                    let overallCount = 0;
-
-                    Object.keys(rxData).forEach(emoji => {
-                        if (rxData[emoji]) {
-                            const entriesCount = Object.keys(rxData[emoji]).length;
-                            if (entriesCount > 0) {
-                                summaryArray.push({ emoji, count: entriesCount });
-                                overallCount += entriesCount;
-                            }
+            const msgNodeRef = ref(rtdb, `sessions/${sessionKey}/${msgId}`);
+            onValue(msgNodeRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const currentVal = snapshot.val();
+                    const count = currentVal.reactionCount || 0;
+                    const livePill = document.getElementById(`pill-${msgId}`);
+                    if (livePill) {
+                        if (count > 0) {
+                            livePill.innerText = `${autoEmojis[0]}${autoEmojis[1]} ${count}`;
+                            livePill.classList.add('active');
+                        } else {
+                            livePill.classList.remove('active');
                         }
-                    });
-
-                    if(summaryArray.length > 0) {
-                        // Max out individual visuals to the top two emojis to keep the layout condensed
-                        summaryArray.sort((a, b) => b.count - a.count);
-                        const topTwoStrings = summaryArray.slice(0, 2).map(item => item.emoji).join('');
-                        badgePod.innerHTML = `${topTwoStrings} <span>${overallCount}</span>`;
-                        badgePod.style.display = 'flex';
-                    } else {
-                        badgePod.style.display = 'none';
                     }
-                } else {
-                    badgePod.style.display = 'none';
                 }
             });
         }
@@ -1169,35 +1052,27 @@
         window.addEventListener('beforeunload', () => {
             if (userId) set(ref(rtdb, 'presence/' + userId), null);
         });
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.reaction-mini-picker').forEach(p => p.style.display = 'none');
+        });
     </script>
 
-    <script>        
+    <script>
         let textTimeout; let currentFocusedIndex = 0;
         const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
-        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME"] };
-        
-        window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
-        lucide.createIcons(); startIdle(); };
-        
-        function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = '';
-        document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); } }
-        
+        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
+        window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); }); lucide.createIcons(); startIdle(); };
+        function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = ''; document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); } }
         function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }
         function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0; const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2); }
-        
         function copyModalValue() { const val = document.getElementById('finalDiscount').innerText; navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
-        
-        function openList(cat) { const listCont = document.getElementById('listContainer'); listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); }); }
-        
+        function openList(cat) { const listCont = document.getElementById('listContainer'); listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); }); toggleModal('listModal', true); }
         function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash'); setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600); }
-        
         document.addEventListener('mousemove', (e) => { const threshold = window.innerHeight * 0.75; if (e.clientY > threshold) { const centerX = window.innerWidth / 2; const centerY = window.innerHeight - (window.innerHeight * 0.125); const pullX = (e.clientX - centerX) * 0.3; const pullY = (e.clientY - centerY) * 0.4; magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; } else { resetMagnet(); } });
         function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
-        
         function updateFocus(index) { currentFocusedIndex = index; const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1"; highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-        
         function executeCopy(row, text, index) { updateFocus(index); navigator.clipboard.writeText(text).then(() => { document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet(); let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000); }); }
-        
         function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0); }
         let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle'); } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));
     </script>
