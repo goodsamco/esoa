@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA - Customization Suite</title>
+    <title>eSOA - Ultimate Customization Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,30 +22,37 @@
         }
         .container {
             width: 100%;
-            max-width: 440px;
+            max-width: 480px;
             background: var(--surface);
             padding: 25px;
             border-radius: 24px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
         h2 {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             text-align: center;
             margin-bottom: 25px;
         }
         .section-title {
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 0.15em;
-            margin: 25px 0 12px 5px;
-            opacity: 0.9;
+            margin: 30px 0 12px 5px;
             font-weight: 800;
             border-left: 3px solid var(--primary);
             padding-left: 8px;
+        }
+        .sub-group-title {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 10px 0 6px 5px;
+            font-weight: 600;
         }
         input[type="text"] {
             width: 100%;
@@ -60,43 +67,46 @@
         }
         input[type="text"]:focus { outline: none; border-color: var(--primary); }
 
-        /* Modern Grid Architecture */
+        /* Grid Framework */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .avatar-grid {
+            grid-template-columns: repeat(3, 1fr);
         }
         .option-card {
             background: rgba(0, 0, 0, 0.25);
             border: 2px solid transparent;
-            padding: 14px;
+            padding: 12px;
             border-radius: 16px;
             cursor: pointer;
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
         .option-card:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-1px); }
         .option-card.selected { border-color: var(--primary); background: rgba(56, 189, 248, 0.12); }
         
-        /* Subject-Focused Avatar Styling */
+        /* Avatar Formats */
         .avatar-frame { 
-            width: 70px; 
-            height: 70px; 
+            width: 65px; 
+            height: 65px; 
             border-radius: 50%; 
             object-fit: cover; 
             background: #242f41;
             border: 2px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.2s;
         }
-        .option-card.selected .avatar-frame { transform: scale(1.05); border-color: var(--primary); }
+        .option-card.selected .avatar-frame { border-color: var(--primary); }
 
-        /* Integrated Custom Pickers */
+        /* Color Sliders / Pickers */
         .picker-container {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255,255,255,0.08);
@@ -106,14 +116,15 @@
             align-items: center;
             justify-content: space-between;
             gap: 15px;
-            margin-top: 10px;
+            margin-top: 8px;
+            margin-bottom: 15px;
         }
-        .picker-label { font-size: 0.85rem; color: #94a3b8; font-weight: 600; }
+        .picker-label { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
         .native-picker {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            width: 50px;
+            width: 55px;
             height: 36px;
             background: transparent;
             border: none;
@@ -122,10 +133,10 @@
         .native-picker::-webkit-color-swatch { border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); }
         .native-picker::-moz-color-swatch { border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); }
 
-        /* Button Custom Mini-Images */
+        /* Button Previews */
         .btn-texture-preview {
             width: 100%;
-            height: 40px;
+            height: 38px;
             border-radius: 8px;
             background-size: cover;
             background-position: center;
@@ -147,78 +158,114 @@
             box-shadow: 0 10px 25px rgba(56, 189, 248, 0.2);
             transition: all 0.2s ease;
         }
-        .btn-save:hover { background: #6feeff; transform: scale(1.01); box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4); }
+        .btn-save:hover { background: #6feeff; transform: scale(1.01); }
         
         .logout-zone { text-align: center; margin-top: 25px; }
         .logout-zone a { color: #64748b; font-size: 0.85rem; text-decoration: none; font-weight: 600; }
-        .logout-zone a:hover { color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>DISPLAY SETTINGS</h2>
+    <h2>ENVIRONMENT PROFILE SETUP</h2>
     
-    <!-- 1. Name Settings -->
     <div class="section-title">Display Name</div>
-    <input type="text" id="customName" placeholder="Edit profile name...">
+    <input type="text" id="customName" placeholder="Enter custom display name...">
 
-    <!-- 2. Target Subject Avatars -->
-    <div class="section-title">Select Central Subject Avatar</div>
-    <div class="grid" id="avatarGrid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80">
-            <img class="avatar-frame" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="People">
-            <span>Human/Minimalist</span>
-        </div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=150&auto=format&fit=crop&q=80">
-            <img class="avatar-frame" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=150&auto=format&fit=crop&q=80" alt="Animal">
-            <span>Cute Subject (Animal)</span>
-        </div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150&auto=format&fit=crop&q=80">
-            <img class="avatar-frame" src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150&auto=format&fit=crop&q=80" alt="Flower">
-            <span>Botanical/Flower</span>
-        </div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=150&auto=format&fit=crop&q=80">
-            <img class="avatar-frame" src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=150&auto=format&fit=crop&q=80" alt="Robot">
-            <span>Cyber Character</span>
-        </div>
+    <div class="section-title">Select Central Avatar Component</div>
+    
+    <div class="sub-group-title">Male Avatars</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150"><span>Urban</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"><span>Classic</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"><span>Minimal</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150"><span>Corporate</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150"><span>Sporty</span></div>
     </div>
 
-    <!-- 3. Dynamic Canvas Wallpaper Background -->
+    <div class="sub-group-title">Female Avatars</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"><span>Vibrant</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150"><span>Natural</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"><span>Studio</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150"><span>Artistic</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150"><span>Elegant</span></div>
+    </div>
+
+    <div class="sub-group-title">Girly Animals</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150"><span>Kitten</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150"><span>Puppy</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1507666405895-422efe53f00d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1507666405895-422efe53f00d?w=150"><span>Lamb</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=150"><span>Hamster</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=150"><span>Fawn</span></div>
+    </div>
+
+    <div class="sub-group-title">Manly Animals</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=150"><span>Lion</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1602491453977-62a312d72113?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1602491453977-62a312d72113?w=150"><span>Tiger</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150"><span>Wolf</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=150"><span>Bear</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1557008075-7f2c5efa4cfd?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1557008075-7f2c5efa4cfd?w=150"><span>Eagle</span></div>
+    </div>
+
+    <div class="sub-group-title">Botanical & Plants</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150"><span>Rose</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1520302832675-a099db7340d7?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1520302832675-a099db7340d7?w=150"><span>Tulip</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?w=150"><span>Sunflower</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1545241047-6083a3684587?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1545241047-6083a3684587?w=150"><span>Succulent</span></div>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=150"><span>Monstera</span></div>
+    </div>
+
     <div class="section-title">Canvas Wallpaper Background</div>
-    <div class="grid" id="bgImgGrid">
-        <div class="option-card" data-type="bgType" data-mode="image" data-val="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600"><span>Abstract Silk Art</span></div>
-        <div class="option-card" data-type="bgType" data-mode="image" data-val="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=600"><span>Neon Geometry</span></div>
+    <div class="grid">
+        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800"><span>Abstract Silk</span></div>
+        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800"><span>Neon Geometry</span></div>
+        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800"><span>Fluid Mesh</span></div>
+        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800"><span>Ocean Minimal</span></div>
+        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1557683316-973673baf926?w=800"><span>Deep Gradient</span></div>
     </div>
     <div class="picker-container">
-        <span class="picker-label">Or adjust custom flat hex background:</span>
-        <input type="color" id="bgColorPicker" class="native-picker" value="#0b0f1a">
+        <span class="picker-label">Or adjust dynamic solid wallpaper color:</span>
+        <input type="color" id="bgColorSlider" class="native-picker" value="#0b0f1a">
     </div>
 
-    <!-- 4. Interactive Custom Button Engine -->
-    <div class="section-title">Action Copy Button Environment</div>
-    <div class="grid" id="btnImgGrid">
-        <div class="option-card" data-type="btnType" data-mode="image" data-val="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300">
+    <div class="section-title">Copy Action Button Texture</div>
+    <div class="grid">
+        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300">
             <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300');"></div>
-            <span>Fluid Hologram Pattern</span>
+            <span>Holo Foil</span>
         </div>
-        <div class="option-card" data-type="btnType" data-mode="image" data-val="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300">
+        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300">
             <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300');"></div>
-            <span>Chrome Spectrum Accent</span>
+            <span>Spectrum Chrome</span>
+        </div>
+        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300">
+            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300');"></div>
+            <span>Carbon Fiber</span>
+        </div>
+        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300">
+            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300');"></div>
+            <span>Liquid Aurora</span>
+        </div>
+        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1604871000636-074fa5117945?w=300">
+            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1604871000636-074fa5117945?w=300');"></div>
+            <span>Abstract Noise</span>
         </div>
     </div>
     <div class="picker-container">
-        <span class="picker-label">Or select unified solid accent color:</span>
-        <input type="color" id="btnColorPicker" class="native-picker" value="#38bdf8">
+        <span class="picker-label">Or adjust standard UI brand color accent:</span>
+        <input type="color" id="btnColorSlider" class="native-picker" value="#38bdf8">
     </div>
 
-    <!-- 5. Global Core Interface Typography -->
     <div class="section-title">Interface Typography Font</div>
-    <div class="grid" id="fontGrid">
-        <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter Systems</div>
-        <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Smooth</div>
+    <div class="grid">
+        <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter System</div>
+        <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Geometric</div>
         <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Developer Code</div>
-        <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Modern Serif</div>
+        <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Classic Serif</div>
     </div>
 
     <button class="btn-save" id="btnSaveConfig">CONFIRM & LAUNCH SYSTEM</button>
@@ -251,35 +298,30 @@
 
     document.getElementById('customName').value = localStorage.getItem("userName") || "";
 
-    // Track active configurations
-    const currentSetup = {
+    const configData = {
         avatar: "",
-        bgMode: "color", // 'color' or 'image'
+        bgMode: "color",
         bgValue: "#0b0f1a",
-        btnMode: "color", // 'color' or 'image'
+        btnMode: "color",
         btnValue: "#38bdf8",
         font: "'Inter', sans-serif"
     };
 
-    // Color picker tracking monitors
-    const bgColorPicker = document.getElementById('bgColorPicker');
-    const btnColorPicker = document.getElementById('btnColorPicker');
+    const bgColorSlider = document.getElementById('bgColorSlider');
+    const btnColorSlider = document.getElementById('btnColorSlider');
 
-    bgColorPicker.addEventListener('input', () => {
-        currentSetup.bgMode = "color";
-        currentSetup.bgValue = bgColorPicker.value;
-        // Drop selected background cards visually
+    bgColorSlider.addEventListener('input', () => {
+        configData.bgMode = "color";
+        configData.bgValue = bgColorSlider.value;
         document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
     });
 
-    btnColorPicker.addEventListener('input', () => {
-        currentSetup.btnMode = "color";
-        currentSetup.btnValue = btnColorPicker.value;
-        // Drop selected button cards visually
+    btnColorSlider.addEventListener('input', () => {
+        configData.btnMode = "color";
+        configData.btnValue = btnColorSlider.value;
         document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
     });
 
-    // Option Grid Selections
     document.querySelectorAll('.option-card').forEach(card => {
         card.addEventListener('click', () => {
             const type = card.getAttribute('data-type');
@@ -288,16 +330,16 @@
             document.querySelectorAll(`.option-card[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
 
-            if (type === "avatar") currentSetup.avatar = val;
-            if (type === "font") currentSetup.font = val;
+            if (type === "avatar") configData.avatar = val;
+            if (type === "font") configData.font = val;
             
             if (type === "bgType") {
-                currentSetup.bgMode = "image";
-                currentSetup.bgValue = val;
+                configData.bgMode = "image";
+                configData.bgValue = val;
             }
             if (type === "btnType") {
-                currentSetup.btnMode = "image";
-                currentSetup.btnValue = val;
+                configData.btnMode = "image";
+                configData.btnValue = val;
             }
         });
     });
@@ -310,17 +352,17 @@
             
             const payload = {
                 customName: customName || localStorage.getItem("userName"),
-                avatarUrl: currentSetup.avatar,
-                bgMode: currentSetup.bgMode,
-                bgValue: currentSetup.bgValue,
-                btnMode: currentSetup.btnMode,
-                btnValue: currentSetup.btnValue,
-                fontFamily: currentSetup.font
+                avatarUrl: configData.avatar,
+                bgMode: configData.bgMode,
+                bgValue: configData.bgValue,
+                btnMode: configData.btnMode,
+                btnValue: configData.btnValue,
+                fontFamily: configData.font
             };
 
             await updateDoc(docRef, payload);
 
-            // Set localStorage states for the core page logic integration
+            // Stash configurations in LocalStorage for prompt client performance
             localStorage.setItem("userName", payload.customName);
             localStorage.setItem("avatarUrl", payload.avatarUrl);
             localStorage.setItem("bgMode", payload.bgMode);
@@ -330,9 +372,9 @@
             localStorage.setItem("fontFamily", payload.fontFamily);
 
             alert("Environment Customized Successfully!");
-            // window.location.href = "main.html"; // Redirects smoothly into core interface loop
+            // window.location.href = "main.html"; 
         } catch (err) {
-            alert("Error committing style profiles: " + err.message);
+            alert("Error logging preferences: " + err.message);
         }
     });
 </script>
