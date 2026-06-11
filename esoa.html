@@ -46,7 +46,7 @@
         }
 
         body.copy-flash {
-            background-color: #fffb00;
+            background-color: var(--primary);
         }
 
         /* Left-aligned Active Users Hub Panel */
@@ -358,8 +358,8 @@
         }
 
         .text-active {
-            color: #d0ff00;
-            text-shadow: 0 0 12px rgba(208, 255, 0, 0.5);
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary);
         }
 
         .add-btn-circle {
@@ -408,8 +408,8 @@
             letter-spacing: 2px;
             position: relative;
             overflow: hidden;
-            background-color: transparent;
-            color: white;
+            background-color: var(--primary);
+            color: #000;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
             background-image: url('https://sklepagatesting.github.io/resources/Images/mclaren.png');
@@ -500,10 +500,14 @@
             cursor: pointer;
             transition: 0.2s;
             color: var(--text-main);
+            background: rgba(255, 115, 0, 0.02);
+            border: 1px solid rgba(255, 115, 0, 0.05);
         }
 
         .list-item:hover {
             background: var(--glass);
+            border-color: var(--primary);
+            color: #fff;
         }
 
         .input-group {
@@ -554,16 +558,30 @@
         .modal-copy-zone {
             height: 60px;
             display: flex;
-            justify(content: center; align-items: center; cursor: pointer; background: var(--primary); color: #000; border-radius: 16px; font-weight: 800; transition: 0.2s;
-            }
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: var(--primary);
+            color: #000;
+            border-radius: 16px;
+            font-weight: 800;
+            transition: 0.2s;
+        }
 
-            .modal-copy-zone.success-state {
-                background: var(--primary); color: #fff;
-            }
+        .modal-copy-zone.success-state {
+            background: var(--primary);
+            color: #fff;
+        }
 
-            .modal-close-btn {
-                margin-top: 20px; background: transparent; border: none; color: #666; cursor: pointer; font-size: 0.8rem; text-decoration: underline;
-            }
+        .modal-close-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -639,7 +657,7 @@
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
         <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
-        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-transform: uppercase;">HM-LOSARTAN</span></div>
+        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
         <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
         <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
         <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
