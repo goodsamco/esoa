@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eSOA - Full Orange Edition</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght=400;600;800&family=Poppins:wght=400;600;800&family=Roboto+Mono:wght=400;600&family=Playfair+Display:wght=400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -49,63 +49,21 @@
             background-color: #fffb00;
         }
 
-        /* Profile Deck Header UI Anchor */
-        .profile-deck-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(to bottom, var(--surface) 85%, rgba(26, 15, 11, 0));
-            backdrop-filter: blur(12px);
-            z-index: 2500;
-            padding: 15px 20px;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 115, 0, 0.1);
-        }
-
-        .user-identity-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .profile-avatar-node {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
-            border: 2px solid var(--primary);
-            padding: 2px;
-        }
-
-        .profile-meta-data {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .profile-meta-data .label {
-            font-size: 0.65rem;
-            color: #a16207;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .profile-meta-data .name-string {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: white;
-        }
-
+        /* Left-aligned Active Users Hub Panel */
         .peer-active-hub {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .peer-wrapper {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-right: 140px;
         }
 
         .peer-avatar-bubble {
@@ -124,13 +82,44 @@
             transform: scale(1.05);
         }
 
+        .peer-name-hover {
+            position: absolute;
+            left: 50%;
+            bottom: -32px;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid rgba(255, 115, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .peer-wrapper:hover .peer-name-hover {
+            opacity: 1;
+            transform: translateX(-50%) translateY(2px);
+        }
+
+        /* Glassmorphic Translucent Blur Top Navigation */
         .top-nav {
             position: fixed;
-            top: 14px;
+            top: 20px;
             right: 20px;
             display: flex;
+            align-items: center;
             gap: 10px;
             z-index: 3000;
+            background: rgba(20, 7, 0, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 115, 0, 0.15);
         }
 
         .top-btn {
@@ -152,6 +141,43 @@
             background: var(--primary);
             color: #000;
             transform: translateY(-2px);
+        }
+
+        /* Dedicated Integrated User Profile Deck Segment */
+        .user-identity-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            margin-left: 6px;
+        }
+
+        .profile-avatar-node {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+            border: 2px solid var(--primary);
+            padding: 2px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-avatar-node:hover {
+            transform: scale(1.05);
+        }
+
+        .user-identity-card .name-string {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            max-width: 75px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Real-time Session Dock Panel Styles */
@@ -337,6 +363,7 @@
             transform: scale(1.1);
         }
 
+        /* Broadened & Flattened Wide Landscape Aspect Copy Engine Keyhole */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -351,10 +378,10 @@
         }
 
         .btn-main-copy {
-            width: 190px;
-            height: 100px;
+            width: 320px;
+            height: 54px;
             border: none;
-            border-radius: 35px;
+            border-radius: 18px;
             font-weight: 800;
             font-size: 1rem;
             text-transform: uppercase;
@@ -366,17 +393,15 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
             background-image: url('https://sklepagatesting.github.io/resources/Images/mclaren.png');
-            background-size: contain;
+            background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
-            filter: drop-shadow(0 0 10px rgba(255, 115, 0, 0.8));
-            background-size: contain;
-            background-position: center;
+            filter: drop-shadow(0 0 12px rgba(255, 115, 0, 0.65));
         }
 
         .bottom-zone:hover .btn-main-copy:not(.success-state) {
-            width: 250px;
-            height: 120px;
+            width: 345px;
+            height: 64px;
         }
 
         .btn-main-copy.success-state {
@@ -385,6 +410,7 @@
             color: #000;
             text-shadow: none;
             box-shadow: 0 0 25px rgba(255, 115, 0, 0.5);
+            border-radius: 35px;
         }
 
         @keyframes idleFloat {
@@ -537,17 +563,7 @@
 
 <body onmouseleave="resetMagnet()">
 
-    <div class="profile-deck-header">
-        <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node"
-                src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar">
-            <div class="profile-meta-data">
-                <span class="label">Operator Room</span>
-                <span id="userDisplayName" class="name-string">Connecting...</span>
-            </div>
-        </div>
-        <div class="peer-active-hub" id="peerActiveHub"></div>
-    </div>
+    <div class="peer-active-hub" id="peerActiveHub"></div>
 
     <div class="top-nav">
         <button class="top-btn" title="Profile Studio" onclick="window.location.href='customization.html'"><i
@@ -556,6 +572,13 @@
             class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i
                 data-lucide="user-check"></i></button> <button class="top-btn" title="Next" onclick="nextFocus()"><i
                 data-lucide="chevron-down"></i></button>
+
+        <div class="user-identity-card">
+            <img id="userDisplayAvatar" class="profile-avatar-node"
+                src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar"
+                onclick="window.location.href='customization.html'">
+            <span id="userDisplayName" class="name-string">Sync...</span>
+        </div>
     </div>
 
     <div class="chat-docking-panel" id="chatDock">
@@ -696,7 +719,7 @@
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
-                document.getElementById('userDisplayName').innerText = data.customName || "Operator Account";
+                document.getElementById('userDisplayName').innerText = data.customName || "Operator";
 
                 const matchedAvatar = premium3dAssets[data.avatarUrl] || data.avatarUrl || premium3dAssets['avatar-m1'];
                 document.getElementById('userDisplayAvatar').src = matchedAvatar;
@@ -732,7 +755,7 @@
             }
         });
 
-        // Room Session Synchronizer
+        // Left Alignment Display Synchronizer Engine with Native Hover Popovers
         const presenceRef = ref(rtdb, 'presence');
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
@@ -744,12 +767,21 @@
                     const peer = users[uid];
                     const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
 
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'peer-wrapper';
+
                     const imgNode = document.createElement('img');
                     imgNode.className = 'peer-avatar-bubble';
                     imgNode.src = cleanAvatarSrc;
-                    imgNode.title = `${peer.name} (Transient Chat Link)`;
                     imgNode.onclick = () => initTransientChatChannel(peer.uid, peer.name);
-                    hub.appendChild(imgNode);
+
+                    const nameTag = document.createElement('div');
+                    nameTag.className = 'peer-name-hover';
+                    nameTag.innerText = peer.name;
+
+                    wrapper.appendChild(imgNode);
+                    wrapper.appendChild(nameTag);
+                    hub.appendChild(wrapper);
                 });
             }
         });
