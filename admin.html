@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: #161e2d;
+            --primary: #38bdf8;
+            --success: #ffee00;
+            --text-main: #f1f5f9;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        h2 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .user-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .user-info .name { font-weight: 600; font-size: 1rem; color: #fff;}
+        .user-info .username { font-size: 0.8rem; color: #64748b; margin-top: 2px;}
+        .btn-approve {
+            background: var(--primary);
+            color: var(--bg);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-approve:hover { background: var(--success); transform: scale(1.05); }
+        .empty-state {
+            text-align: center;
+            color: #64748b;
+            padding: 30px 0;
+            font-size: 0.95rem;
+        }
+        .logout-link {
+            margin-top: 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .logout-link:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Pending Approvals</h2>
+    <div id="userList">Loading registrations...</div>
+</div>
+
+<a href="login.html" class="logout-link" onclick="localStorage.clear()">Log out Management</a>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Simple security gate check
+    if (localStorage.getItem("userRole") !== "admin") {
+        window.location.href = "login.html";
+    }
+
+    async function loadPendingUsers() {
+        const container = document.getElementById('userList');
+        container.innerHTML = "";
+
+        try {
+            const q = query(collection(db, "accounts"), where("status", "==", "pending"));
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No accounts requiring attention right now.</div>`;
+                return;
+            }
+
+            snapshot.forEach((userDoc) => {
+                const data = userDoc.data();
+                const card = document.createElement('div');
+                card.className = "user-card";
+                card.innerHTML = `
+                    <div class="user-info">
+                        <div class="name">${data.name}</div>
+                        <div class="username">@${data.username}</div>
+                    </div>
+                    <button class="btn-approve" data-id="${userDoc.id}">APPROVE</button>
+                `;
+                container.appendChild(card);
+            });
+
+            // Bind buttons
+            document.querySelectorAll('.btn-approve').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const docRef = doc(db, "accounts", id);
+                    await updateDoc(docRef, { status: "approved" });
+                    loadPendingUsers(); // Refresh
+                });
+            });
+
+        } catch (err) {
+            container.innerHTML = `<div class="empty-state" style="color:#ef4444">Error loading profiles.</div>`;
+        }
+    }
+
+    window.onload = loadPendingUsers;
+</script>
+</body></html>
