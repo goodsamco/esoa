@@ -857,11 +857,67 @@
             }
         });
 
-        // Combined Active Chat Synchronizer Engine
-        const presenceRef = ref(rtdb, 'presence');
-        onValue(presenceRef, (snapshot) => {
-            const hub = document.getElementById('unifiedChatHub');
-            hub.innerHTML = '';
+// Updated Peer Active Hub Display Synchronizer
+const presenceRef = ref(rtdb, 'presence');
+onValue(presenceRef, (snapshot) => {
+    const hub = document.getElementById('peerActiveHub');
+    hub.innerHTML = ''; // Clear existing
+
+    // 1. Always render Group Chat Bubble first
+    const gcWrapper = document.createElement('div');
+    gcWrapper.className = 'peer-wrapper';
+    gcWrapper.id = 'gc-hub-node';
+    gcWrapper.innerHTML = `
+        <div class="peer-avatar-bubble" style="display:flex; align-items:center; justify-content:center; background:#ff7300; border-color:#fff;" onclick="initGroupChatChannel()">
+            <i data-lucide="users" style="width:18px;height:18px;color:#000;"></i>
+        </div>
+        <div class="peer-notif-dot" id="gc-notif-dot"></div>
+        <div class="peer-name-hover">GROUP CHAT</div>
+    `;
+    hub.appendChild(gcWrapper);
+    // Ensure you have a function bound for GC notification tracking
+    if (typeof bindBackgroundGcListener === 'function') bindBackgroundGcListener();
+
+    // 2. Only render active users
+    if (snapshot.exists()) {
+        const users = snapshot.val();
+        const activeUids = Object.keys(users).filter(uid => uid !== userId);
+        const MAX_VISIBLE = 4;
+
+        activeUids.forEach((uid, index) => {
+            if (index < MAX_VISIBLE) {
+                const peer = users[uid];
+                const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'peer-wrapper';
+                wrapper.id = `peer-node-${peer.uid}`;
+                wrapper.innerHTML = `
+                    <img class="peer-avatar-bubble" src="${cleanAvatarSrc}" onclick="initTransientChatChannel('${peer.uid}', '${peer.name}')">
+                    <div class="peer-notif-dot"></div>
+                    <div class="peer-name-hover">${peer.name}</div>
+                `;
+                hub.appendChild(wrapper);
+                bindBackgroundNotifListener(peer.uid);
+            }
+        });
+
+        // 3. Dynamic "..." overflow button
+        if (activeUids.length > MAX_VISIBLE) {
+            const overflowNames = activeUids.slice(MAX_VISIBLE).map(uid => users[uid].name).join(', ');
+            const moreWrapper = document.createElement('div');
+            moreWrapper.className = 'peer-wrapper';
+            moreWrapper.innerHTML = `
+                <div class="peer-avatar-bubble" style="display:flex; align-items:center; justify-content:center; background:var(--surface); border:1px solid var(--primary);">...</div>
+                <div class="peer-name-hover" style="width: auto; max-width: 150px; white-space: normal;">More: ${overflowNames}</div>
+            `;
+            hub.appendChild(moreWrapper);
+        }
+    }
+    
+    // Refresh icons after DOM updates
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
 
             // Inject the Fixed Global Group Chat ("GC") Node Segment
             const gcWrapper = document.createElement('div');
