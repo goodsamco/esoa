@@ -52,7 +52,7 @@
             background-color: var(--primary);
         }
 
-        /* Left-aligned Active Users Hub Panel with Profile Node Architecture */
+        /* Peer Active Hub Matrix Display */
         .peer-active-hub {
             position: fixed;
             top: 20px;
@@ -88,7 +88,6 @@
             box-shadow: 0 0 12px var(--primary);
         }
 
-        /* Notification Dot overlay on sender avatar */
         .peer-notif-dot {
             position: absolute;
             top: -2px;
@@ -135,7 +134,7 @@
             transform: translateX(-50%) translateY(2px);
         }
 
-        /* Glassmorphic Translucent Blur Top Navigation */
+        /* Top Bar Actions and Global Nav Controllers */
         .top-nav {
             position: fixed;
             top: 20px;
@@ -173,7 +172,6 @@
             transform: translateY(-2px);
         }
 
-        /* Dedicated Integrated User Profile Deck Segment */
         .user-identity-card {
             display: flex;
             flex-direction: column;
@@ -210,26 +208,35 @@
             white-space: nowrap;
         }
 
-        /* Real-time Session Dock Panel Styles (Persistent Group Chat Engine Layout) */
+        /* Split-Docking Multi-Channel Messaging Pipeline Panels */
         .chat-docking-panel {
             position: fixed;
             bottom: 26vh;
-            right: 20px;
-            width: 340px;
-            height: 440px;
+            width: 320px;
+            height: 400px;
             background: var(--modal-bg);
             border: 1px solid var(--glass);
             border-radius: 24px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-            display: none;
+            display: flex;
             flex-direction: column;
             z-index: 3500;
             overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        #globalGroupDock {
+            right: 360px; /* Anchored position side-by-side with direct message hub */
+        }
+
+        #chatDock {
+            right: 20px;
+            display: none;
         }
 
         .chat-header-bar {
             background: rgba(0, 0, 0, 0.4);
-            padding: 14px;
+            padding: 12px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -237,7 +244,7 @@
         }
 
         .chat-header-bar span {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 800;
             color: var(--primary);
             text-transform: uppercase;
@@ -255,26 +262,26 @@
 
         .chat-scroller-view {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
-        /* Messaging Structural Nodes */
+        /* Unified Message Stream UI Components */
         .message-row {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: flex-end;
-            max-width: 85%;
+            max-width: 88%;
         }
         .message-row.incoming { align-self: flex-start; }
         .message-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
 
         .msg-profile-badge {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             object-fit: cover;
             border: 1.5px solid var(--primary);
@@ -289,10 +296,10 @@
         }
 
         .msg-author-meta {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: #64748b;
             font-weight: 800;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -300,13 +307,15 @@
 
         .msg-interactive-container {
             position: relative;
+            padding-top: 25px; /* Creates permanent vertical alignment boundary for hover menus */
+            margin-top: -25px;
         }
 
         .msg-bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 0.85rem;
-            line-height: 1.4;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            line-height: 1.35;
             word-wrap: break-word;
         }
 
@@ -325,33 +334,34 @@
         }
 
         .msg-time-stamp {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: #475569;
             margin-top: 3px;
             align-self: flex-end;
         }
         .message-row.outgoing .msg-time-stamp { align-self: flex-start; }
 
-        /* --- ENGINE REACTION OVERLAYS --- */
+        /* Stable Core CSS-Driven Reaction Selection Panels */
         .reaction-menu-deck {
             position: absolute;
-            top: -38px;
+            top: -15px;
             background: #110700;
             border: 1px solid var(--primary);
             border-radius: 20px;
-            padding: 4px 8px;
+            padding: 4px 6px;
             display: flex;
-            gap: 8px;
+            gap: 6px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.6);
             z-index: 100;
             opacity: 0;
             pointer-events: none;
             transform: translateY(4px) scale(0.95);
-            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.15s ease, transform 0.15s ease;
         }
         .message-row.incoming .reaction-menu-deck { left: 4px; }
         .message-row.outgoing .reaction-menu-deck { right: 4px; }
 
+        /* The wider hover container prevents menu tracking drops when navigating to emojis */
         .msg-interactive-container:hover .reaction-menu-deck {
             opacity: 1;
             pointer-events: auto;
@@ -359,34 +369,37 @@
         }
 
         .reaction-node {
-            font-size: 1.05rem;
+            font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 0 2px;
         }
         .reaction-node:hover {
-            transform: scale(1.3);
+            transform: scale(1.35);
         }
 
-        .active-reaction-badge {
+        /* Unified Real-time Live Reaction Counts Container Pod */
+        .active-reaction-badge-pod {
             position: absolute;
-            bottom: -10px;
+            bottom: -8px;
             background: #1c0b00;
             border: 1px solid var(--glass);
-            padding: 1px 5px;
-            border-radius: 10px;
-            font-size: 0.65rem;
-            display: flex;
+            padding: 1px 4px;
+            border-radius: 8px;
+            font-size: 0.6rem;
+            display: none;
             align-items: center;
-            gap: 2px;
+            gap: 3px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
         }
-        .message-row.incoming .active-reaction-badge { right: -6px; }
-        .message-row.outgoing .active-reaction-badge { left: -6px; }
+        .message-row.incoming .active-reaction-badge-pod { right: -4px; }
+        .message-row.outgoing .active-reaction-badge-pod { left: -4px; }
 
         .chat-input-row {
-            padding: 12px;
+            padding: 10px;
             display: flex;
-            gap: 8px;
+            gap: 6px;
             background: rgba(0, 0, 0, 0.5);
             border-top: 1px solid var(--glass);
         }
@@ -397,22 +410,21 @@
             border: 1px solid rgba(255, 115, 0, 0.2);
             border-radius: 10px;
             color: white;
-            padding: 10px;
-            font-size: 0.85rem;
+            padding: 8px 10px;
+            font-size: 0.8rem;
             outline: none;
         }
 
-        .chat-input-row input:focus {
-            border-color: var(--primary);
-        }
+        .chat-input-row input:focus { border-color: var(--primary); }
 
         .chat-input-row button {
             background: var(--primary);
             color: #000;
             border: none;
             border-radius: 10px;
-            padding: 0 16px;
+            padding: 0 14px;
             font-weight: 800;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: transform 0.2s;
         }
@@ -464,19 +476,9 @@
             transition: all 0.3s ease;
         }
 
-        .item-row:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .text-content {
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .text-active {
-            color: var(--primary);
-            text-shadow: 0 0 12px var(--primary);
-        }
+        .item-row:hover { background: rgba(255, 255, 255, 0.03); }
+        .text-content { font-size: 0.95rem; font-weight: 500; }
+        .text-active { color: var(--primary); text-shadow: 0 0 12px var(--primary); }
 
         .add-btn-circle {
             width: 38px;
@@ -499,7 +501,6 @@
             transform: scale(1.1);
         }
 
-        /* Broadened & Flattened Copy Engine Keyhole */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -554,9 +555,7 @@
             50% { transform: translate(0, -5px); }
         }
 
-        .btn-main-copy.idle {
-            animation: idleFloat 3.5s ease-in-out infinite;
-        }
+        .btn-main-copy.idle { animation: idleFloat 3.5s ease-in-out infinite; }
 
         .modal-overlay {
             position: fixed;
@@ -646,23 +645,9 @@
             outline: none;
         }
 
-        .modal-content input:focus {
-            border-color: var(--primary);
-        }
-
-        .modal-result {
-            margin: 25px 0;
-            padding: 20px;
-            background: var(--glass);
-            border-radius: 20px;
-            border: 1px dashed var(--primary);
-        }
-
-        #finalDiscount {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
+        .modal-content input:focus { border-color: var(--primary); }
+        .modal-result { margin: 25px 0; padding: 20px; background: var(--glass); border-radius: 20px; border: 1px dashed var(--primary); }
+        #finalDiscount { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
 
         .modal-copy-zone {
             height: 60px;
@@ -677,20 +662,8 @@
             transition: 0.2s;
         }
 
-        .modal-copy-zone.success-state {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .modal-close-btn {
-            margin-top: 20px;
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 0.8rem;
-            text-decoration: underline;
-        }
+        .modal-copy-zone.success-state { background: var(--primary); color: #fff; }
+        .modal-close-btn { margin-top: 20px; background: transparent; border: none; color: #666; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
     </style>
 </head>
 
@@ -711,14 +684,26 @@
         </div>
     </div>
 
+    <div class="chat-docking-panel" id="globalGroupDock">
+        <div class="chat-header-bar">
+            <span>Barangay Lepaga Public Group Chat</span>
+        </div>
+        <div class="chat-scroller-view" id="groupChatScroller"></div>
+        <div class="chat-input-row">
+            <input type="text" id="groupMsgInput" placeholder="Broadcast to group chat..."
+                onkeydown="if(event.key === 'Enter') sendGroupBroadcastPayload()">
+            <button onclick="sendGroupBroadcastPayload()">Send</button>
+        </div>
+    </div>
+
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
-            <span id="chatTargetName">Group Chat Matrix</span>
+            <span id="chatTargetName">Direct Messaging Channel</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Type a message..."
+            <input type="text" id="chatMsgInput" placeholder="Type a private message..."
                 onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
@@ -755,13 +740,6 @@
         <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
-        <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
-        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
-        <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
-        <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
-        <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
-        <div class="item-row" data-val="X-RAY"><span class="text-content">X-RAY</span></div>
-        <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
 
@@ -790,24 +768,10 @@
         </div>
     </div>
 
-    <script>
-        // Global Realtime Reaction Update Handler Node
-        window.registerMessageReaction = function(reactionNode, emoji) {
-            const wrapper = reactionNode.closest('.msg-interactive-container');
-            let badge = wrapper.querySelector('.active-reaction-badge');
-            if(!badge) {
-                badge = document.createElement('div');
-                badge.className = 'active-reaction-badge';
-                wrapper.appendChild(badge);
-            }
-            badge.innerHTML = `${emoji} <span>1</span>`;
-        };
-    </script>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, push, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -825,9 +789,7 @@
         const rtdb = getDatabase(app);
 
         const userId = localStorage.getItem("userId");
-        if (!userId) {
-            window.location.href = "login.html";
-        }
+        if (!userId) { window.location.href = "login.html"; }
 
         let selectedActiveChatPartnerId = null;
         let transientChatListenerRemoveHook = null;
@@ -851,15 +813,7 @@
             'animal-m3': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Rex',
             'plant-1': 'https://api.dicebear.com/7.x/shapes/svg?seed=Rose',
             'plant-2': 'https://api.dicebear.com/7.x/shapes/svg?seed=Fern',
-            'plant-3': 'https://api.dicebear.com/7.x/shapes/svg?seed=Ivy',
-            'bg-theme-1': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-            'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
-            'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
-            'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
-            'btn-theme-1': 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300',
-            'btn-theme-2': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300',
-            'btn-theme-3': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300',
-            'btn-theme-4': 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300'
+            'plant-3': 'https://api.dicebear.com/7.x/shapes/svg?seed=Ivy'
         };
 
         function hexToRgb(hex) {
@@ -873,6 +827,7 @@
             return "255,115,0";
         }
 
+        // Global User Realtime Configuration Engine Hydration
         const userDocRef = doc(db, "accounts", userId);
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
@@ -886,10 +841,8 @@
 
                 if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
 
-                // Restoring Wallpapers (Background image parsing decoupled from style coloring)
                 if (data.bgMode === "image") {
-                    const bgImg = premium3dAssets[data.bgValue] || data.bgValue;
-                    document.body.style.backgroundImage = `url('${bgImg}')`;
+                    document.body.style.backgroundImage = `url('${data.bgValue}')`;
                     document.body.style.backgroundSize = "cover";
                     document.body.style.backgroundAttachment = "fixed";
                 } else if (data.bgValue) {
@@ -897,22 +850,11 @@
                     document.body.style.backgroundColor = data.bgValue;
                 }
 
-                // Accent Theme Master Generation (Color slider decoupled from background images)
                 const magnetBtn = document.getElementById('magnetBtn');
                 if (data.btnValue) {
-                    if (data.btnValue.includes('hsl') || data.btnValue.startsWith('#')) {
-                        document.documentElement.style.setProperty('--primary', data.btnValue);
-                        const parsedRgb = hexToRgb(data.btnValue.startsWith('#') ? data.btnValue : "#ff7300");
-                        document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
-                    }
-                }
-                
-                if (data.btnMode === "image") {
-                    const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
-                    magnetBtn.style.backgroundImage = `url('${btnImg}')`;
-                    magnetBtn.style.backgroundColor = "transparent";
-                } else {
-                    magnetBtn.style.backgroundImage = "none";
+                    document.documentElement.style.setProperty('--primary', data.btnValue);
+                    const parsedRgb = hexToRgb(data.btnValue.startsWith('#') ? data.btnValue : "#ff7300");
+                    document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
                 set(ref(rtdb, 'presence/' + userId), {
@@ -921,12 +863,10 @@
                     avatar: data.avatarUrl || 'avatar-m1',
                     timestamp: Date.now()
                 });
-            } else {
-                window.location.href = "login.html";
             }
         });
 
-        // Left Alignment Display Sync with Active User Nodes
+        // Online Peering Framework Tracking Active Profiles
         const presenceRef = ref(rtdb, 'presence');
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
@@ -963,6 +903,7 @@
             }
         });
 
+        // Direct Messaging Real-time Execution Pipeline
         function bindBackgroundNotifListener(partnerId) {
             if (mappedRouteTrackingHooks[partnerId]) return;
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -976,9 +917,7 @@
                     const msg = childSnap.val();
                     if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
                         const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-                        if (peerContainer) {
-                            peerContainer.classList.add('has-unread');
-                        }
+                        if (peerContainer) peerContainer.classList.add('has-unread');
                     }
                 }
             });
@@ -992,9 +931,7 @@
             document.getElementById('chatDock').style.display = 'flex';
 
             const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-            if (peerContainer) {
-                peerContainer.classList.remove('has-unread');
-            }
+            if (peerContainer) peerContainer.classList.remove('has-unread');
 
             if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -1003,18 +940,16 @@
             transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
-                    let senderName = partnerName;
-                    let senderAvatar = premium3dAssets['avatar-m1'];
+                    const msgId = childSnap.key;
+                    let senderName = msg.senderName || partnerName;
+                    let senderAvatar = msg.senderAvatar || premium3dAssets['avatar-m1'];
                     
                     if (msg.sender === userId) {
                         senderName = "You";
                         senderAvatar = currentUserGlobalAvatar;
-                    } else {
-                        const peerNode = document.querySelector(`#peer-node-${partnerId} .peer-avatar-bubble`);
-                        if (peerNode) senderAvatar = peerNode.src;
                     }
                     
-                    appendBubbleToScroller(msg.text, msg.sender === userId ? 'outgoing' : 'incoming', senderName, senderAvatar, msg.timestamp);
+                    appendBubbleToScroller('chatScroller', msgId, msg.text, msg.sender === userId ? 'outgoing' : 'incoming', senderName, senderAvatar, msg.timestamp, `sessions/${channelSessionKey}`);
                 }
             });
         }
@@ -1027,16 +962,49 @@
             const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
 
-            const newMsgRef = push(chatRouteRef);
-            set(newMsgRef, { sender: userId, text: text, timestamp: Date.now() });
+            push(chatRouteRef, {
+                sender: userId,
+                senderName: currentUserGlobalName,
+                senderAvatar: currentUserGlobalAvatar,
+                text: text,
+                timestamp: Date.now()
+            });
             input.value = '';
         };
 
-        function appendBubbleToScroller(text, direction, authorName, avatarUrl, timestamp) {
-            const view = document.getElementById('chatScroller');
+        // Persistent Public Group Chat Matrix Logic Runtime
+        const globalGroupRouteRef = ref(rtdb, `public_group_chat`);
+        onChildAdded(globalGroupRouteRef, (childSnap) => {
+            if (childSnap.exists()) {
+                const msg = childSnap.val();
+                const msgId = childSnap.key;
+                const direction = msg.sender === userId ? 'outgoing' : 'incoming';
+                appendBubbleToScroller('groupChatScroller', msgId, msg.text, direction, msg.senderName, msg.senderAvatar, msg.timestamp, `public_group_chat`);
+            }
+        });
+
+        window.sendGroupBroadcastPayload = function() {
+            const input = document.getElementById('groupMsgInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            push(globalGroupRouteRef, {
+                sender: userId,
+                senderName: currentUserGlobalName,
+                senderAvatar: currentUserGlobalAvatar,
+                text: text,
+                timestamp: Date.now()
+            });
+            input.value = '';
+        };
+
+        // Unified Message Builder Node Supporting Live Real-time Database Reaction Sync
+        function appendBubbleToScroller(targetScrollerId, msgId, text, direction, authorName, avatarUrl, timestamp, dataLocationPath) {
+            const view = document.getElementById(targetScrollerId);
             
             const msgRow = document.createElement('div');
             msgRow.className = `message-row ${direction}`;
+            msgRow.id = `msg-node-${msgId}`;
 
             const avatarImg = document.createElement('img');
             avatarImg.className = 'msg-profile-badge';
@@ -1052,24 +1020,31 @@
             const interactiveContainer = document.createElement('div');
             interactiveContainer.className = 'msg-interactive-container';
 
-            // Modern Engine Hover Reactions Menu Architecture
             const reactionDeck = document.createElement('div');
             reactionDeck.className = 'reaction-menu-deck';
-            reactionDeck.innerHTML = `
-                <span class="reaction-node" onclick="registerMessageReaction(this, '😂')">😂</span>
-                <span class="reaction-node" onclick="registerMessageReaction(this, '😢')">😢</span>
-                <span class="reaction-node" onclick="registerMessageReaction(this, '😡')">😡</span>
-                <span class="reaction-node" onclick="registerMessageReaction(this, '🖕')">🖕</span>
-            `;
+            
+            ['😂', '😢', '😡', '🖕'].forEach(emoji => {
+                const node = document.createElement('span');
+                node.className = 'reaction-node';
+                node.innerText = emoji;
+                node.onclick = () => {
+                    const targetNodeRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions/${emoji}`);
+                    update(ref(rtdb, `${dataLocationPath}/${msgId}/reactions`), { [emoji]: true });
+                };
+                reactionDeck.appendChild(node);
+            });
 
             const bbl = document.createElement('div');
             bbl.className = 'msg-bubble';
             bbl.innerText = text;
 
+            const badgePod = document.createElement('div');
+            badgePod.className = 'active-reaction-badge-pod';
+
             interactiveContainer.appendChild(reactionDeck);
             interactiveContainer.appendChild(bbl);
+            interactiveContainer.appendChild(badgePod);
 
-            // Computing Local Time Representation String
             const timeString = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const timeMeta = document.createElement('div');
             timeMeta.className = 'msg-time-stamp';
@@ -1084,6 +1059,23 @@
             
             view.appendChild(msgRow);
             view.scrollTop = view.scrollHeight;
+
+            // Instantiating Synchronized Reaction Sync Channel Observers
+            const reactionWatcherRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions`);
+            onValue(reactionWatcherRef, (snapshot) => {
+                if(snapshot.exists()) {
+                    const rxData = snapshot.val();
+                    const activeEmojis = Object.keys(rxData);
+                    if(activeEmojis.length > 0) {
+                        badgePod.innerHTML = activeEmojis.map(e => `${e} <span>1</span>`).join(' ');
+                        badgePod.style.display = 'flex';
+                    } else {
+                        badgePod.style.display = 'none';
+                    }
+                } else {
+                    badgePod.style.display = 'none';
+                }
+            });
         }
 
         window.closeChatSession = function () {
@@ -1100,55 +1092,32 @@
     <script>        
         let textTimeout; let currentFocusedIndex = 0;
         const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
-        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
+        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME"] };
         
         window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
         lucide.createIcons(); startIdle(); };
         
         function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = '';
-        document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400);
-        } }
+        document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); } }
         
-        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false);
-        }
+        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }
+        function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0; const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2); }
         
-        function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
-        const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
-        }
+        function copyModalValue() { const val = document.getElementById('finalDiscount').innerText; navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
         
-        function copyModalValue() { const val = document.getElementById('finalDiscount').innerText;
-        navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
+        function openList(cat) { const listCont = document.getElementById('listContainer'); listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); }); }
         
-        function openList(cat) { const listCont = document.getElementById('listContainer');
-        listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); });
-        }
-        
-        function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash');
-        setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600);
-        }
+        function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash'); setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600); }
         
         document.addEventListener('mousemove', (e) => { const threshold = window.innerHeight * 0.75; if (e.clientY > threshold) { const centerX = window.innerWidth / 2; const centerY = window.innerHeight - (window.innerHeight * 0.125); const pullX = (e.clientX - centerX) * 0.3; const pullY = (e.clientY - centerY) * 0.4; magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; } else { resetMagnet(); } });
         function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
         
-        function updateFocus(index) { currentFocusedIndex = index;
-        const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1";
-        highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        function updateFocus(index) { currentFocusedIndex = index; const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1"; highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
         
-        function executeCopy(row, text, index) {
-            updateFocus(index);
-            navigator.clipboard.writeText(text).then(() => {
-                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet();
-                let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
-            });
-        }
+        function executeCopy(row, text, index) { updateFocus(index); navigator.clipboard.writeText(text).then(() => { document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet(); let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000); }); }
         
-        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex);
-        } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0);
-        }
-        
-        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle');
-        } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));    
+        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0); }
+        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle'); function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle)); }
     </script>
 </body>
 
