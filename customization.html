@@ -435,36 +435,40 @@
     }
 
     document.getElementById('btnSaveConfig').addEventListener('click', async () => {
-        const customName = document.getElementById('customName').value.trim();
-        
-        try {
-            const docRef = doc(db, "accounts", userId);
-            const payload = {
-                customName: customName || localStorage.getItem("userName"),
-                avatarUrl: configData.avatar,
-                bgMode: configData.bgMode,
-                bgValue: configData.bgValue,
-                btnMode: configData.btnMode,
-                btnValue: configData.btnValue,
-                fontFamily: configData.font
-            };
+    const customName = document.getElementById('customName').value.trim();
 
-            await updateDoc(docRef, payload);
+    try {
+        const docRef = doc(db, "accounts", userId);
+        const payload = {
+            customName: customName || localStorage.getItem("userName"),
+            avatarUrl: configData.avatar,
+            bgMode: configData.bgMode,
+            bgValue: configData.bgValue,
+            btnMode: configData.btnMode,
+            btnValue: configData.btnValue,
+            fontFamily: configData.font
+        };
 
-            localStorage.setItem("userName", payload.customName);
-            localStorage.setItem("avatarUrl", payload.avatarUrl);
-            localStorage.setItem("bgMode", payload.bgMode);
-            localStorage.setItem("bgValue", payload.bgValue);
-            localStorage.setItem("btnMode", payload.btnMode);
-            localStorage.setItem("btnValue", payload.btnValue);
-            localStorage.setItem("fontFamily", payload.fontFamily);
+        await updateDoc(docRef, payload);
 
-            alert("Preferences Saved Successfully!");
-        } catch (err) {
-            alert("Error saving preferences: " + err.message);
-        }
-    });
+        localStorage.setItem("userName", payload.customName);
+        localStorage.setItem("avatarUrl", payload.avatarUrl);
+        localStorage.setItem("bgMode", payload.bgMode);
+        localStorage.setItem("bgValue", payload.bgValue);
+        localStorage.setItem("btnMode", payload.btnMode);
+        localStorage.setItem("btnValue", payload.btnValue);
+        localStorage.setItem("fontFamily", payload.fontFamily);
 
-    window.onload = fetchSavedConfigurations;
+        alert("Preferences Saved Successfully!");
+
+        // Redirect to esoa.html
+        window.location.href = "esoa.html";
+
+    } catch (err) {
+        alert("Error saving preferences: " + err.message);
+    }
+});
+
+window.onload = fetchSavedConfigurations;
 </script>
 </body></html>
