@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA - Ultimate Customization Panel</title>
+    <title>eSOA - Customize Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -51,7 +51,7 @@
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            margin: 10px 0 6px 5px;
+            margin: 15px 0 8px 5px;
             font-weight: 600;
         }
         input[type="text"] {
@@ -67,16 +67,15 @@
         }
         input[type="text"]:focus { outline: none; border-color: var(--primary); }
 
-        /* Grid Framework */
+        /* Selection Framework */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-bottom: 12px;
         }
-        .avatar-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
+        .avatar-grid { grid-template-columns: repeat(3, 1fr); }
+        
         .option-card {
             background: rgba(0, 0, 0, 0.25);
             border: 2px solid transparent;
@@ -95,43 +94,59 @@
         .option-card:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-1px); }
         .option-card.selected { border-color: var(--primary); background: rgba(56, 189, 248, 0.12); }
         
-        /* Avatar Formats */
+        /* Cartoon/Memoji Style Avatar Frames */
         .avatar-frame { 
-            width: 65px; 
-            height: 65px; 
+            width: 70px; 
+            height: 70px; 
             border-radius: 50%; 
-            object-fit: cover; 
-            background: #242f41;
+            object-fit: contain; 
+            background: #1e293b;
             border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 4px;
         }
-        .option-card.selected .avatar-frame { border-color: var(--primary); }
+        .option-card.selected .avatar-frame { border-color: var(--primary); background: #0f172a; }
 
-        /* Color Sliders / Pickers */
-        .picker-container {
+        /* Custom Spectrum Sliders */
+        .slider-box {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 16px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
+            padding: 16px;
             margin-top: 8px;
             margin-bottom: 15px;
         }
-        .picker-label { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
-        .native-picker {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 55px;
-            height: 36px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
-        .native-picker::-webkit-color-swatch { border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); }
-        .native-picker::-moz-color-swatch { border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); }
+        .slider-label { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+        .slider-preview {
+            width: 30px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .spectrum-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+        }
+        .spectrum-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #000;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+        }
 
         /* Button Previews */
         .btn-texture-preview {
@@ -172,92 +187,83 @@
     <div class="section-title">Display Name</div>
     <input type="text" id="customName" placeholder="Enter custom display name...">
 
-    <div class="section-title">Select Central Avatar Component</div>
+    <div class="section-title">Select Cartoon Avatar Component</div>
     
-    <div class="sub-group-title">Male Avatars</div>
+    <div class="sub-group-title">Cartoon Male</div>
     <div class="grid avatar-grid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150"><span>Urban</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"><span>Classic</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"><span>Minimal</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150"><span>Corporate</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150"><span>Sporty</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix"><span>Boy 1</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Jack"><span>Boy 2</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Oliver"><span>Boy 3</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m4"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Charlie"><span>Boy 4</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m5"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Max"><span>Boy 5</span></div>
     </div>
 
-    <div class="sub-group-title">Female Avatars</div>
+    <div class="sub-group-title">Cartoon Female</div>
     <div class="grid avatar-grid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"><span>Vibrant</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150"><span>Natural</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"><span>Studio</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150"><span>Artistic</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150"><span>Elegant</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Lily"><span>Girl 1</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Chloe"><span>Girl 2</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Ruby"><span>Girl 3</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f4"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Maya"><span>Girl 4</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f5"><img class="avatar-frame" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Zoe"><span>Girl 5</span></div>
     </div>
 
-    <div class="sub-group-title">Girly Animals</div>
+    <div class="sub-group-title">Girly Cartoon Animals</div>
     <div class="grid avatar-grid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150"><span>Kitten</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150"><span>Puppy</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1507666405895-422efe53f00d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1507666405895-422efe53f00d?w=150"><span>Lamb</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=150"><span>Hamster</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=150"><span>Fawn</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Kitty"><span>Bunny</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Mimi"><span>Cat</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Daisy"><span>Panda</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g4"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Lulu"><span>Fox</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g5"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Sasha"><span>Koala</span></div>
     </div>
 
-    <div class="sub-group-title">Manly Animals</div>
+    <div class="sub-group-title">Manly Cartoon Animals</div>
     <div class="grid avatar-grid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=150"><span>Lion</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1602491453977-62a312d72113?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1602491453977-62a312d72113?w=150"><span>Tiger</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150"><span>Wolf</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=150"><span>Bear</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1557008075-7f2c5efa4cfd?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1557008075-7f2c5efa4cfd?w=150"><span>Eagle</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Rocky"><span>Wolf</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Spike"><span>Lion</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Rex"><span>Bear</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m4"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Buster"><span>Tiger</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m5"><img class="avatar-frame" src="https://api.dicebear.com/7.x/bottts/svg?seed=Duke"><span>Eagle</span></div>
     </div>
 
-    <div class="sub-group-title">Botanical & Plants</div>
+    <div class="sub-group-title">Cartoon Plants</div>
     <div class="grid avatar-grid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150"><span>Rose</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1520302832675-a099db7340d7?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1520302832675-a099db7340d7?w=150"><span>Tulip</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?w=150"><span>Sunflower</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1545241047-6083a3684587?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1545241047-6083a3684587?w=150"><span>Succulent</span></div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=150"><img class="avatar-frame" src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=150"><span>Monstera</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/identicon/svg?seed=Rose"><span>Cactus</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/identicon/svg?seed=Fern"><span>Sprout</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/identicon/svg?seed=Ivy"><span>Flower</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-4"><img class="avatar-frame" src="https://api.dicebear.com/7.x/identicon/svg?seed=Tree"><span>Bonsai</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-5"><img class="avatar-frame" src="https://api.dicebear.com/7.x/identicon/svg?seed=Lily"><span>Lotus</span></div>
     </div>
 
     <div class="section-title">Canvas Wallpaper Background</div>
     <div class="grid">
-        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800"><span>Abstract Silk</span></div>
-        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800"><span>Neon Geometry</span></div>
-        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800"><span>Fluid Mesh</span></div>
-        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800"><span>Ocean Minimal</span></div>
-        <div class="option-card" data-type="bgType" data-val="https://images.unsplash.com/photo-1557683316-973673baf926?w=800"><span>Deep Gradient</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-1"><span>Abstract Silk</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-2"><span>Neon Geometry</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-3"><span>Fluid Mesh</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-4"><span>Ocean Minimal</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-5"><span>Deep Gradient</span></div>
     </div>
-    <div class="picker-container">
-        <span class="picker-label">Or adjust dynamic solid wallpaper color:</span>
-        <input type="color" id="bgColorSlider" class="native-picker" value="#0b0f1a">
+    <div class="slider-box">
+        <div class="slider-header">
+            <span class="slider-label">Solid Color Wallpaper Slider:</span>
+            <div id="bgPreview" class="slider-preview" style="background-color: hsl(200, 70%, 15%);"></div>
+        </div>
+        <input type="range" id="bgHueSlider" class="spectrum-range" min="0" max="360" value="200">
     </div>
 
     <div class="section-title">Copy Action Button Texture</div>
     <div class="grid">
-        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300">
-            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300');"></div>
-            <span>Holo Foil</span>
-        </div>
-        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300">
-            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300');"></div>
-            <span>Spectrum Chrome</span>
-        </div>
-        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300">
-            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300');"></div>
-            <span>Carbon Fiber</span>
-        </div>
-        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300">
-            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300');"></div>
-            <span>Liquid Aurora</span>
-        </div>
-        <div class="option-card" data-type="btnType" data-val="https://images.unsplash.com/photo-1604871000636-074fa5117945?w=300">
-            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1604871000636-074fa5117945?w=300');"></div>
-            <span>Abstract Noise</span>
-        </div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-1"><span>Holo Foil</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-2"><span>Spectrum Chrome</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-3"><span>Carbon Fiber</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-4"><span>Liquid Aurora</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-5"><span>Abstract Noise</span></div>
     </div>
-    <div class="picker-container">
-        <span class="picker-label">Or adjust standard UI brand color accent:</span>
-        <input type="color" id="btnColorSlider" class="native-picker" value="#38bdf8">
+    <div class="slider-box">
+        <div class="slider-header">
+            <span class="slider-label">Solid Action Button Color Slider:</span>
+            <div id="btnPreview" class="slider-preview" style="background-color: hsl(195, 100%, 60%);"></div>
+        </div>
+        <input type="range" id="btnHueSlider" class="spectrum-range" min="0" max="360" value="195">
     </div>
 
     <div class="section-title">Interface Typography Font</div>
@@ -277,7 +283,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -296,32 +302,36 @@
     const userId = localStorage.getItem("userId");
     if (!userId) window.location.href = "login.html";
 
-    document.getElementById('customName').value = localStorage.getItem("userName") || "";
-
     const configData = {
         avatar: "",
         bgMode: "color",
-        bgValue: "#0b0f1a",
+        bgValue: "hsl(200, 70%, 15%)",
         btnMode: "color",
-        btnValue: "#38bdf8",
+        btnValue: "hsl(195, 100%, 60%)",
         font: "'Inter', sans-serif"
     };
 
-    const bgColorSlider = document.getElementById('bgColorSlider');
-    const btnColorSlider = document.getElementById('btnColorSlider');
+    // Color Slider Processing Configurations
+    const bgHueSlider = document.getElementById('bgHueSlider');
+    const bgPreview = document.getElementById('bgPreview');
+    const btnHueSlider = document.getElementById('btnHueSlider');
+    const btnPreview = document.getElementById('btnPreview');
 
-    bgColorSlider.addEventListener('input', () => {
+    bgHueSlider.addEventListener('input', () => {
         configData.bgMode = "color";
-        configData.bgValue = bgColorSlider.value;
+        configData.bgValue = `hsl(${bgHueSlider.value}, 70%, 15%)`;
+        bgPreview.style.backgroundColor = configData.bgValue;
         document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
     });
 
-    btnColorSlider.addEventListener('input', () => {
+    btnHueSlider.addEventListener('input', () => {
         configData.btnMode = "color";
-        configData.btnValue = btnColorSlider.value;
+        configData.btnValue = `hsl(${btnHueSlider.value}, 100%, 60%)`;
+        btnPreview.style.backgroundColor = configData.btnValue;
         document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
     });
 
+    // Option Cards Event Handlers
     document.querySelectorAll('.option-card').forEach(card => {
         card.addEventListener('click', () => {
             const type = card.getAttribute('data-type');
@@ -344,6 +354,64 @@
         });
     });
 
+    // 🔄 RECOVERY GATEWAY: Pull configurations from Database if User is going back to edit
+    async function fetchSavedConfigurations() {
+        try {
+            const docRef = doc(db, "accounts", userId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.customName) document.getElementById('customName').value = data.customName;
+                
+                // Re-apply avatar card activation
+                if (data.avatarUrl) {
+                    configData.avatar = data.avatarUrl;
+                    const card = document.querySelector(`.option-card[data-type="avatar"][data-val="${data.avatarUrl}"]`);
+                    if(card) card.classList.add('selected');
+                }
+                
+                // Re-apply font setting cards activation
+                if (data.fontFamily) {
+                    configData.font = data.fontFamily;
+                    const card = document.querySelector(`.option-card[data-type="font"][data-val="${data.fontFamily}"]`);
+                    if(card) card.classList.add('selected');
+                }
+
+                // Re-apply background setups
+                if (data.bgMode === "image") {
+                    configData.bgMode = "image";
+                    configData.bgValue = data.bgValue;
+                    const card = document.querySelector(`.option-card[data-type="bgType"][data-val="${data.bgValue}"]`);
+                    if(card) card.classList.add('selected');
+                } else if (data.bgValue && data.bgValue.includes('hsl')) {
+                    configData.bgMode = "color";
+                    configData.bgValue = data.bgValue;
+                    bgPreview.style.backgroundColor = data.bgValue;
+                    const match = data.bgValue.match(/\d+/);
+                    if(match) bgHueSlider.value = match[0];
+                }
+
+                // Re-apply button presets
+                if (data.btnMode === "image") {
+                    configData.btnMode = "image";
+                    configData.btnValue = data.btnValue;
+                    const card = document.querySelector(`.option-card[data-type="btnType"][data-val="${data.btnValue}"]`);
+                    if(card) card.classList.add('selected');
+                } else if (data.btnValue && data.btnValue.includes('hsl')) {
+                    configData.btnMode = "color";
+                    configData.btnValue = data.btnValue;
+                    btnPreview.style.backgroundColor = data.btnValue;
+                    const match = data.btnValue.match(/\d+/);
+                    if(match) btnHueSlider.value = match[0];
+                }
+            }
+        } catch (e) {
+            console.log("State recovery error:", e);
+        }
+    }
+
+    // Process Submission to Server
     document.getElementById('btnSaveConfig').addEventListener('click', async () => {
         const customName = document.getElementById('customName').value.trim();
         
@@ -362,7 +430,7 @@
 
             await updateDoc(docRef, payload);
 
-            // Stash configurations in LocalStorage for prompt client performance
+            // Populate LocalStorage states safely
             localStorage.setItem("userName", payload.customName);
             localStorage.setItem("avatarUrl", payload.avatarUrl);
             localStorage.setItem("bgMode", payload.bgMode);
@@ -371,11 +439,13 @@
             localStorage.setItem("btnValue", payload.btnValue);
             localStorage.setItem("fontFamily", payload.fontFamily);
 
-            alert("Environment Customized Successfully!");
-            // window.location.href = "main.html"; 
+            alert("Preferences Saved Successfully!");
+            // window.location.href = "main.html"; // Dynamic return hook link
         } catch (err) {
-            alert("Error logging preferences: " + err.message);
+            alert("Error saving preferences: " + err.message);
         }
     });
+
+    window.onload = fetchSavedConfigurations;
 </script>
 </body></html>
