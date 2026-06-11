@@ -1,9 +1,14 @@
-<!DOCTYPE html><html lang="en">
+
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eSOA - Customize Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
@@ -105,7 +110,8 @@
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 0.15em;
-            margin: 35px 0 12px 5px;            font-weight: 800;
+            margin: 35px 0 12px 5px;
+            font-weight: 800;
             border-left: 3px solid var(--primary);
             padding-left: 8px;
             transition: color 0.3s ease, border-color 0.3s ease;
@@ -314,6 +320,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="fixed-back-deck">
@@ -329,44 +336,69 @@
         <input type="text" id="customName" placeholder="Enter custom display name...">
 
         <div class="section-title">Identity Node Avatar Core</div>
+
         <div class="slider-box" style="margin-bottom: 20px;">
             <span class="slider-label">Inject Personal Custom Avatar URL:</span>
-            <input type="text" id="avatarUrlInput" placeholder="https://example.com/your-photo.png" style="margin-top: 8px;">
+            <input type="text" id="avatarUrlInput" placeholder="https://example.com/your-photo.png"
+                style="margin-top: 8px;">
         </div>
 
         <div class="sub-group-title">Universal Human Avatars</div>
         <div class="grid avatar-grid">
-            <div class="option-card" data-type="avatar" data-val="avatar-m1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix"><span>Avatar 1</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-m2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack"><span>Avatar 2</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-m3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Oliver"><span>Avatar 3</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-f1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Lily"><span>Avatar 4</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-f2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Chloe"><span>Avatar 5</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-f3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Ruby"><span>Avatar 6</span></div>
+            <div class="option-card" data-type="avatar" data-val="avatar-m1"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix"><span>Avatar 1</span></div>
+            <div class="option-card" data-type="avatar" data-val="avatar-m2"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack"><span>Avatar 2</span></div>
+            <div class="option-card" data-type="avatar" data-val="avatar-m3"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Oliver"><span>Avatar 3</span></div>
+            <div class="option-card" data-type="avatar" data-val="avatar-f1"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Lily"><span>Avatar 4</span></div>
+            <div class="option-card" data-type="avatar" data-val="avatar-f2"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Chloe"><span>Avatar 5</span></div>
+            <div class="option-card" data-type="avatar" data-val="avatar-f3"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Ruby"><span>Avatar 6</span></div>
         </div>
 
         <div class="sub-group-title">3D Animal Avatars</div>
         <div class="grid avatar-grid">
-            <div class="option-card" data-type="avatar" data-val="animal-g1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty"><span>Bunny</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-g2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi"><span>Cat</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-g3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Daisy"><span>Panda</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-m1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rocky"><span>Wolf</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-m2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Spike"><span>Lion</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-m3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rex"><span>Bear</span></div>
+            <div class="option-card" data-type="avatar" data-val="animal-g1"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty"><span>Bunny</span></div>
+            <div class="option-card" data-type="avatar" data-val="animal-g2"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi"><span>Cat</span></div>
+            <div class="option-card" data-type="avatar" data-val="animal-g3"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Daisy"><span>Panda</span></div>
+            <div class="option-card" data-type="avatar" data-val="animal-m1"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rocky"><span>Wolf</span></div>
+            <div class="option-card" data-type="avatar" data-val="animal-m2"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Spike"><span>Lion</span></div>
+            <div class="option-card" data-type="avatar" data-val="animal-m3"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rex"><span>Bear</span></div>
         </div>
 
         <div class="sub-group-title">3D Plant Avatars</div>
         <div class="grid avatar-grid">
-            <div class="option-card" data-type="avatar" data-val="plant-1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/shapes/svg?seed=Rose"><span>Cactus</span></div>
-            <div class="option-card" data-type="avatar" data-val="plant-2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/shapes/svg?seed=Fern"><span>Sprout</span></div>
-            <div class="option-card" data-type="avatar" data-val="plant-3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/shapes/svg?seed=Ivy"><span>Flower</span></div>
+            <div class="option-card" data-type="avatar" data-val="plant-1"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/shapes/svg?seed=Rose"><span>Cactus</span></div>
+            <div class="option-card" data-type="avatar" data-val="plant-2"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/shapes/svg?seed=Fern"><span>Sprout</span></div>
+            <div class="option-card" data-type="avatar" data-val="plant-3"><img class="avatar-frame"
+                    src="https://api.dicebear.com/7.x/shapes/svg?seed=Ivy"><span>Flower</span></div>
         </div>
 
         <div class="section-title">Canvas Wallpaper Background</div>
         <div class="grid">
-            <div class="option-card" data-type="bgType" data-val="bg-theme-1"><img class="theme-visual-preview" src="https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150"><span>Teal</span></div>
-            <div class="option-card" data-type="bgType" data-val="bg-theme-2"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150"><span>Neon Lines</span></div>
-            <div class="option-card" data-type="bgType" data-val="bg-theme-3"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150"><span>Fluid Mesh</span></div>
-            <div class="option-card" data-type="bgType" data-val="bg-theme-4"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=150"><span>Ocean Minimal</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-1"><img class="theme-visual-preview"
+                    src="https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150"><span>Teal</span>
+            </div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-2"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150"><span>Neon Lines</span>
+            </div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-3"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150"><span>Fluid Mesh</span>
+            </div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-4"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=150"><span>Ocean Minimal</span>
+            </div>
         </div>
 
         <div class="slider-box">
@@ -384,10 +416,18 @@
 
         <div class="section-title">Copy Action Button Texture</div>
         <div class="grid">
-            <div class="option-card" data-type="btnType" data-val="btn-theme-1"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=150"><span>Holo Foil</span></div>
-            <div class="option-card" data-type="btnType" data-val="btn-theme-2"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=150"><span>Spectrum Chrome</span></div>
-            <div class="option-card" data-type="btnType" data-val="btn-theme-3"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150"><span>Carbon Fiber</span></div>
-            <div class="option-card" data-type="btnType" data-val="btn-theme-4"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=150"><span>Liquid Aurora</span></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-1"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=150"><span>Holo Foil</span>
+            </div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-2"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=150"><span>Spectrum
+                    Chrome</span></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-3"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150"><span>Carbon Fiber</span>
+            </div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-4"><img class="theme-visual-preview"
+                    src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=150"><span>Liquid Aurora</span>
+            </div>
         </div>
 
         <div class="slider-box">
@@ -405,10 +445,14 @@
 
         <div class="section-title">Interface Typography Font</div>
         <div class="grid">
-            <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter System</div>
-            <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Geometric</div>
-            <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Developer Code</div>
-            <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Classic Serif</div>
+            <div class="option-card" data-type="font" data-val="'Inter', sans-serif"
+                style="font-family: 'Inter', sans-serif;">Inter System</div>
+            <div class="option-card" data-type="font" data-val="'Poppins', sans-serif"
+                style="font-family: 'Poppins', sans-serif;">Poppins Geometric</div>
+            <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace"
+                style="font-family: 'Roboto Mono', monospace;">Developer Code</div>
+            <div class="option-card" data-type="font" data-val="'Playfair Display', serif"
+                style="font-family: 'Playfair Display', serif;">Classic Serif</div>
         </div>
 
         <div class="logout-zone">
@@ -505,27 +549,28 @@
                 document.body.style.backgroundColor = configData.bgValue;
             }
 
-            // Continuous Accent Sync: Read from the slider color first, fallback to state values
+            // Parse theme primary dynamic colors cleanly
             let targetHexColor = "#ff7300";
-            const currentSliderColor = `hsl(${btnHueSlider.value}, 100%, 60%)`;
-            const colorToParse = (configData.btnMode === "color") ? configData.btnValue : currentSliderColor;
-
-            if (colorToParse.includes('hsl')) {
-                const match = colorToParse.match(/\d+/g);
-                if (match && match.length >= 3) {
-                    targetHexColor = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
+            if (configData.btnMode === "color") {
+                if (configData.btnValue.includes('hsl')) {
+                    const match = configData.btnValue.match(/\d+/g);
+                    if (match && match.length >= 3) {
+                        targetHexColor = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
+                    }
+                } else {
+                    targetHexColor = configData.btnValue;
                 }
             } else {
-                targetHexColor = colorToParse;
+                targetHexColor = "#ff7300"; // Seamless fallback state 
             }
 
-            // Inject variables instantly to bind global elements seamlessly
+            // Inject variables instantly to prevent throwing off the user interface
             document.documentElement.style.setProperty('--primary', targetHexColor);
             const rgbVals = hexToRgb(targetHexColor);
             document.documentElement.style.setProperty('--glass', `rgba(${rgbVals}, 0.15)`);
         }
 
-        // Solid Hue Controls - Now preserves color synchronization globally
+        // Solid Hue Controls
         bgHueSlider.addEventListener('input', () => {
             configData.bgMode = "color";
             configData.bgValue = `hsl(${bgHueSlider.value}, 70%, 15%)`;
@@ -536,12 +581,11 @@
         });
 
         btnHueSlider.addEventListener('input', () => {
-            const colorVal = `hsl(${btnHueSlider.value}, 100%, 60%)`;
-            btnPreview.style.backgroundColor = colorVal;
-            
-            if (configData.btnMode === "color") {
-                configData.btnValue = colorVal;
-            }
+            configData.btnMode = "color";
+            configData.btnValue = `hsl(${btnHueSlider.value}, 100%, 60%)`;
+            btnPreview.style.backgroundColor = configData.btnValue;
+            btnUrlInput.value = "";
+            document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
             applyRealtimeThemePreview();
         });
 
@@ -710,4 +754,5 @@
         };
     </script>
 </body>
+
 </html>
