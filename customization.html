@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA - Customization</title>
+    <title>eSOA - Customization Suite</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,7 +22,7 @@
         }
         .container {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             background: var(--surface);
             padding: 25px;
             border-radius: 24px;
@@ -37,12 +37,15 @@
             margin-bottom: 25px;
         }
         .section-title {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 0.15em;
-            margin: 20px 0 10px 5px;
-            opacity: 0.8;
+            margin: 25px 0 12px 5px;
+            opacity: 0.9;
+            font-weight: 800;
+            border-left: 3px solid var(--primary);
+            padding-left: 8px;
         }
         input[type="text"] {
             width: 100%;
@@ -53,32 +56,81 @@
             color: white;
             font-size: 1rem;
             box-sizing: border-box;
+            transition: border 0.3s;
         }
-        /* Item Selection Grid */
+        input[type="text"]:focus { outline: none; border-color: var(--primary); }
+
+        /* Modern Grid Architecture */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 12px;
         }
         .option-card {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.25);
             border: 2px solid transparent;
-            padding: 12px;
-            border-radius: 14px;
+            padding: 14px;
+            border-radius: 16px;
             cursor: pointer;
             text-align: center;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
         }
-        .option-card:hover { border-color: rgba(56, 189, 248, 0.4); }
-        .option-card.selected { border-color: var(--primary); background: rgba(56, 189, 248, 0.1); }
+        .option-card:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-1px); }
+        .option-card.selected { border-color: var(--primary); background: rgba(56, 189, 248, 0.12); }
         
-        .color-preview { width: 24px; height: 24px; border-radius: 50%; border: 1px solid white;}
-        .avatar-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #555; }
+        /* Subject-Focused Avatar Styling */
+        .avatar-frame { 
+            width: 70px; 
+            height: 70px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            background: #242f41;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s;
+        }
+        .option-card.selected .avatar-frame { transform: scale(1.05); border-color: var(--primary); }
+
+        /* Integrated Custom Pickers */
+        .picker-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .picker-label { font-size: 0.85rem; color: #94a3b8; font-weight: 600; }
+        .native-picker {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 50px;
+            height: 36px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+        .native-picker::-webkit-color-swatch { border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); }
+        .native-picker::-moz-color-swatch { border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); }
+
+        /* Button Custom Mini-Images */
+        .btn-texture-preview {
+            width: 100%;
+            height: 40px;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
 
         .btn-save {
             width: 100%;
@@ -86,23 +138,20 @@
             background: var(--primary);
             color: var(--bg);
             border: none;
-            border-radius: 30px;
+            border-radius: 35px;
             font-weight: 800;
             font-size: 1rem;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             cursor: pointer;
-            margin-top: 30px;
+            margin-top: 35px;
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.2);
             transition: all 0.2s ease;
         }
-        .btn-save:hover { background: #6feeff; transform: scale(1.02); }
-        .action-links {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding: 0 10px;
-        }
-        .action-links a { color: #64748b; font-size: 0.85rem; text-decoration: none; font-weight: 600;}
-        .action-links a:hover { color: var(--primary); }
+        .btn-save:hover { background: #6feeff; transform: scale(1.01); box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4); }
+        
+        .logout-zone { text-align: center; margin-top: 25px; }
+        .logout-zone a { color: #64748b; font-size: 0.85rem; text-decoration: none; font-weight: 600; }
+        .logout-zone a:hover { color: var(--primary); }
     </style>
 </head>
 <body>
@@ -110,69 +159,72 @@
 <div class="container">
     <h2>DISPLAY SETTINGS</h2>
     
+    <!-- 1. Name Settings -->
     <div class="section-title">Display Name</div>
     <input type="text" id="customName" placeholder="Edit profile name...">
 
-    <div class="section-title">Select Avatar Character</div>
+    <!-- 2. Target Subject Avatars -->
+    <div class="section-title">Select Central Subject Avatar</div>
     <div class="grid" id="avatarGrid">
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=150">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=150" alt="Plant">
-            <span>Nature/Plant</span>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80">
+            <img class="avatar-frame" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="People">
+            <span>Human/Minimalist</span>
         </div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1535268647977-a403b69fc756?w=150">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1535268647977-a403b69fc756?w=150" alt="Seal">
-            <span>Cute Animal</span>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=150&auto=format&fit=crop&q=80">
+            <img class="avatar-frame" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=150&auto=format&fit=crop&q=80" alt="Animal">
+            <span>Cute Subject (Animal)</span>
         </div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=150">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=150" alt="Robot">
-            <span>Tech Robot</span>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150&auto=format&fit=crop&q=80">
+            <img class="avatar-frame" src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=150&auto=format&fit=crop&q=80" alt="Flower">
+            <span>Botanical/Flower</span>
         </div>
-        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=150">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=150" alt="Abstract">
-            <span>Minimalist</span>
-        </div>
-    </div>
-
-    <div class="section-title">Theme System Tint</div>
-    <div class="grid" id="colorGrid">
-        <div class="option-card" data-type="color" data-val="#38bdf8">
-            <div class="color-preview" style="background: #38bdf8"></div>
-            <span>Cyber Sky</span>
-        </div>
-        <div class="option-card" data-type="color" data-val="#a855f7">
-            <div class="color-preview" style="background: #a855f7"></div>
-            <span>Neon Violet</span>
-        </div>
-        <div class="option-card" data-type="color" data-val="#22c55e">
-            <div class="color-preview" style="background: #22c55e"></div>
-            <span>Emerald Glitch</span>
-        </div>
-        <div class="option-card" data-type="color" data-val="#f43f5e">
-            <div class="color-preview" style="background: #f43f5e"></div>
-            <span>Crimson Core</span>
+        <div class="option-card" data-type="avatar" data-val="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=150&auto=format&fit=crop&q=80">
+            <img class="avatar-frame" src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=150&auto=format&fit=crop&q=80" alt="Robot">
+            <span>Cyber Character</span>
         </div>
     </div>
 
-    <div class="section-title">Canvas Wallpaper</div>
-    <div class="grid" id="bgGrid">
-        <div class="option-card" data-type="bg" data-val="#0b0f1a"><span>Deep Obsidian Dark</span></div>
-        <div class="option-card" data-type="bg" data-val="#1e1b4b"><span>Midnight Indigo Blue</span></div>
-        <div class="option-card" data-type="bg" data-val="#064e3b"><span>Nordic Forest Teal</span></div>
-        <div class="option-card" data-type="bg" data-val="#111827"><span>Matte Charcoal Gray</span></div>
+    <!-- 3. Dynamic Canvas Wallpaper Background -->
+    <div class="section-title">Canvas Wallpaper Background</div>
+    <div class="grid" id="bgImgGrid">
+        <div class="option-card" data-type="bgType" data-mode="image" data-val="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600"><span>Abstract Silk Art</span></div>
+        <div class="option-card" data-type="bgType" data-mode="image" data-val="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=600"><span>Neon Geometry</span></div>
+    </div>
+    <div class="picker-container">
+        <span class="picker-label">Or adjust custom flat hex background:</span>
+        <input type="color" id="bgColorPicker" class="native-picker" value="#0b0f1a">
     </div>
 
-    <div class="section-title">Interface Typography</div>
+    <!-- 4. Interactive Custom Button Engine -->
+    <div class="section-title">Action Copy Button Environment</div>
+    <div class="grid" id="btnImgGrid">
+        <div class="option-card" data-type="btnType" data-mode="image" data-val="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300">
+            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300');"></div>
+            <span>Fluid Hologram Pattern</span>
+        </div>
+        <div class="option-card" data-type="btnType" data-mode="image" data-val="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300">
+            <div class="btn-texture-preview" style="background-image: url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300');"></div>
+            <span>Chrome Spectrum Accent</span>
+        </div>
+    </div>
+    <div class="picker-container">
+        <span class="picker-label">Or select unified solid accent color:</span>
+        <input type="color" id="btnColorPicker" class="native-picker" value="#38bdf8">
+    </div>
+
+    <!-- 5. Global Core Interface Typography -->
+    <div class="section-title">Interface Typography Font</div>
     <div class="grid" id="fontGrid">
-        <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter (Default)</div>
+        <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter Systems</div>
         <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Smooth</div>
-        <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Roboto Developer</div>
-        <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Playfair Clean Serif</div>
+        <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Developer Code</div>
+        <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Modern Serif</div>
     </div>
 
-    <button class="btn-save" id="btnSaveConfig">SAVE & LAUNCH APP</button>
+    <button class="btn-save" id="btnSaveConfig">CONFIRM & LAUNCH SYSTEM</button>
 
-    <div class="action-links">
-        <a href="#" onclick="localStorage.clear(); window.location.href='login.html'">Logout</a>
+    <div class="logout-zone">
+        <a href="#" onclick="localStorage.clear(); window.location.href='login.html'">Logout Session</a>
     </div>
 </div>
 
@@ -197,23 +249,56 @@
     const userId = localStorage.getItem("userId");
     if (!userId) window.location.href = "login.html";
 
-    // Set fallback initial name value
     document.getElementById('customName').value = localStorage.getItem("userName") || "";
 
-    // Selection Handling
-    const selections = { avatar: "", color: "", bg: "", font: "" };
+    // Track active configurations
+    const currentSetup = {
+        avatar: "",
+        bgMode: "color", // 'color' or 'image'
+        bgValue: "#0b0f1a",
+        btnMode: "color", // 'color' or 'image'
+        btnValue: "#38bdf8",
+        font: "'Inter', sans-serif"
+    };
 
+    // Color picker tracking monitors
+    const bgColorPicker = document.getElementById('bgColorPicker');
+    const btnColorPicker = document.getElementById('btnColorPicker');
+
+    bgColorPicker.addEventListener('input', () => {
+        currentSetup.bgMode = "color";
+        currentSetup.bgValue = bgColorPicker.value;
+        // Drop selected background cards visually
+        document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
+    });
+
+    btnColorPicker.addEventListener('input', () => {
+        currentSetup.btnMode = "color";
+        currentSetup.btnValue = btnColorPicker.value;
+        // Drop selected button cards visually
+        document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
+    });
+
+    // Option Grid Selections
     document.querySelectorAll('.option-card').forEach(card => {
         card.addEventListener('click', () => {
             const type = card.getAttribute('data-type');
             const val = card.getAttribute('data-val');
             
-            // Uncheck brothers
             document.querySelectorAll(`.option-card[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
-            
-            // Check active
             card.classList.add('selected');
-            selections[type] = val;
+
+            if (type === "avatar") currentSetup.avatar = val;
+            if (type === "font") currentSetup.font = val;
+            
+            if (type === "bgType") {
+                currentSetup.bgMode = "image";
+                currentSetup.bgValue = val;
+            }
+            if (type === "btnType") {
+                currentSetup.btnMode = "image";
+                currentSetup.btnValue = val;
+            }
         });
     });
 
@@ -222,29 +307,32 @@
         
         try {
             const docRef = doc(db, "accounts", userId);
-            const updatePayload = {
-                customName: customName || localStorage.getItem("userName")
+            
+            const payload = {
+                customName: customName || localStorage.getItem("userName"),
+                avatarUrl: currentSetup.avatar,
+                bgMode: currentSetup.bgMode,
+                bgValue: currentSetup.bgValue,
+                btnMode: currentSetup.btnMode,
+                btnValue: currentSetup.btnValue,
+                fontFamily: currentSetup.font
             };
 
-            if(selections.avatar) updatePayload.avatarUrl = selections.avatar;
-            if(selections.color) updatePayload.themeColor = selections.color;
-            if(selections.bg) updatePayload.backgroundColor = selections.bg;
-            if(selections.font) updatePayload.fontFamily = selections.font;
+            await updateDoc(docRef, payload);
 
-            await updateDoc(docRef, updatePayload);
+            // Set localStorage states for the core page logic integration
+            localStorage.setItem("userName", payload.customName);
+            localStorage.setItem("avatarUrl", payload.avatarUrl);
+            localStorage.setItem("bgMode", payload.bgMode);
+            localStorage.setItem("bgValue", payload.bgValue);
+            localStorage.setItem("btnMode", payload.btnMode);
+            localStorage.setItem("btnValue", payload.btnValue);
+            localStorage.setItem("fontFamily", payload.fontFamily);
 
-            // Pass choices down localstorage storage values so the core environment can read natively instantly
-            localStorage.setItem("themeColor", selections.color || "#38bdf8");
-            localStorage.setItem("bgColor", selections.bg || "#0b0f1a");
-            localStorage.setItem("fontFamily", selections.font || "'Inter', sans-serif");
-            localStorage.setItem("avatarUrl", selections.avatar || "");
-            if(customName) localStorage.setItem("userName", customName);
-
-            alert("Preferences Saved! Launching Environment...");
-            // Switch dynamically onto your main view component page
-            // window.location.href = "main.html"; 
+            alert("Environment Customized Successfully!");
+            // window.location.href = "main.html"; // Redirects smoothly into core interface loop
         } catch (err) {
-            alert("Error logging preferences: " + err.message);
+            alert("Error committing style profiles: " + err.message);
         }
     });
 </script>
