@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Main Engine Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: #161e2d;
+            --primary: #ff7300;
+            --success: #00ffaa;
+            --text-main: #f1f5f9;
+            --glass: rgba(255, 115, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            transition: background 0.3s ease;
+        }
+
+        /* Sidebar Container Node */
+        .sidebar-deck {
+            width: 320px;
+            background: rgba(22, 30, 45, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+        }
+
+        .user-profile-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0,0,0,0.15);
+        }
+
+        .user-meta-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+            background: #1e293b;
+        }
+
+        .user-meta-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        .user-meta-name { font-weight: 800; font-size: 0.9rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-meta-role { font-size: 0.7rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+        .action-tool-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .action-tool-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 12px var(--primary); }
+
+        /* Dynamic Chat Heads Feed Area */
+        .chat-heads-stream {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-head-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            background: rgba(0,0,0,0.1);
+        }
+        .chat-head-card:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
+        .chat-head-card.active { background: var(--glass); border-color: var(--primary); }
+
+        .chat-head-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #2e3b4e;
+            border: 2px solid rgba(255,255,255,0.1);
+            transition: border-color 0.2s;
+        }
+        .chat-head-card.active .chat-head-avatar { border-color: var(--primary); }
+
+        .chat-head-details { flex: 1; min-width: 0; }
+        .chat-head-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+        .chat-head-subtitle { font-size: 0.75rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Core Application Workspace */
+        .main-workspace-deck {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(11, 15, 26, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .chat-room-header {
+            height: 85px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            background: rgba(22, 30, 45, 0.5);
+        }
+        .room-meta-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+
+        /* Messaging Stream Arena */
+        .message-pipeline-stream {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Modern Group Chat Avatar Row Layout Wrapper */
+        .message-cluster-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            max-width: 75%;
+        }
+        .message-cluster-row.outgoing-node {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .sender-identity-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: #1e293b;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message-bubble-block {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .message-sender-label {
+            font-size: 0.68rem;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 4px;
+            margin-left: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .message-cluster-row.outgoing-node .message-sender-label { text-align: right; margin-right: 4px; }
+
+        .message-bubble {
+            background: rgba(22, 30, 45, 0.85);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 14px 18px;
+            border-radius: 20px;
+            border-top-left-radius: 4px;
+            color: #f1f5f9;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .message-cluster-row.outgoing-node .message-bubble {
+            background: var(--primary);
+            color: #000;
+            border-radius: 20px;
+            border-top-right-radius: 4px;
+            font-weight: 600;
+            border: none;
+        }
+        .message-bubble:hover { transform: scale(1.01); }
+
+        /* Expression Reactions Dock Component Architecture */
+        .reactions-panel-bubble {
+            display: flex;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            position: absolute;
+            bottom: -15px;
+            right: 12px;
+            transform: translateY(0px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 50;
+        }
+        .reaction-stat-badge {
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: transform 0.15s;
+        }
+        .reaction-stat-badge:hover { transform: scale(1.3); }
+
+        /* Floating Overlay Context Menu for Instant Reaction Picker */
+        .reaction-picker-overlay {
+            position: absolute;
+            top: -46px;
+            left: 10px;
+            background: #161e2d;
+            border: 1px solid var(--primary);
+            border-radius: 30px;
+            padding: 6px 12px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px) scale(0.9);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .message-bubble-block:hover .reaction-picker-overlay {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .picker-emoji-node {
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .picker-emoji-node:hover { transform: scale(1.4); }
+
+        /* Persistent Input Control Runway Base */
+        .chat-input-runway {
+            padding: 25px 30px;
+            background: rgba(11, 15, 26, 0.8);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .input-text-field {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 16px 20px;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-text-field:focus { border-color: var(--primary); }
+
+        .btn-dispatch-message {
+            width: 52px;
+            height: 52px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--glass);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-dispatch-message:hover { transform: scale(1.06); box-shadow: 0 0 20px var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-deck">
+        <div class="user-profile-header">
+            <img id="myGlobalAvatar" class="user-meta-avatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Profile">
+            <div class="user-meta-info">
+                <span id="myGlobalName" class="user-meta-name">Loading Profile...</span>
+                <span class="user-meta-role">Authorized Node</span>
+            </div>
+            <div class="action-tool-btn" onclick="window.location.href='customization.html'" title="Open Customize Studio">
+                <i data-lucide="sliders"></i>
+            </div>
+        </div>
+
+        <div class="chat-heads-stream" id="chatHeadsContainer">
+            <div class="chat-head-card active" data-channel="global-hq">
+                <img class="chat-head-avatar" id="groupHqAvatar" src="https://api.dicebear.com/7.x/shapes/svg?seed=Lepaga" alt="Group Chat">
+                <div class="chat-head-details">
+                    <div class="chat-head-title">Barangay HQ Portal <i data-lucide="users" style="width:12px; height:12px; color:var(--primary)"></i></div>
+                    <div class="chat-head-subtitle">Active operations group room channel</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-workspace-deck">
+        <div class="chat-room-header">
+            <div class="room-meta-title" id="activeRoomTitle">Barangay HQ Portal</div>
+            <div class="action-tool-btn" onclick="localStorage.clear(); window.location.href='login.html'" title="Disconnect Session">
+                <i data-lucide="log-out"></i>
+            </div>
+        </div>
+
+        <div class="message-pipeline-stream" id="messageStreamCanvas"></div>
+
+        <div class="chat-input-runway">
+            <input type="text" id="messageInputField" class="input-text-field" placeholder="Type a message into secure server pipeline...">
+            <button class="btn-dispatch-message" id="btnSendMessage">
+                <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+            </button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) window.location.href = "login.html";
+
+    // Setup asset preset mapping indexes for instant recovery processing
+    const assetDictionary = {
+        'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
+        'avatar-m2': 'https://api.dicebear.com/7.x/notionists/svg?seed=Jack',
+        'avatar-m3': 'https://api.dicebear.com/7.x/notionists/svg?seed=Oliver',
+        'avatar-f1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Lily',
+        'avatar-f2': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Chloe',
+        'avatar-f3': 'https://api.dicebear.com/7.x/notionists/svg?seed=Ruby',
+        'animal-g1': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty',
+        'animal-g2': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi',
+        'animal-g3': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Daisy',
+        'animal-m1': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Rocky',
+        'animal-m2': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Spike',
+        'animal-m3': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Rex',
+        'plant-1': 'https://api.dicebear.com/7.x/shapes/svg?seed=Rose',
+        'plant-2': 'https://api.dicebear.com/7.x/shapes/svg?seed=Fern',
+        'plant-3': 'https://api.dicebear.com/7.x/shapes/svg?seed=Ivy',
+        'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
+        'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+        'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+        'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'
+    };
+
+    let cachedUserAvatar = "https://api.dicebear.com/7.x/notionists/svg?seed=Felix";
+    let cachedUserName = "Anonymous Operator";
+
+    function hexToRgb(hex) {
+        let c;
+        if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+            c= hex.substring(1).split('');
+            if(c.length== 3){ c= [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+            c= '0x'+c.join('');
+            return [(c>>16)&255, (c>>8)&255, c&255].join(',');
+        }
+        return "255,115,0";
+    }
+
+    function hslToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    /* Core Architectural Alignment Engine Initialization Block */
+    async function synchronizeUserEnvironmentLayout() {
+        try {
+            const docRef = doc(db, "accounts", userId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                cachedUserName = data.customName || localStorage.getItem("userName") || "Operator";
+                document.getElementById('myGlobalName').innerText = cachedUserName;
+
+                // Avatar Processing Map Channels
+                if (data.avatarUrl) {
+                    cachedUserAvatar = assetDictionary[data.avatarUrl] || data.avatarUrl;
+                    document.getElementById('myGlobalAvatar').src = cachedUserAvatar;
+                    document.getElementById('groupHqAvatar').src = cachedUserAvatar; // Sync profile avatar back to chat list head element
+                }
+
+                if (data.fontFamily) {
+                    document.body.style.fontFamily = data.fontFamily;
+                }
+
+                // Background Theme Isolation Rendering Layer Channel Logic
+                if (data.bgMode === "image") {
+                    const mappedImg = assetDictionary[data.bgValue] || data.bgValue;
+                    document.body.style.backgroundImage = `url('${mappedImg}')`;
+                } else if (data.bgValue) {
+                    document.body.style.backgroundImage = "none";
+                    document.body.style.backgroundColor = data.bgValue;
+                }
+
+                // CRITICAL REQUIREMENT FIX: Separate custom action slider theme colors from raw image selections
+                let runtimeHexAccent = "#ff7300";
+                if (data.btnValue) {
+                    if (data.btnValue.includes('hsl')) {
+                        const fragments = data.btnValue.match(/\d+/g);
+                        if (fragments && fragments.length >= 3) {
+                            runtimeHexAccent = hslToHex(parseInt(fragments[0]), parseInt(fragments[1]), parseInt(fragments[2]));
+                        }
+                    } else if (data.btnValue.startsWith('#')) {
+                        runtimeHexAccent = data.btnValue;
+                    }
+                }
+
+                // Force layout color application across structural bounds
+                document.documentElement.style.setProperty('--primary', runtimeHexAccent);
+                const computedRgbColors = hexToRgb(runtimeHexAccent);
+                document.documentElement.style.setProperty('--glass', `rgba(${computedRgbColors}, 0.15)`);
+            }
+        } catch (e) {
+            console.error("Profile ecosystem styling failure, fallback configurations executed: ", e);
+        }
+    }
+
+    /* System Messenger Live Core Execution Layer */
+    const messageStreamCanvas = document.getElementById('messageStreamCanvas');
+    const messageInputField = document.getElementById('messageInputField');
+    const btnSendMessage = document.getElementById('btnSendMessage');
+
+    function launchLiveMessageStreaming() {
+        const queryConstraints = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+        
+        onSnapshot(queryConstraints, (snapshot) => {
+            messageStreamCanvas.innerHTML = "";
+            
+            snapshot.forEach((msgDoc) => {
+                const messageRecord = msgDoc.data();
+                const messageId = msgDoc.id;
+                const matchesCurrentUser = (messageRecord.senderId === userId);
+
+                // Setup default template mapping properties for real-time dynamic group chat identity cards
+                const senderAvatar = messageRecord.senderAvatar || "https://api.dicebear.com/7.x/notionists/svg?seed=Mimi";
+                const senderName = messageRecord.senderName || "Operator Node";
+
+                // Generate Group Row Structure
+                const clusterRow = document.createElement('div');
+                clusterRow.className = `message-cluster-row ${matchesCurrentUser ? 'outgoing-node' : ''}`;
+
+                // Inject Avatar Element Component Node straight into message structural group
+                const avatarImg = document.createElement('img');
+                avatarImg.className = "sender-identity-avatar";
+                avatarImg.src = assetDictionary[senderAvatar] || senderAvatar;
+                avatarImg.alt = "Sender Node";
+
+                const bubbleBlock = document.createElement('div');
+                bubbleBlock.className = "message-bubble-block";
+
+                const senderLabel = document.createElement('div');
+                senderLabel.className = "message-sender-label";
+                senderLabel.innerText = matchesCurrentUser ? "You" : senderName;
+
+                const messageBubble = document.createElement('div');
+                messageBubble.className = "message-bubble";
+                messageBubble.innerText = messageRecord.text || "";
+
+                // Expression Reactions UI Layout Architecture Pipeline Initialization
+                const reactionsPanel = document.createElement('div');
+                reactionsPanel.className = "reactions-panel-bubble";
+                
+                const activeReactions = messageRecord.reactions || {};
+                let displayPanelHasData = false;
+
+                Object.keys(activeReactions).forEach(emojiKey => {
+                    if (activeReactions[emojiKey] && activeReactions[emojiKey].length > 0) {
+                        displayPanelHasData = true;
+                        const reactionBadge = document.createElement('span');
+                        reactionBadge.className = "reaction-stat-badge";
+                        reactionBadge.innerHTML = `${emojiKey} · <small style="margin-left:3px; font-weight:800;">${activeReactions[emojiKey].length}</small>`;
+                        
+                        reactionBadge.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            toggleReactionExpressionNode(messageId, emojiKey, activeReactions);
+                        });
+                        reactionsPanel.appendChild(reactionBadge);
+                    }
+                });
+
+                // Expression Selection Subsystem Popover Widget
+                const reactionPicker = document.createElement('div');
+                reactionPicker.className = "reaction-picker-overlay";
+                
+                // Populating expressions: 😂 (Haha), 😢 (Sad), 😡 (Angry), 🖕 (Middle Finger)
+                const supportedExpressions = ["😂", "😢", "😡", "🖕"];
+                supportedExpressions.forEach(emoji => {
+                    const emojiNode = document.createElement('span');
+                    emojiNode.className = "picker-emoji-node";
+                    emojiNode.innerText = emoji;
+                    emojiNode.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleReactionExpressionNode(messageId, emoji, activeReactions);
+                    });
+                    reactionPicker.appendChild(emojiNode);
+                });
+
+                bubbleBlock.appendChild(senderLabel);
+                bubbleBlock.appendChild(reactionPicker);
+                bubbleBlock.appendChild(messageBubble);
+                if(displayPanelHasData) bubbleBlock.appendChild(reactionsPanel);
+
+                clusterRow.appendChild(avatarImg);
+                clusterRow.appendChild(bubbleBlock);
+                messageStreamCanvas.appendChild(clusterRow);
+            });
+
+            // Smoothly auto-scroll framework view right to the horizon line
+            messageStreamCanvas.scrollTop = messageStreamCanvas.scrollHeight;
+        });
+    }
+
+    async function processMessageDispatch() {
+        const cleanContent = messageInputField.value.trim();
+        if(!cleanContent) return;
+
+        try {
+            await addDoc(collection(db, "messages"), {
+                senderId: userId,
+                senderName: cachedUserName,
+                senderAvatar: localStorage.getItem("avatarUrl") || "avatar-m1", // Maintain schema state node tracking
+                text: cleanContent,
+                timestamp: new Date().getTime(),
+                reactions: { "😂": [], "😢": [], "😡": [], "🖕": [] }
+            });
+            messageInputField.value = "";
+        } catch(err) {
+            console.error("Message delivery pipeline failed inside central engine: ", err);
+        }
+    }
+
+    /* Core Expression Reactions Balancing Array Logic Processor */
+    async function toggleReactionExpressionNode(msgId, selectedEmoji, structuralReactionsMap) {
+        const docReferenceNode = doc(db, "messages", msgId);
+        let emojiUserArray = structuralReactionsMap[selectedEmoji] || [];
+
+        if (emojiUserArray.includes(userId)) {
+            // Remove user reaction identity trace if item exists natively
+            emojiUserArray = emojiUserArray.filter(id => id !== userId);
+        } else {
+            // Add user expression signature profile sequence
+            emojiUserArray.push(userId);
+        }
+
+        const updatedReactionsPayload = { ...structuralReactionsMap, [selectedEmoji]: emojiUserArray };
+
+        try {
+            await updateDoc(docReferenceNode, { reactions: updatedReactionsPayload });
+        } catch (err) {
+            console.error("Reactions payload matrix generation execution failure: ", err);
+        }
+    }
+
+    // Interactive Action Interface Event Listeners Block
+    btnSendMessage.addEventListener('click', processMessageDispatch);
+    messageInputField.addEventListener('keydown', (e) => { if(e.key === "Enter") processMessageDispatch(); });
+
+    window.onload = async () => {
+        await synchronizeUserEnvironmentLayout();
+        launchLiveMessageStreaming();
+        lucide.createIcons();
+    };
+</script>
+</body>
+</html>
