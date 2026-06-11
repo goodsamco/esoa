@@ -3,309 +3,649 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA - Core Engine</title>
+    <title>eSOA - Full Orange Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
             --bg: #0b0f1a;
-            --surface: #161e2d;
-            --primary: #38bdf8;
-            --glass: rgba(56, 189, 248, 0.15);
+            --surface: #140700;
+            --primary: #ff7300;
+            --success: #ffee00;
             --text-main: #f1f5f9;
+            --glass: rgba(255, 115, 0, 0.15);
         }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 0;
+            padding: 100px 10px 140px 10px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, background-image 0.3s ease;
             background-position: center;
             background-size: cover;
             background-attachment: fixed;
-            transition: background 0.3s ease;
         }
 
-        .app-window {
-            width: 100%;
-            max-width: 480px;
-            height: 92vh;
-            background: var(--surface);
-            border-radius: 28px;
-            border: 1px solid var(--glass);
-            box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
+        /* Upper Floating Navigation Deck */
+        .fixed-back-deck {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 5000;
         }
-
-        /* Interactive Header Identity Stack */
-        .chat-header {
-            padding: 16px 20px;
-            background: rgba(0, 0, 0, 0.25);
+        .floating-action-circle {
+            width: 48px;
+            height: 48px;
+            background: rgba(20, 7, 0, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 100;
-        }
-        .header-identity {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 2px solid var(--primary);
-            object-fit: cover;
-            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
-        }
-        .header-info h3 {
-            margin: 0;
-            font-size: 0.95rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-        .header-info p {
-            margin: 2px 0 0 0;
-            font-size: 0.7rem;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .header-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.03);
             border: 1px solid var(--glass);
+            border-radius: 50%;
             color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .header-btn:hover {
+        .floating-action-circle:hover {
             background: var(--primary);
             color: #000;
-            transform: scale(1.05);
+            transform: scale(1.1) rotate(-5deg);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary);
         }
 
-        /* Chat Timeline Viewport */
-        .chat-timeline {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--glass);
+            position: relative;
+            z-index: 10;
+            transition: background 0.3s ease, border-color 0.3s ease;
+            box-sizing: border-box;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 800;
+            transition: color 0.3s ease;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin: 35px 0 12px 5px;
+            font-weight: 800;
+            border-left: 3px solid var(--primary);
+            padding-left: 8px;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .sub-group-title {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 20px 0 8px 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--glass);
+            padding: 14px;
+            border-radius: 14px;
+            color: white;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border 0.3s, box-shadow 0.3s;
+            margin-top: 5px;
+            outline: none;
+        }
+        input[type="text"]:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 10px var(--glass);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .avatar-grid { grid-template-columns: repeat(3, 1fr); }
+        
+        .option-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 2px solid transparent;
+            padding: 12px 8px;
+            border-radius: 16px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.75rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            background: rgba(0,0,0,0.05);
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+        .option-card:hover { 
+            border-color: rgba(255, 255, 255, 0.15); 
+            transform: translateY(-1px); 
+        }
+        .option-card.selected { 
+            border-color: var(--primary); 
+            background: var(--glass); 
+        }
+        
+        .avatar-frame { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .option-card.selected .avatar-frame { 
+            border-color: var(--primary); 
+            transform: scale(1.02);
         }
 
-        /* Message Structure Container */
-        .msg-row {
-            display: flex;
-            gap: 10px;
-            max-width: 85%;
-            position: relative;
+        .theme-visual-preview {
+            width: 100%;
+            height: 65px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .msg-row.incoming { align-self: flex-start; }
-        .msg-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
 
-        .msg-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
+        .slider-box {
+            background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--glass);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .slider-label { font-size: 0.75rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .slider-preview {
+            width: 36px;
+            height: 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: background-color 0.2s;
+        }
+        
+        .spectrum-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+        }
+        .spectrum-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #000;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+        }
+
+        /* --- CHAT HEADS DECK ARCHITECTURE --- */
+        .chat-heads-container {
+            display: flex;
+            gap: 14px;
+            padding: 10px 5px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+        .chat-head-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            min-width: 65px;
+        }
+        .chat-head-avatar-wrapper {
+            position: relative;
+            width: 56px;
+            height: 56px;
+        }
+        .chat-head-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
             object-fit: cover;
             background: #1e293b;
-            flex-shrink: 0;
-            margin-top: 4px;
+            transition: transform 0.2s ease;
+        }
+        .chat-head-node:hover .chat-head-avatar {
+            transform: scale(1.05);
+            box-shadow: 0 0 12px var(--primary);
+        }
+        .chat-head-status {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border: 2px solid var(--surface);
+            border-radius: 50%;
+        }
+        .chat-head-label {
+            font-size: 0.68rem;
+            margin-top: 6px;
+            color: #94a3b8;
+            max-width: 65px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            font-weight: 600;
         }
 
-        .msg-content-block {
+        /* --- COMMUNICATIONS MATRIX (GROUP CHAT) --- */
+        .chat-stream-matrix {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass);
+            border-radius: 20px;
+            height: 350px;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            padding: 15px;
+            overflow-y: auto;
+            gap: 18px;
         }
-        .msg-sender-lbl {
+        .message-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            max-width: 85%;
+        }
+        .message-row.incoming {
+            align-self: flex-start;
+        }
+        .message-row.outgoing {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .msg-profile-node {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--primary);
+            background: #1e293b;
+            flex-shrink: 0;
+        }
+        .msg-bubble-packet {
+            position: relative;
+        }
+        .msg-meta-author {
             font-size: 0.65rem;
-            font-weight: 800;
             color: #64748b;
+            font-weight: 800;
+            margin-bottom: 4px;
             margin-left: 4px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .msg-row.outgoing .msg-sender-lbl { text-align: right; margin-right: 4px; }
-
+        .message-row.outgoing .msg-meta-author {
+            text-align: right;
+            margin-right: 4px;
+        }
         .msg-bubble {
             padding: 12px 16px;
             border-radius: 18px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             line-height: 1.4;
+            color: #fff;
             position: relative;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.2s;
         }
-        .msg-row.incoming .msg-bubble {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255,255,255,0.05);
+        .incoming .msg-bubble {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
             border-top-left-radius: 4px;
         }
-        .msg-row.outgoing .msg-bubble {
-            background: var(--primary);
-            color: #000;
+        .outgoing .msg-bubble {
+            background: var(--glass);
+            border: 1px solid var(--primary);
             border-top-right-radius: 4px;
-            font-weight: 600;
         }
-        .msg-bubble:active { transform: scale(0.98); }
 
-        /* Dynamic Reactions Layer */
-        .reaction-badge-dock {
-            display: flex;
-            gap: 4px;
-            position: absolute;
-            bottom: -12px;
-            right: 10px;
-            z-index: 10;
+        /* --- ENGINE REACTION OVERLAYS --- */
+        .bubble-interactive-wrapper {
+            position: relative;
+            cursor: pointer;
         }
-        .msg-row.outgoing .reaction-badge-dock { left: 10px; right: auto; }
+        .reaction-trigger-deck {
+            position: absolute;
+            top: -42px;
+            background: #161e2d;
+            border: 1px solid var(--primary);
+            border-radius: 30px;
+            padding: 4px 8px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(5px) scale(0.95);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .incoming .reaction-trigger-deck { left: 10px; }
+        .outgoing .reaction-trigger-deck { right: 10px; }
         
-        .reaction-pill {
-            background: #1e293b;
+        .bubble-interactive-wrapper:hover .reaction-trigger-deck,
+        .bubble-interactive-wrapper:focus-within .reaction-trigger-deck {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .reaction-node {
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 2px;
+        }
+        .reaction-node:hover {
+            transform: scale(1.35);
+        }
+        
+        /* Rendered Applied Active Reactions Pod */
+        .reaction-badge-pod {
+            position: absolute;
+            bottom: -10px;
+            background: #161e2d;
             border: 1px solid var(--glass);
-            border-radius: 10px;
             padding: 2px 6px;
+            border-radius: 12px;
             font-size: 0.65rem;
             display: flex;
             align-items: center;
             gap: 2px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
+        .incoming .reaction-badge-pod { right: 10px; }
+        .outgoing .reaction-badge-pod { left: 10px; }
 
-        /* Contextual Popover Reaction Drawer */
-        .reaction-drawer {
-            position: absolute;
-            top: -46px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.9);
-            background: rgba(22, 30, 45, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass);
-            border-radius: 30px;
-            padding: 6px 12px;
+        /* Persistent Lower Horizon Floating Control Deck */
+        .bottom-action-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            z-index: 4000;
             display: flex;
-            gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.2);
-            z-index: 500;
-        }
-        .reaction-drawer.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(-50%) scale(1);
-        }
-        .react-node {
-            font-size: 1.25rem;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .react-node:hover { transform: scale(1.3); }
-
-        /* Terminal Input Tray */
-        .input-tray {
-            padding: 16px 20px;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid var(--glass);
-            display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 12px;
+            background: linear-gradient(to top, rgba(11,15,26,0.95) 40%, rgba(11,15,26,0));
+            pointer-events: none;
         }
-        .msg-input {
-            flex: 1;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--glass);
-            border-radius: 16px;
-            padding: 14px 18px;
-            color: #fff;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .msg-input:focus { border-color: var(--primary); }
-        
-        .btn-send {
-            width: 46px;
-            height: 46px;
-            border-radius: 16px;
+        .btn-save {
+            width: 260px;
+            height: 56px;
             background: var(--primary);
             color: #000;
             border: none;
+            border-radius: 35px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
+            gap: 10px;
         }
-        .btn-send:hover { transform: scale(1.04); }
+        .btn-save:hover { 
+            transform: translateY(-4px) scale(1.03); 
+            box-shadow: 0 15px 30px var(--glass);
+        }
+
+        .logout-zone { text-align: center; margin-top: 25px; margin-bottom: 15px; }
+        .logout-zone a { color: #64748b; font-size: 0.82rem; text-decoration: none; font-weight: 600; transition: color 0.2s; }
+        .logout-zone a:hover { color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div class="app-window">
-    <header class="chat-header">
-        <div class="header-identity">
-            <img id="userHeaderAvatar" class="header-avatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Profile Node">
-            <div class="header-info">
-                <h3 id="userHeaderName">Loading Node...</h3>
-                <p>Global Router / Lepaga Network</p>
+<div class="fixed-back-deck">
+    <div class="floating-action-circle" onclick="window.location.href='esoa.html'" title="Return to Core Engine">
+        <i data-lucide="arrow-left"></i>
+    </div>
+</div>
+
+<div class="container" id="liveMatrixPreviewContainer">
+    <h2>COMMUNICATIONS PIPELINE PREVIEW</h2>
+    
+    <div class="section-title">Active Chat Heads Engine</div>
+    <div class="chat-heads-container">
+        <div class="chat-head-node">
+            <div class="chat-head-avatar-wrapper">
+                <img class="chat-head-avatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User">
+                <div class="chat-head-status"></div>
             </div>
+            <div class="chat-head-label">Felix (You)</div>
         </div>
-        <div class="header-actions">
-            <button class="header-btn" onclick="window.location.href='customization.html'" title="Customize Studio">
-                <i data-lucide="sliders"></i>
-            </button>
+        <div class="chat-head-node">
+            <div class="chat-head-avatar-wrapper">
+                <img class="chat-head-avatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack" alt="User">
+                <div class="chat-head-status"></div>
+            </div>
+            <div class="chat-head-label">Admin Alpha</div>
         </div>
-    </header>
-
-    <main class="chat-timeline" id="chatTimeline">
-        </main>
-
-    <div class="reaction-drawer" id="globalReactionDrawer">
-        <span class="react-node" data-emoji="😆" title="Haha">😆</span>
-        <span class="react-node" data-emoji="😢" title="Sad">😢</span>
-        <span class="react-node" data-emoji="😠" title="Angry">😠</span>
-        <span class="react-node" data-emoji="🖕" title="Middle Finger">🖕</span>
+        <div class="chat-head-node">
+            <div class="chat-head-avatar-wrapper">
+                <img class="chat-head-avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi" alt="User">
+                <div class="chat-head-status"></div>
+            </div>
+            <div class="chat-head-label">SK Secretariat</div>
+        </div>
     </div>
 
-    <footer class="input-tray">
-        <input type="text" id="messageInputField" class="msg-input" placeholder="Transmit telemetry packet to group...">
-        <button class="btn-send" id="sendMessageBtn">
-            <i data-lucide="send"></i>
-        </button>
-    </footer>
+    <div class="section-title">Barangay Lepaga Group Chat Matrix</div>
+    <div class="chat-stream-matrix">
+        <div class="message-row incoming">
+            <img class="msg-profile-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack" alt="Avatar">
+            <div class="msg-bubble-packet">
+                <div class="msg-meta-author">Admin Alpha</div>
+                <div class="bubble-interactive-wrapper">
+                    <div class="reaction-trigger-deck">
+                        <span class="reaction-node" onclick="reactToMessage(this, '😂')">😂</span>
+                        <span class="reaction-node" onclick="reactToMessage(this, '😢')">😢</span>
+                        <span class="reaction-node" onclick="reactToMessage(this, '😡')">😡</span>
+                        <span class="reaction-node" onclick="reactToMessage(this, '🖕')">🖕</span>
+                    </div>
+                    <div class="msg-bubble">The server instance deployment configuration maps cleanly. Did you verify the changes?</div>
+                    <div class="reaction-badge-pod">😂 <span>1</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="message-row outgoing">
+            <img class="msg-profile-node" id="chatMirrorSelfAvatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Avatar">
+            <div class="msg-bubble-packet">
+                <div class="msg-meta-author">You</div>
+                <div class="bubble-interactive-wrapper">
+                    <div class="reaction-trigger-deck">
+                        <span class="reaction-node" onclick="reactToMessage(this, '😂')">😂</span>
+                        <span class="reaction-node" onclick="reactToMessage(this, '😢')">😢</span>
+                        <span class="reaction-node" onclick="reactToMessage(this, '😡')">😡</span>
+                        <span class="reaction-node" onclick="reactToMessage(this, '🖕')">🖕</span>
+                    </div>
+                    <div class="msg-bubble">Confirmed. The custom sliders decouple beautifully without matching or altering assets.</div>
+                    <div class="reaction-badge-pod" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="container" id="configContainer">
+    <h2>ENVIRONMENT PROFILE SETUP</h2>
+        
+    <div class="section-title">Display Name</div>
+    <input type="text" id="customName" placeholder="Enter custom display name...">
+
+    <div class="section-title">Identity Node Avatar Core</div>
+    
+    <div class="slider-box" style="margin-bottom: 20px;">
+        <span class="slider-label">Inject Personal Custom Avatar URL:</span>
+        <input type="text" id="avatarUrlInput" placeholder="https://example.com/your-photo.png" style="margin-top: 8px;">
+    </div>
+    
+    <div class="sub-group-title">Universal Human Avatars</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="avatar-m1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix"><span>Avatar 1</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack"><span>Avatar 2</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-m3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Oliver"><span>Avatar 3</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Lily"><span>Avatar 4</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Chloe"><span>Avatar 5</span></div>
+        <div class="option-card" data-type="avatar" data-val="avatar-f3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/notionists/svg?seed=Ruby"><span>Avatar 6</span></div>
+    </div>
+
+    <div class="sub-group-title">3D Animal Avatars</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="animal-g1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty"><span>Bunny</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi"><span>Cat</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-g3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Daisy"><span>Panda</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rocky"><span>Wolf</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Spike"><span>Lion</span></div>
+        <div class="option-card" data-type="avatar" data-val="animal-m3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rex"><span>Bear</span></div>
+    </div>
+
+    <div class="sub-group-title">3D Plant Avatars</div>
+    <div class="grid avatar-grid">
+        <div class="option-card" data-type="avatar" data-val="plant-1"><img class="avatar-frame" src="https://api.dicebear.com/7.x/shapes/svg?seed=Rose"><span>Cactus</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-2"><img class="avatar-frame" src="https://api.dicebear.com/7.x/shapes/svg?seed=Fern"><span>Sprout</span></div>
+        <div class="option-card" data-type="avatar" data-val="plant-3"><img class="avatar-frame" src="https://api.dicebear.com/7.x/shapes/svg?seed=Ivy"><span>Flower</span></div>
+    </div>
+
+    <div class="section-title">Canvas Wallpaper Background</div>
+    <div class="grid">
+        <div class="option-card" data-type="bgType" data-val="bg-theme-1"><img class="theme-visual-preview" src="https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150"><span>Teal</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-2"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150"><span>Neon Lines</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-3"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150"><span>Fluid Mesh</span></div>
+        <div class="option-card" data-type="bgType" data-val="bg-theme-4"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=150"><span>Ocean Minimal</span></div>
+    </div>
+        
+    <div class="slider-box">
+        <div class="slider-header">
+            <span class="slider-label">Solid Color Wallpaper Slider:</span>
+            <div id="bgPreview" class="slider-preview" style="background-color: hsl(200, 70%, 15%);"></div>
+        </div>
+        <input type="range" id="bgHueSlider" class="spectrum-range" min="0" max="360" value="200">
+                
+        <div style="margin-top: 12px;">
+            <label class="slider-label">Or Paste Personal Custom Image URL:</label>
+            <input type="text" id="bgUrlInput" placeholder="https://example.com/your-wallpaper.jpg">
+        </div>
+    </div>
+
+    <div class="section-title">System Theme Control Studio</div>
+    <div class="grid">
+        <div class="option-card" data-type="btnType" data-val="btn-theme-1"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=150"><span>Holo Foil</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-2"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=150"><span>Spectrum Chrome</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-3"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150"><span>Carbon Fiber</span></div>
+        <div class="option-card" data-type="btnType" data-val="btn-theme-4"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=150"><span>Liquid Aurora</span></div>
+    </div>
+        
+    <div class="slider-box">
+        <div class="slider-header">
+            <span class="slider-label">Master Theme Color Accent Slider:</span>
+            <div id="btnPreview" class="slider-preview" style="background-color: hsl(195, 100%, 60%);"></div>
+        </div>
+        <input type="range" id="btnHueSlider" class="spectrum-range" min="0" max="360" value="15">
+                
+        <div style="margin-top: 12px;">
+            <label class="slider-label">Or Paste Background Texture URL:</label>
+            <input type="text" id="btnUrlInput" placeholder="https://example.com/your-texture.jpg">
+        </div>
+    </div>
+
+    <div class="section-title">Interface Typography Font</div>
+    <div class="grid">
+        <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter System</div>
+        <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Geometric</div>
+        <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Developer Code</div>
+        <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Classic Serif</div>
+    </div>
+
+    <div class="logout-zone">
+        <a href="#" onclick="localStorage.clear(); window.location.href='login.html'">Logout Session</a>
+    </div>
+</div>
+
+<div class="bottom-action-dock">
+    <button class="btn-save" id="btnSaveConfig">
+        <i data-lucide="save"></i>
+        <span>Save & Launch</span>
+    </button>
+</div>
+
+<script>
+    // Global Runtime Interactivity For Matrix Previews
+    window.reactToMessage = function(element, emoji) {
+        const pod = element.closest('.bubble-interactive-wrapper').querySelector('.reaction-badge-pod');
+        if (pod) {
+            pod.innerHTML = `${emoji} <span>1</span>`;
+            pod.style.display = 'flex';
+        }
+    }
+</script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -324,18 +664,30 @@
     const userId = localStorage.getItem("userId");
     if (!userId) window.location.href = "login.html";
 
-    let activeTargetMessageId = null;
-    const chatTimeline = document.getElementById('chatTimeline');
-    const messageInputField = document.getElementById('messageInputField');
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    const globalReactionDrawer = document.getElementById('globalReactionDrawer');
-
     const premium3dAssets = {
         'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
         'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
         'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
         'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'
     };
+
+    const configData = {
+        avatar: "",
+        bgMode: "color",
+        bgValue: "hsl(200, 70%, 15%)",
+        btnMode: "color",
+        btnValue: "hsl(15, 100%, 50%)", // Preserving full orange edition system base state
+        font: "'Inter', sans-serif"
+    };
+
+    const bgHueSlider = document.getElementById('bgHueSlider');
+    const bgPreview = document.getElementById('bgPreview');
+    const bgUrlInput = document.getElementById('bgUrlInput');
+    const avatarUrlInput = document.getElementById('avatarUrlInput');
+        
+    const btnHueSlider = document.getElementById('btnHueSlider');
+    const btnPreview = document.getElementById('btnPreview');
+    const btnUrlInput = document.getElementById('btnUrlInput');
 
     function hexToRgb(hex) {
         let c;
@@ -345,7 +697,7 @@
             c= '0x'+c.join('');
             return [(c>>16)&255, (c>>8)&255, c&255].join(',');
         }
-        return "56,189,248";
+        return "255,115,0";
     }
 
     function hslToHex(h, s, l) {
@@ -359,204 +711,219 @@
         return `#${f(0)}${f(8)}${f(4)}`;
     }
 
-    /* Core Dynamic Interface Calibration Engine */
-    async function synchronizeUserEnvironmentTheme() {
+    /* Real-Time Preview Synchronization Engine */
+    function applyRealtimeThemePreview() {
+        // Font Sync
+        document.body.style.fontFamily = configData.font;
+        
+        // Background Base Sync
+        if (configData.bgMode === "image") {
+            const realImg = premium3dAssets[configData.bgValue] || configData.bgValue;
+            document.body.style.backgroundImage = `url('${realImg}')`;
+        } else {
+            document.body.style.backgroundImage = "none";
+            document.body.style.backgroundColor = configData.bgValue;
+        }
+
+        // Accent theme processing logic (Independent from background image selection)
+        let targetHexColor = "#ff7300"; 
+        if (configData.btnValue && configData.btnValue.includes('hsl')) {
+            const match = configData.btnValue.match(/\d+/g);
+            if (match && match.length >= 3) {
+                targetHexColor = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
+            }
+        } else if (configData.btnValue && configData.btnValue.startsWith('#')) {
+            targetHexColor = configData.btnValue;
+        }
+
+        // Apply theme color parameters cleanly across all modules
+        document.documentElement.style.setProperty('--primary', targetHexColor);
+        const rgbVals = hexToRgb(targetHexColor);
+        document.documentElement.style.setProperty('--glass', `rgba(${rgbVals}, 0.15)`);
+
+        // Realtime Avatar Sync across preview structures
+        if(configData.avatar) {
+            let activeUrl = configData.avatar;
+            const optionNode = document.querySelector(`.option-card[data-type="avatar"][data-val="${configData.avatar}"] img`);
+            if (optionNode) activeUrl = optionNode.src;
+            
+            // Mirror live settings directly inside communication layout elements
+            const selfChatHead = document.querySelector('.chat-heads-container .chat-head-node:first-child .chat-head-avatar');
+            if(selfChatHead) selfChatHead.src = activeUrl;
+            const selfBubbleImg = document.getElementById('chatMirrorSelfAvatar');
+            if(selfBubbleImg) selfBubbleImg.src = activeUrl;
+        }
+    }
+
+    // Solid Hue Controls
+    bgHueSlider.addEventListener('input', () => {
+        configData.bgMode = "color";
+        configData.bgValue = `hsl(${bgHueSlider.value}, 70%, 15%)`;
+        bgPreview.style.backgroundColor = configData.bgValue;
+        bgUrlInput.value = ""; 
+        document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
+        applyRealtimeThemePreview();
+    });
+
+    btnHueSlider.addEventListener('input', () => {
+        // Theme color selector updates system primary variables (Decoupled from background textures)
+        configData.btnValue = `hsl(${btnHueSlider.value}, 100%, 50%)`;
+        btnPreview.style.backgroundColor = configData.btnValue;
+        applyRealtimeThemePreview();
+    });
+
+    // Custom URL Input Pipelines
+    bgUrlInput.addEventListener('input', () => {
+        if(bgUrlInput.value.trim() !== "") {
+            configData.bgMode = "image";
+            configData.bgValue = bgUrlInput.value.trim();
+            document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
+            applyRealtimeThemePreview();
+        }
+    });
+
+    btnUrlInput.addEventListener('input', () => {
+        if(btnUrlInput.value.trim() !== "") {
+            configData.btnMode = "image";
+            // Keep background texture mapping separate from master color configurations
+            document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
+            applyRealtimeThemePreview();
+        }
+    });
+
+    avatarUrlInput.addEventListener('input', () => {
+        if(avatarUrlInput.value.trim() !== "") {
+            configData.avatar = avatarUrlInput.value.trim();
+            document.querySelectorAll('.option-card[data-type="avatar"]').forEach(c => c.classList.remove('selected'));
+            applyRealtimeThemePreview();
+        }
+    });
+
+    // Preset UI Grid Click Mapping
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const type = card.getAttribute('data-type');
+            const val = card.getAttribute('data-val');
+                        
+            document.querySelectorAll(`.option-card[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            if (type === "avatar") {
+                configData.avatar = val;
+                avatarUrlInput.value = "";
+            }
+            if (type === "font") {
+                configData.font = val;
+            }
+            if (type === "bgType") {
+                configData.bgMode = "image";
+                configData.bgValue = val;
+                bgUrlInput.value = "";
+            }
+            if (type === "btnType") {
+                configData.btnMode = "image";
+                btnUrlInput.value = "";
+            }
+            applyRealtimeThemePreview();
+        });
+    });
+
+    // State Recovery Pipeline
+    async function fetchSavedConfigurations() {
         try {
             const docRef = doc(db, "accounts", userId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                
-                // Track & Update Profile Header Details
-                const currentName = data.customName || localStorage.getItem("userName") || "Ident Node";
-                const rawAvatar = data.avatarUrl || "avatar-m1";
-                const resolvedAvatar = rawAvatar.startsWith('http') ? rawAvatar : `https://api.dicebear.com/7.x/notionists/svg?seed=${rawAvatar}`;
-
-                document.getElementById('userHeaderName').innerText = currentName;
-                document.getElementById('userHeaderAvatar').src = resolvedAvatar;
-
-                // Sync Global Typography Fonts
-                if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
-
-                // Wallpaper Canvas Mode Processing
-                if (data.bgMode === "image") {
-                    const mappedImg = premium3dAssets[data.bgValue] || data.bgValue;
-                    document.body.style.backgroundImage = `url('${mappedImg}')`;
-                } else if (data.bgValue) {
-                    document.body.style.backgroundImage = "none";
-                    document.body.style.backgroundColor = data.bgValue;
+                if (data.customName) document.getElementById('customName').value = data.customName;
+                                
+                if (data.avatarUrl) {
+                    configData.avatar = data.avatarUrl;
+                    const card = document.querySelector(`.option-card[data-type="avatar"][data-val="${data.avatarUrl}"]`);
+                    if(card) {
+                        card.classList.add('selected');
+                    } else {
+                        avatarUrlInput.value = data.avatarUrl;
+                    }
+                }
+                                
+                if (data.fontFamily) {
+                    configData.font = data.fontFamily;
+                    const card = document.querySelector(`.option-card[data-type="font"][data-val="${data.fontFamily}"]`);
+                    if(card) card.classList.add('selected');
                 }
 
-                /* CRITICAL FIX: Compute color variables using btnValue REGARDLESS of image selections.
-                   This makes sure the slider color scales properly across all layouts.
-                */
-                let activeHexAccent = "#38bdf8";
+                // Restore Wallpapers
+                if (data.bgMode === "image") {
+                    configData.bgMode = "image";
+                    configData.bgValue = data.bgValue;
+                    const card = document.querySelector(`.option-card[data-type="bgType"][data-val="${data.bgValue}"]`);
+                    if(card) {
+                        card.classList.add('selected');
+                    } else {
+                        bgUrlInput.value = data.bgValue;
+                    }
+                } else if (data.bgValue && data.bgValue.includes('hsl')) {
+                    configData.bgMode = "color";
+                    configData.bgValue = data.bgValue;
+                    bgPreview.style.backgroundColor = data.bgValue;
+                    const match = data.bgValue.match(/\d+/);
+                    if(match) bgHueSlider.value = match[0];
+                }
+
+                // Restore Button Theme System Slider
                 if (data.btnValue) {
-                    if (data.btnValue.includes('hsl')) {
-                        const tokens = data.btnValue.match(/\d+/g);
-                        if (tokens && tokens.length >= 3) {
-                            activeHexAccent = hslToHex(parseInt(tokens[0]), parseInt(tokens[1]), parseInt(tokens[2]));
-                        }
-                    } else if (data.btnValue.startsWith('#')) {
-                        activeHexAccent = data.btnValue;
+                    configData.btnValue = data.btnValue;
+                    if(data.btnValue.includes('hsl')) {
+                        btnPreview.style.backgroundColor = data.btnValue;
+                        const match = data.btnValue.match(/\d+/);
+                        if(match) btnHueSlider.value = match[0];
                     }
                 }
                 
-                document.documentElement.style.setProperty('--primary', activeHexAccent);
-                document.documentElement.style.setProperty('--glass', `rgba(${hexToRgb(activeHexAccent)}, 0.16)`);
+                applyRealtimeThemePreview();
             }
-        } catch (err) {
-            console.error("Environment pipeline crash:", err);
+        } catch (e) {
+            console.log("State recovery execution failure:", e);
         }
     }
 
-    /* Real-Time Database Message Stream Pipeline with Group Profiles and Reactions */
-    function initializeRealtimeMessagePipeline() {
-        const messageQuery = query(collection(db, "groupMessages"), orderBy("timestamp", "asc"));
-        
-        onSnapshot(messageQuery, (snapshot) => {
-            chatTimeline.innerHTML = "";
-            snapshot.forEach((docSnap) => {
-                const messageData = docSnap.data();
-                const msgId = docSnap.id;
-                
-                const isMyMessage = messageData.senderId === userId;
-                const userAvatarValue = messageData.senderAvatar || "avatar-m1";
-                const avatarRenderSrc = userAvatarValue.startsWith('http') ? userAvatarValue : `https://api.dicebear.com/7.x/notionists/svg?seed=${userAvatarValue}`;
-
-                const rowElement = document.createElement('div');
-                rowElement.classList.add('msg-row', isMyMessage ? 'outgoing' : 'incoming');
-
-                // Render group avatar image node on message bubble profiles
-                const imgNode = document.createElement('img');
-                imgNode.className = "msg-avatar";
-                imgNode.src = avatarRenderSrc;
-                rowElement.appendChild(imgNode);
-
-                const baseContentBlock = document.createElement('div');
-                baseContentBlock.className = "msg-content-block";
-
-                // Sender Display Labels
-                const senderLabel = document.createElement('span');
-                senderLabel.className = "msg-sender-lbl";
-                senderLabel.innerText = messageData.senderName || "Node User";
-                baseContentBlock.appendChild(senderLabel);
-
-                // Bubble Content Container
-                const bubble = document.createElement('div');
-                bubble.className = "msg-bubble";
-                bubble.innerText = messageData.text || "";
-                
-                // Attach Event Handlers to open Popover Emoji Drawer
-                bubble.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    triggerReactionDrawerPopover(msgId, bubble);
-                });
-
-                baseContentBlock.appendChild(bubble);
-
-                // Process and mount explicit user reactions layout stack
-                if (messageData.reactions && Object.keys(messageData.reactions).length > 0) {
-                    const pillBox = document.createElement('div');
-                    pillBox.className = "reaction-badge-dock";
-                    
-                    Object.entries(messageData.reactions).forEach(([emoji, count]) => {
-                        if (count > 0) {
-                            const badge = document.createElement('div');
-                            badge.className = "reaction-pill";
-                            badge.innerHTML = `<span>${emoji}</span><span>${count}</span>`;
-                            pillBox.appendChild(badge);
-                        }
-                    });
-                    baseContentBlock.appendChild(pillBox);
-                }
-
-                rowElement.appendChild(baseContentBlock);
-                chatTimeline.appendChild(rowElement);
-            });
-            chatTimeline.scrollTop = chatTimeline.scrollHeight;
-        });
-    }
-
-    /* Handle Message Dispatch Pipeline */
-    async function transmitGroupMessage() {
-        const textMessage = messageInputField.value.trim();
-        if (!textMessage) return;
+    document.getElementById('btnSaveConfig').addEventListener('click', async () => {
+        const customName = document.getElementById('customName').value.trim();
 
         try {
-            // Retrieve latest profile metadata layers from storage caches safely
-            const cachedName = localStorage.getItem("userName") || "Node User";
-            const cachedAvatar = localStorage.getItem("avatarUrl") || "avatar-m1";
+            const docRef = doc(db, "accounts", userId);
+            const payload = {
+                customName: customName || localStorage.getItem("userName"),
+                avatarUrl: configData.avatar,
+                bgMode: configData.bgMode,
+                bgValue: configData.bgValue,
+                btnMode: "color", // Locked to track design matrices dynamically
+                btnValue: configData.btnValue,
+                fontFamily: configData.font
+            };
 
-            await addDoc(collection(db, "groupMessages"), {
-                text: textMessage,
-                senderId: userId,
-                senderName: cachedName,
-                senderAvatar: cachedAvatar,
-                timestamp: new Date().getTime(),
-                reactions: {}
-            });
-            messageInputField.value = "";
-        } catch (error) {
-            console.error("Packet drop exception encountered:", error);
+            await updateDoc(docRef, payload);
+
+            localStorage.setItem("userName", payload.customName);
+            localStorage.setItem("avatarUrl", payload.avatarUrl);
+            localStorage.setItem("bgMode", payload.bgMode);
+            localStorage.setItem("bgValue", payload.bgValue);
+            localStorage.setItem("btnMode", payload.btnMode);
+            localStorage.setItem("btnValue", payload.btnValue);
+            localStorage.setItem("fontFamily", payload.fontFamily);
+
+            alert("Preferences Saved Successfully!");
+            window.location.href = "esoa.html";
+
+        } catch (err) {
+            alert("Error saving preferences: " + err.message);
         }
-    }
-
-    /* Popover Reaction Drawer Engine */
-    function triggerReactionDrawerPopover(messageId, elementTarget) {
-        activeTargetMessageId = messageId;
-        const rect = elementTarget.getBoundingClientRect();
-        const mainContainerRect = chatTimeline.getBoundingClientRect();
-
-        // Position drawer popover context layer layout gracefully over targeted item node
-        globalReactionDrawer.style.top = `${rect.top - mainContainerRect.top + chatTimeline.scrollTop - 40}px`;
-        globalReactionDrawer.style.left = `${rect.left - mainContainerRect.left + (rect.width / 2)}px`;
-        globalReactionDrawer.classList.add('active');
-    }
-
-    // Dismiss custom reaction popover layouts cleanly
-    document.addEventListener('click', () => {
-        globalReactionDrawer.classList.remove('active');
-        activeTargetMessageId = null;
     });
 
-    // Capture click events inside the interactive emoji drawer array nodes
-    document.querySelectorAll('.react-node').forEach(node => {
-        node.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const emojiSelected = node.getAttribute('data-emoji');
-            
-            if (activeTargetMessageId) {
-                try {
-                    const docRef = doc(db, "groupMessages", activeTargetMessageId);
-                    const docSnap = await getDoc(docRef);
-                    
-                    if (docSnap.exists()) {
-                        const currentData = docSnap.data();
-                        const currentReactions = currentData.reactions || {};
-                        
-                        // Mutate atomic snapshot keys to track total reactions incrementally
-                        currentReactions[emojiSelected] = (currentReactions[emojiSelected] || 0) + 1;
-                        
-                        await updateDoc(docRef, { reactions: currentReactions });
-                    }
-                } catch (err) {
-                    console.error("Failed to commit reaction node adjustment:", err);
-                }
-            }
-            globalReactionDrawer.classList.remove('active');
-        });
-    });
-
-    // Send Interactions Binding Keys
-    sendMessageBtn.addEventListener('click', transmitGroupMessage);
-    messageInputField.addEventListener('keydown', (e) => { if (e.key === 'Enter') transmitGroupMessage(); });
-
-    // Initialize Global App Setup
     window.onload = () => {
-        synchronizeUserEnvironmentTheme();
-        initializeRealtimeMessagePipeline();
+        fetchSavedConfigurations();
         lucide.createIcons();
     };
 </script>
