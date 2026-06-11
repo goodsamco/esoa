@@ -88,6 +88,19 @@
             box-shadow: 0 0 12px var(--primary);
         }
 
+        /* Special Dedicated Public Global Chat Head Style Match */
+        .global-chat-head-btn .peer-avatar-bubble {
+            background: #1e0b00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+        .global-chat-head-btn:hover .peer-avatar-bubble {
+            color: #000;
+            background: var(--primary);
+        }
+
         .peer-notif-dot {
             position: absolute;
             top: -2px;
@@ -208,35 +221,26 @@
             white-space: nowrap;
         }
 
-        /* Split-Docking Multi-Channel Messaging Pipeline Panels */
+        /* Retaining Original Fixed Layout Location coordinates for Chat Frameworks */
         .chat-docking-panel {
             position: fixed;
             bottom: 26vh;
-            width: 320px;
-            height: 400px;
+            right: 20px;
+            width: 340px;
+            height: 440px;
             background: var(--modal-bg);
             border: 1px solid var(--glass);
             border-radius: 24px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-            display: flex;
+            display: none;
             flex-direction: column;
             z-index: 3500;
             overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-
-        #globalGroupDock {
-            right: 360px; /* Anchored position side-by-side with direct message hub */
-        }
-
-        #chatDock {
-            right: 20px;
-            display: none;
         }
 
         .chat-header-bar {
             background: rgba(0, 0, 0, 0.4);
-            padding: 12px 14px;
+            padding: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -244,7 +248,7 @@
         }
 
         .chat-header-bar span {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 800;
             color: var(--primary);
             text-transform: uppercase;
@@ -262,26 +266,26 @@
 
         .chat-scroller-view {
             flex: 1;
-            padding: 12px;
+            padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
         }
 
         /* Unified Message Stream UI Components */
         .message-row {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: flex-end;
-            max-width: 88%;
+            max-width: 85%;
         }
         .message-row.incoming { align-self: flex-start; }
         .message-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
 
         .msg-profile-badge {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             object-fit: cover;
             border: 1.5px solid var(--primary);
@@ -296,27 +300,31 @@
         }
 
         .msg-author-meta {
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             color: #64748b;
             font-weight: 800;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .message-row.outgoing .msg-author-meta { text-align: right; }
 
+        /* Significantly expanded safe padding zone context preventing accidental mouse leave closures */
         .msg-interactive-container {
             position: relative;
-            padding-top: 25px; /* Creates permanent vertical alignment boundary for hover menus */
-            margin-top: -25px;
+            padding-top: 32px;
+            margin-top: -32px;
+            padding-bottom: 4px;
         }
 
         .msg-bubble {
-            padding: 10px 12px;
-            border-radius: 14px;
-            font-size: 0.8rem;
-            line-height: 1.35;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            line-height: 1.4;
             word-wrap: break-word;
+            position: relative;
+            z-index: 5;
         }
 
         .message-row.incoming .msg-bubble {
@@ -334,34 +342,34 @@
         }
 
         .msg-time-stamp {
-            font-size: 0.55rem;
+            font-size: 0.6rem;
             color: #475569;
             margin-top: 3px;
             align-self: flex-end;
         }
         .message-row.outgoing .msg-time-stamp { align-self: flex-start; }
 
-        /* Stable Core CSS-Driven Reaction Selection Panels */
+        /* Secure Hyper-Extended Selection Anchoring Deck Layouts */
         .reaction-menu-deck {
             position: absolute;
-            top: -15px;
+            top: -12px;
             background: #110700;
             border: 1px solid var(--primary);
             border-radius: 20px;
-            padding: 4px 6px;
+            padding: 6px 10px;
             display: flex;
-            gap: 6px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
             z-index: 100;
             opacity: 0;
             pointer-events: none;
-            transform: translateY(4px) scale(0.95);
-            transition: opacity 0.15s ease, transform 0.15s ease;
+            transform: translateY(6px) scale(0.95);
+            transition: opacity 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
         .message-row.incoming .reaction-menu-deck { left: 4px; }
         .message-row.outgoing .reaction-menu-deck { right: 4px; }
 
-        /* The wider hover container prevents menu tracking drops when navigating to emojis */
+        /* Hover selection window locks open cleanly with extended tracking borders */
         .msg-interactive-container:hover .reaction-menu-deck {
             opacity: 1;
             pointer-events: auto;
@@ -369,37 +377,37 @@
         }
 
         .reaction-node {
-            font-size: 1rem;
+            font-size: 1.1rem;
             cursor: pointer;
             transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            padding: 0 2px;
+            padding: 2px;
         }
         .reaction-node:hover {
-            transform: scale(1.35);
+            transform: scale(1.4);
         }
 
-        /* Unified Real-time Live Reaction Counts Container Pod */
+        /* Condensed Metrics Reaction badge display layout structure rules */
         .active-reaction-badge-pod {
             position: absolute;
             bottom: -8px;
             background: #1c0b00;
             border: 1px solid var(--glass);
-            padding: 1px 4px;
-            border-radius: 8px;
-            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.65rem;
             display: none;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            z-index: 10;
+            z-index: 20;
         }
-        .message-row.incoming .active-reaction-badge-pod { right: -4px; }
-        .message-row.outgoing .active-reaction-badge-pod { left: -4px; }
+        .message-row.incoming .active-reaction-badge-pod { right: -6px; }
+        .message-row.outgoing .active-reaction-badge-pod { left: -6px; }
 
         .chat-input-row {
-            padding: 10px;
+            padding: 12px;
             display: flex;
-            gap: 6px;
+            gap: 8px;
             background: rgba(0, 0, 0, 0.5);
             border-top: 1px solid var(--glass);
         }
@@ -410,8 +418,8 @@
             border: 1px solid rgba(255, 115, 0, 0.2);
             border-radius: 10px;
             color: white;
-            padding: 8px 10px;
-            font-size: 0.8rem;
+            padding: 10px;
+            font-size: 0.85rem;
             outline: none;
         }
 
@@ -422,9 +430,8 @@
             color: #000;
             border: none;
             border-radius: 10px;
-            padding: 0 14px;
+            padding: 0 16px;
             font-weight: 800;
-            font-size: 0.75rem;
             cursor: pointer;
             transition: transform 0.2s;
         }
@@ -686,7 +693,8 @@
 
     <div class="chat-docking-panel" id="globalGroupDock">
         <div class="chat-header-bar">
-            <span>Barangay Lepaga Public Group Chat</span>
+            <span>Public Group Chat</span>
+            <button class="chat-close-trigger" onclick="toggleGlobalGroupWindow(false)"><i data-lucide="x"></i></button>
         </div>
         <div class="chat-scroller-view" id="groupChatScroller"></div>
         <div class="chat-input-row">
@@ -771,7 +779,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, push, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -871,6 +879,27 @@
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
             hub.innerHTML = '';
+            
+            // Build Permanent Public Group Chat Bubble Toggle Button Node Frame
+            const globalNodeWrapper = document.createElement('div');
+            globalNodeWrapper.className = 'peer-wrapper global-chat-head-btn';
+            
+            const globalImgNode = document.createElement('div');
+            globalImgNode.className = 'peer-avatar-bubble';
+            globalImgNode.innerHTML = '<i data-lucide="users" style="width:20px;height:20px;"></i>';
+            globalImgNode.onclick = () => {
+                const currentDisplay = document.getElementById('globalGroupDock').style.display;
+                toggleGlobalGroupWindow(currentDisplay !== 'flex');
+            };
+            
+            const globalNameTag = document.createElement('div');
+            globalNameTag.className = 'peer-name-hover';
+            globalNameTag.innerText = "Public Chat";
+            
+            globalNodeWrapper.appendChild(globalImgNode);
+            globalNodeWrapper.appendChild(globalNameTag);
+            hub.appendChild(globalNodeWrapper);
+
             if (snapshot.exists()) {
                 const users = snapshot.val();
                 Object.keys(users).forEach(uid => {
@@ -885,7 +914,14 @@
                     const imgNode = document.createElement('img');
                     imgNode.className = 'peer-avatar-bubble';
                     imgNode.src = cleanAvatarSrc;
-                    imgNode.onclick = () => initTransientChatChannel(peer.uid, peer.name);
+                    imgNode.onclick = () => {
+                        const directDock = document.getElementById('chatDock');
+                        if (selectedActiveChatPartnerId === peer.uid && directDock.style.display === 'flex') {
+                            closeChatSession();
+                        } else {
+                            initTransientChatChannel(peer.uid, peer.name);
+                        }
+                    };
 
                     const dotNode = document.createElement('div');
                     dotNode.className = 'peer-notif-dot';
@@ -901,7 +937,21 @@
                     bindBackgroundNotifListener(peer.uid);
                 });
             }
+            lucide.createIcons();
         });
+
+        // Toggle Public Group Chat Visibility Controller
+        window.toggleGlobalGroupWindow = function(show) {
+            const globalDock = document.getElementById('globalGroupDock');
+            if (show) {
+                document.getElementById('chatDock').style.display = 'none'; // Closes direct workspace overlap
+                globalDock.style.display = 'flex';
+                const scroller = document.getElementById('groupChatScroller');
+                scroller.scrollTop = scroller.scrollHeight;
+            } else {
+                globalDock.style.display = 'none';
+            }
+        };
 
         // Direct Messaging Real-time Execution Pipeline
         function bindBackgroundNotifListener(partnerId) {
@@ -925,6 +975,7 @@
         }
 
         function initTransientChatChannel(partnerId, partnerName) {
+            document.getElementById('globalGroupDock').style.display = 'none'; // Clear window view stack
             selectedActiveChatPartnerId = partnerId;
             document.getElementById('chatTargetName').innerText = `Chat with ${partnerName}`;
             document.getElementById('chatScroller').innerHTML = '';
@@ -998,7 +1049,26 @@
             input.value = '';
         };
 
-        // Unified Message Builder Node Supporting Live Real-time Database Reaction Sync
+        // One-reaction-per-user enforcement routing updates
+        window.processReactionClick = function(dataLocationPath, msgId, selectedEmoji) {
+            const listRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions`);
+            
+            onValue(listRef, (snapshot) => {
+                const updates = {};
+                if (snapshot.exists()) {
+                    const currentReactions = snapshot.val();
+                    Object.keys(currentReactions).forEach(emoji => {
+                        if (currentReactions[emoji] && currentReactions[emoji][userId]) {
+                            updates[`${emoji}/${userId}`] = null; // Mark previous reactions for deletion
+                        }
+                    });
+                }
+                updates[`${selectedEmoji}/${userId}`] = true; // Inject updated choice target entry
+                update(listRef, updates);
+            }, { onlyOnce: true });
+        };
+
+        // Consolidated and condensed UI component renderer node maps
         function appendBubbleToScroller(targetScrollerId, msgId, text, direction, authorName, avatarUrl, timestamp, dataLocationPath) {
             const view = document.getElementById(targetScrollerId);
             
@@ -1027,10 +1097,7 @@
                 const node = document.createElement('span');
                 node.className = 'reaction-node';
                 node.innerText = emoji;
-                node.onclick = () => {
-                    const targetNodeRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions/${emoji}`);
-                    update(ref(rtdb, `${dataLocationPath}/${msgId}/reactions`), { [emoji]: true });
-                };
+                node.onclick = () => processReactionClick(dataLocationPath, msgId, emoji);
                 reactionDeck.appendChild(node);
             });
 
@@ -1060,14 +1127,29 @@
             view.appendChild(msgRow);
             view.scrollTop = view.scrollHeight;
 
-            // Instantiating Synchronized Reaction Sync Channel Observers
+            // Instantiating Condensed Reaction Synchronization Observer Channels
             const reactionWatcherRef = ref(rtdb, `${dataLocationPath}/${msgId}/reactions`);
             onValue(reactionWatcherRef, (snapshot) => {
                 if(snapshot.exists()) {
                     const rxData = snapshot.val();
-                    const activeEmojis = Object.keys(rxData);
-                    if(activeEmojis.length > 0) {
-                        badgePod.innerHTML = activeEmojis.map(e => `${e} <span>1</span>`).join(' ');
+                    const summaryArray = [];
+                    let overallCount = 0;
+
+                    Object.keys(rxData).forEach(emoji => {
+                        if (rxData[emoji]) {
+                            const entriesCount = Object.keys(rxData[emoji]).length;
+                            if (entriesCount > 0) {
+                                summaryArray.push({ emoji, count: entriesCount });
+                                overallCount += entriesCount;
+                            }
+                        }
+                    });
+
+                    if(summaryArray.length > 0) {
+                        // Max out individual visuals to the top two emojis to keep the layout condensed
+                        summaryArray.sort((a, b) => b.count - a.count);
+                        const topTwoStrings = summaryArray.slice(0, 2).map(item => item.emoji).join('');
+                        badgePod.innerHTML = `${topTwoStrings} <span>${overallCount}</span>`;
                         badgePod.style.display = 'flex';
                     } else {
                         badgePod.style.display = 'none';
@@ -1117,7 +1199,7 @@
         function executeCopy(row, text, index) { updateFocus(index); navigator.clipboard.writeText(text).then(() => { document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet(); let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000); }); }
         
         function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0); }
-        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle'); function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle)); }
+        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle'); } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));
     </script>
 </body>
 
