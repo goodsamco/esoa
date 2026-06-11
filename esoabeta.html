@@ -854,6 +854,7 @@
         let isGroupChat = false;
         let transientChatListenerRemoveHook = null;
         const mappedRouteTrackingHooks = {};
+        let backgroundGcTrackingHook = null;
 
         const premium3dAssets = {
             'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
@@ -946,19 +947,28 @@
             // 1. Static Group Chat Bubble Node
             const gcWrapper = document.createElement('div');
             gcWrapper.className = 'peer-wrapper';
+            gcWrapper.id = 'gc-hub-node';
             
             const gcBubble = document.createElement('div');
             gcBubble.className = 'group-chat-bubble';
             gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
             gcBubble.onclick = () => initGroupChatChannel();
 
+            const gcDotNode = document.createElement('div');
+            gcDotNode.className = 'peer-notif-dot';
+            gcDotNode.id = 'gc-notif-dot';
+
             const gcNameTag = document.createElement('div');
             gcNameTag.className = 'peer-name-hover';
             gcNameTag.innerText = "GROUP CHAT";
 
             gcWrapper.appendChild(gcBubble);
+            gcWrapper.appendChild(gcDotNode);
             gcWrapper.appendChild(gcNameTag);
             hub.appendChild(gcWrapper);
+
+            // Trigger real-time monitoring on the shared Group Chat hub
+            bindBackgroundGcListener();
 
             // 2. Load online peer nodes
             if (snapshot.exists()) {
@@ -995,6 +1005,7 @@
             lucide.createIcons();
         });
 
+        // Background tracking listener that captures messages AND reaction updates
         function bindBackgroundNotifListener(partnerId) {
             if (mappedRouteTrackingHooks[partnerId]) return;
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -1002,19 +1013,78 @@
 
             let initialSyncComplete = false;
             onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+            
             const hook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (!initialSyncComplete) return;
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
+                    // If message is from partner, show red dot
                     if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
                         const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-                        if (peerContainer) {
-                            peerContainer.classList.add('has-unread');
-                        }
+                        if (peerContainer) peerContainer.classList.add('has-unread');
                     }
                 }
             });
             mappedRouteTrackingHooks[partnerId] = hook;
+
+            // Stream and monitor sub-reaction pathways as an active payload update
+            onValue(chatRouteRef, (snapshot) => {
+                if (!initialSyncComplete) return;
+                if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
+                    const messages = snapshot.val();
+                    // Intercept changes inside nested reaction structures
+                    Object.keys(messages).forEach(mId => {
+                        const m = messages[mId];
+                        if (m.reactions) {
+                            Object.keys(m.reactions).forEach(uId => {
+                                if (uId !== userId) {
+                                    const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                                    if (peerContainer) peerContainer.classList.add('has-unread');
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Live stream update logic matching rules for Group Chat notification configurations
+        function bindBackgroundGcListener() {
+            if (backgroundGcTrackingHook) return;
+            const gcRouteRef = ref(rtdb, `group_chat/messages`);
+
+            let initialSyncComplete = false;
+            onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+            backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+                if (!initialSyncComplete) return;
+                if (childSnap.exists()) {
+                    const msg = childSnap.val();
+                    if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                        const gcContainer = document.getElementById('gc-hub-node');
+                        if (gcContainer) gcContainer.classList.add('has-unread');
+                    }
+                }
+            });
+
+            // Monitor variations inside the group channel reactions node payload matrices
+            onValue(gcRouteRef, (snapshot) => {
+                if (!initialSyncComplete) return;
+                if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                    const messages = snapshot.val();
+                    Object.keys(messages).forEach(mId => {
+                        const m = messages[mId];
+                        if (m.reactions) {
+                            Object.keys(m.reactions).forEach(uId => {
+                                if (uId !== userId) {
+                                    const gcContainer = document.getElementById('gc-hub-node');
+                                    if (gcContainer) gcContainer.classList.add('has-unread');
+                                }
+                            });
+                        }
+                    });
+                }
+            });
         }
 
         // Initialize Group Chat View
@@ -1024,6 +1094,9 @@
             document.getElementById('chatTargetName').innerText = `Group Chat`;
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
+
+            const gcContainer = document.getElementById('gc-hub-node');
+            if (gcContainer) gcContainer.classList.remove('has-unread');
 
             cleanupTransientListeners();
 
@@ -1100,10 +1173,8 @@
             wrapper.className = `msg-wrapper ${direction}`;
             wrapper.id = `msg-wrap-${msgId}`;
 
-            // Parse formatted localized time string from node timestamp
             const msgTime = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-            // GC Modification: Render Profile Identity Metadata Info block for whoever chatted inside the Group Chat
             if (isGroupChat) {
                 const metaRow = document.createElement('div');
                 metaRow.className = 'msg-meta-row';
@@ -1131,7 +1202,6 @@
             bbl.className = `msg-bubble ${direction}`;
             bbl.innerText = msg.text;
             
-            // Toggle Reaction Selector Popover Window on Bubble Press Click
             bbl.onclick = (e) => {
                 e.stopPropagation();
                 toggleReactionPicker(msgId, wrapper);
@@ -1139,7 +1209,6 @@
 
             wrapper.appendChild(bbl);
 
-            // Container for Active Display Reactions Node Element (Visible on both private and group messaging)
             const rxContainer = document.createElement('div');
             rxContainer.className = 'msg-reaction-container';
             rxContainer.id = `rx-container-${msgId}`;
@@ -1149,11 +1218,9 @@
             view.appendChild(wrapper);
             view.scrollTop = view.scrollHeight;
 
-            // Sync and monitor reactions real-time node bindings
             syncReactionsDisplay(msgId);
         }
 
-        // Popover Tray Matrix Selection Controller Engine
         function toggleReactionPicker(msgId, wrapper) {
             const activeTray = document.getElementById(`tray-${msgId}`);
             if (activeTray) {
@@ -1183,7 +1250,6 @@
             wrapper.appendChild(tray);
         }
 
-        // Commit state parameters down into targeted database endpoints
         function submitReaction(msgId, emoji) {
             let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
             if (isGroupChat) {
@@ -1200,7 +1266,6 @@
             }, { onlyOnce: true });
         }
 
-        // Sync and parse reaction metrics across channels
         function syncReactionsDisplay(msgId) {
             let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
             if (isGroupChat) {
@@ -1218,8 +1283,6 @@
                 }
 
                 const reactionData = snapshot.val();
-                
-                // Build reactive user tracking lists
                 const summary = {};
                 Object.keys(reactionData).forEach(uid => {
                     const emo = reactionData[uid];
@@ -1232,7 +1295,6 @@
                     const pill = document.createElement('div');
                     pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
                     
-                    // Conditional Tally configuration check: group layouts display total numbers, private chats display just the elements
                     if (isGroupChat) {
                         pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
                     } else {
