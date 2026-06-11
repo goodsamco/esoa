@@ -78,8 +78,27 @@
         }
 
         .peer-avatar-bubble:hover {
-            border-color: var(--success);
+            border-color: var(--primary);
             transform: scale(1.05);
+        }
+
+        /* Notification Dot overlay on sender avatar */
+        .peer-notif-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary);
+            border: 2px solid var(--surface);
+            border-radius: 50%;
+            display: none;
+            z-index: 3010;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .peer-wrapper.has-unread .peer-notif-dot {
+            display: block;
         }
 
         .peer-name-hover {
@@ -88,7 +107,7 @@
             bottom: -32px;
             transform: translateX(-50%);
             background: var(--surface);
-            border: 1px solid rgba(255, 115, 0, 0.3);
+            border: 1px solid var(--glass);
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 0.7rem;
@@ -119,7 +138,7 @@
             -webkit-backdrop-filter: blur(20px);
             padding: 6px 10px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 115, 0, 0.15);
+            border: 1px solid var(--glass);
         }
 
         .top-btn {
@@ -188,7 +207,7 @@
             width: 300px;
             height: 360px;
             background: var(--modal-bg);
-            border: 1px solid rgba(255, 115, 0, 0.3);
+            border: 1px solid var(--glass);
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
             display: none;
@@ -203,7 +222,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 115, 0, 0.15);
+            border-bottom: 1px solid var(--glass);
         }
 
         .chat-header-bar span {
@@ -241,6 +260,7 @@
             background: rgba(255, 255, 255, 0.06);
             align-self: flex-start;
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .msg-bubble.outgoing {
@@ -260,7 +280,7 @@
         .chat-input-row input {
             flex: 1;
             background: #000;
-            border: 1px solid #333;
+            border: 1px solid rgba(255, 115, 0, 0.2);
             border-radius: 8px;
             color: white;
             padding: 8px;
@@ -363,7 +383,7 @@
             transform: scale(1.1);
         }
 
-        /* Broadened & Flattened Wide Landscape Aspect Copy Engine Keyhole */
+        /* Broadened & Flattened Normal Sized Aspect Copy Engine Keyhole */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -378,7 +398,7 @@
         }
 
         .btn-main-copy {
-            width: 320px;
+            width: 220px;
             height: 54px;
             border: none;
             border-radius: 18px;
@@ -400,13 +420,13 @@
         }
 
         .bottom-zone:hover .btn-main-copy:not(.success-state) {
-            width: 345px;
-            height: 64px;
+            width: 240px;
+            height: 60px;
         }
 
         .btn-main-copy.success-state {
             background-image: none !important;
-            background-color: var(--success) !important;
+            background-color: var(--primary) !important;
             color: #000;
             text-shadow: none;
             box-shadow: 0 0 25px rgba(255, 115, 0, 0.5);
@@ -455,7 +475,7 @@
             max-width: 380px;
             padding: 40px 30px;
             border-radius: 32px;
-            border: 1px solid rgba(255, 115, 0, 0.3);
+            border: 1px solid var(--glass);
             position: relative;
             text-align: center;
             opacity: 0;
@@ -483,7 +503,7 @@
         }
 
         .list-item:hover {
-            background: rgba(255, 115, 0, 0.1);
+            background: var(--glass);
         }
 
         .input-group {
@@ -501,7 +521,7 @@
         .modal-content input {
             width: 100%;
             background: #000;
-            border: 1px solid #333;
+            border: 1px solid rgba(255, 115, 0, 0.2);
             padding: 16px;
             margin-top: 5px;
             border-radius: 16px;
@@ -520,7 +540,7 @@
         .modal-result {
             margin: 25px 0;
             padding: 20px;
-            background: rgba(255, 115, 0, 0.05);
+            background: var(--glass);
             border-radius: 20px;
             border: 1px dashed var(--primary);
         }
@@ -534,30 +554,16 @@
         .modal-copy-zone {
             height: 60px;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            background: var(--primary);
-            color: #000;
-            border-radius: 16px;
-            font-weight: 800;
-            transition: 0.2s;
-        }
+            justify(content: center; align-items: center; cursor: pointer; background: var(--primary); color: #000; border-radius: 16px; font-weight: 800; transition: 0.2s;
+            }
 
-        .modal-copy-zone.success-state {
-            background: var(--success);
-            color: #fff;
-        }
+            .modal-copy-zone.success-state {
+                background: var(--primary); color: #fff;
+            }
 
-        .modal-close-btn {
-            margin-top: 20px;
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 0.8rem;
-            text-decoration: underline;
-        }
+            .modal-close-btn {
+                margin-top: 20px; background: transparent; border: none; color: #666; cursor: pointer; font-size: 0.8rem; text-decoration: underline;
+            }
     </style>
 </head>
 
@@ -633,7 +639,7 @@
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
         <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
-        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
+        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-transform: uppercase;">HM-LOSARTAN</span></div>
         <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
         <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
         <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
@@ -685,9 +691,14 @@
         const db = getFirestore(app);
         const rtdb = getDatabase(app);
 
-        const userId = localStorage.getItem("userId") || "mock-user-id";
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            window.location.href = "login.html";
+        }
+
         let selectedActiveChatPartnerId = null;
         let transientChatListenerRemoveHook = null;
+        const mappedRouteTrackingHooks = {};
 
         const premium3dAssets = {
             'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
@@ -714,6 +725,17 @@
             'btn-theme-3': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300',
             'btn-theme-4': 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300'
         };
+
+        function hexToRgb(hex) {
+            let c;
+            if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+                c = hex.substring(1).split('');
+                if (c.length == 3) { c = [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+                c = '0x' + c.join('');
+                return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',');
+            }
+            return "255,115,0";
+        }
 
         const userDocRef = doc(db, "accounts", userId);
         onSnapshot(userDocRef, (snapshot) => {
@@ -744,6 +766,8 @@
                 } else if (data.btnValue) {
                     magnetBtn.style.backgroundImage = "none";
                     document.documentElement.style.setProperty('--primary', data.btnValue);
+                    const parsedRgb = hexToRgb(data.btnValue);
+                    document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
                 set(ref(rtdb, 'presence/' + userId), {
@@ -752,10 +776,12 @@
                     avatar: data.avatarUrl || 'avatar-m1',
                     timestamp: Date.now()
                 });
+            } else {
+                window.location.href = "login.html";
             }
         });
 
-        // Left Alignment Display Synchronizer Engine with Native Hover Popovers
+        // Left Alignment Display Synchronizer Engine with Native Hover Popovers and Active Badging
         const presenceRef = ref(rtdb, 'presence');
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
@@ -769,28 +795,68 @@
 
                     const wrapper = document.createElement('div');
                     wrapper.className = 'peer-wrapper';
+                    wrapper.id = `peer-node-${peer.uid}`;
 
                     const imgNode = document.createElement('img');
                     imgNode.className = 'peer-avatar-bubble';
                     imgNode.src = cleanAvatarSrc;
                     imgNode.onclick = () => initTransientChatChannel(peer.uid, peer.name);
 
+                    const dotNode = document.createElement('div');
+                    dotNode.className = 'peer-notif-dot';
+
                     const nameTag = document.createElement('div');
                     nameTag.className = 'peer-name-hover';
                     nameTag.innerText = peer.name;
 
                     wrapper.appendChild(imgNode);
+                    wrapper.appendChild(dotNode);
                     wrapper.appendChild(nameTag);
                     hub.appendChild(wrapper);
+
+                    // Map notification badge monitoring listeners to background threads
+                    bindBackgroundNotifListener(peer.uid);
                 });
             }
         });
+
+        function bindBackgroundNotifListener(partnerId) {
+            if (mappedRouteTrackingHooks[partnerId]) return;
+
+            const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+            const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+
+            let initialSyncComplete = false;
+
+            // Check once to skip initial historical processing count overhead
+            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+            const hook = onChildAdded(chatRouteRef, (childSnap) => {
+                if (!initialSyncComplete) return;
+                if (childSnap.exists()) {
+                    const msg = childSnap.val();
+                    if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
+                        const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                        if (peerContainer) {
+                            peerContainer.classList.add('has-unread');
+                        }
+                    }
+                }
+            });
+
+            mappedRouteTrackingHooks[partnerId] = hook;
+        }
 
         function initTransientChatChannel(partnerId, partnerName) {
             selectedActiveChatPartnerId = partnerId;
             document.getElementById('chatTargetName').innerText = `Chat with ${partnerName}`;
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
+
+            const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+            if (peerContainer) {
+                peerContainer.classList.remove('has-unread');
+            }
 
             if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
 
@@ -834,7 +900,7 @@
         };
 
         window.addEventListener('beforeunload', () => {
-            set(ref(rtdb, 'presence/' + userId), null);
+            if (userId) set(ref(rtdb, 'presence/' + userId), null);
         });
     </script>
 
