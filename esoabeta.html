@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
+<style>
         :root {
             --bg: #1a0f0b;
             --surface: #140700;
@@ -20,69 +20,761 @@
             --modal-bg: rgba(20, 7, 0, 0.98);
         }
 
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #331a10; border-radius: 10px; }
+        /* --- GLOBAL SCROLLBARS --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 6px;
+        }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 150px 10px 25vh 10px; display: flex; justify-content: center; overflow-x: hidden; transition: background-color 0.3s ease; }
-        body.copy-flash { background-color: var(--primary); }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
 
-        .peer-active-hub { position: fixed; top: 20px; left: 20px; display: flex; gap: 6px; align-items: center; z-index: 3000; }
-        .peer-wrapper { position: relative; display: flex; align-items: center; }
-        .peer-avatar-bubble { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%); border: 2px solid #666; cursor: pointer; transition: all 0.2s ease; }
-        .peer-avatar-bubble:hover { border-color: var(--primary); transform: scale(1.05); }
-        .group-chat-bubble { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--primary); transition: all 0.2s ease; box-shadow: 0 0 8px rgba(255, 115, 0, 0.4); }
-        .group-chat-bubble:hover { transform: scale(1.05); background: #fff; border-color: #fff; }
-        .peer-notif-dot { position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; background-color: var(--primary); border: 2px solid var(--surface); border-radius: 50%; display: none; z-index: 3010; box-shadow: 0 0 8px var(--primary); }
-        .peer-wrapper.has-unread .peer-notif-dot { display: block; }
-        .peer-name-hover { position: absolute; left: 50%; bottom: -32px; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--glass); padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; color: white; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
-        .peer-wrapper:hover .peer-name-hover { opacity: 1; transform: translateX(-50%) translateY(2px); }
+        ::-webkit-scrollbar-thumb {
+            background: #331a10;
+            border-radius: 10px;
+        }
 
-        .top-nav { position: fixed; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; z-index: 3000; background: rgba(20, 7, 0, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 6px 10px; border-radius: 20px; border: 1px solid var(--glass); }
-        .top-btn { width: 46px; height: 46px; background: var(--surface); border: 1px solid rgba(255, 115, 0, 0.2); border-radius: 14px; color: white; backdrop-filter: blur(10px); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .top-btn:hover { background: var(--primary); color: #000; transform: translateY(-2px); }
-        .user-identity-card { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-left: 6px; }
-        .profile-avatar-node { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%); border: 2px solid var(--primary); padding: 2px; cursor: pointer; transition: transform 0.2s ease; }
-        .profile-avatar-node:hover { transform: scale(1.05); }
-        .name-string { font-size: 0.65rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; max-width: 75px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 150px 10px 25vh 10px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease;
+        }
 
-        .chat-docking-panel { position: fixed; bottom: 26vh; right: 20px; width: 340px; height: 440px; background: var(--modal-bg); border: 1px solid var(--glass); border-radius: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8); display: none; flex-direction: column; z-index: 3500; overflow: hidden; }
-        .chat-header-bar { background: rgba(0, 0, 0, 0.4); padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass); }
-        .chat-close-trigger { background: transparent; border: none; color: #666; cursor: pointer; }
-        .chat-scroller-view { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-        .msg-wrapper { display: flex; flex-direction: column; max-width: 85%; position: relative; }
-        .msg-wrapper.incoming { align-self: flex-start; }
-        .msg-wrapper.outgoing { align-self: flex-end; align-items: flex-end; }
-        .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; word-wrap: break-word; position: relative; cursor: pointer; user-select: none; }
-        .msg-bubble.incoming { background: rgba(255, 255, 255, 0.06); color: white; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .msg-bubble.outgoing { background: var(--primary); color: #000; font-weight: 600; }
-        .chat-input-row { padding: 10px; display: flex; gap: 8px; background: rgba(0, 0, 0, 0.5); }
-        .chat-input-row input { flex: 1; background: #000; border: 1px solid rgba(255, 115, 0, 0.2); border-radius: 8px; color: white; padding: 8px; font-size: 0.85rem; outline: none; }
-        .chat-input-row input:focus { border-color: var(--primary); }
-        .chat-input-row button { background: var(--primary); color: #000; border: none; border-radius: 8px; padding: 0 14px; font-weight: 800; cursor: pointer; }
+        body.copy-flash {
+            background-color: var(--primary);
+        }
 
-        .container { position: relative; width: 100%; max-width: 400px; background: var(--surface); padding: 20px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); border: 1px solid rgba(255, 115, 0, 0.1); }
-        #highlighter { position: absolute; left: 8px; right: 8px; border: 2px solid var(--primary); background-color: var(--glass); border-radius: 12px; pointer-events: none; transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 1; opacity: 0; }
-        h2 { font-size: 0.7rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.15em; margin: 30px 0 10px 10px; opacity: 0.6; }
-        .item-row { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 14px; margin: 4px 0; cursor: pointer; border-radius: 12px; transition: all 0.3s ease; }
-        .item-row:hover { background: rgba(255, 255, 255, 0.03); }
-        .text-content { font-size: 0.95rem; font-weight: 500; }
-        .text-active { color: var(--primary); text-shadow: 0 0 12px var(--primary); }
-        .add-btn-circle { width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 115, 0, 0.05); border: 1px dashed var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 10px 0 20px 10px; transition: all 0.2s ease; }
-        .add-btn-circle:hover { background: var(--primary); color: #000; transform: scale(1.1); }
-        .bottom-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 25vh; z-index: 2000; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .btn-main-copy { width: 160px; height: 70px; border: none; border-radius: 18px; font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; position: relative; overflow: hidden; background-color: var(--primary); color: #000; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; background-image: url('https://sklepagatesting.github.io/resources/Images/mclaren.png'); background-size: cover; background-repeat: no-repeat; background-position: center; filter: drop-shadow(0 0 12px rgba(255, 115, 0, 0.65)); }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0); backdrop-filter: blur(0px); display: none; justify-content: center; align-items: center; z-index: 4000; transition: all 0.3s ease; }
-        .modal-overlay.active { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
-        .modal-content { background: var(--modal-bg); width: 90%; max-width: 380px; padding: 40px 30px; border-radius: 32px; border: 1px solid var(--glass); position: relative; text-align: center; opacity: 0; transform: scale(0.6) translateY(40px); filter: blur(15px); transition: all 0.35s cubic-bezier(0.15, 1, 0.3, 1.1); max-height: 80vh; overflow-y: auto; }
-        .modal-overlay.active .modal-content { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { font-size: 0.65rem; color: var(--primary); margin-left: 10px; font-weight: 800; }
-        .modal-content input { width: 100%; background: #000; border: 1px solid rgba(255, 115, 0, 0.2); padding: 16px; margin-top: 5px; border-radius: 16px; color: white; font-size: 1.3rem; box-sizing: border-box; text-align: center; font-weight: 700; outline: none; }
-        .modal-result { margin: 25px 0; padding: 20px; background: var(--glass); border-radius: 20px; border: 1px dashed var(--primary); }
-        #finalDiscount { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
-        .modal-copy-zone { height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; background: var(--primary); color: #000; border-radius: 16px; font-weight: 800; transition: 0.2s; }
+        /* --- ACTIVE CHATHEADS HUB --- */
+        .peer-active-hub {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: -22px;
+            align-items: center;
+            z-index: 3000;
+            max-width: calc(100vw - 230px);
+            overflow-x: auto;
+            overflow-y: visible;
+            padding-bottom: 4px;
+            scrollbar-width: none; /* Hide scrollbars on Firefox */
+        }
+
+        .peer-active-hub::-webkit-scrollbar {
+            display: none; /* Hide scrollbars on Chrome/Safari */
+        }
+
+        .peer-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0; /* Guard against component squishing on overflow */
+        }
+
+        .peer-avatar-bubble {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+            border: 2px solid #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .peer-avatar-bubble:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* --- GROUP CHAT STATIC NODE --- */
+        .group-chat-bubble {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: all 0.2s ease;
+            box-shadow: 0 0 8px rgba(255, 115, 0, 0.4);
+            flex-shrink: 0;
+        }
+
+        .group-chat-bubble:hover {
+            transform: scale(1.05);
+            background: #fff;
+            border-color: #fff;
+        }
+
+        /* --- NOTIFICATION DOTS & OVERLAYS --- */
+        .peer-notif-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary);
+            border: 2px solid var(--surface);
+            border-radius: 50%;
+            display: none;
+            z-index: 3010;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .peer-wrapper.has-unread .peer-notif-dot {
+            display: block;
+        }
+
+        .peer-name-hover {
+            position: absolute;
+            left: 50%;
+            bottom: -32px;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--glass);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .peer-wrapper:hover .peer-name-hover {
+            opacity: 1;
+            transform: translateX(-50%) translateY(2px);
+        }
+
+        /* --- GLASSMORPHIC TOP NAVIGATION --- */
+        .top-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 3000;
+            background: rgba(20, 7, 0, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--glass);
+        }
+
+        .top-btn {
+            width: 38px;
+            height: 38px;
+            background: var(--surface);
+            border: 1px solid rgba(255, 115, 0, 0.2);
+            border-radius: 14px;
+            color: white;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-btn:hover {
+            background: var(--primary);
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+        /* --- INTEGRATED PROFILE DECK CARD --- */
+        .user-identity-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            margin-left: 6px;
+        }
+
+        .profile-avatar-node {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+            border: 2px solid var(--primary);
+            padding: 2px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-avatar-node:hover {
+            transform: scale(1.05);
+        }
+
+        .user-identity-card .name-string {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            max-width: 75px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* --- LIVE SESSION DOCK PANEL --- */
+        .chat-docking-panel {
+            position: fixed;
+            bottom: 26vh;
+            right: 20px;
+            width: 340px;
+            height: 440px;
+            background: var(--modal-bg);
+            border: 1px solid var(--glass);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            z-index: 3500;
+            overflow: hidden;
+        }
+
+        .chat-header-bar {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass);
+        }
+
+        .chat-header-bar span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .chat-close-trigger {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .chat-scroller-view {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* --- MESSAGES & REACTION SCALING --- */
+        .msg-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            position: relative;
+        }
+
+        .msg-wrapper.incoming {
+            align-self: flex-start;
+        }
+
+        .msg-wrapper.outgoing {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .msg-wrapper.outgoing .msg-meta-row {
+            flex-direction: row-reverse;
+        }
+
+        .msg-gc-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--primary);
+        }
+
+        .msg-author-tag {
+            font-size: 0.65rem;
+            color: #aaa;
+            font-weight: 700;
+        }
+
+        .msg-time-tag {
+            font-size: 0.6rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .msg-bubble {
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            word-wrap: break-word;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .msg-bubble.incoming {
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .msg-bubble.outgoing {
+            background: var(--primary);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .msg-reaction-container {
+            display: flex;
+            gap: 4px;
+            margin-top: -4px;
+            z-index: 10;
+            background: #140700;
+            border: 1px solid rgba(255, 115, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            align-items: center;
+        }
+
+        .reaction-pill {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+        }
+
+        .reaction-pill.user-voted {
+            background: rgba(255, 115, 0, 0.2);
+            border-radius: 4px;
+            padding: 0 2px;
+        }
+
+        .reaction-count {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .reaction-picker-tray {
+            position: absolute;
+            background: #1c0d07;
+            border: 1px solid var(--primary);
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: flex;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            z-index: 4000;
+            top: -35px;
+        }
+
+        .msg-wrapper.incoming .reaction-picker-tray {
+            left: 0;
+        }
+
+        .msg-wrapper.outgoing .reaction-picker-tray {
+            right: 0;
+        }
+
+        .reaction-option {
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.1s ease;
+        }
+
+        .reaction-option:hover {
+            transform: scale(1.25);
+        }
+
+        .chat-input-row {
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-input-row input {
+            flex: 1;
+            background: #000;
+            border: 1px solid rgba(255, 115, 0, 0.2);
+            border-radius: 8px;
+            color: white;
+            padding: 8px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .chat-input-row input:focus {
+            border-color: var(--primary);
+        }
+
+        .chat-input-row button {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 0 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* --- CONTENT MAIN WRAPPER CONTAINER --- */
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 115, 0, 0.1);
+        }
+
+        #highlighter {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            border: 2px solid var(--primary);
+            background-color: var(--glass);
+            border-radius: 12px;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 1;
+            opacity: 0;
+        }
+
+        h2 {
+            font-size: 0.7rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin: 30px 0 10px 10px;
+            opacity: 0.6;
+        }
+
+        .item-row {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            margin: 4px 0;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .item-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .text-content {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .text-active {
+            color: var(--primary);
+            text-shadow: 0 0 12px var(--primary);
+        }
+
+        .add-btn-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 115, 0, 0.05);
+            border: 1px dashed var(--primary);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 10px 0 20px 10px;
+            transition: all 0.2s ease;
+        }
+
+        .add-btn-circle:hover {
+            background: var(--primary);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        /* --- BOTOM ACTION KEYHOLE ENGINE --- */
+        .bottom-zone {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25vh;
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .btn-main-copy {
+            width: 160px;
+            height: 70px;
+            border: none;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--primary);
+            color: #000;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            background-image: url('https://sklepagatesting.github.io/resources/Images/mclaren.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 0 12px rgba(255, 115, 0, 0.65));
+        }
+
+        .bottom-zone:hover .btn-main-copy:not(.success-state) {
+            width: 250px;
+            height: 120px;
+        }
+
+        .btn-main-copy.success-state {
+            background-image: none !important;
+            background-color: var(--primary) !important;
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 25px rgba(255, 115, 0, 0.5);
+            border-radius: 35px;
+        }
+
+        @keyframes idleFloat {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(0, -5px); }
+        }
+
+        .btn-main-copy.idle {
+            animation: idleFloat 3.5s ease-in-out infinite;
+        }
+
+        /* --- MODAL STRUCTURE INTERFACES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--modal-bg);
+            width: 90%;
+            max-width: 380px;
+            padding: 40px 30px;
+            border-radius: 32px;
+            border: 1px solid var(--glass);
+            position: relative;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.6) translateY(40px);
+            filter: blur(15px);
+            transition: all 0.35s cubic-bezier(0.15, 1, 0.3, 1.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            filter: blur(0px);
+        }
+
+        .list-item {
+            padding: 16px;
+            margin: 8px 0;
+            border-radius: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text-main);
+            background: rgba(255, 115, 0, 0.02);
+            border: 1px solid rgba(255, 115, 0, 0.05);
+        }
+
+        .list-item:hover {
+            background: var(--glass);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-size: 0.65rem;
+            color: var(--primary);
+            margin-left: 10px;
+            font-weight: 800;
+        }
+
+        .modal-content input {
+            width: 100%;
+            background: #000;
+            border: 1px solid rgba(255, 115, 0, 0.2);
+            padding: 16px;
+            margin-top: 5px;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.3rem;
+            box-sizing: border-box;
+            text-align: center;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .modal-content input:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-result {
+            margin: 25px 0;
+            padding: 20px;
+            background: var(--glass);
+            border-radius: 20px;
+            border: 1px dashed var(--primary);
+        }
+
+        #finalDiscount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .modal-copy-zone {
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: var(--primary);
+            color: #000;
+            border-radius: 16px;
+            font-weight: 800;
+            transition: 0.2s;
+        }
+
+        .modal-copy-zone.success-state {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .modal-close-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        /* --- RESPONSIVE MOBILE HARD-FORK PIPELINE --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 100px; /* Breathe layouts down underneath standard layout panels */
+            }
+
+            /* Convert standalone nav segment to dynamic edge-to-edge layout strip */
+            .top-nav {
+                left: 10px;
+                right: 10px;
+                width: auto;
+                justify-content: space-between;
+                border-radius: 24px;
+                padding: 6px 12px;
+            }
+
+            /* Snatch absolute chat head layout frames and drop cleanly directly into standard top-bar workspace flow */
+            .peer-active-hub {
+                position: relative;
+                top: auto;
+                left: auto;
+                max-width: none;
+                flex: 1; /* Automatically absorb and scale across empty header tracks */
+                margin-right: 10px;
+                padding: 0;
+            }
+
+            /* Subtle sizing updates for identity decks to preserve minimal spatial properties */
+            .user-identity-card {
+                margin-left: 2px;
+            }
+
+            .profile-avatar-node {
+                width: 38px;
+                height: 38px;
+            }
+
+            .user-identity-card .name-string {
+                max-width: 50px;
+            }
+
+            /* Force overlay views to securely drop clean dynamic alignment on small screens */
+            .chat-docking-panel {
+                left: 10px;
+                right: 10px;
+                width: auto;
+                bottom: 26vh;
+                height: 40vh;
+            }
+        }
     </style>
 </head>
 
@@ -91,12 +783,14 @@
     <div class="peer-active-hub" id="peerActiveHub"></div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button> 
-        <button class="top-btn" title="Next" onclick="nextFocus()"><i data-lucide="chevron-down"></i></button>
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> <button
+            class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i
+                data-lucide="user-check"></i></button>
 
         <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+            <img id="userDisplayAvatar" class="profile-avatar-node"
+                src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar"
+                onclick="window.location.href='customization.html'">
             <span id="userDisplayName" class="name-string">Sync...</span>
         </div>
     </div>
@@ -108,7 +802,8 @@
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <input type="text" id="chatMsgInput" placeholder="Aa"
+                onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
     </div>
@@ -121,10 +816,14 @@
         <div class="item-row" data-val="110098112460"><span class="text-content">110098112460</span></div>
         <h2>Laboratory & Diagnostic</h2>
         <div class="item-row" data-val="CHEMISTRY: FBS"><span class="text-content">CHEMISTRY: FBS</span></div>
-        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span></div>
-        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL CHOLESTEROL</span></div>
-        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span></div>
-        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY: URINE-URINALYSIS</span></div>
+        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span>
+        </div>
+        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL
+                CHOLESTEROL</span></div>
+        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span>
+        </div>
+        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY:
+                URINE-URINALYSIS</span></div>
         <div class="item-row" data-val="HEMATOLOGY: CBC"><span class="text-content">HEMATOLOGY: CBC</span></div>
         <div class="add-btn-circle" onclick="openList('lab')"><i data-lucide="plus"></i></div>
         <h2>Medical Supplies</h2>
@@ -132,15 +831,18 @@
         <div class="item-row" data-val="IV CATHETER G. 24"><span class="text-content">IV CATHETER G. 24</span></div>
         <div class="item-row" data-val="MICROSET"><span class="text-content">MICROSET</span></div>
         <div class="item-row" data-val="MACROSET"><span class="text-content">MACROSET</span></div>
-        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10 CC)</span></div>
-        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL PAPER TAPE 2X10 YARD</span></div>
+        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10
+                CC)</span></div>
+        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL
+                PAPER TAPE 2X10 YARD</span></div>
         <div class="add-btn-circle" onclick="openList('supply')"><i data-lucide="plus"></i></div>
         <h2>Others</h2>
         <div class="item-row" data-val="ER FEE"><span class="text-content">ER FEE</span></div>
         <div class="item-row" data-val="ADMISSION FEE"><span class="text-content">ADMISSION FEE</span></div>
         <div class="item-row" data-val="MISCELLANEOUS"><span class="text-content">MISCELLANEOUS</span></div>
         <div class="item-row" data-val="BED SHEET"><span class="text-content">BED SHEET</span></div>
-        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span></div>
+        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span>
+        </div>
         <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
@@ -153,19 +855,27 @@
         <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
-
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
-        <button class="btn-main-copy" id="magnetBtn"></button> 
-    </div>
-
+    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> <button class="btn-main-copy"
+            id="magnetBtn"></button> </div>
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
-            <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> </div>
-            <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> </div>
-            <div class="modal-result"> <div id="finalDiscount">0.00</div> </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div>
-            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+            <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number"
+                    placeholder="0.00" oninput="calcSr()"> </div>
+            <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number"
+                    placeholder="0.00" oninput="calcSr()"> </div>
+            <div class="modal-result">
+                <div id="finalDiscount">0.00</div>
+            </div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> <button
+                class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+        </div>
+    </div>
+    <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="listTitle">SELECT ITEM</h3>
+            <div id="listContainer"></div> <button class="modal-close-btn"
+                onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
 
@@ -266,11 +976,13 @@
                     const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
                     magnetBtn.style.backgroundImage = `url('${btnImg}')`;
                     magnetBtn.style.backgroundColor = "transparent";
+                    magnetBtn.innerText = ""; // Clear resting label text for Image textures
                 } else if (data.btnValue) {
                     magnetBtn.style.backgroundImage = "none";
                     document.documentElement.style.setProperty('--primary', data.btnValue);
                     const parsedRgb = hexToRgb(data.btnValue);
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
+                    magnetBtn.innerText = "COPY"; // Set standard text label for solid color modes
                 }
 
                 set(ref(rtdb, 'presence/' + userId), {
@@ -293,7 +1005,7 @@
             const gcWrapper = document.createElement('div');
             gcWrapper.className = 'peer-wrapper';
             gcWrapper.id = 'gc-hub-node';
-            
+
             const gcBubble = document.createElement('div');
             gcBubble.className = 'group-chat-bubble';
             gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
@@ -358,7 +1070,7 @@
 
             let initialSyncComplete = false;
             onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
-            
+
             const hook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (!initialSyncComplete) return;
                 if (childSnap.exists()) {
@@ -502,10 +1214,10 @@
                 const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
                 const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
                 const newMsgRef = push(chatRouteRef);
-                set(newMsgRef, { 
-                    sender: userId, 
-                    text: text, 
-                    timestamp: Date.now() 
+                set(newMsgRef, {
+                    sender: userId,
+                    text: text,
+                    timestamp: Date.now()
                 });
             }
             input.value = '';
@@ -513,7 +1225,7 @@
 
         function appendBubbleToScroller(msg, msgId, direction) {
             const view = document.getElementById('chatScroller');
-            
+
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${direction}`;
             wrapper.id = `msg-wrap-${msgId}`;
@@ -546,7 +1258,7 @@
             const bbl = document.createElement('div');
             bbl.className = `msg-bubble ${direction}`;
             bbl.innerText = msg.text;
-            
+
             bbl.onclick = (e) => {
                 e.stopPropagation();
                 toggleReactionPicker(msgId, wrapper);
@@ -639,13 +1351,13 @@
                 Object.keys(summary).forEach(emo => {
                     const pill = document.createElement('div');
                     pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
-                    
+
                     if (isGroupChat) {
                         pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
                     } else {
                         pill.innerHTML = `<span>${emo}</span>`;
                     }
-                    
+
                     pill.onclick = (e) => {
                         e.stopPropagation();
                         submitReaction(msgId, emo);
@@ -672,45 +1384,73 @@
         });
     </script>
 
-    <script>        
+    <script>
         let textTimeout; let currentFocusedIndex = 0;
         const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
         const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
-        
-        window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
-        lucide.createIcons(); startIdle(); };
-        
-        function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = '';
-        document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400);
-        } }
-        
-        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false);
+
+        window.onload = () => {
+            setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
+            lucide.createIcons(); startIdle();
+        };
+
+        function toggleModal(id, show) {
+            const modal = document.getElementById(id); if (show) {
+                document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = '';
+                document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10);
+            } else {
+                modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400);
+            }
         }
-        
-        function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
-        const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
+
+        function closeOutside(e, id) {
+            if (e.target.id === id) toggleModal(id, false);
         }
-        
-        function copyModalValue() { const val = document.getElementById('finalDiscount').innerText;
-        navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
-        
-        function openList(cat) { const listCont = document.getElementById('listContainer');
-        listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); });
-        window.toggleModal('listModal', true); }
-        
-        function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash');
-        setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600);
+
+        function calcSr() {
+            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
+            const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
         }
-        
+
+        function copyModalValue() {
+            const val = document.getElementById('finalDiscount').innerText;
+            navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); });
+        }
+
+        function openList(cat) {
+            const listCont = document.getElementById('listContainer');
+            listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); });
+            window.toggleModal('listModal', true);
+        }
+
+        function flashMagnet() {
+            magnetBtn.innerText = "COPIED!";
+            magnetBtn.classList.add('success-state');
+            document.body.classList.add('copy-flash');
+
+            setTimeout(() => {
+                // If the button has a background image set, return to empty string. Otherwise revert to "COPY".
+                if (magnetBtn.style.backgroundImage && magnetBtn.style.backgroundImage !== "none") {
+                    magnetBtn.innerText = "";
+                } else {
+                    magnetBtn.innerText = "COPY";
+                }
+
+                magnetBtn.classList.remove('success-state');
+                document.body.classList.remove('copy-flash');
+            }, 600);
+        }
+
         document.addEventListener('mousemove', (e) => { const threshold = window.innerHeight * 0.75; if (e.clientY > threshold) { const centerX = window.innerWidth / 2; const centerY = window.innerHeight - (window.innerHeight * 0.125); const pullX = (e.clientX - centerX) * 0.3; const pullY = (e.clientY - centerY) * 0.4; magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; } else { resetMagnet(); } });
-        
+
         function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
-        
-        function updateFocus(index) { currentFocusedIndex = index;
-        const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1";
-        highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        function updateFocus(index) {
+            currentFocusedIndex = index;
+            const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1";
+            highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        
+
         function executeCopy(row, text, index) {
             updateFocus(index);
             navigator.clipboard.writeText(text).then(() => {
@@ -718,13 +1458,17 @@
                 let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
             });
         }
-        
-        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex);
-        } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0);
+
+        function copyFocusedItem() {
+            executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex);
+        } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() {
+            updateFocus(0);
         }
-        
-        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle');
+
+        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() {
+            magnetBtn.classList.remove('idle');
         } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));    
     </script>
 </body>
+
 </html>
