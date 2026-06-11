@@ -226,8 +226,8 @@
             position: fixed;
             bottom: 26vh;
             right: 20px;
-            width: 320px;
-            height: 420px;
+            width: 340px;
+            height: 440px;
             background: var(--modal-bg);
             border: 1px solid var(--glass);
             border-radius: 20px;
@@ -274,7 +274,7 @@
         .msg-wrapper {
             display: flex;
             flex-direction: column;
-            max-width: 80%;
+            max-width: 85%;
             position: relative;
         }
 
@@ -287,12 +287,36 @@
             align-items: flex-end;
         }
 
+        /* GC Metadata Structure Row styling */
+        .msg-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        
+        .msg-wrapper.outgoing .msg-meta-row {
+            flex-direction: row-reverse;
+        }
+
+        .msg-gc-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--primary);
+        }
+
         .msg-author-tag {
             font-size: 0.65rem;
-            color: #888;
-            margin-bottom: 2px;
-            font-weight: 600;
-            padding-left: 4px;
+            color: #aaa;
+            font-weight: 700;
+        }
+
+        .msg-time-tag {
+            font-size: 0.6rem;
+            color: #666;
+            font-weight: 400;
         }
 
         .msg-bubble {
@@ -302,6 +326,7 @@
             word-wrap: break-word;
             position: relative;
             cursor: pointer;
+            user-select: none;
         }
 
         .msg-bubble.incoming {
@@ -319,7 +344,7 @@
         /* Reactions container styles */
         .msg-reaction-container {
             display: flex;
-            gap: 3px;
+            gap: 4px;
             margin-top: -4px;
             z-index: 10;
             background: #140700;
@@ -824,10 +849,10 @@
         }
 
         let currentUserName = "Operator";
+        let currentUserAvatarRaw = "avatar-m1";
         let selectedActiveChatPartnerId = null;
         let isGroupChat = false;
         let transientChatListenerRemoveHook = null;
-        let transientReactionListenerRemoveHook = null;
         const mappedRouteTrackingHooks = {};
 
         const premium3dAssets = {
@@ -872,9 +897,10 @@
             if (snapshot.exists()) {
                 const data = snapshot.data();
                 currentUserName = data.customName || "Operator";
+                currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
                 document.getElementById('userDisplayName').innerText = currentUserName;
 
-                const matchedAvatar = premium3dAssets[data.avatarUrl] || data.avatarUrl || premium3dAssets['avatar-m1'];
+                const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
                 document.getElementById('userDisplayAvatar').src = matchedAvatar;
 
                 if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
@@ -904,7 +930,7 @@
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
                     name: currentUserName,
-                    avatar: data.avatarUrl || 'avatar-m1',
+                    avatar: currentUserAvatarRaw,
                     timestamp: Date.now()
                 });
             } else {
@@ -928,7 +954,7 @@
 
             const gcNameTag = document.createElement('div');
             gcNameTag.className = 'peer-name-hover';
-            gcNameTag.innerText = "BARANGAY GROUP CHAT";
+            gcNameTag.innerText = "GROUP CHAT";
 
             gcWrapper.appendChild(gcBubble);
             gcWrapper.appendChild(gcNameTag);
@@ -995,7 +1021,7 @@
         function initGroupChatChannel() {
             isGroupChat = true;
             selectedActiveChatPartnerId = "BARANGAY_GC";
-            document.getElementById('chatTargetName').innerText = `🔥 Barangay Group Chat`;
+            document.getElementById('chatTargetName').innerText = `Group Chat`;
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
 
@@ -1014,7 +1040,7 @@
         function initTransientChatChannel(partnerId, partnerName) {
             isGroupChat = false;
             selectedActiveChatPartnerId = partnerId;
-            document.getElementById('chatTargetName').innerText = `Chat with ${partnerName}`;
+            document.getElementById('chatTargetName').innerText = `${partnerName}`;
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
 
@@ -1037,7 +1063,6 @@
 
         function cleanupTransientListeners() {
             if (transientChatListenerRemoveHook) { transientChatListenerRemoveHook(); transientChatListenerRemoveHook = null; }
-            if (transientReactionListenerRemoveHook) { transientReactionListenerRemoveHook(); transientReactionListenerRemoveHook = null; }
         }
 
         window.sendChatPayload = function () {
@@ -1051,6 +1076,7 @@
                 set(newMsgRef, {
                     sender: userId,
                     senderName: currentUserName,
+                    senderAvatar: currentUserAvatarRaw,
                     text: text,
                     timestamp: Date.now()
                 });
@@ -1074,18 +1100,38 @@
             wrapper.className = `msg-wrapper ${direction}`;
             wrapper.id = `msg-wrap-${msgId}`;
 
-            if (isGroupChat && direction === 'incoming') {
+            // Parse formatted localized time string from node timestamp
+            const msgTime = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+            // GC Modification: Render Profile Identity Metadata Info block for whoever chatted inside the Group Chat
+            if (isGroupChat) {
+                const metaRow = document.createElement('div');
+                metaRow.className = 'msg-meta-row';
+
+                const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
+                const avatarNode = document.createElement('img');
+                avatarNode.className = 'msg-gc-avatar';
+                avatarNode.src = avatarSrc;
+
                 const authorTag = document.createElement('div');
                 authorTag.className = 'msg-author-tag';
-                authorTag.innerText = msg.senderName || "Anonymous";
-                wrapper.appendChild(authorTag);
+                authorTag.innerText = msg.senderName || "Operator";
+
+                const timeTag = document.createElement('div');
+                timeTag.className = 'msg-time-tag';
+                timeTag.innerText = msgTime;
+
+                metaRow.appendChild(avatarNode);
+                metaRow.appendChild(authorTag);
+                metaRow.appendChild(timeTag);
+                wrapper.appendChild(metaRow);
             }
 
             const bbl = document.createElement('div');
             bbl.className = `msg-bubble ${direction}`;
             bbl.innerText = msg.text;
             
-            // Toggle Picker On Click
+            // Toggle Reaction Selector Popover Window on Bubble Press Click
             bbl.onclick = (e) => {
                 e.stopPropagation();
                 toggleReactionPicker(msgId, wrapper);
@@ -1093,7 +1139,7 @@
 
             wrapper.appendChild(bbl);
 
-            // Container for Reactions
+            // Container for Active Display Reactions Node Element (Visible on both private and group messaging)
             const rxContainer = document.createElement('div');
             rxContainer.className = 'msg-reaction-container';
             rxContainer.id = `rx-container-${msgId}`;
@@ -1103,11 +1149,11 @@
             view.appendChild(wrapper);
             view.scrollTop = view.scrollHeight;
 
-            // Sync Reactions in real-time
+            // Sync and monitor reactions real-time node bindings
             syncReactionsDisplay(msgId);
         }
 
-        // Reaction Toggle Picker Controller Matrix
+        // Popover Tray Matrix Selection Controller Engine
         function toggleReactionPicker(msgId, wrapper) {
             const activeTray = document.getElementById(`tray-${msgId}`);
             if (activeTray) {
@@ -1115,7 +1161,6 @@
                 return;
             }
 
-            // Clean up existing picker menus
             document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
 
             const tray = document.createElement('div');
@@ -1138,7 +1183,7 @@
             wrapper.appendChild(tray);
         }
 
-        // Write or drop reaction data payload directly to RTDB node references
+        // Commit state parameters down into targeted database endpoints
         function submitReaction(msgId, emoji) {
             let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
             if (isGroupChat) {
@@ -1148,14 +1193,14 @@
             const rxRef = ref(rtdb, path);
             onValue(rxRef, (snapshot) => {
                 if (snapshot.exists() && snapshot.val() === emoji) {
-                    remove(rxRef); // Remove if selected item matches previously selected index node
+                    remove(rxRef);
                 } else {
                     set(rxRef, emoji);
                 }
             }, { onlyOnce: true });
         }
 
-        // Monitor and parse targeted message structural parameters and render aggregates
+        // Sync and parse reaction metrics across channels
         function syncReactionsDisplay(msgId) {
             let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
             if (isGroupChat) {
@@ -1172,15 +1217,9 @@
                     return;
                 }
 
-                const reactionData = snapshot.val(); // e.g. { userId1: '😂', userId2: '😡' }
+                const reactionData = snapshot.val();
                 
-                // CRITICAL RULE CONDITION CHECK: Suppress rendering total configuration tallies on private messages
-                if (!isGroupChat) {
-                    container.style.display = 'none';
-                    return;
-                }
-
-                // Process Group Chat dynamic reaction counts
+                // Build reactive user tracking lists
                 const summary = {};
                 Object.keys(reactionData).forEach(uid => {
                     const emo = reactionData[uid];
@@ -1192,7 +1231,13 @@
                 Object.keys(summary).forEach(emo => {
                     const pill = document.createElement('div');
                     pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
-                    pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
+                    
+                    // Conditional Tally configuration check: group layouts display total numbers, private chats display just the elements
+                    if (isGroupChat) {
+                        pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
+                    } else {
+                        pill.innerHTML = `<span>${emo}</span>`;
+                    }
                     
                     pill.onclick = (e) => {
                         e.stopPropagation();
@@ -1215,7 +1260,6 @@
             if (userId) set(ref(rtdb, 'presence/' + userId), null);
         });
 
-        // Close Popovers on clicking outer window areas
         window.addEventListener('click', () => {
             document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
         });
