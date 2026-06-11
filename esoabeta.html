@@ -82,6 +82,28 @@
             transform: scale(1.05);
         }
 
+        /* Group Chat Static Node Bubble */
+        .group-chat-bubble {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: all 0.2s ease;
+            box-shadow: 0 0 8px rgba(255, 115, 0, 0.4);
+        }
+
+        .group-chat-bubble:hover {
+            transform: scale(1.05);
+            background: #fff;
+            border-color: #fff;
+        }
+
         /* Notification Dot overlay on sender avatar */
         .peer-notif-dot {
             position: absolute;
@@ -205,7 +227,7 @@
             bottom: 26vh;
             right: 20px;
             width: 320px;
-            height: 400px;
+            height: 420px;
             background: var(--modal-bg);
             border: 1px solid var(--glass);
             border-radius: 20px;
@@ -245,37 +267,41 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
 
-        /* Message Layout Wrapper to support Reactions Side-by-Side without overlapping */
-        .msg-layout-wrapper {
+        /* Message Structure Enhancements for Content and Reactions */
+        .msg-wrapper {
             display: flex;
-            align-items: flex-end;
-            gap: 6px;
-            width: 100%;
+            flex-direction: column;
+            max-width: 80%;
             position: relative;
         }
 
-        .msg-layout-wrapper.outgoing {
-            flex-direction: row-reverse;
-            align-self: flex-end;
+        .msg-wrapper.incoming {
+            align-self: flex-start;
         }
 
-        .msg-layout-wrapper.incoming {
-            flex-direction: row;
-            align-self: flex-start;
+        .msg-wrapper.outgoing {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg-author-tag {
+            font-size: 0.65rem;
+            color: #888;
+            margin-bottom: 2px;
+            font-weight: 600;
+            padding-left: 4px;
         }
 
         .msg-bubble {
             padding: 8px 12px;
             border-radius: 12px;
             font-size: 0.85rem;
-            max-width: 70%;
             word-wrap: break-word;
-            cursor: pointer;
             position: relative;
-            user-select: none;
+            cursor: pointer;
         }
 
         .msg-bubble.incoming {
@@ -290,60 +316,69 @@
             font-weight: 600;
         }
 
-        /* Non-overlapping Side Reaction Pill Configuration */
-        .msg-side-reaction-pill {
+        /* Reactions container styles */
+        .msg-reaction-container {
+            display: flex;
+            gap: 3px;
+            margin-top: -4px;
+            z-index: 10;
+            background: #140700;
+            border: 1px solid rgba(255, 115, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            align-items: center;
+        }
+
+        .reaction-pill {
             display: flex;
             align-items: center;
-            gap: 3px;
-            background: #23120b;
-            border: 1px solid var(--glass);
-            padding: 3px 6px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            color: var(--text-main);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            user-select: none;
+            gap: 2px;
             cursor: pointer;
-            height: fit-content;
-            margin-bottom: 2px;
-            opacity: 0;
-            transform: scale(0.8);
-            transition: opacity 0.15s ease, transform 0.15s ease;
-            pointer-events: none;
         }
 
-        .msg-side-reaction-pill.active {
-            opacity: 1;
-            transform: scale(1);
-            pointer-events: auto;
+        .reaction-pill.user-voted {
+            background: rgba(255, 115, 0, 0.2);
+            border-radius: 4px;
+            padding: 0 2px;
         }
 
-        .msg-side-reaction-pill:hover {
-            border-color: var(--primary);
+        .reaction-count {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary);
         }
 
-        /* Mini Context Popover Picker Panel */
-        .reaction-mini-picker {
+        /* Floating Reaction Picker popover overlay */
+        .reaction-picker-tray {
             position: absolute;
-            bottom: calc(100% + 4px);
-            background: #1f0d04;
+            background: #1c0d07;
             border: 1px solid var(--primary);
-            border-radius: 10px;
-            padding: 4px;
+            padding: 4px 8px;
+            border-radius: 20px;
             display: flex;
             gap: 6px;
-            z-index: 3600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 4000;
+            top: -35px;
+        }
+        
+        .msg-wrapper.incoming .reaction-picker-tray {
+            left: 0;
         }
 
-        .reaction-mini-picker span {
-            font-size: 1.1rem;
+        .msg-wrapper.outgoing .reaction-picker-tray {
+            right: 0;
+        }
+
+        .reaction-option {
             cursor: pointer;
+            font-size: 1.1rem;
             transition: transform 0.1s ease;
         }
 
-        .reaction-mini-picker span:hover {
+        .reaction-option:hover {
             transform: scale(1.25);
         }
 
@@ -511,8 +546,15 @@
         }
 
         @keyframes idleFloat {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(0, -5px); }
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(0, -5px);
+            }
         }
 
         .btn-main-copy.idle {
@@ -660,12 +702,15 @@
     <div class="peer-active-hub" id="peerActiveHub"></div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
-        <button class="top-btn" title="Next" onclick="nextFocus()"><i data-lucide="chevron-down"></i></button>
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> <button
+            class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i
+                data-lucide="user-check"></i></button> <button class="top-btn" title="Next" onclick="nextFocus()"><i
+                data-lucide="chevron-down"></i></button>
 
         <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+            <img id="userDisplayAvatar" class="profile-avatar-node"
+                src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar"
+                onclick="window.location.href='customization.html'">
             <span id="userDisplayName" class="name-string">Sync...</span>
         </div>
     </div>
@@ -677,7 +722,8 @@
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Transient text node..." onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <input type="text" id="chatMsgInput" placeholder="Transient text node..."
+                onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
     </div>
@@ -690,10 +736,14 @@
         <div class="item-row" data-val="110098112460"><span class="text-content">110098112460</span></div>
         <h2>Laboratory & Diagnostic</h2>
         <div class="item-row" data-val="CHEMISTRY: FBS"><span class="text-content">CHEMISTRY: FBS</span></div>
-        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span></div>
-        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL CHOLESTEROL</span></div>
-        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span></div>
-        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY: URINE-URINALYSIS</span></div>
+        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span>
+        </div>
+        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL
+                CHOLESTEROL</span></div>
+        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span>
+        </div>
+        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY:
+                URINE-URINALYSIS</span></div>
         <div class="item-row" data-val="HEMATOLOGY: CBC"><span class="text-content">HEMATOLOGY: CBC</span></div>
         <div class="add-btn-circle" onclick="openList('lab')"><i data-lucide="plus"></i></div>
         <h2>Medical Supplies</h2>
@@ -701,15 +751,18 @@
         <div class="item-row" data-val="IV CATHETER G. 24"><span class="text-content">IV CATHETER G. 24</span></div>
         <div class="item-row" data-val="MICROSET"><span class="text-content">MICROSET</span></div>
         <div class="item-row" data-val="MACROSET"><span class="text-content">MACROSET</span></div>
-        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10 CC)</span></div>
-        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL PAPER TAPE 2X10 YARD</span></div>
+        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10
+                CC)</span></div>
+        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL
+                PAPER TAPE 2X10 YARD</span></div>
         <div class="add-btn-circle" onclick="openList('supply')"><i data-lucide="plus"></i></div>
         <h2>Others</h2>
         <div class="item-row" data-val="ER FEE"><span class="text-content">ER FEE</span></div>
         <div class="item-row" data-val="ADMISSION FEE"><span class="text-content">ADMISSION FEE</span></div>
         <div class="item-row" data-val="MISCELLANEOUS"><span class="text-content">MISCELLANEOUS</span></div>
         <div class="item-row" data-val="BED SHEET"><span class="text-content">BED SHEET</span></div>
-        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span></div>
+        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span>
+        </div>
         <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
@@ -722,43 +775,34 @@
         <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
-
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()">
-        <button class="btn-main-copy" id="magnetBtn"></button>
-    </div>
-
+    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> <button class="btn-main-copy"
+            id="magnetBtn"></button> </div>
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
-            <div class="input-group">
-                <label>HOSPITAL CHARGES</label>
-                <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()">
-            </div>
-            <div class="input-group">
-                <label>CASE RATE (PHIC)</label>
-                <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()">
-            </div>
+            <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number"
+                    placeholder="0.00" oninput="calcSr()"> </div>
+            <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number"
+                    placeholder="0.00" oninput="calcSr()"> </div>
             <div class="modal-result">
                 <div id="finalDiscount">0.00</div>
             </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div>
-            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> <button
+                class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
-
     <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="listTitle">SELECT ITEM</h3>
-            <div id="listContainer"></div>
-            <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
+            <div id="listContainer"></div> <button class="modal-close-btn"
+                onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+        import { getDatabase, ref, onValue, set, push, onChildAdded, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
             authDomain: "svls-289ee.firebaseapp.com",
@@ -779,9 +823,13 @@
             window.location.href = "login.html";
         }
 
+        let currentUserName = "Operator";
         let selectedActiveChatPartnerId = null;
+        let isGroupChat = false;
         let transientChatListenerRemoveHook = null;
+        let transientReactionListenerRemoveHook = null;
         const mappedRouteTrackingHooks = {};
+
         const premium3dAssets = {
             'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
             'avatar-m2': 'https://api.dicebear.com/7.x/notionists/svg?seed=Jack',
@@ -823,7 +871,8 @@
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
-                document.getElementById('userDisplayName').innerText = data.customName || "Operator";
+                currentUserName = data.customName || "Operator";
+                document.getElementById('userDisplayName').innerText = currentUserName;
 
                 const matchedAvatar = premium3dAssets[data.avatarUrl] || data.avatarUrl || premium3dAssets['avatar-m1'];
                 document.getElementById('userDisplayAvatar').src = matchedAvatar;
@@ -854,7 +903,7 @@
 
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
-                    name: data.customName || "User Room",
+                    name: currentUserName,
                     avatar: data.avatarUrl || 'avatar-m1',
                     timestamp: Date.now()
                 });
@@ -867,6 +916,25 @@
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
             hub.innerHTML = '';
+
+            // 1. Static Group Chat Bubble Node
+            const gcWrapper = document.createElement('div');
+            gcWrapper.className = 'peer-wrapper';
+            
+            const gcBubble = document.createElement('div');
+            gcBubble.className = 'group-chat-bubble';
+            gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
+            gcBubble.onclick = () => initGroupChatChannel();
+
+            const gcNameTag = document.createElement('div');
+            gcNameTag.className = 'peer-name-hover';
+            gcNameTag.innerText = "BARANGAY GROUP CHAT";
+
+            gcWrapper.appendChild(gcBubble);
+            gcWrapper.appendChild(gcNameTag);
+            hub.appendChild(gcWrapper);
+
+            // 2. Load online peer nodes
             if (snapshot.exists()) {
                 const users = snapshot.val();
                 Object.keys(users).forEach(uid => {
@@ -894,17 +962,12 @@
                     wrapper.appendChild(dotNode);
                     wrapper.appendChild(nameTag);
                     hub.appendChild(wrapper);
+
                     bindBackgroundNotifListener(peer.uid);
                 });
             }
+            lucide.createIcons();
         });
-
-        function hexToUniqueEmojis(msgId) {
-            const emojis = ["❤️", "👍", "🔥", "😂", "😮", "😢", "👏"];
-            let code = 0;
-            for (let i = 0; i < msgId.length; i++) code += msgId.charCodeAt(i);
-            return [emojis[code % emojis.length], emojis[(code + 2) % emojis.length]];
-        }
 
         function bindBackgroundNotifListener(partnerId) {
             if (mappedRouteTrackingHooks[partnerId]) return;
@@ -928,7 +991,28 @@
             mappedRouteTrackingHooks[partnerId] = hook;
         }
 
+        // Initialize Group Chat View
+        function initGroupChatChannel() {
+            isGroupChat = true;
+            selectedActiveChatPartnerId = "BARANGAY_GC";
+            document.getElementById('chatTargetName').innerText = `🔥 Barangay Group Chat`;
+            document.getElementById('chatScroller').innerHTML = '';
+            document.getElementById('chatDock').style.display = 'flex';
+
+            cleanupTransientListeners();
+
+            const chatRouteRef = ref(rtdb, `group_chat/messages`);
+            transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
+                if (childSnap.exists()) {
+                    const msg = childSnap.val();
+                    appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+                }
+            });
+        }
+
+        // Initialize Private Chat View
         function initTransientChatChannel(partnerId, partnerName) {
+            isGroupChat = false;
             selectedActiveChatPartnerId = partnerId;
             document.getElementById('chatTargetName').innerText = `Chat with ${partnerName}`;
             document.getElementById('chatScroller').innerHTML = '';
@@ -939,16 +1023,21 @@
                 peerContainer.classList.remove('has-unread');
             }
 
-            if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
+            cleanupTransientListeners();
+
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-            
             transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
-                    appendBubbleWithSideReaction(childSnap.key, msg, channelSessionKey);
+                    appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
                 }
             });
+        }
+
+        function cleanupTransientListeners() {
+            if (transientChatListenerRemoveHook) { transientChatListenerRemoveHook(); transientChatListenerRemoveHook = null; }
+            if (transientReactionListenerRemoveHook) { transientReactionListenerRemoveHook(); transientReactionListenerRemoveHook = null; }
         }
 
         window.sendChatPayload = function () {
@@ -956,96 +1045,169 @@
             const text = input.value.trim();
             if (!text || !selectedActiveChatPartnerId) return;
 
-            const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-            const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-
-            const newMsgRef = push(chatRouteRef);
-            set(newMsgRef, { sender: userId, text: text, timestamp: Date.now() });
+            if (isGroupChat) {
+                const chatRouteRef = ref(rtdb, `group_chat/messages`);
+                const newMsgRef = push(chatRouteRef);
+                set(newMsgRef, {
+                    sender: userId,
+                    senderName: currentUserName,
+                    text: text,
+                    timestamp: Date.now()
+                });
+            } else {
+                const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+                const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+                const newMsgRef = push(chatRouteRef);
+                set(newMsgRef, { 
+                    sender: userId, 
+                    text: text, 
+                    timestamp: Date.now() 
+                });
+            }
             input.value = '';
         };
 
-        function appendBubbleWithSideReaction(msgId, msgObj, sessionKey) {
+        function appendBubbleToScroller(msg, msgId, direction) {
             const view = document.getElementById('chatScroller');
-            const direction = msgObj.sender === userId ? 'outgoing' : 'incoming';
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${direction}`;
+            wrapper.id = `msg-wrap-${msgId}`;
 
-            const layoutWrapper = document.createElement('div');
-            layoutWrapper.className = `msg-layout-wrapper ${direction}`;
-            layoutWrapper.id = `wrapper-${msgId}`;
+            if (isGroupChat && direction === 'incoming') {
+                const authorTag = document.createElement('div');
+                authorTag.className = 'msg-author-tag';
+                authorTag.innerText = msg.senderName || "Anonymous";
+                wrapper.appendChild(authorTag);
+            }
 
             const bbl = document.createElement('div');
             bbl.className = `msg-bubble ${direction}`;
-            bbl.innerText = msgObj.text;
-
-            const pill = document.createElement('div');
-            pill.className = 'msg-side-reaction-pill';
-            pill.id = `pill-${msgId}`;
-
-            const autoEmojis = hexToUniqueEmojis(msgId);
-            const totalCount = msgObj.reactionCount || 0;
-
-            if (totalCount > 0) {
-                pill.innerText = `${autoEmojis[0]}${autoEmojis[1]} ${totalCount}`;
-                pill.classList.add('active');
-            }
-
-            const picker = document.createElement('div');
-            picker.className = 'reaction-mini-picker';
-            picker.id = `picker-${msgId}`;
-
-            const pickerList = ["🔥", "❤️", "👍", "😂"];
-            pickerList.forEach(emo => {
-                const span = document.createElement('span');
-                span.innerText = emo;
-                span.onclick = (e) => {
-                    e.stopPropagation();
-                    const nextCount = totalCount + 1;
-                    update(ref(rtdb, `sessions/${sessionKey}/${msgId}`), { reactionCount: nextCount });
-                    picker.style.display = 'none';
-                };
-                picker.appendChild(span);
-            });
-
+            bbl.innerText = msg.text;
+            
+            // Toggle Picker On Click
             bbl.onclick = (e) => {
                 e.stopPropagation();
-                document.querySelectorAll('.reaction-mini-picker').forEach(p => {
-                    if (p.id !== `picker-${msgId}`) p.style.display = 'none';
-                });
-                picker.style.display = (picker.style.display === 'flex') ? 'none' : 'flex';
+                toggleReactionPicker(msgId, wrapper);
             };
 
-            pill.onclick = (e) => {
-                e.stopPropagation();
-                const nextCount = totalCount + 1;
-                update(ref(rtdb, `sessions/${sessionKey}/${msgId}`), { reactionCount: nextCount });
-            };
+            wrapper.appendChild(bbl);
 
-            layoutWrapper.appendChild(bbl);
-            layoutWrapper.appendChild(pill);
-            bbl.appendChild(picker);
-            view.appendChild(layoutWrapper);
+            // Container for Reactions
+            const rxContainer = document.createElement('div');
+            rxContainer.className = 'msg-reaction-container';
+            rxContainer.id = `rx-container-${msgId}`;
+            rxContainer.style.display = 'none';
+            wrapper.appendChild(rxContainer);
+
+            view.appendChild(wrapper);
             view.scrollTop = view.scrollHeight;
 
-            const msgNodeRef = ref(rtdb, `sessions/${sessionKey}/${msgId}`);
-            onValue(msgNodeRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const currentVal = snapshot.val();
-                    const count = currentVal.reactionCount || 0;
-                    const livePill = document.getElementById(`pill-${msgId}`);
-                    if (livePill) {
-                        if (count > 0) {
-                            livePill.innerText = `${autoEmojis[0]}${autoEmojis[1]} ${count}`;
-                            livePill.classList.add('active');
-                        } else {
-                            livePill.classList.remove('active');
-                        }
-                    }
+            // Sync Reactions in real-time
+            syncReactionsDisplay(msgId);
+        }
+
+        // Reaction Toggle Picker Controller Matrix
+        function toggleReactionPicker(msgId, wrapper) {
+            const activeTray = document.getElementById(`tray-${msgId}`);
+            if (activeTray) {
+                activeTray.remove();
+                return;
+            }
+
+            // Clean up existing picker menus
+            document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
+
+            const tray = document.createElement('div');
+            tray.className = 'reaction-picker-tray';
+            tray.id = `tray-${msgId}`;
+
+            const emojis = ['😂', '😢', '😡', '🖕'];
+            emojis.forEach(emoji => {
+                const opt = document.createElement('div');
+                opt.className = 'reaction-option';
+                opt.innerText = emoji;
+                opt.onclick = (e) => {
+                    e.stopPropagation();
+                    submitReaction(msgId, emoji);
+                    tray.remove();
+                };
+                tray.appendChild(opt);
+            });
+
+            wrapper.appendChild(tray);
+        }
+
+        // Write or drop reaction data payload directly to RTDB node references
+        function submitReaction(msgId, emoji) {
+            let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
+            if (isGroupChat) {
+                path = `group_chat/messages/${msgId}/reactions/${userId}`;
+            }
+
+            const rxRef = ref(rtdb, path);
+            onValue(rxRef, (snapshot) => {
+                if (snapshot.exists() && snapshot.val() === emoji) {
+                    remove(rxRef); // Remove if selected item matches previously selected index node
+                } else {
+                    set(rxRef, emoji);
                 }
+            }, { onlyOnce: true });
+        }
+
+        // Monitor and parse targeted message structural parameters and render aggregates
+        function syncReactionsDisplay(msgId) {
+            let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
+            if (isGroupChat) {
+                path = `group_chat/messages/${msgId}/reactions`;
+            }
+
+            onValue(ref(rtdb, path), (snapshot) => {
+                const container = document.getElementById(`rx-container-${msgId}`);
+                if (!container) return;
+
+                container.innerHTML = '';
+                if (!snapshot.exists()) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                const reactionData = snapshot.val(); // e.g. { userId1: '😂', userId2: '😡' }
+                
+                // CRITICAL RULE CONDITION CHECK: Suppress rendering total configuration tallies on private messages
+                if (!isGroupChat) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                // Process Group Chat dynamic reaction counts
+                const summary = {};
+                Object.keys(reactionData).forEach(uid => {
+                    const emo = reactionData[uid];
+                    if (!summary[emo]) summary[emo] = { count: 0, userVoted: false };
+                    summary[emo].count++;
+                    if (uid === userId) summary[emo].userVoted = true;
+                });
+
+                Object.keys(summary).forEach(emo => {
+                    const pill = document.createElement('div');
+                    pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
+                    pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
+                    
+                    pill.onclick = (e) => {
+                        e.stopPropagation();
+                        submitReaction(msgId, emo);
+                    };
+                    container.appendChild(pill);
+                });
+
+                container.style.display = 'flex';
             });
         }
 
         window.closeChatSession = function () {
             document.getElementById('chatDock').style.display = 'none';
-            if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
+            cleanupTransientListeners();
             selectedActiveChatPartnerId = null;
         };
 
@@ -1053,28 +1215,65 @@
             if (userId) set(ref(rtdb, 'presence/' + userId), null);
         });
 
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.reaction-mini-picker').forEach(p => p.style.display = 'none');
+        // Close Popovers on clicking outer window areas
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
         });
     </script>
 
-    <script>
+    <script>        
         let textTimeout; let currentFocusedIndex = 0;
         const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
         const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
-        window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); }); lucide.createIcons(); startIdle(); };
-        function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = ''; document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); } }
-        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }
-        function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0; const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2); }
-        function copyModalValue() { const val = document.getElementById('finalDiscount').innerText; navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
-        function openList(cat) { const listCont = document.getElementById('listContainer'); listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); }); toggleModal('listModal', true); }
-        function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash'); setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600); }
+        
+        window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
+        lucide.createIcons(); startIdle(); };
+        
+        function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = '';
+        document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400);
+        } }
+        
+        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false);
+        }
+        
+        function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
+        const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
+        }
+        
+        function copyModalValue() { const val = document.getElementById('finalDiscount').innerText;
+        navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
+        
+        function openList(cat) { const listCont = document.getElementById('listContainer');
+        listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); });
+        window.toggleModal('listModal', true); }
+        
+        function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash');
+        setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600);
+        }
+        
         document.addEventListener('mousemove', (e) => { const threshold = window.innerHeight * 0.75; if (e.clientY > threshold) { const centerX = window.innerWidth / 2; const centerY = window.innerHeight - (window.innerHeight * 0.125); const pullX = (e.clientX - centerX) * 0.3; const pullY = (e.clientY - centerY) * 0.4; magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; } else { resetMagnet(); } });
+        
         function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
-        function updateFocus(index) { currentFocusedIndex = index; const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1"; highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-        function executeCopy(row, text, index) { updateFocus(index); navigator.clipboard.writeText(text).then(() => { document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet(); let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000); }); }
-        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0); }
-        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle'); } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));
+        
+        function updateFocus(index) { currentFocusedIndex = index;
+        const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1";
+        highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function executeCopy(row, text, index) {
+            updateFocus(index);
+            navigator.clipboard.writeText(text).then(() => {
+                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet();
+                let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
+            });
+        }
+        
+        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex);
+        } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0);
+        }
+        
+        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle');
+        } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));    
     </script>
 </body>
 
