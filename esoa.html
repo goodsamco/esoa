@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -874,7 +876,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set, push, onChildAdded, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -941,8 +943,29 @@
         return "255,115,0";
     }
 
-    const userDocRef = doc(db, "accounts", userId);
-            
+    // Inject continuous visual style transforms dynamically for fluid animations
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+        .peer-wrapper {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+        .peer-avatar-bubble {
+            transition: filter 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+        .peer-wrapper.is-away {
+            transform: scale(0.85);
+            opacity: 0.65;
+        }
+        .peer-wrapper.is-away .peer-avatar-bubble {
+            filter: grayscale(100%);
+        }
+        .peer-wrapper.is-away .peer-notif-dot {
+            background-color: #94a3b8 !important;
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+    const userDocRef = doc(db, "accounts", userId);                
     onSnapshot(userDocRef, (snapshot) => {
         if (snapshot.exists()) {
             const data = snapshot.data();
@@ -956,8 +979,6 @@
 
             currentUserName = data.customName || "Operator";
             currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
-            
-            // Format name representation to exactly one word
             document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
 
             const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
@@ -987,28 +1008,28 @@
                 document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
             }
 
-            if (!document.hidden) {
-                set(ref(rtdb, 'presence/' + userId), {
-                    uid: userId,
-                    name: currentUserName,
-                    avatar: currentUserAvatarRaw,
-                    timestamp: Date.now()
-                });
-                updateDoc(userDocRef, { isOnline: true });
-            }
+            const myPresenceRef = ref(rtdb, 'presence/' + userId);
+            onDisconnect(myPresenceRef).remove();
+
+            set(myPresenceRef, {
+                uid: userId,
+                name: currentUserName,
+                avatar: currentUserAvatarRaw,
+                isAway: document.hidden,
+                timestamp: Date.now()
+            });
+            updateDoc(userDocRef, { isOnline: true });
         } else {
             window.location.href = "login.html";
         }
     });
 
-    // Initialize static Group Chat interface components once
     const hub = document.getElementById('peerActiveHub');
     hub.innerHTML = '';
 
     const gcWrapper = document.createElement('div');
     gcWrapper.className = 'peer-wrapper';
     gcWrapper.id = 'gc-hub-node';                                    
-    
     const gcBubble = document.createElement('div');
     gcBubble.className = 'group-chat-bubble';
     gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
@@ -1029,12 +1050,10 @@
 
     bindBackgroundGcListener();
 
-    // Rearchitected tracking logic prevents flickering and manages presence elements intelligently
     const presenceRef = ref(rtdb, 'presence');
     onValue(presenceRef, (snapshot) => {
         const users = snapshot.val() || {};
 
-        // Strip outdated nodes whose targets went offline or left active display states
         const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
         existingNodes.forEach(node => {
             const nodeUid = node.id.replace('peer-node-', '');
@@ -1043,7 +1062,6 @@
             }
         });
 
-        // Loop through incoming presence states and patch existing elements smoothly
         Object.keys(users).forEach(uid => {
             if (uid === userId) return;
             const peer = users[uid];
@@ -1082,6 +1100,13 @@
                 const tag = peerContainer.querySelector('.peer-name-hover');
                 if (tag) tag.innerText = singleWordLabel;
             }
+
+            // Animate element state changes fluidly using toggle attributes
+            if (peer.isAway) {
+                peerContainer.classList.add('is-away');
+            } else {
+                peerContainer.classList.remove('is-away');
+            }
         });
         lucide.createIcons();
     });
@@ -1093,7 +1118,6 @@
 
         let initialSyncComplete = false;
         onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                                    
-        
         const hook = onChildAdded(chatRouteRef, (childSnap) => {
             if (!initialSyncComplete) return;
             if (childSnap.exists()) {
@@ -1186,7 +1210,6 @@
     function initTransientChatChannel(partnerId, partnerName) {
         isGroupChat = false;
         selectedActiveChatPartnerId = partnerId;
-        
         const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
         document.getElementById('chatTargetName').innerText = `${cleanName}`;
         document.getElementById('chatScroller').innerHTML = '';
@@ -1389,21 +1412,11 @@
         selectedActiveChatPartnerId = null;
     };
 
-    // Tracks user tab changes and visibility states to clean background node parameters
+    // Tracks window focus mutations cleanly without breaking structural presence state trees
     document.addEventListener('visibilitychange', () => {
         if (!userId) return;
-        if (document.hidden) {
-            set(ref(rtdb, 'presence/' + userId), null);
-            updateDoc(doc(db, "accounts", userId), { isOnline: false });
-        } else {
-            set(ref(rtdb, 'presence/' + userId), {
-                uid: userId,
-                name: currentUserName,
-                avatar: currentUserAvatarRaw,
-                timestamp: Date.now()
-            });
-            updateDoc(doc(db, "accounts", userId), { isOnline: true });
-        }
+        updateDoc(doc(db, "accounts", userId), { isOnline: true });
+        updateDoc(ref(rtdb, 'presence/' + userId), { isAway: document.hidden });
     });
 
     window.addEventListener('beforeunload', () => {
