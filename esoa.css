@@ -48,17 +48,17 @@ body.copy-flash {
 
 
 /* ==========================================================================
-   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX)
+   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX) - ULTRA COMPACT & LARGE
    ========================================================================== */
-/* The main dedicated visual container around the entire peer area */
+/* Expanded container height to comfortably fit large profiles + persistent text */
 .peer-wrapper-row {
     position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 40px);
-    max-width: 600px;
-    height: 120px;
+    max-width: 650px;
+    height: 160px; /* Increased to accommodate 100px avatars + text names */
     display: flex;
     align-items: center;
     z-index: 3100;
@@ -67,23 +67,23 @@ body.copy-flash {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass);
-    border-radius: 24px;
-    padding: 0 45px; /* Clean breathing area for left/right anchored arrows */
+    border-radius: 28px;
+    padding: 0 45px; 
     box-sizing: border-box;
 }
 
 /* Horizontal Scroll Viewport - Rigid Left Alignment */
 .peer-active-hub {
     display: flex;
-    gap: 8px;
+    gap: -12px; /* Negative gap brings them extremely close, overlapping style */
     align-items: center;
-    justify-content: flex-start; /* Keeps items consistently left-aligned */
+    justify-content: flex-start; 
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
     width: 100%;
     height: 100%;
-    padding: 0 4px;
+    padding: 0 10px;
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -99,7 +99,7 @@ body.copy-flash {
     top: 0;
     bottom: 0;
     width: 40px;
-    background: transparent; /* Seamless transparent background matching context */
+    background: transparent; 
     border: none;
     color: var(--primary);
     display: flex;
@@ -123,7 +123,7 @@ body.copy-flash {
     transform: scale(1.1);
 }
 
-/* Base Wrapper for single item units */
+/* Single Item Unit Wrapper */
 .peer-wrapper {
     position: relative;
     display: inline-flex;
@@ -131,18 +131,18 @@ body.copy-flash {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 64px; /* Strict uniform sizing constraints */
-    height: 90px;
+    width: 106px; /* Expanded match width + subtle breathing gap for 100px profiles */
+    height: 140px;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), order 0.4s ease;
 }
 
 /* Offline state modifications (Shrink and Grayscale instead of disappearing) */
 .peer-wrapper.is-offline {
     filter: grayscale(100%);
-    transform: scale(0.85);
+    transform: scale(0.8);
 }
 
-/* Consistent Avatar Node Dimensions */
+/* Fixed Large Profile Node Dimensions */
 .peer-avatar-bubble, 
 .group-chat-bubble {
     width: 100px;
@@ -163,6 +163,7 @@ body.copy-flash {
 .peer-avatar-bubble:hover {
     border-color: var(--primary);
     transform: scale(1.05);
+    z-index: 10; /* Ensures hovered profile pops above tight neighbors */
 }
 
 .group-chat-bubble {
@@ -174,27 +175,29 @@ body.copy-flash {
     cursor: pointer;
     border: 2px solid var(--primary);
     transition: all 0.2s ease;
-    box-shadow: 0 0 8px rgba(255, 115, 0, 0.4);
+    box-shadow: 0 0 12px rgba(255, 115, 0, 0.4);
 }
 
 .group-chat-bubble:hover {
     transform: scale(1.05);
     background: #fff;
     border-color: #fff;
+    z-index: 10;
 }
 
+/* Notification Badge adjusted for larger bubble scales */
 .peer-notif-dot {
     position: absolute;
-    top: 2px;
-    right: 8px;
-    width: 10px;
-    height: 10px;
+    top: 6px;
+    right: 12px;
+    width: 14px;
+    height: 14px;
     background-color: var(--primary);
-    border: 2px solid var(--surface);
+    border: 2.5px solid var(--surface);
     border-radius: 50%;
     display: none;
     z-index: 3010;
-    box-shadow: 0 0 8px var(--primary);
+    box-shadow: 0 0 10px var(--primary);
 }
 
 .peer-wrapper.has-unread .peer-notif-dot {
@@ -203,8 +206,8 @@ body.copy-flash {
 
 /* Persistent, clearly readable text names arranged beneath avatars */
 .peer-name-hover {
-    margin-top: 6px;
-    font-size: 0.65rem;
+    margin-top: 8px;
+    font-size: 0.7rem;
     font-weight: 700;
     color: white;
     text-align: center;
@@ -212,10 +215,9 @@ body.copy-flash {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    opacity: 1; /* Made persistent */
+    opacity: 1;
     pointer-events: auto;
 }
-
 
 
 /* ==========================================================================
