@@ -266,6 +266,44 @@ function bindBackgroundNotifListener(partnerId) {
     });
 }
 
+function bindBackgroundGcListener() {
+    if (backgroundGcTrackingHook) return;
+    const gcRouteRef = ref(rtdb, `group_chat/messages`);
+
+    let initialSyncComplete = false;
+    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                const gcContainer = document.getElementById('gc-hub-node');
+                if (gcContainer) gcContainer.classList.add('has-unread');
+            }
+        }
+    });
+
+    onValue(gcRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const gcContainer = document.getElementById('gc-hub-node');
+                            if (gcContainer) gcContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
+        }
+    });
+    }
+
+
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC
    ========================================================================== */
@@ -569,7 +607,6 @@ window.openList = function (cat) {
     });
     window.toggleModal('listModal', true);
 };
-
 
 /* ==========================================================================
    8. HIGHLIGHTER, MAGNETIC ENGINE & INTERACTION ANIMATIONS
