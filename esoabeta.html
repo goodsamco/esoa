@@ -38,7 +38,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 150px 10px 25vh 10px;
+            padding: 190px 10px 25vh 10px; /* Adjusted top padding to prevent layout overlapping */
             display: flex;
             justify-content: center;
             overflow-x: hidden;
@@ -49,21 +49,33 @@
             background-color: var(--primary);
         }
 
-        /* Left-aligned Active Users Hub Panel - Retained Original Layout Logic */
-        .peer-active-hub {
+        /* Active Users Hub Panel - Set at absolute top header layer */
+        .header-peer-container {
             position: fixed;
-            top: 80px; /* Positioned at exactly 80px from top */
-            left: 20px;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 70px;
+            background: rgba(20, 7, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass);
             display: flex;
-            gap: 6px; /* Clean spacing for horizontal row */
             align-items: center;
-            z-index: 3000;
-            max-width: calc(100vw - 40px); /* Keeps it within view bounds */
-            overflow-x: auto; /* Enables horizontal scroll */
+            z-index: 3100;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .peer-active-hub {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex: 1;
+            overflow-x: auto;
             white-space: nowrap;
             padding: 4px;
-            
-            /* Hide scrollbar across modern browsers */
+            scroll-behavior: smooth;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
         }
@@ -73,11 +85,33 @@
             display: none;
         }
 
+        /* Navigation Arrows for Horizontal Scroll */
+        .scroll-nav-btn {
+            background: rgba(20, 7, 0, 0.6);
+            border: 1px solid rgba(255, 115, 0, 0.3);
+            color: var(--primary);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3110;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .scroll-nav-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
         .peer-wrapper {
             position: relative;
             display: inline-flex;
             align-items: center;
-            flex-shrink: 0; /* Prevents avatars from crushing on overflow */
+            flex-shrink: 0;
         }
 
         .peer-avatar-bubble {
@@ -161,10 +195,10 @@
             transform: translateX(-50%) translateY(2px);
         }
 
-        /* Glassmorphic Translucent Blur Top Navigation */
+        /* Top Navigation - Lowered to 100px down from top layout */
         .top-nav {
             position: fixed;
-            top: 20px;
+            top: 100px;
             right: 20px;
             display: flex;
             align-items: center;
@@ -199,7 +233,7 @@
             transform: translateY(-2px);
         }
 
-        /* Dedicated Integrated User Profile Deck Segment */
+        /* User Profile Identity Deck Segment */
         .user-identity-card {
             display: flex;
             flex-direction: column;
@@ -285,7 +319,6 @@
             gap: 14px;
         }
 
-        /* Message Structure Enhancements for Content and Reactions */
         .msg-wrapper {
             display: flex;
             flex-direction: column;
@@ -302,7 +335,6 @@
             align-items: flex-end;
         }
 
-        /* GC Metadata Structure Row styling */
         .msg-meta-row {
             display: flex;
             align-items: center;
@@ -356,7 +388,6 @@
             font-weight: 600;
         }
 
-        /* Reactions container styles */
         .msg-reaction-container {
             display: flex;
             gap: 4px;
@@ -390,7 +421,6 @@
             color: var(--primary);
         }
 
-        /* Floating Reaction Picker popover overlay */
         .reaction-picker-tray {
             position: absolute;
             background: #1c0d07;
@@ -535,7 +565,6 @@
             transform: scale(1.1);
         }
 
-        /* Broadened & Flattened Normal Sized Aspect Copy Engine Keyhole */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -586,15 +615,8 @@
         }
 
         @keyframes idleFloat {
-
-            0%,
-            100% {
-                transform: translate(0, 0);
-            }
-
-            50% {
-                transform: translate(0, -5px);
-            }
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(0, -5px); }
         }
 
         .btn-main-copy.idle {
@@ -739,7 +761,21 @@
 
 <body onmouseleave="resetMagnet()">
 
-    <div class="peer-active-hub" id="peerActiveHub"></div>
+    <div class="header-peer-container">
+        <button class="scroll-nav-btn" onclick="scrollPeers('left')"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub">
+            <div class="group-chat-bubble"><i data-lucide="users"></i></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Ana"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=John"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Maria"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Dave"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Sara"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Alex"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Ben"></div>
+            <div class="peer-wrapper"><img class="peer-avatar-bubble" src="https://api.dicebear.com/7.x/notionists/svg?seed=Elena"></div>
+        </div>
+        <button class="scroll-nav-btn" onclick="scrollPeers('right')"><i data-lucide="chevron-right"></i></button>
+    </div>
 
     <div class="top-nav">
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>
@@ -774,14 +810,10 @@
         <div class="item-row" data-val="110098112460"><span class="text-content">110098112460</span></div>
         <h2>Laboratory & Diagnostic</h2>
         <div class="item-row" data-val="CHEMISTRY: FBS"><span class="text-content">CHEMISTRY: FBS</span></div>
-        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span>
-        </div>
-        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL
-                CHOLESTEROL</span></div>
-        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span>
-        </div>
-        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY:
-                URINE-URINALYSIS</span></div>
+        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span></div>
+        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL CHOLESTEROL</span></div>
+        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span></div>
+        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY: URINE-URINALYSIS</span></div>
         <div class="item-row" data-val="HEMATOLOGY: CBC"><span class="text-content">HEMATOLOGY: CBC</span></div>
         <div class="add-btn-circle" onclick="openList('lab')"><i data-lucide="plus"></i></div>
         <h2>Medical Supplies</h2>
@@ -789,18 +821,15 @@
         <div class="item-row" data-val="IV CATHETER G. 24"><span class="text-content">IV CATHETER G. 24</span></div>
         <div class="item-row" data-val="MICROSET"><span class="text-content">MICROSET</span></div>
         <div class="item-row" data-val="MACROSET"><span class="text-content">MACROSET</span></div>
-        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10
-                CC)</span></div>
-        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL
-                PAPER TAPE 2X10 YARD</span></div>
+        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10 CC)</span></div>
+        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL PAPER TAPE 2X10 YARD</span></div>
         <div class="add-btn-circle" onclick="openList('supply')"><i data-lucide="plus"></i></div>
         <h2>Others</h2>
         <div class="item-row" data-val="ER FEE"><span class="text-content">ER FEE</span></div>
         <div class="item-row" data-val="ADMISSION FEE"><span class="text-content">ADMISSION FEE</span></div>
         <div class="item-row" data-val="MISCELLANEOUS"><span class="text-content">MISCELLANEOUS</span></div>
         <div class="item-row" data-val="BED SHEET"><span class="text-content">BED SHEET</span></div>
-        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span>
-        </div>
+        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span></div>
         <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
         <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
         <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
@@ -813,31 +842,31 @@
         <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> <button class="btn-main-copy"
-            id="magnetBtn">COPY</button>
+
+    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
+        <button class="btn-main-copy" id="magnetBtn">COPY</button>
     </div>
+
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
-            <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number"
-                    placeholder="0.00" oninput="calcSr()"> </div>
-            <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number"
-                    placeholder="0.00" oninput="calcSr()"> </div>
+            <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> </div>
+            <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> </div>
             <div class="modal-result">
                 <div id="finalDiscount">0.00</div>
             </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> <button
-                class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
+
     <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="listTitle">SELECT ITEM</h3>
-            <div id="listContainer"></div> <button class="modal-close-btn"
-                onclick="toggleModal('listModal', false)">Dismiss</button>
+            <div id="listContainer"></div> <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
-<script type="module">
+
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -1467,6 +1496,16 @@
         function stopIdle() { magnetBtn.classList.remove('idle'); } 
         function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } 
         ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
+        // Control execution layout function for arrow scroll navigation
+        function scrollPeers(direction) {
+            const container = document.getElementById('peerActiveHub');
+            const scrollAmount = 200; 
+            if (direction === 'left') {
+                container.scrollLeft -= scrollAmount;
+            } else {
+                container.scrollLeft += scrollAmount;
+            }
+        }
     </script>
 </body>
 
