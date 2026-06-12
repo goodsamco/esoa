@@ -35,7 +35,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 240px 10px 25vh 10px;
+            padding: 260px 10px 25vh 10px; /* Expanded padding room to provide space for hover values below bubbles */
             display: flex;
             justify-content: center;
             overflow-x: hidden;
@@ -46,7 +46,7 @@
             background-color: var(--primary);
         }
 
-        /* Fixed Row Container */
+        /* Fixed Row Container without rigid height constraints */
         .peer-wrapper-row {
             position: fixed;
             top: 20px;
@@ -54,12 +54,12 @@
             transform: translateX(-50%);
             width: calc(100% - 40px);
             max-width: 600px;
-            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             z-index: 3100;
+            padding-bottom: 25px; /* Creates explicit safe layout area for downward tooltip visibility */
         }
 
         /* Horizontal Scroll Node Viewport */
@@ -169,24 +169,25 @@
             display: block;
         }
 
-        /* Names on Hover - Flipped strictly ABOVE the items to remain fully visible */
+        /* Names on Hover - Moved downwards with dedicated presentation clearance space */
         .peer-name-hover {
             position: absolute;
             left: 50%;
-            top: -35px; 
-            transform: translateX(-50%) translateY(-5px);
+            bottom: -22px; 
+            transform: translateX(-50%) translateY(4px);
             background: var(--surface);
-            border: 1px solid var(--glass);
-            padding: 4px 8px;
+            border: 1px solid var(--primary);
+            padding: 3px 8px;
             border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
+            font-size: 0.65rem;
+            font-weight: 700;
             color: white;
             white-space: nowrap;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            z-index: 3500;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            z-index: 4000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .peer-wrapper:hover .peer-name-hover {
@@ -194,22 +195,22 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Clean Pill Layout Tray Panel */
+        /* Clean Pill Layout Tray Panel - Configured with wider left/right padding breathing space */
         .top-nav {
             position: fixed;
-            top: 115px;
+            top: 135px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             z-index: 3000;
             background: rgba(20, 7, 0, 0.5);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 6px 16px;
-            border-radius: 30px; /* Pill Shape */
+            padding: 6px 22px; /* Distinct wide pill aspect ratio */
+            border-radius: 32px; 
             border: 1px solid var(--glass);
         }
 
@@ -219,7 +220,7 @@
             height: 38px;
             background: var(--surface);
             border: 1px solid rgba(255, 115, 0, 0.2);
-            border-radius: 50%; /* Circle Buttons */
+            border-radius: 50%; /* Pure Circle Form */
             color: white;
             cursor: pointer;
             display: flex;
@@ -233,7 +234,7 @@
             color: #000;
         }
 
-        /* Ultimate Bottom Right Profile Isolation (Containerless layout) */
+        /* Ultimate Bottom Right Profile Isolation (Containerless layout specs) */
         .profile-avatar-node {
             position: fixed;
             bottom: 45px;
@@ -246,7 +247,7 @@
             border: 2px solid var(--primary);
             cursor: pointer;
             transition: transform 0.2s ease;
-            z-index: 2500; /* Layered directly on top of copy zone spaces */
+            z-index: 2500; /* Overlaid cleanly over button zones */
         }
 
         .profile-avatar-node:hover {
@@ -262,7 +263,7 @@
             color: var(--text-main);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            width: 48px; /* Perfectly matches avatar width context */
+            width: 48px; /* Balanced tracking directly underneath avatar width */
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -614,7 +615,7 @@
         </div>
     </div>
 
- <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -1244,9 +1245,9 @@
         function stopIdle() { magnetBtn.classList.remove('idle'); } 
         function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } 
         ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
-
-        
-        lucide.createIcons();
     </script>
 </body>
+
 </html>
+
+    
