@@ -987,22 +987,15 @@
                 document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
             }
 
-// Push initialization updates directly without inspecting tab visibility states
-// Create a reference to this user's presence node
-            const myPresenceRef = ref(rtdb, 'presence/' + userId);
-
-            // CRITICAL: Tell the server to automatically wipe this node when the connection drops/closes
-            remove(onDisconnect(myPresenceRef));
-
-            // Now safely push the online status
-            set(myPresenceRef, {
-                uid: userId,
-                name: currentUserName,
-                avatar: currentUserAvatarRaw,
-                timestamp: Date.now()
-            });
-            
-            updateDoc(userDocRef, { isOnline: true });
+            if (!document.hidden) {
+                set(ref(rtdb, 'presence/' + userId), {
+                    uid: userId,
+                    name: currentUserName,
+                    avatar: currentUserAvatarRaw,
+                    timestamp: Date.now()
+                });
+                updateDoc(userDocRef, { isOnline: true });
+            }
         } else {
             window.location.href = "login.html";
         }
@@ -1396,13 +1389,22 @@
         selectedActiveChatPartnerId = null;
     };
 
-// Fires strictly when the user terminates the tab, window, or site instance entirely
-window.addEventListener('beforeunload', () => {
-    if (userId) {
-        set(ref(rtdb, 'presence/' + userId), null);
-        updateDoc(doc(db, "accounts", userId), { isOnline: false });
-    }
-});
+    // Tracks user tab changes and visibility states to clean background node parameters
+    document.addEventListener('visibilitychange', () => {
+        if (!userId) return;
+        if (document.hidden) {
+            set(ref(rtdb, 'presence/' + userId), null);
+            updateDoc(doc(db, "accounts", userId), { isOnline: false });
+        } else {
+            set(ref(rtdb, 'presence/' + userId), {
+                uid: userId,
+                name: currentUserName,
+                avatar: currentUserAvatarRaw,
+                timestamp: Date.now()
+            });
+            updateDoc(doc(db, "accounts", userId), { isOnline: true });
+        }
+    });
 
     window.addEventListener('beforeunload', () => {
         if (userId) {
