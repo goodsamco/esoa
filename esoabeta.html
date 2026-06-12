@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap"
         rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-<style>
+    <style>
         :root {
             --bg: #1a0f0b;
             --surface: #140700;
@@ -20,10 +20,8 @@
             --modal-bg: rgba(20, 7, 0, 0.98);
         }
 
-        /* --- GLOBAL SCROLLBARS --- */
         ::-webkit-scrollbar {
             width: 8px;
-            height: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -51,123 +49,22 @@
             background-color: var(--primary);
         }
 
-        /* --- ACTIVE CHATHEADS HUB --- */
-        .peer-active-hub {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            gap: -22px;
-            align-items: center;
-            z-index: 3000;
-            max-width: calc(100vw - 230px);
-            overflow-x: auto;
-            overflow-y: visible;
-            padding-bottom: 4px;
-            scrollbar-width: none; /* Hide scrollbars on Firefox */
-        }
-
-        .peer-active-hub::-webkit-scrollbar {
-            display: none; /* Hide scrollbars on Chrome/Safari */
-        }
-
-        .peer-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            flex-shrink: 0; /* Guard against component squishing on overflow */
-        }
-
-        .peer-avatar-bubble {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
-            border: 2px solid #666;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .peer-avatar-bubble:hover {
-            border-color: var(--primary);
-            transform: scale(1.05);
-        }
-
-        /* --- GROUP CHAT STATIC NODE --- */
-        .group-chat-bubble {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 2px solid var(--primary);
-            transition: all 0.2s ease;
-            box-shadow: 0 0 8px rgba(255, 115, 0, 0.4);
-            flex-shrink: 0;
-        }
-
-        .group-chat-bubble:hover {
-            transform: scale(1.05);
-            background: #fff;
-            border-color: #fff;
-        }
-
-        /* --- NOTIFICATION DOTS & OVERLAYS --- */
-        .peer-notif-dot {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 12px;
-            height: 12px;
-            background-color: var(--primary);
-            border: 2px solid var(--surface);
-            border-radius: 50%;
-            display: none;
-            z-index: 3010;
-            box-shadow: 0 0 8px var(--primary);
-        }
-
-        .peer-wrapper.has-unread .peer-notif-dot {
-            display: block;
-        }
-
-        .peer-name-hover {
-            position: absolute;
-            left: 50%;
-            bottom: -32px;
-            transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--glass);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: white;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-
-        .peer-wrapper:hover .peer-name-hover {
-            opacity: 1;
-            transform: translateX(-50%) translateY(2px);
-        }
-
-        /* --- GLASSMORPHIC TOP NAVIGATION --- */
-        .top-nav {
+        /* Grouped Right Sidebar Navigation Structure */
+        .right-nav-container {
             position: fixed;
             top: 20px;
             right: 20px;
             display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            z-index: 3000;
+        }
+
+        /* Glassmorphic Translucent Blur Top Navigation Menu */
+        .top-nav {
+            display: flex;
             align-items: center;
             gap: 8px;
-            z-index: 3000;
             background: rgba(20, 7, 0, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -197,7 +94,7 @@
             transform: translateY(-2px);
         }
 
-        /* --- INTEGRATED PROFILE DECK CARD --- */
+        /* Dedicated Integrated User Profile Deck Segment */
         .user-identity-card {
             display: flex;
             flex-direction: column;
@@ -234,7 +131,103 @@
             white-space: nowrap;
         }
 
-        /* --- LIVE SESSION DOCK PANEL --- */
+        /* Right-aligned Active Users Hub Panel — Anchored below Profile Deck */
+        .peer-active-hub {
+            margin-top: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            padding-right: 12px;
+        }
+
+        .peer-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .peer-avatar-bubble {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+            border: 2px solid #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .peer-avatar-bubble:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* Group Chat Static Node Bubble */
+        .group-chat-bubble {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: all 0.2s ease;
+            box-shadow: 0 0 8px rgba(255, 115, 0, 0.4);
+        }
+
+        .group-chat-bubble:hover {
+            transform: scale(1.05);
+            background: #fff;
+            border-color: #fff;
+        }
+
+        /* Notification Dot overlay on sender avatar */
+        .peer-notif-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary);
+            border: 2px solid var(--surface);
+            border-radius: 50%;
+            display: none;
+            z-index: 3010;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .peer-wrapper.has-unread .peer-notif-dot {
+            display: block;
+        }
+
+        .peer-name-hover {
+            position: absolute;
+            right: 52px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--surface);
+            border: 1px solid var(--glass);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .peer-wrapper:hover .peer-name-hover {
+            opacity: 1;
+            transform: translateY(-50%) translateX(-4px);
+        }
+
+        /* Real-time Session Dock Panel Styles */
         .chat-docking-panel {
             position: fixed;
             bottom: 26vh;
@@ -283,7 +276,7 @@
             gap: 14px;
         }
 
-        /* --- MESSAGES & REACTION SCALING --- */
+        /* Message Structure Enhancements for Content and Reactions */
         .msg-wrapper {
             display: flex;
             flex-direction: column;
@@ -300,6 +293,7 @@
             align-items: flex-end;
         }
 
+        /* GC Metadata Structure Row styling */
         .msg-meta-row {
             display: flex;
             align-items: center;
@@ -353,6 +347,7 @@
             font-weight: 600;
         }
 
+        /* Reactions container styles */
         .msg-reaction-container {
             display: flex;
             gap: 4px;
@@ -386,6 +381,7 @@
             color: var(--primary);
         }
 
+        /* Floating Reaction Picker popover overlay */
         .reaction-picker-tray {
             position: absolute;
             background: #1c0d07;
@@ -449,7 +445,6 @@
             cursor: pointer;
         }
 
-        /* --- CONTENT MAIN WRAPPER CONTAINER --- */
         .container {
             position: relative;
             width: 100%;
@@ -531,7 +526,7 @@
             transform: scale(1.1);
         }
 
-        /* --- BOTOM ACTION KEYHOLE ENGINE --- */
+        /* Broadened & Flattened Normal Sized Aspect Copy Engine Keyhole */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -582,15 +577,21 @@
         }
 
         @keyframes idleFloat {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(0, -5px); }
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(0, -5px);
+            }
         }
 
         .btn-main-copy.idle {
             animation: idleFloat 3.5s ease-in-out infinite;
         }
 
-        /* --- MODAL STRUCTURE INTERFACES --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -724,75 +725,23 @@
             font-size: 0.8rem;
             text-decoration: underline;
         }
-
-        /* --- RESPONSIVE MOBILE HARD-FORK PIPELINE --- */
-        @media (max-width: 600px) {
-            body {
-                padding-top: 100px; /* Breathe layouts down underneath standard layout panels */
-            }
-
-            /* Convert standalone nav segment to dynamic edge-to-edge layout strip */
-            .top-nav {
-                left: 10px;
-                right: 10px;
-                width: auto;
-                justify-content: space-between;
-                border-radius: 24px;
-                padding: 6px 12px;
-            }
-
-            /* Snatch absolute chat head layout frames and drop cleanly directly into standard top-bar workspace flow */
-            .peer-active-hub {
-                position: relative;
-                top: auto;
-                left: auto;
-                max-width: none;
-                flex: 1; /* Automatically absorb and scale across empty header tracks */
-                margin-right: 10px;
-                padding: 0;
-            }
-
-            /* Subtle sizing updates for identity decks to preserve minimal spatial properties */
-            .user-identity-card {
-                margin-left: 2px;
-            }
-
-            .profile-avatar-node {
-                width: 38px;
-                height: 38px;
-            }
-
-            .user-identity-card .name-string {
-                max-width: 50px;
-            }
-
-            /* Force overlay views to securely drop clean dynamic alignment on small screens */
-            .chat-docking-panel {
-                left: 10px;
-                right: 10px;
-                width: auto;
-                bottom: 26vh;
-                height: 40vh;
-            }
-        }
     </style>
 </head>
 
 <body onmouseleave="resetMagnet()">
 
-    <div class="peer-active-hub" id="peerActiveHub"></div>
+    <div class="right-nav-container">
+        <div class="top-nav">
+            <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>
+            <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
 
-    <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> <button
-            class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i
-                data-lucide="user-check"></i></button>
-
-        <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node"
-                src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar"
-                onclick="window.location.href='customization.html'">
-            <span id="userDisplayName" class="name-string">Sync...</span>
+            <div class="user-identity-card">
+                <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+                <span id="userDisplayName" class="name-string">Sync...</span>
+            </div>
         </div>
+        
+        <div class="peer-active-hub" id="peerActiveHub"></div>
     </div>
 
     <div class="chat-docking-panel" id="chatDock">
@@ -856,7 +805,8 @@
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
     <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> <button class="btn-main-copy"
-            id="magnetBtn"></button> </div>
+            id="magnetBtn">COPY</button>
+    </div>
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -878,11 +828,11 @@
                 onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
             authDomain: "svls-289ee.firebaseapp.com",
@@ -949,9 +899,21 @@
         }
 
         const userDocRef = doc(db, "accounts", userId);
+        
+        // Listen to Account configurations and track administration restriction gates
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
+
+                // CRITICAL SAFETY GUARDRAIL: Check if access has been disabled by dashboard admin panel
+                if (data.esoaDisabled === true) {
+                    alert("Your access to eSOA has been suspended by management.");
+                    // Soft-drop presence status values clean on redirect
+                    set(ref(rtdb, 'presence/' + userId), null);
+                    window.location.href = "login.html";
+                    return;
+                }
+
                 currentUserName = data.customName || "Operator";
                 currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
                 document.getElementById('userDisplayName').innerText = currentUserName;
@@ -976,21 +938,24 @@
                     const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
                     magnetBtn.style.backgroundImage = `url('${btnImg}')`;
                     magnetBtn.style.backgroundColor = "transparent";
-                    magnetBtn.innerText = ""; // Clear resting label text for Image textures
                 } else if (data.btnValue) {
                     magnetBtn.style.backgroundImage = "none";
                     document.documentElement.style.setProperty('--primary', data.btnValue);
                     const parsedRgb = hexToRgb(data.btnValue);
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
-                    magnetBtn.innerText = "COPY"; // Set standard text label for solid color modes
                 }
 
+                // Push status data updates to Realtime Database
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
                     name: currentUserName,
                     avatar: currentUserAvatarRaw,
                     timestamp: Date.now()
                 });
+
+                // Update active tracking parameters inside Firestore
+                updateDoc(userDocRef, { isOnline: true });
+
             } else {
                 window.location.href = "login.html";
             }
@@ -1001,11 +966,9 @@
             const hub = document.getElementById('peerActiveHub');
             hub.innerHTML = '';
 
-            // 1. Static Group Chat Bubble Node
             const gcWrapper = document.createElement('div');
             gcWrapper.className = 'peer-wrapper';
-            gcWrapper.id = 'gc-hub-node';
-
+            gcWrapper.id = 'gc-hub-node';                        
             const gcBubble = document.createElement('div');
             gcBubble.className = 'group-chat-bubble';
             gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
@@ -1024,10 +987,8 @@
             gcWrapper.appendChild(gcNameTag);
             hub.appendChild(gcWrapper);
 
-            // Trigger real-time monitoring on the shared Group Chat hub
             bindBackgroundGcListener();
 
-            // 2. Load online peer nodes
             if (snapshot.exists()) {
                 const users = snapshot.val();
                 Object.keys(users).forEach(uid => {
@@ -1062,20 +1023,17 @@
             lucide.createIcons();
         });
 
-        // Background tracking listener that captures messages AND reaction updates
         function bindBackgroundNotifListener(partnerId) {
             if (mappedRouteTrackingHooks[partnerId]) return;
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
 
             let initialSyncComplete = false;
-            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
-
+            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                        
             const hook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (!initialSyncComplete) return;
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
-                    // If message is from partner, show red dot
                     if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
                         const peerContainer = document.getElementById(`peer-node-${partnerId}`);
                         if (peerContainer) peerContainer.classList.add('has-unread');
@@ -1084,12 +1042,10 @@
             });
             mappedRouteTrackingHooks[partnerId] = hook;
 
-            // Stream and monitor sub-reaction pathways as an active payload update
             onValue(chatRouteRef, (snapshot) => {
                 if (!initialSyncComplete) return;
                 if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
                     const messages = snapshot.val();
-                    // Intercept changes inside nested reaction structures
                     Object.keys(messages).forEach(mId => {
                         const m = messages[mId];
                         if (m.reactions) {
@@ -1105,7 +1061,6 @@
             });
         }
 
-        // Live stream update logic matching rules for Group Chat notification configurations
         function bindBackgroundGcListener() {
             if (backgroundGcTrackingHook) return;
             const gcRouteRef = ref(rtdb, `group_chat/messages`);
@@ -1124,7 +1079,6 @@
                 }
             });
 
-            // Monitor variations inside the group channel reactions node payload matrices
             onValue(gcRouteRef, (snapshot) => {
                 if (!initialSyncComplete) return;
                 if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
@@ -1144,7 +1098,6 @@
             });
         }
 
-        // Initialize Group Chat View
         function initGroupChatChannel() {
             isGroupChat = true;
             selectedActiveChatPartnerId = "BARANGAY_GC";
@@ -1166,7 +1119,6 @@
             });
         }
 
-        // Initialize Private Chat View
         function initTransientChatChannel(partnerId, partnerName) {
             isGroupChat = false;
             selectedActiveChatPartnerId = partnerId;
@@ -1214,18 +1166,17 @@
                 const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
                 const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
                 const newMsgRef = push(chatRouteRef);
-                set(newMsgRef, {
-                    sender: userId,
-                    text: text,
-                    timestamp: Date.now()
-                });
+                set(newMsgRef, { 
+                    sender: userId, 
+                    text: text, 
+                    timestamp: Date.now() 
+                 });
             }
             input.value = '';
         };
 
         function appendBubbleToScroller(msg, msgId, direction) {
-            const view = document.getElementById('chatScroller');
-
+            const view = document.getElementById('chatScroller');                        
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${direction}`;
             wrapper.id = `msg-wrap-${msgId}`;
@@ -1257,8 +1208,7 @@
 
             const bbl = document.createElement('div');
             bbl.className = `msg-bubble ${direction}`;
-            bbl.innerText = msg.text;
-
+            bbl.innerText = msg.text;                        
             bbl.onclick = (e) => {
                 e.stopPropagation();
                 toggleReactionPicker(msgId, wrapper);
@@ -1350,14 +1300,12 @@
 
                 Object.keys(summary).forEach(emo => {
                     const pill = document.createElement('div');
-                    pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
-
+                    pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                        
                     if (isGroupChat) {
                         pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
                     } else {
                         pill.innerHTML = `<span>${emo}</span>`;
-                    }
-
+                    }                                        
                     pill.onclick = (e) => {
                         e.stopPropagation();
                         submitReaction(msgId, emo);
@@ -1375,99 +1323,141 @@
             selectedActiveChatPartnerId = null;
         };
 
+        // Standard clean exit listener updating user presence indicators across database types
         window.addEventListener('beforeunload', () => {
-            if (userId) set(ref(rtdb, 'presence/' + userId), null);
+            if (userId) {
+                set(ref(rtdb, 'presence/' + userId), null);
+                // Mark user as offline inside Firestore directly before closing
+                updateDoc(doc(db, "accounts", userId), { isOnline: false });
+            }
         });
 
         window.addEventListener('click', () => {
             document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
         });
     </script>
-
-    <script>
-        let textTimeout; let currentFocusedIndex = 0;
-        const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
-        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
-
-        window.onload = () => {
-            setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
-            lucide.createIcons(); startIdle();
-        };
-
-        function toggleModal(id, show) {
-            const modal = document.getElementById(id); if (show) {
-                document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = '';
-                document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10);
-            } else {
-                modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400);
-            }
-        }
-
-        function closeOutside(e, id) {
-            if (e.target.id === id) toggleModal(id, false);
-        }
-
-        function calcSr() {
-            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
-            const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
-        }
-
-        function copyModalValue() {
-            const val = document.getElementById('finalDiscount').innerText;
-            navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); });
-        }
-
-        function openList(cat) {
-            const listCont = document.getElementById('listContainer');
-            listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); });
-            window.toggleModal('listModal', true);
-        }
-
-        function flashMagnet() {
-            magnetBtn.innerText = "COPIED!";
-            magnetBtn.classList.add('success-state');
+    
+    <script>                
+        let textTimeout; let currentFocusedIndex = 0;        
+        const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');        
+        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };                
+        
+        window.onload = () => { 
+            setTimeout(() => updateFocus(0), 100); 
+            allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });        
+            lucide.createIcons(); 
+            startIdle(); 
+        };                
+        
+        function toggleModal(id, show) { 
+            const modal = document.getElementById(id); 
+            if (show) { 
+                document.getElementById('hospCharges').value = ''; 
+                document.getElementById('caseRate').value = '';        
+                document.getElementById('finalDiscount').innerText = '0.00'; 
+                modal.style.display = 'flex'; 
+                setTimeout(() => modal.classList.add('active'), 10); 
+            } else { 
+                modal.classList.remove('active'); 
+                setTimeout(() => modal.style.display = 'none', 400);        
+            } 
+        }                
+        
+        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }                
+        
+        function calcSr() { 
+            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;        
+            const rate = parseFloat(document.getElementById('caseRate').value) || 0; 
+            document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);        
+        }                
+        
+        function copyModalValue() { 
+            const val = document.getElementById('finalDiscount').innerText;        
+            navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); 
+        }                
+        
+        function openList(cat) { 
+            const listCont = document.getElementById('listContainer');        
+            listCont.innerHTML = ''; 
+            document.getElementById('listTitle').innerText = cat.toUpperCase(); 
+            extraItems[cat].forEach(text => { 
+                const div = document.createElement('div'); 
+                div.className = 'list-item'; 
+                div.innerText = text; 
+                div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; 
+                listCont.appendChild(div); 
+            });        
+            window.toggleModal('listModal', true); 
+        }        
+        
+        function flashMagnet() {    
+            magnetBtn.innerText = "COPIED!";    
+            magnetBtn.classList.add('success-state');    
             document.body.classList.add('copy-flash');
 
-            setTimeout(() => {
-                // If the button has a background image set, return to empty string. Otherwise revert to "COPY".
-                if (magnetBtn.style.backgroundImage && magnetBtn.style.backgroundImage !== "none") {
-                    magnetBtn.innerText = "";
-                } else {
-                    magnetBtn.innerText = "COPY";
-                }
-
-                magnetBtn.classList.remove('success-state');
-                document.body.classList.remove('copy-flash');
+            setTimeout(() => {        
+                magnetBtn.innerText = "COPY";        
+                magnetBtn.classList.remove('success-state');        
+                document.body.classList.remove('copy-flash');    
             }, 600);
-        }
-
-        document.addEventListener('mousemove', (e) => { const threshold = window.innerHeight * 0.75; if (e.clientY > threshold) { const centerX = window.innerWidth / 2; const centerY = window.innerHeight - (window.innerHeight * 0.125); const pullX = (e.clientX - centerX) * 0.3; const pullY = (e.clientY - centerY) * 0.4; magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; } else { resetMagnet(); } });
-
-        function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
-
-        function updateFocus(index) {
-            currentFocusedIndex = index;
-            const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1";
-            highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function executeCopy(row, text, index) {
-            updateFocus(index);
-            navigator.clipboard.writeText(text).then(() => {
-                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet();
-                let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
-            });
-        }
-
-        function copyFocusedItem() {
-            executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex);
-        } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() {
-            updateFocus(0);
-        }
-
-        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() {
-            magnetBtn.classList.remove('idle');
-        } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));    
+        }                
+        
+        document.addEventListener('mousemove', (e) => { 
+            const threshold = window.innerHeight * 0.75; 
+            if (e.clientY > threshold) { 
+                const centerX = window.innerWidth / 2; 
+                const centerY = window.innerHeight - (window.innerHeight * 0.125); 
+                const pullX = (e.clientX - centerX) * 0.3; 
+                const pullY = (e.clientY - centerY) * 0.4; 
+                magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; 
+            } else { 
+                resetMagnet(); 
+            } 
+        });                
+        
+        function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }                
+        
+        function updateFocus(index) { 
+            currentFocusedIndex = index;        
+            const targetRow = allRows[index]; 
+            if (!targetRow) return; 
+            const rect = targetRow.getBoundingClientRect(); 
+            const containerRect = container.getBoundingClientRect(); 
+            highlighter.style.opacity = "1";        
+            highlighter.style.top = (rect.top - containerRect.top) + "px"; 
+            highlighter.style.height = rect.height + "px"; 
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });        
+        }                
+        
+        function executeCopy(row, text, index) {            
+            updateFocus(index);            
+            navigator.clipboard.writeText(text).then(() => {                
+                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); 
+                clearTimeout(textTimeout); 
+                const textElement = row.querySelector('.text-content'); 
+                textElement.classList.add('text-active'); 
+                flashMagnet();                
+                let nextIdx = (index + 1) % allRows.length; 
+                const rowText = row.innerText.toUpperCase(); 
+                if (rowText.includes("IV CATHETER G. 20")) { 
+                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); 
+                } else if (rowText.includes("IV CATHETER G. 24")) { 
+                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); 
+                } 
+                setTimeout(() => updateFocus(nextIdx), 450); 
+                textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);            
+            });        
+        }                
+        
+        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } 
+        function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } 
+        function resetFocus() { updateFocus(0); }                
+        
+        let idleTimer; 
+        function startIdle() { magnetBtn.classList.add('idle'); } 
+        function stopIdle() { magnetBtn.classList.remove('idle'); } 
+        function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } 
+        ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
     </script>
 </body>
 
