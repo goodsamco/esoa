@@ -940,6 +940,12 @@
             return "255,115,0";
         }
 
+        // Helper logic to isolate the first word of a name string securely
+        function getFirstWord(nameStr) {
+            if (!nameStr) return "Operator";
+            return nameStr.trim().split(/\s+/)[0];
+        }
+
         const userDocRef = doc(db, "accounts", userId);
         
         onSnapshot(userDocRef, (snapshot) => {
@@ -955,7 +961,9 @@
 
                 currentUserName = data.customName || "Operator";
                 currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
-                document.getElementById('userDisplayName').innerText = currentUserName;
+                
+                // UI updates locally using the isolated first word string
+                document.getElementById('userDisplayName').innerText = getFirstWord(currentUserName);
 
                 const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
                 document.getElementById('userDisplayAvatar').src = matchedAvatar;
@@ -984,15 +992,16 @@
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
-                // Push clean presence metrics upstream
-                set(ref(rtdb, 'presence/' + userId), {
-                    uid: userId,
-                    name: currentUserName,
-                    avatar: currentUserAvatarRaw,
-                    timestamp: Date.now()
-                });
-
-                updateDoc(userDocRef, { isOnline: true });
+                // Initialize presence cleanly only if the tab environment is fully active
+                if (document.visibilityState === 'visible') {
+                    set(ref(rtdb, 'presence/' + userId), {
+                        uid: userId,
+                        name: currentUserName,
+                        avatar: currentUserAvatarRaw,
+                        timestamp: Date.now()
+                    });
+                    updateDoc(userDocRef, { isOnline: true });
+                }
             } else {
                 window.location.href = "login.html";
             }
@@ -1033,14 +1042,13 @@
                     if (uid === userId) return;
                     const peer = users[uid];
                     
-                    // Drop layouts completely if peer data node resolves null
                     if (!peer || !peer.uid || !peer.name) return;
 
                     const wrapper = document.createElement('div');
                     wrapper.className = 'peer-wrapper';
                     wrapper.id = `peer-node-${peer.uid}`;
 
-                    // Replaced image node avatar bubble completely with clean custom display name capsule text
+                    // Display Node using exclusively the first isolated word
                     const textNodeBtn = document.createElement('div');
                     textNodeBtn.className = 'peer-avatar-bubble'; 
                     textNodeBtn.style.width = 'auto';
@@ -1056,10 +1064,9 @@
                     textNodeBtn.style.alignItems = 'center';
                     textNodeBtn.style.justifyContent = 'center';
                     textNodeBtn.style.cursor = 'pointer';
-                    textNodeBtn.innerText = peer.name;
+                    textNodeBtn.innerText = getFirstWord(peer.name);
                     textNodeBtn.onclick = () => initTransientChatChannel(peer.uid, peer.name);
 
-                    // Hover effects for the text button
                     textNodeBtn.onmouseenter = () => { textNodeBtn.style.borderColor = 'var(--primary)'; };
                     textNodeBtn.onmouseleave = () => { textNodeBtn.style.borderColor = 'var(--glass)'; };
 
@@ -1178,7 +1185,7 @@
         function initTransientChatChannel(partnerId, partnerName) {
             isGroupChat = false;
             selectedActiveChatPartnerId = partnerId;
-            document.getElementById('chatTargetName').innerText = `${partnerName}`;
+            document.getElementById('chatTargetName').innerText = getFirstWord(partnerName);
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
 
@@ -1213,7 +1220,7 @@
                 const newMsgRef = push(chatRouteRef);
                 set(newMsgRef, {
                     sender: userId,
-                    senderName: currentUserName,
+                    senderName: getFirstWord(currentUserName),
                     senderAvatar: currentUserAvatarRaw,
                     text: text,
                     timestamp: Date.now()
@@ -1245,7 +1252,7 @@
 
                 const authorTag = document.createElement('div');
                 authorTag.className = 'msg-author-tag';
-                authorTag.innerText = msg.senderName || "Operator";
+                authorTag.innerText = getFirstWord(msg.senderName);
 
                 const timeTag = document.createElement('div');
                 timeTag.className = 'msg-time-tag';
@@ -1373,7 +1380,7 @@
             selectedActiveChatPartnerId = null;
         };
 
-        // CLEAN DISCONNECT SYSTEM: Drops presence tracking from Realtime Database and Firestore instantly upon unload or tab change
+        // RIGOROUS PRESENCE TERMINATION: Instantly deletes the database presence node when leaving/switching tabs
         const purgeUserPresence = () => {
             if (userId) {
                 set(ref(rtdb, 'presence/' + userId), null);
@@ -1383,9 +1390,20 @@
 
         window.addEventListener('beforeunload', purgeUserPresence);
         window.addEventListener('unload', purgeUserPresence);
+        
+        // Triggers instantly if they switch browser tabs or minimize window
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
                 purgeUserPresence();
+            } else if (document.visibilityState === 'visible' && userId) {
+                // Re-establish presence instantly if they return
+                set(ref(rtdb, 'presence/' + userId), {
+                    uid: userId,
+                    name: currentUserName,
+                    avatar: currentUserAvatarRaw,
+                    timestamp: Date.now()
+                });
+                updateDoc(doc(db, "accounts", userId), { isOnline: true });
             }
         });
 
