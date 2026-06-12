@@ -75,7 +75,7 @@ body.copy-flash {
 /* Horizontal Scroll Viewport - Rigid Left Alignment */
 .peer-active-hub {
     display: flex;
-    gap: 16px;
+    gap: 8px;
     align-items: center;
     justify-content: flex-start; /* Keeps items consistently left-aligned */
     overflow-x: auto;
@@ -145,8 +145,8 @@ body.copy-flash {
 /* Consistent Avatar Node Dimensions */
 .peer-avatar-bubble, 
 .group-chat-bubble {
-    width: 70px;
-    height: 70px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     object-fit: cover;
     box-sizing: border-box;
