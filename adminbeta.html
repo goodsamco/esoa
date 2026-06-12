@@ -1,0 +1,342 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: #161e2d;
+            --primary: #38bdf8;
+            --success: #ffee00;
+            --danger: #ef4444;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        h2 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Lists and Cards */
+        .user-card, .chat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .chat-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .user-info .name { font-weight: 600; font-size: 1rem; color: #fff;}
+        .user-info .username { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;}
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .status-badge.active { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-badge.offline { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+
+        /* Buttons */
+        .btn {
+            color: var(--bg);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { transform: scale(1.03); }
+        .btn-approve { background: var(--primary); }
+        .btn-approve:hover { background: var(--success); }
+        .btn-disable { background: #ea580c; color: #fff; }
+        .btn-enable { background: #16a34a; color: #fff; }
+
+        /* Chat view styling */
+        .chat-meta {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .chat-msg {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            background: rgba(255,255,255,0.02);
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .chat-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            align-self: flex-end;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 30px 0;
+            font-size: 0.95rem;
+        }
+        .logout-link {
+            margin-top: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .logout-link:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Management Dashboard</h2>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('approvals')">Approvals</button>
+        <button class="tab-btn" onclick="switchTab('activity')">Active & Access Control</button>
+        <button class="tab-btn" onclick="switchTab('chats')">Chat Monitor</button>
+    </div>
+
+    <div id="approvals" class="tab-content active">
+        <div id="userList">Loading registrations...</div>
+    </div>
+
+    <div id="activity" class="tab-content">
+        <div id="activeUserList">Loading accounts...</div>
+    </div>
+
+    <div id="chats" class="tab-content">
+        <div id="chatLogsList">Loading chat history...</div>
+    </div>
+</div>
+
+<a href="login.html" class="logout-link" onclick="localStorage.clear()">Log out Management</a>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    if (localStorage.getItem("userRole") !== "admin") {
+        window.location.href = "login.html";
+    }
+
+    // --- TAB 1: PENDING APPROVALS ---
+    async function loadPendingUsers() {
+        const container = document.getElementById('userList');
+        container.innerHTML = "";
+        try {
+            const q = query(collection(db, "accounts"), where("status", "==", "pending"));
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No accounts requiring attention right now.</div>`;
+                return;
+            }
+
+            snapshot.forEach((userDoc) => {
+                const data = userDoc.data();
+                const card = document.createElement('div');
+                card.className = "user-card";
+                card.innerHTML = `
+                    <div class="user-info">
+                        <div class="name">${data.name}</div>
+                        <div class="username">@${data.username}</div>
+                    </div>
+                    <button class="btn btn-approve" data-id="${userDoc.id}">APPROVE</button>
+                `;
+                container.appendChild(card);
+            });
+
+            document.querySelectorAll('.btn-approve').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    await updateDoc(doc(db, "accounts", id), { status: "approved" });
+                    loadPendingUsers();
+                });
+            });
+        } catch (err) {
+            container.innerHTML = `<div class="empty-state" style="color:var(--danger)">Error loading profiles.</div>`;
+        }
+    }
+
+    // --- TAB 2: ACTIVE STATUS & ESOA TOGGLE ---
+    // Listens in real-time to track online/offline states and provide an access kill-switch
+    function listenToUserActivity() {
+        const container = document.getElementById('activeUserList');
+        const q = query(collection(db, "accounts"), where("status", "!=", "pending"));
+
+        onSnapshot(q, (snapshot) => {
+            container.innerHTML = "";
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No verified accounts found.</div>`;
+                return;
+            }
+
+            snapshot.forEach((userDoc) => {
+                const data = userDoc.data();
+                const isOnline = data.isOnline === true; 
+                const isEsoaDisabled = data.esoaDisabled === true;
+
+                const card = document.createElement('div');
+                card.className = "user-card";
+                card.innerHTML = `
+                    <div class="user-info">
+                        <div class="name">
+                            ${data.name} 
+                            <span class="status-badge ${isOnline ? 'active' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                        </div>
+                        <div class="username">@${data.username} ${isEsoaDisabled ? '<span style="color:var(--danger); font-size:0.75rem;">(eSOA Disabled)</span>' : ''}</div>
+                    </div>
+                    <button class="btn ${isEsoaDisabled ? 'btn-enable' : 'btn-disable'}" data-id="${userDoc.id}" data-disabled="${isEsoaDisabled}">
+                        ${isEsoaDisabled ? 'Enable eSOA' : 'Disable eSOA'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+
+            // Bind toggle access events
+            container.querySelectorAll('.btn-disable, .btn-enable').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const currentDisabledStatus = e.target.getAttribute('data-disabled') === 'true';
+                    await updateDoc(doc(db, "accounts", id), { 
+                        esoaDisabled: !currentDisabledStatus 
+                    });
+                });
+            });
+        });
+    }
+
+    // --- TAB 3: CHAT MONITORING ---
+    // Watches your messages system to pull down sender, receiver, and content context
+    function listenToChats() {
+        const container = document.getElementById('chatLogsList');
+        // Looks into a 'messages' collection ordered by time
+        const q = query(collection(db, "messages"), orderBy("timestamp", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            container.innerHTML = "";
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No chat logs recorded yet.</div>`;
+                return;
+            }
+
+            snapshot.forEach((msgDoc) => {
+                const data = msgDoc.data();
+                const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                
+                const card = document.createElement('div');
+                card.className = "chat-card";
+                card.innerHTML = `
+                    <div class="chat-meta">
+                        <span>${data.senderName || data.senderId}</span> ➡️ <span>${data.receiverName || data.receiverId || 'Group/Admin'}</span>
+                    </div>
+                    <div class="chat-msg">${data.text || data.message}</div>
+                    <div class="chat-time">${time}</div>
+                `;
+                container.appendChild(card);
+            });
+        }, (err) => {
+            container.innerHTML = `<div class="empty-state" style="color:var(--danger)">Set up a 'messages' collection with an ordered 'timestamp' field to read text transmissions.</div>`;
+        });
+    }
+
+    // Initialize everything
+    window.onload = () => {
+        loadPendingUsers();
+        listenToUserActivity();
+        listenToChats();
+    };
+</script>
+
+<script>
+    // Tab switching logic
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+</script>
+</body></html>
