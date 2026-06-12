@@ -55,25 +55,25 @@
             top: 20px; /* Positioned at the absolute top layout */
             left: 20px;
             right: 20px;
-            height: 78px;
+            height: 110px;
             display: flex;
             align-items: center;
             gap: 8px;
             z-index: 3100;
         }
 
-        .peer-active-hub {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex: 1;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 4px;
-            scroll-behavior: smooth;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
+.peer-active-hub {
+    display: flex;
+    gap: 12px; /* Marginally widened for cleaner alignment with larger bubbles */
+    align-items: center;
+    flex: 1;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 4px 4px 35px 4px; /* Added bottom padding so the absolutely positioned hover name doesn't clip */
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
 
         .peer-active-hub::-webkit-scrollbar {
             display: none;
@@ -165,23 +165,23 @@
             display: block;
         }
 
-        .peer-name-hover {
-            position: absolute;
-            left: 50%;
-            bottom: -32px;
-            transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--glass);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: white;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
+.peer-name-hover {
+    position: absolute;
+    left: 50%;
+    bottom: -28px; 
+    transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--glass);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
 
         .peer-wrapper:hover .peer-name-hover {
             opacity: 1;
