@@ -870,7 +870,7 @@
         </div>
     </div>
 
-    <script type="module">
+ <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -942,15 +942,12 @@
 
         const userDocRef = doc(db, "accounts", userId);
         
-        // Listen to Account configurations and track administration restriction gates
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
 
-                // CRITICAL SAFETY GUARDRAIL: Check if access has been disabled by dashboard admin panel
                 if (data.esoaDisabled === true) {
                     alert("Your access to eSOA has been suspended by management.");
-                    // Soft-drop presence status values clean on redirect
                     set(ref(rtdb, 'presence/' + userId), null);
                     window.location.href = "login.html";
                     return;
@@ -987,7 +984,6 @@
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
-                // Push status data updates to Realtime Database
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
                     name: currentUserName,
@@ -995,9 +991,7 @@
                     timestamp: Date.now()
                 });
 
-                // Update active tracking parameters inside Firestore
                 updateDoc(userDocRef, { isOnline: true });
-
             } else {
                 window.location.href = "login.html";
             }
@@ -1010,7 +1004,8 @@
 
             const gcWrapper = document.createElement('div');
             gcWrapper.className = 'peer-wrapper';
-            gcWrapper.id = 'gc-hub-node';                        
+            gcWrapper.id = 'gc-hub-node';
+                                    
             const gcBubble = document.createElement('div');
             gcBubble.className = 'group-chat-bubble';
             gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
@@ -1036,6 +1031,10 @@
                 Object.keys(users).forEach(uid => {
                     if (uid === userId) return;
                     const peer = users[uid];
+                    
+                    // FIXED: Safeguard to completely drop nodes when user data is removed or null
+                    if (!peer || !peer.uid) return;
+
                     const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
 
                     const wrapper = document.createElement('div');
@@ -1071,7 +1070,8 @@
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
 
             let initialSyncComplete = false;
-            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                        
+            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+                                    
             const hook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (!initialSyncComplete) return;
                 if (childSnap.exists()) {
@@ -1218,7 +1218,7 @@
         };
 
         function appendBubbleToScroller(msg, msgId, direction) {
-            const view = document.getElementById('chatScroller');                        
+            const view = document.getElementById('chatScroller');                                    
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${direction}`;
             wrapper.id = `msg-wrap-${msgId}`;
@@ -1250,7 +1250,7 @@
 
             const bbl = document.createElement('div');
             bbl.className = `msg-bubble ${direction}`;
-            bbl.innerText = msg.text;                        
+            bbl.innerText = msg.text;                                    
             bbl.onclick = (e) => {
                 e.stopPropagation();
                 toggleReactionPicker(msgId, wrapper);
@@ -1342,12 +1342,12 @@
 
                 Object.keys(summary).forEach(emo => {
                     const pill = document.createElement('div');
-                    pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                        
+                    pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                                            
                     if (isGroupChat) {
                         pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
                     } else {
                         pill.innerHTML = `<span>${emo}</span>`;
-                    }                                        
+                    }                                                            
                     pill.onclick = (e) => {
                         e.stopPropagation();
                         submitReaction(msgId, emo);
@@ -1365,11 +1365,9 @@
             selectedActiveChatPartnerId = null;
         };
 
-        // Standard clean exit listener updating user presence indicators across database types
         window.addEventListener('beforeunload', () => {
             if (userId) {
                 set(ref(rtdb, 'presence/' + userId), null);
-                // Mark user as offline inside Firestore directly before closing
                 updateDoc(doc(db, "accounts", userId), { isOnline: false });
             }
         });
@@ -1378,128 +1376,128 @@
             document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
         });
     </script>
-    
-    <script>                
-        let textTimeout; let currentFocusedIndex = 0;        
-        const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');        
-        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };                
+
+    <script>                        
+        let textTimeout; let currentFocusedIndex = 0;                
+        const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');                
+        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };                                
         
-        window.onload = () => { 
-            setTimeout(() => updateFocus(0), 100); 
-            allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });        
-            lucide.createIcons(); 
-            startIdle(); 
-        };                
+        window.onload = () => {             
+            setTimeout(() => updateFocus(0), 100);             
+            allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });                    
+            lucide.createIcons();             
+            startIdle();         
+        };                                
         
-        function toggleModal(id, show) { 
-            const modal = document.getElementById(id); 
-            if (show) { 
-                document.getElementById('hospCharges').value = ''; 
-                document.getElementById('caseRate').value = '';        
-                document.getElementById('finalDiscount').innerText = '0.00'; 
-                modal.style.display = 'flex'; 
-                setTimeout(() => modal.classList.add('active'), 10); 
-            } else { 
-                modal.classList.remove('active'); 
-                setTimeout(() => modal.style.display = 'none', 400);        
-            } 
-        }                
+        function toggleModal(id, show) {             
+            const modal = document.getElementById(id);             
+            if (show) {                 
+                document.getElementById('hospCharges').value = '';                 
+                document.getElementById('caseRate').value = '';                        
+                document.getElementById('finalDiscount').innerText = '0.00';                 
+                modal.style.display = 'flex';                 
+                setTimeout(() => modal.classList.add('active'), 10);             
+            } else {                 
+                modal.classList.remove('active');                 
+                setTimeout(() => modal.style.display = 'none', 400);                    
+            }         
+        }                                
         
-        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }                
+        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }                                
         
-        function calcSr() { 
-            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;        
-            const rate = parseFloat(document.getElementById('caseRate').value) || 0; 
-            document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);        
-        }                
+        function calcSr() {             
+            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;                    
+            const rate = parseFloat(document.getElementById('caseRate').value) || 0;             
+            document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);                
+        }                                
         
-        function copyModalValue() { 
-            const val = document.getElementById('finalDiscount').innerText;        
-            navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); 
-        }                
+        function copyModalValue() {             
+            const val = document.getElementById('finalDiscount').innerText;                    
+            navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); });         
+        }                                
         
-        function openList(cat) { 
-            const listCont = document.getElementById('listContainer');        
-            listCont.innerHTML = ''; 
-            document.getElementById('listTitle').innerText = cat.toUpperCase(); 
-            extraItems[cat].forEach(text => { 
-                const div = document.createElement('div'); 
-                div.className = 'list-item'; 
-                div.innerText = text; 
-                div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; 
-                listCont.appendChild(div); 
-            });        
-            window.toggleModal('listModal', true); 
-        }        
+        function openList(cat) {             
+            const listCont = document.getElementById('listContainer');                    
+            listCont.innerHTML = '';             
+            document.getElementById('listTitle').innerText = cat.toUpperCase();             
+            extraItems[cat].forEach(text => {                 
+                const div = document.createElement('div');                 
+                div.className = 'list-item';                 
+                div.innerText = text;                 
+                div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); };                 
+                listCont.appendChild(div);             
+            });                    
+            window.toggleModal('listModal', true);         
+        }                        
         
-        function flashMagnet() {    
-            magnetBtn.innerText = "COPIED!";    
-            magnetBtn.classList.add('success-state');    
+        function flashMagnet() {                
+            magnetBtn.innerText = "COPIED!";                
+            magnetBtn.classList.add('success-state');                
             document.body.classList.add('copy-flash');
 
-            setTimeout(() => {        
-                magnetBtn.innerText = "COPY";        
-                magnetBtn.classList.remove('success-state');        
-                document.body.classList.remove('copy-flash');    
-            }, 600);
-        }                
+            setTimeout(() => {                        
+                magnetBtn.innerText = "COPY";                        
+                magnetBtn.classList.remove('success-state');                        
+                document.body.classList.remove('copy-flash');                
+            }, 600);        
+        }                                
         
-        document.addEventListener('mousemove', (e) => { 
-            const threshold = window.innerHeight * 0.75; 
-            if (e.clientY > threshold) { 
-                const centerX = window.innerWidth / 2; 
-                const centerY = window.innerHeight - (window.innerHeight * 0.125); 
-                const pullX = (e.clientX - centerX) * 0.3; 
-                const pullY = (e.clientY - centerY) * 0.4; 
-                magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; 
-            } else { 
-                resetMagnet(); 
-            } 
-        });                
+        document.addEventListener('mousemove', (e) => {             
+            const threshold = window.innerHeight * 0.75;             
+            if (e.clientY > threshold) {                 
+                const centerX = window.innerWidth / 2;                 
+                const centerY = window.innerHeight - (window.innerHeight * 0.125);                 
+                const pullX = (e.clientX - centerX) * 0.3;                 
+                const pullY = (e.clientY - centerY) * 0.4;                 
+                magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`;             
+            } else {                 
+                resetMagnet();             
+            }         
+        });                                
         
-        function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }                
+        function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }                                
         
-        function updateFocus(index) { 
-            currentFocusedIndex = index;        
-            const targetRow = allRows[index]; 
-            if (!targetRow) return; 
-            const rect = targetRow.getBoundingClientRect(); 
-            const containerRect = container.getBoundingClientRect(); 
-            highlighter.style.opacity = "1";        
-            highlighter.style.top = (rect.top - containerRect.top) + "px"; 
-            highlighter.style.height = rect.height + "px"; 
-            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });        
-        }                
+        function updateFocus(index) {             
+            currentFocusedIndex = index;                    
+            const targetRow = allRows[index];             
+            if (!targetRow) return;             
+            const rect = targetRow.getBoundingClientRect();             
+            const containerRect = container.getBoundingClientRect();             
+            highlighter.style.opacity = "1";                    
+            highlighter.style.top = (rect.top - containerRect.top) + "px";             
+            highlighter.style.height = rect.height + "px";             
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });                
+        }                                
         
-        function executeCopy(row, text, index) {            
-            updateFocus(index);            
-            navigator.clipboard.writeText(text).then(() => {                
-                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); 
-                clearTimeout(textTimeout); 
-                const textElement = row.querySelector('.text-content'); 
-                textElement.classList.add('text-active'); 
-                flashMagnet();                
-                let nextIdx = (index + 1) % allRows.length; 
-                const rowText = row.innerText.toUpperCase(); 
-                if (rowText.includes("IV CATHETER G. 20")) { 
-                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); 
-                } else if (rowText.includes("IV CATHETER G. 24")) { 
-                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); 
-                } 
-                setTimeout(() => updateFocus(nextIdx), 450); 
-                textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);            
-            });        
-        }                
+        function executeCopy(row, text, index) {                        
+            updateFocus(index);                        
+            navigator.clipboard.writeText(text).then(() => {                                
+                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active'));                 
+                clearTimeout(textTimeout);                 
+                const textElement = row.querySelector('.text-content');                 
+                textElement.classList.add('text-active');                 
+                flashMagnet();                                
+                let nextIdx = (index + 1) % allRows.length;                 
+                const rowText = row.innerText.toUpperCase();                 
+                if (rowText.includes("IV CATHETER G. 20")) {                     
+                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET"));                 
+                } else if (rowText.includes("IV CATHETER G. 24")) {                     
+                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET"));                 
+                }                 
+                setTimeout(() => updateFocus(nextIdx), 450);                 
+                textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);                        
+            });                
+        }                                
         
-        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } 
-        function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } 
-        function resetFocus() { updateFocus(0); }                
+        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); }         
+        function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); }         
+        function resetFocus() { updateFocus(0); }                                
         
-        let idleTimer; 
-        function startIdle() { magnetBtn.classList.add('idle'); } 
-        function stopIdle() { magnetBtn.classList.remove('idle'); } 
-        function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } 
-        ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
+        let idleTimer;         
+        function startIdle() { magnetBtn.classList.add('idle'); }         
+        function stopIdle() { magnetBtn.classList.remove('idle'); }         
+        function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); }         
+        ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));       
     </script>
 </body>
 
