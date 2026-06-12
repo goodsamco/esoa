@@ -1389,7 +1389,13 @@ function flashMagnet() {
         }
         
         let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle');
-        } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));    
+        } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
+
+
+        if (userData.esoaDisabled === true) {
+    alert("Your access to eSOA has been suspended by management.");
+    window.location.href = "dashboard.html";
+}
     </script>
 </body>
 
