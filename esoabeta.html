@@ -35,7 +35,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 240px 10px 25vh 10px; /* Space out the body layout to match top header panels */
+            padding: 240px 10px 25vh 10px;
             display: flex;
             justify-content: center;
             overflow-x: hidden;
@@ -46,7 +46,7 @@
             background-color: var(--primary);
         }
 
-        /* Fixed Row Container - Ensures cross-axis line consistency */
+        /* Fixed Row Container */
         .peer-wrapper-row {
             position: fixed;
             top: 20px;
@@ -56,13 +56,13 @@
             max-width: 600px;
             height: 80px;
             display: flex;
-            align-items: center; /* Absolutely anchors elements along the central line */
+            align-items: center;
             justify-content: center;
             gap: 12px;
             z-index: 3100;
         }
 
-        /* Horizontal Scroll Node Viewport with consistent content lines */
+        /* Horizontal Scroll Node Viewport */
         .peer-active-hub {
             display: flex;
             gap: 14px;
@@ -79,7 +79,7 @@
             display: none;
         }
 
-        /* Centered Scroll Navigation Buttons without unpredictable hacky margins */
+        /* Scroll Navigation Buttons */
         .scroll-nav-btn {
             background: rgba(20, 7, 0, 0.6);
             border: 1px solid rgba(255, 115, 0, 0.2);
@@ -128,7 +128,7 @@
             transform: scale(1.05);
         }
 
-        /* Group Chat Node Configuration - Retained small sizing specs */
+        /* Group Chat Node Configuration */
         .group-chat-bubble {
             width: 38px;
             height: 38px;
@@ -169,12 +169,12 @@
             display: block;
         }
 
-        /* Tooltip hover tag popups */
+        /* Names on Hover - Flipped strictly ABOVE the items to remain fully visible */
         .peer-name-hover {
             position: absolute;
             left: 50%;
-            top: 72px; /* Shifts hover context strictly below the avatars */
-            transform: translateX(-50%) translateY(5px);
+            top: -35px; 
+            transform: translateX(-50%) translateY(-5px);
             background: var(--surface);
             border: 1px solid var(--glass);
             padding: 4px 8px;
@@ -186,7 +186,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, transform 0.2s ease;
-            z-index: 3200;
+            z-index: 3500;
         }
 
         .peer-wrapper:hover .peer-name-hover {
@@ -194,7 +194,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Control Tray Panel - Centered beautifully below the active chat row */
+        /* Clean Pill Layout Tray Panel */
         .top-nav {
             position: fixed;
             top: 115px;
@@ -205,20 +205,21 @@
             justify-content: center;
             gap: 10px;
             z-index: 3000;
-            background: rgba(20, 7, 0, 0.4);
+            background: rgba(20, 7, 0, 0.5);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 6px 12px;
-            border-radius: 18px;
+            padding: 6px 16px;
+            border-radius: 30px; /* Pill Shape */
             border: 1px solid var(--glass);
         }
 
+        /* Perfect Circle operational buttons */
         .top-btn {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: var(--surface);
             border: 1px solid rgba(255, 115, 0, 0.2);
-            border-radius: 12px;
+            border-radius: 50%; /* Circle Buttons */
             color: white;
             cursor: pointer;
             display: flex;
@@ -232,63 +233,42 @@
             color: #000;
         }
 
-        /* Complete Overhaul: Profile identity deck section moved safely to the bottom right zone */
-        .user-profile-anchor {
-            position: fixed;
-            bottom: calc(25vh + 20px); /* Positioned cleanly over your action button space */
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 3000;
-            background: rgba(20, 7, 0, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 8px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--glass);
-        }
-
-        .user-identity-card {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 2px;
-        }
-
+        /* Ultimate Bottom Right Profile Isolation (Containerless layout) */
         .profile-avatar-node {
-            width: 44px;
-            height: 44px;
+            position: fixed;
+            bottom: 45px;
+            right: 25px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
             border: 2px solid var(--primary);
             cursor: pointer;
             transition: transform 0.2s ease;
+            z-index: 2500; /* Layered directly on top of copy zone spaces */
         }
 
         .profile-avatar-node:hover {
             transform: scale(1.05);
         }
 
-        .user-identity-card .name-string {
-            font-size: 0.7rem;
+        .name-string {
+            position: fixed;
+            bottom: 22px;
+            right: 25px;
+            font-size: 0.65rem;
             font-weight: 800;
             color: var(--text-main);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            max-width: 90px;
+            width: 48px; /* Perfectly matches avatar width context */
+            text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-
-        .user-identity-card .status-string {
-            font-size: 0.55rem;
-            color: var(--primary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            z-index: 2500;
+            pointer-events: none;
         }
 
         /* Real-time Session Dock Panel Styles */
@@ -409,102 +389,6 @@
             font-weight: 600;
         }
 
-        .msg-reaction-container {
-            display: flex;
-            gap: 4px;
-            margin-top: -4px;
-            z-index: 10;
-            background: #140700;
-            border: 1px solid rgba(255, 115, 0, 0.3);
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-            align-items: center;
-        }
-
-        .reaction-pill {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            cursor: pointer;
-        }
-
-        .reaction-pill.user-voted {
-            background: rgba(255, 115, 0, 0.2);
-            border-radius: 4px;
-            padding: 0 2px;
-        }
-
-        .reaction-count {
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .reaction-picker-tray {
-            position: absolute;
-            background: #1c0d07;
-            border: 1px solid var(--primary);
-            padding: 4px 8px;
-            border-radius: 20px;
-            display: flex;
-            gap: 6px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            z-index: 4000;
-            top: -35px;
-        }
-
-        .msg-wrapper.incoming .reaction-picker-tray {
-            left: 0;
-        }
-
-        .msg-wrapper.outgoing .reaction-picker-tray {
-            right: 0;
-        }
-
-        .reaction-option {
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: transform 0.1s ease;
-        }
-
-        .reaction-option:hover {
-            transform: scale(1.25);
-        }
-
-        .chat-input-row {
-            padding: 10px;
-            display: flex;
-            gap: 8px;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .chat-input-row input {
-            flex: 1;
-            background: #000;
-            border: 1px solid rgba(255, 115, 0, 0.2);
-            border-radius: 8px;
-            color: white;
-            padding: 8px;
-            font-size: 0.85rem;
-            outline: none;
-        }
-
-        .chat-input-row input:focus {
-            border-color: var(--primary);
-        }
-
-        .chat-input-row button {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 0 14px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
         .container {
             position: relative;
             width: 100%;
@@ -558,11 +442,6 @@
         .text-content {
             font-size: 0.95rem;
             font-weight: 500;
-        }
-
-        .text-active {
-            color: var(--primary);
-            text-shadow: 0 0 12px var(--primary);
         }
 
         .add-btn-circle {
@@ -626,24 +505,6 @@
             height: 120px;
         }
 
-        .btn-main-copy.success-state {
-            background-image: none !important;
-            background-color: var(--primary) !important;
-            color: #000;
-            text-shadow: none;
-            box-shadow: 0 0 25px rgba(255, 115, 0, 0.5);
-            border-radius: 35px;
-        }
-
-        @keyframes idleFloat {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(0, -5px); }
-        }
-
-        .btn-main-copy.idle {
-            animation: idleFloat 3.5s ease-in-out infinite;
-        }
-
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -680,103 +541,6 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-
-        .modal-overlay.active .modal-content {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-            filter: blur(0px);
-        }
-
-        .list-item {
-            padding: 16px;
-            margin: 8px 0;
-            border-radius: 16px;
-            text-align: left;
-            cursor: pointer;
-            transition: 0.2s;
-            color: var(--text-main);
-            background: rgba(255, 115, 0, 0.02);
-            border: 1px solid rgba(255, 115, 0, 0.05);
-        }
-
-        .list-item:hover {
-            background: var(--glass);
-            border-color: var(--primary);
-            color: #fff;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .input-group label {
-            font-size: 0.65rem;
-            color: var(--primary);
-            margin-left: 10px;
-            font-weight: 800;
-        }
-
-        .modal-content input {
-            width: 100%;
-            background: #000;
-            border: 1px solid rgba(255, 115, 0, 0.2);
-            padding: 16px;
-            margin-top: 5px;
-            border-radius: 16px;
-            color: white;
-            font-size: 1.3rem;
-            box-sizing: border-box;
-            text-align: center;
-            font-weight: 700;
-            outline: none;
-        }
-
-        .modal-content input:focus {
-            border-color: var(--primary);
-        }
-
-        .modal-result {
-            margin: 25px 0;
-            padding: 20px;
-            background: var(--glass);
-            border-radius: 20px;
-            border: 1px dashed var(--primary);
-        }
-
-        #finalDiscount {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .modal-copy-zone {
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            background: var(--primary);
-            color: #000;
-            border-radius: 16px;
-            font-weight: 800;
-            transition: 0.2s;
-        }
-
-        .modal-copy-zone.success-state {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .modal-close-btn {
-            margin-top: 20px;
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 0.8rem;
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body onmouseleave="resetMagnet()">
@@ -792,13 +556,8 @@
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
     </div>
 
-    <div class="user-profile-anchor">
-        <div class="user-identity-card">
-            <span id="userDisplayName" class="name-string">Sync...</span>
-            <span class="status-string">EJ</span>
-        </div>
-        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    </div>
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">EJ</span>
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
@@ -839,17 +598,6 @@
         <div class="item-row" data-val="ADMISSION FEE"><span class="text-content">ADMISSION FEE</span></div>
         <div class="item-row" data-val="MISCELLANEOUS"><span class="text-content">MISCELLANEOUS</span></div>
         <div class="item-row" data-val="BED SHEET"><span class="text-content">BED SHEET</span></div>
-        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span></div>
-        <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
-        <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
-        <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
-        <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
-        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
-        <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
-        <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
-        <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
-        <div class="item-row" data-val="X-RAY"><span class="text-content">X-RAY</span></div>
-        <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
 
@@ -862,23 +610,11 @@
             <h3>DISCOUNT CALCULATOR</h3>
             <div class="input-group"> <label>HOSPITAL CHARGES</label> <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> </div>
             <div class="input-group"> <label>CASE RATE (PHIC)</label> <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> </div>
-            <div class="modal-result">
-                <div id="finalDiscount">0.00</div>
-            </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> 
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="listTitle">SELECT ITEM</h3>
-            <div id="listContainer"></div> 
-            <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
-        </div>
-    </div>
-
-<script type="module">
+ <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
