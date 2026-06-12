@@ -35,7 +35,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 230px 10px 25vh 10px; /* Comfortably clears the updated dual-tier stack row design */
+            padding: 240px 10px 25vh 10px; /* Space out the body layout to match top header panels */
             display: flex;
             justify-content: center;
             overflow-x: hidden;
@@ -46,28 +46,30 @@
             background-color: var(--primary);
         }
 
-        /* Fixed Row Container wrapping the navigation actions and user hub together */
+        /* Fixed Row Container - Ensures cross-axis line consistency */
         .peer-wrapper-row {
             position: fixed;
             top: 20px;
-            left: 20px;
-            right: 20px;
-            height: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            height: 80px;
             display: flex;
-            align-items: center; /* Ensures scroll nav keys and bubble contents align completely center on the cross-axis */
-            gap: 8px;
+            align-items: center; /* Absolutely anchors elements along the central line */
+            justify-content: center;
+            gap: 12px;
             z-index: 3100;
         }
 
-        /* Horizontal Scroll Node Viewport */
+        /* Horizontal Scroll Node Viewport with consistent content lines */
         .peer-active-hub {
             display: flex;
-            gap: 12px;
+            gap: 14px;
             align-items: center;
-            flex: 1;
             overflow-x: auto;
             white-space: nowrap;
-            padding: 4px 4px 35px 4px; /* Bottom padding keeps name hovers clear from boundaries */
+            padding: 10px 4px;
             scroll-behavior: smooth;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -77,7 +79,7 @@
             display: none;
         }
 
-        /* Centered Inline Action Scroll Buttons */
+        /* Centered Scroll Navigation Buttons without unpredictable hacky margins */
         .scroll-nav-btn {
             background: rgba(20, 7, 0, 0.6);
             border: 1px solid rgba(255, 115, 0, 0.2);
@@ -94,7 +96,6 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             flex-shrink: 0;
-            margin-top: -31px; /* Precision mechanical offset to counter-balance bottom hover text fields */
         }
 
         .scroll-nav-btn:hover {
@@ -106,13 +107,14 @@
             position: relative;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             flex-shrink: 0;
         }
 
-        /* 70px User Avatar Layout */
+        /* Chat Avatar Layout Bubble */
         .peer-avatar-bubble {
-            width: 70px;
-            height: 70px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
@@ -126,7 +128,7 @@
             transform: scale(1.05);
         }
 
-        /* Compact Group Chat Node Configuration */
+        /* Group Chat Node Configuration - Retained small sizing specs */
         .group-chat-bubble {
             width: 38px;
             height: 38px;
@@ -167,11 +169,12 @@
             display: block;
         }
 
+        /* Tooltip hover tag popups */
         .peer-name-hover {
             position: absolute;
             left: 50%;
-            bottom: -28px;
-            transform: translateX(-50%);
+            top: 72px; /* Shifts hover context strictly below the avatars */
+            transform: translateX(-50%) translateY(5px);
             background: var(--surface);
             border: 1px solid var(--glass);
             padding: 4px 8px;
@@ -183,6 +186,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 3200;
         }
 
         .peer-wrapper:hover .peer-name-hover {
@@ -190,61 +194,75 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Top Action Bar - Shifted downwards clear of upper system frames */
+        /* Control Tray Panel - Centered beautifully below the active chat row */
         .top-nav {
             position: fixed;
-            top: 145px;
-            right: 20px;
-            below: 30px;
+            top: 115px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
             z-index: 3000;
             background: rgba(20, 7, 0, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 6px 50px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 18px;
             border: 1px solid var(--glass);
         }
 
         .top-btn {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             background: var(--surface);
             border: 1px solid rgba(255, 115, 0, 0.2);
-            border-radius: 14px;
+            border-radius: 12px;
             color: white;
-            backdrop-filter: blur(10px);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
         }
 
         .top-btn:hover {
             background: var(--primary);
             color: #000;
-            transform: translateY(-2px);
+        }
+
+        /* Complete Overhaul: Profile identity deck section moved safely to the bottom right zone */
+        .user-profile-anchor {
+            position: fixed;
+            bottom: calc(25vh + 20px); /* Positioned cleanly over your action button space */
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            background: rgba(20, 7, 0, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--glass);
         }
 
         .user-identity-card {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            margin-left: 6px;
+            align-items: flex-start;
+            gap: 2px;
         }
 
         .profile-avatar-node {
-            width: 46px;
-            height: 46px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
             border: 2px solid var(--primary);
-            padding: 2px;
             cursor: pointer;
             transition: transform 0.2s ease;
         }
@@ -254,15 +272,23 @@
         }
 
         .user-identity-card .name-string {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 800;
             color: var(--text-main);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            max-width: 75px;
+            max-width: 90px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        .user-identity-card .status-string {
+            font-size: 0.55rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Real-time Session Dock Panel Styles */
@@ -764,10 +790,14 @@
     <div class="top-nav">
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+    </div>
+
+    <div class="user-profile-anchor">
         <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
             <span id="userDisplayName" class="name-string">Sync...</span>
+            <span class="status-string">EJ</span>
         </div>
+        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     </div>
 
     <div class="chat-docking-panel" id="chatDock">
@@ -1478,6 +1508,9 @@
         function stopIdle() { magnetBtn.classList.remove('idle'); } 
         function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } 
         ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
+
+        
+        lucide.createIcons();
     </script>
 </body>
 </html>
