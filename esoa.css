@@ -48,9 +48,9 @@ body.copy-flash {
 
 
 /* ==========================================================================
-   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX) - REBALANCED TO 70PX
+   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX) - HOVER REVEAL & MASKED VIA CSS
    ========================================================================== */
-/* Adjusted parent container height to perfectly balance 70px profiles + names */
+/* Main layout frame around peer elements */
 .peer-wrapper-row {
     position: fixed;
     top: 20px;
@@ -58,7 +58,7 @@ body.copy-flash {
     transform: translateX(-50%);
     width: calc(100% - 40px);
     max-width: 600px;
-    height: 130px; /* Reduced from 160px to tightly frame 70px layouts */
+    height: 130px; 
     display: flex;
     align-items: center;
     z-index: 3100;
@@ -72,10 +72,10 @@ body.copy-flash {
     box-sizing: border-box;
 }
 
-/* Horizontal Scroll Viewport - Tightly Packed Left Alignment */
+/* Viewport slider view tracking */
 .peer-active-hub {
     display: flex;
-    gap: -14px; /* Negative gap pulling the 70px nodes closer for clean overlap */
+    gap: -14px; 
     align-items: center;
     justify-content: flex-start; 
     overflow-x: auto;
@@ -93,13 +93,12 @@ body.copy-flash {
     display: none;
 }
 
-/* Absolute Anchored Navigation Controls */
+/* Absolute Anchored Navigation Controls - Hidden by Default */
 .scroll-nav-btn {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 40px;
-    background: transparent; 
+    width: 45px;
     border: none;
     color: var(--primary);
     display: flex;
@@ -107,23 +106,40 @@ body.copy-flash {
     justify-content: center;
     cursor: pointer;
     z-index: 3120;
-    transition: all 0.2s ease;
+    opacity: 0; /* Fully hidden by default */
+    pointer-events: none; /* Prevents capturing clicks while invisible */
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, transform 0.2s ease;
 }
 
+/* Left side navigation layout using a smooth, completely transparent mask */
 .scroll-nav-btn.prev {
-    left: 4px;
+    left: 0;
+    background: linear-gradient(to right, rgba(20, 7, 0, 0.6) 0%, rgba(20, 7, 0, 0) 100%);
 }
 
+/* Right side navigation layout using a smooth, completely transparent mask */
 .scroll-nav-btn.next {
-    right: 4px;
+    right: 0;
+    background: linear-gradient(to left, rgba(20, 7, 0, 0.6) 0%, rgba(20, 7, 0, 0) 100%);
+}
+
+/* REVEAL TRIGGER ON CONTAINER HOVER: Instantly handles visibility when mouse enters */
+.peer-wrapper-row:hover .scroll-nav-btn {
+    opacity: 1;
+    pointer-events: auto; /* Restores clicking action during hover state */
 }
 
 .scroll-nav-btn:hover {
     color: #fff;
-    transform: scale(1.1);
+}
+.scroll-nav-btn.prev:hover {
+    transform: scale(1.05) translateX(-2px);
+}
+.scroll-nav-btn.next:hover {
+    transform: scale(1.05) translateX(2px);
 }
 
-/* Single Item Unit Wrapper */
+/* Profile wrapper containers */
 .peer-wrapper {
     position: relative;
     display: inline-flex;
@@ -131,22 +147,21 @@ body.copy-flash {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 78px; /* Perfectly scaled width map to hold the 70px nodes plus margin */
+    width: 78px; 
     height: 115px;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), order 0.4s ease;
 }
 
-/* Offline state modifications (Shrink and Grayscale instead of disappearing) */
 .peer-wrapper.is-offline {
     filter: grayscale(100%);
     transform: scale(0.82);
 }
 
-/* Balanced Profile Node Dimensions */
+/* Profiles normalized parameters */
 .peer-avatar-bubble, 
 .group-chat-bubble {
-    width: 70px; /* Redefined dimension parameter */
-    height: 70px; /* Redefined dimension parameter */
+    width: 70px; 
+    height: 70px; 
     border-radius: 50%;
     object-fit: cover;
     box-sizing: border-box;
@@ -163,7 +178,7 @@ body.copy-flash {
 .peer-avatar-bubble:hover {
     border-color: var(--primary);
     transform: scale(1.06);
-    z-index: 10; /* Hover stack pop over tight overlapping layout elements */
+    z-index: 10; 
 }
 
 .group-chat-bubble {
@@ -175,7 +190,7 @@ body.copy-flash {
     cursor: pointer;
     border: 2px solid var(--primary);
     transition: all 0.2s ease;
-    box-shadow: 0 0 10px rgba(255, 115, 0, 0.35);
+    box-shadow: 0 0 8px rgba(255, 115, 0, 0.35);
 }
 
 .group-chat-bubble:hover {
@@ -185,7 +200,6 @@ body.copy-flash {
     z-index: 10;
 }
 
-/* Notification Badge adjusted for 70px bubble positions */
 .peer-notif-dot {
     position: absolute;
     top: 4px;
@@ -204,7 +218,6 @@ body.copy-flash {
     display: block;
 }
 
-/* Persistent labels scaled safely under 70px elements */
 .peer-name-hover {
     margin-top: 6px;
     font-size: 0.65rem;
@@ -219,49 +232,6 @@ body.copy-flash {
     pointer-events: auto;
 }
 
-
-/* ==========================================================================
-   4. NAVIGATION CONTROL BARS
-   ========================================================================== */
-/* Shifted layout coordinate down slightly to compensate for the smaller container above */
-.top-nav {
-    position: fixed;
-    top: 165px; /* Safely clears the new 130px container bounds beautifully */
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    z-index: 3000;
-    background: rgba(20, 7, 0, 0.5);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 6px 18px; 
-    border-radius: 32px; 
-    border: 1px solid var(--glass);
-}
-
-/* Perfect Circle Operational Buttons */
-.top-btn {
-    width: 38px;
-    height: 38px;
-    background: var(--surface);
-    border: 1px solid rgba(255, 115, 0, 0.2);
-    border-radius: 50%; 
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.top-btn:hover {
-    background: var(--primary);
-    color: #000;
-    transform: translateY(-2px);
-}
 /* ==========================================================================
    5. PERSONAL PROFILE FLOATING TARGETS
    ========================================================================== */
