@@ -173,14 +173,17 @@ const presenceRef = ref(rtdb, 'presence');
 onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
 
+    // 1. Mark matching profile entries as offline if absent from current RTDB snapshot data
     const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
     existingNodes.forEach(node => {
         const nodeUid = node.id.replace('peer-node-', '');
         if (!users[nodeUid] || nodeUid === userId) {
-            node.remove();
+            node.classList.add('is-offline');
+            node.style.order = "1"; // Auto-rearranges to the end of the container grid
         }
     });
 
+    // 2. Loop through current system users and map nodes dynamically
     Object.keys(users).forEach(uid => {
         if (uid === userId) return;
         const peer = users[uid];
@@ -219,9 +222,14 @@ onValue(presenceRef, (snapshot) => {
             const tag = peerContainer.querySelector('.peer-name-hover');
             if (tag) tag.innerText = singleWordLabel;
         }
+
+        // Active node recovery normalization state parameters
+        peerContainer.classList.remove('is-offline');
+        peerContainer.style.order = "0"; // Auto-rearranges back to the front left side positions
     });
     if (window.lucide) window.lucide.createIcons();
 });
+
 
 
 /* ==========================================================================
