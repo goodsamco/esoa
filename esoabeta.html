@@ -35,7 +35,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 180px 10px 25vh 10px; /* Expanded overhead clearance room for bottom tags */
+            padding: 260px 10px 25vh 10px; /* Generous breathing room for centered top layouts */
             display: flex;
             justify-content: center;
             overflow-x: hidden;
@@ -46,28 +46,75 @@
             background-color: var(--primary);
         }
 
-        /* Fixed Top-Left Workspace Active Users Tray Panel Layout */
-        .peer-active-hub {
+        /* Centered Active Users Hub Container */
+        .peer-wrapper-row {
             position: fixed;
             top: 20px;
-            left: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
             display: flex;
-            gap: 12px; /* Fixed compressed gap overlapping to guarantee item selection room */
             align-items: center;
-            z-index: 3000;
-            padding-bottom: 30px; /* Layout safety padding boundary zone for dropdown labels */
+            justify-content: center;
+            gap: 12px;
+            z-index: 3100;
+            padding-bottom: 25px; /* Creates explicit safe layout area for downward tooltip visibility */
+        }
+
+        /* Horizontal Scroll Node Viewport */
+        .peer-active-hub {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 4px;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .peer-active-hub::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Scroll Navigation Buttons */
+        .scroll-nav-btn {
+            background: rgba(20, 7, 0, 0.6);
+            border: 1px solid rgba(255, 115, 0, 0.2);
+            color: var(--primary);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3110;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .scroll-nav-btn:hover {
+            background: var(--primary);
+            color: #000;
         }
 
         .peer-wrapper {
             position: relative;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
+        /* Chat Avatar Layout Bubble */
         .peer-avatar-bubble {
-            width: 40px;
-            height: 40px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
@@ -122,11 +169,11 @@
             display: block;
         }
 
-        /* Clean & Completely Legible Downward Hover Context Labels */
+        /* Clean, Fully Visible Downward Hover Context Labels */
         .peer-name-hover {
             position: absolute;
             left: 50%;
-            bottom: -28px; /* Offset low enough to completely clear avatar profile limits */
+            bottom: -26px; /* Positions completely clear of the avatar circle */
             transform: translateX(-50%) translateY(4px);
             background: var(--surface);
             border: 1px solid var(--primary);
@@ -139,7 +186,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 4500; /* Absolute top stack layer orientation */
+            z-index: 4500; /* Absolute topmost presentation layer */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
         }
 
@@ -148,29 +195,32 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Glassmorphic Translucent Blur Top Navigation Layout Window */
+        /* Widened Pill Layout Tray Navigation (Centered beneath user hub) */
         .top-nav {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 135px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 12px;
             z-index: 3000;
             background: rgba(20, 7, 0, 0.5);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 6px 16px; /* Widen pill configuration */
-            border-radius: 32px;
+            padding: 6px 22px; /* Distinct wide pill aspect ratio */
+            border-radius: 32px; 
             border: 1px solid var(--glass);
         }
 
+        /* Perfect Circle Operational Buttons */
         .top-btn {
             width: 38px;
             height: 38px;
             background: var(--surface);
             border: 1px solid rgba(255, 115, 0, 0.2);
-            border-radius: 50%; /* Pure Circle operational configuration updates */
+            border-radius: 50%; /* Pure Circle Form */
             color: white;
             cursor: pointer;
             display: flex;
@@ -185,41 +235,42 @@
             transform: translateY(-2px);
         }
 
-        /* Dedicated Integrated User Profile Deck Segment */
-        .user-identity-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            margin-left: 6px;
-        }
-
+        /* Isolated Bottom-Right Profile Node (Containerless layout) */
         .profile-avatar-node {
-            width: 46px;
-            height: 46px;
+            position: fixed;
+            bottom: 45px;
+            right: 25px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
             border: 2px solid var(--primary);
-            padding: 2px;
             cursor: pointer;
             transition: transform 0.2s ease;
+            z-index: 2500; /* Directly layered over background content spaces */
         }
 
         .profile-avatar-node:hover {
             transform: scale(1.05);
         }
 
-        .user-identity-card .name-string {
+        .name-string {
+            position: fixed;
+            bottom: 22px;
+            right: 25px;
             font-size: 0.65rem;
             font-weight: 800;
             color: var(--text-main);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            max-width: 75px;
+            width: 48px; /* Balanced perfectly underneath the avatar width */
+            text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            z-index: 2500;
+            pointer-events: none;
         }
 
         /* Real-time Session Dock Panel Styles */
@@ -283,12 +334,10 @@
             align-self: flex-start;
         }
 
-        .msg-wrapper.outgoing {
-            align-self: flex-end;
+        .msg-wrapper.outgoing {            align-self: flex-end;
             align-items: flex-end;
         }
 
-        /* GC Metadata Structure Row styling */
         .msg-meta-row {
             display: flex;
             align-items: center;
@@ -342,7 +391,7 @@
             font-weight: 600;
         }
 
-        /* Reactions container styles */
+        /* Reactions Container Styles */
         .msg-reaction-container {
             display: flex;
             gap: 4px;
@@ -376,7 +425,7 @@
             color: var(--primary);
         }
 
-        /* Floating Reaction Picker popover overlay */
+        /* Floating Reaction Picker Popover Overlay */
         .reaction-picker-tray {
             position: absolute;
             background: #1c0d07;
@@ -521,7 +570,7 @@
             transform: scale(1.1);
         }
 
-        /* Broadened & Flattened Normal Sized Aspect Copy Engine Keyhole */
+        /* Broadened & Flattened Copy Button */
         .bottom-zone {
             position: fixed;
             bottom: 0;
@@ -717,16 +766,19 @@
 </head>
 <body onmouseleave="resetMagnet()">
 
-    <div class="peer-active-hub" id="peerActiveHub"></div>
+    <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
+        <button class="scroll-nav-btn" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
+    </div>
 
     <div class="top-nav">
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
-        <div class="user-identity-card">
-            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-            <span id="userDisplayName" class="name-string">Sync...</span>
-        </div>
     </div>
+
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">EJ</span>
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
@@ -809,7 +861,8 @@
             <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
-<script type="module">
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -1443,4 +1496,3 @@
 </body>
 
 </html>
-    
