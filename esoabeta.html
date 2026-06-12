@@ -46,34 +46,37 @@
             background-color: var(--primary);
         }
 
-        /* Centered Active Users Hub Container */
-        .peer-wrapper-row {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 40px);
-            max-width: 600px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            z-index: 3100;
-            padding-bottom: 25px; /* Creates explicit safe layout area for downward tooltip visibility */
-        }
+/* Parent Row Layout Adjustments */
+.peer-wrapper-row {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 3100;
+    padding-bottom: 35px; /* Creates explicit canvas height clearance for downward tooltips */
+    overflow: visible; /* Prevents parent containers from masking out the text bounding box */
+}
 
         /* Horizontal Scroll Node Viewport */
-        .peer-active-hub {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 10px 4px;
-            scroll-behavior: smooth;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
+.peer-active-hub {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible; /* Critical: allows tooltips to spill outside the scroll section bounds */
+    white-space: nowrap;
+    padding: 10px 4px 25px 4px; /* Internal bottom offset guarantees track boundary spacing */
+    margin-bottom: -25px;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
 
         .peer-active-hub::-webkit-scrollbar {
             display: none;
@@ -170,30 +173,31 @@
         }
 
         /* Clean, Fully Visible Downward Hover Context Labels */
-        .peer-name-hover {
-            position: absolute;
-            left: 50%;
-            bottom: -26px; /* Positions completely clear of the avatar circle */
-            transform: translateX(-50%) translateY(4px);
-            background: var(--surface);
-            border: 1px solid var(--primary);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: white;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 4500; /* Absolute topmost presentation layer */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-        }
+/* Clean, Fully Visible Downward Hover Context Labels */
+.peer-name-hover {
+    position: absolute;
+    left: 50%;
+    bottom: -32px; /* Pushes the label fully clear of the avatar border radius */
+    transform: translateX(-50%) translateY(4px);
+    background: var(--surface);
+    border: 1px solid var(--primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 4500; /* Overrides container stack rules to prevent cropping */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
 
-        .peer-wrapper:hover .peer-name-hover {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
+.peer-wrapper:hover .peer-name-hover {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
 
         /* Widened Pill Layout Tray Navigation (Centered beneath user hub) */
         .top-nav {
