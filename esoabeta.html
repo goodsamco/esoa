@@ -870,7 +870,7 @@
         </div>
     </div>
 
- <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -984,6 +984,7 @@
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
+                // Push clean presence metrics upstream
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
                     name: currentUserName,
@@ -1008,20 +1009,20 @@
                                     
             const gcBubble = document.createElement('div');
             gcBubble.className = 'group-chat-bubble';
-            gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
+            gcBubble.innerHTML = '<i data-lucide="users" style="width:16px;height:16px;"></i><span style="font-size:0.75rem;font-weight:800;margin-left:4px;">GC</span>';
+            gcBubble.style.borderRadius = '12px';
+            gcBubble.style.width = 'auto';
+            gcBubble.style.padding = '8px 12px';
             gcBubble.onclick = () => initGroupChatChannel();
 
             const gcDotNode = document.createElement('div');
             gcDotNode.className = 'peer-notif-dot';
             gcDotNode.id = 'gc-notif-dot';
-
-            const gcNameTag = document.createElement('div');
-            gcNameTag.className = 'peer-name-hover';
-            gcNameTag.innerText = "GC";
+            gcDotNode.style.top = '-4px';
+            gcDotNode.style.right = '-4px';
 
             gcWrapper.appendChild(gcBubble);
             gcWrapper.appendChild(gcDotNode);
-            gcWrapper.appendChild(gcNameTag);
             hub.appendChild(gcWrapper);
 
             bindBackgroundGcListener();
@@ -1032,30 +1033,43 @@
                     if (uid === userId) return;
                     const peer = users[uid];
                     
-                    // Drop layout rendering if user tracking payload is missing or null
-                    if (!peer || !peer.uid) return;
-
-                    const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
+                    // Drop layouts completely if peer data node resolves null
+                    if (!peer || !peer.uid || !peer.name) return;
 
                     const wrapper = document.createElement('div');
                     wrapper.className = 'peer-wrapper';
                     wrapper.id = `peer-node-${peer.uid}`;
 
-                    const imgNode = document.createElement('img');
-                    imgNode.className = 'peer-avatar-bubble';
-                    imgNode.src = cleanAvatarSrc;
-                    imgNode.onclick = () => initTransientChatChannel(peer.uid, peer.name);
+                    // Replaced image node avatar bubble completely with clean custom display name capsule text
+                    const textNodeBtn = document.createElement('div');
+                    textNodeBtn.className = 'peer-avatar-bubble'; 
+                    textNodeBtn.style.width = 'auto';
+                    textNodeBtn.style.height = 'auto';
+                    textNodeBtn.style.padding = '8px 14px';
+                    textNodeBtn.style.borderRadius = '12px';
+                    textNodeBtn.style.background = 'var(--surface)';
+                    textNodeBtn.style.border = '1px solid var(--glass)';
+                    textNodeBtn.style.color = 'var(--text-main)';
+                    textNodeBtn.style.fontSize = '0.75rem';
+                    textNodeBtn.style.fontWeight = '700';
+                    textNodeBtn.style.display = 'flex';
+                    textNodeBtn.style.alignItems = 'center';
+                    textNodeBtn.style.justifyContent = 'center';
+                    textNodeBtn.style.cursor = 'pointer';
+                    textNodeBtn.innerText = peer.name;
+                    textNodeBtn.onclick = () => initTransientChatChannel(peer.uid, peer.name);
+
+                    // Hover effects for the text button
+                    textNodeBtn.onmouseenter = () => { textNodeBtn.style.borderColor = 'var(--primary)'; };
+                    textNodeBtn.onmouseleave = () => { textNodeBtn.style.borderColor = 'var(--glass)'; };
 
                     const dotNode = document.createElement('div');
                     dotNode.className = 'peer-notif-dot';
+                    dotNode.style.top = '-4px';
+                    dotNode.style.right = '-4px';
 
-                    const nameTag = document.createElement('div');
-                    nameTag.className = 'peer-name-hover';
-                    nameTag.innerText = peer.name;
-
-                    wrapper.appendChild(imgNode);
+                    wrapper.appendChild(textNodeBtn);
                     wrapper.appendChild(dotNode);
-                    wrapper.appendChild(nameTag);
                     hub.appendChild(wrapper);
 
                     bindBackgroundNotifListener(peer.uid);
@@ -1229,11 +1243,6 @@
                 const metaRow = document.createElement('div');
                 metaRow.className = 'msg-meta-row';
 
-                const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
-                const avatarNode = document.createElement('img');
-                avatarNode.className = 'msg-gc-avatar';
-                avatarNode.src = avatarSrc;
-
                 const authorTag = document.createElement('div');
                 authorTag.className = 'msg-author-tag';
                 authorTag.innerText = msg.senderName || "Operator";
@@ -1242,7 +1251,6 @@
                 timeTag.className = 'msg-time-tag';
                 timeTag.innerText = msgTime;
 
-                metaRow.appendChild(avatarNode);
                 metaRow.appendChild(authorTag);
                 metaRow.appendChild(timeTag);
                 wrapper.appendChild(metaRow);
@@ -1365,10 +1373,19 @@
             selectedActiveChatPartnerId = null;
         };
 
-        window.addEventListener('beforeunload', () => {
+        // CLEAN DISCONNECT SYSTEM: Drops presence tracking from Realtime Database and Firestore instantly upon unload or tab change
+        const purgeUserPresence = () => {
             if (userId) {
                 set(ref(rtdb, 'presence/' + userId), null);
                 updateDoc(doc(db, "accounts", userId), { isOnline: false });
+            }
+        };
+
+        window.addEventListener('beforeunload', purgeUserPresence);
+        window.addEventListener('unload', purgeUserPresence);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                purgeUserPresence();
             }
         });
 
@@ -1386,7 +1403,6 @@
             setTimeout(() => updateFocus(0), 100);             
             allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });                    
             
-            // Wire up scroll navigation buttons explicitly
             const hubContainer = document.getElementById('peerActiveHub');
             const navBtns = document.querySelectorAll('.scroll-nav-btn');
             if (hubContainer && navBtns.length >= 2) {
