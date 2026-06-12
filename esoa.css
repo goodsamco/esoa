@@ -50,7 +50,7 @@ body.copy-flash {
 /* ==========================================================================
    3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX)
    ========================================================================== */
-/* Parent Row Layout Adjustments */
+/* The main dedicated visual container around the entire peer area */
 .peer-wrapper-row {
     position: fixed;
     top: 20px;
@@ -58,29 +58,32 @@ body.copy-flash {
     transform: translateX(-50%);
     width: calc(100% - 40px);
     max-width: 600px;
+    height: 110px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 1px;
     z-index: 3100;
-    /* Creates explicit canvas height clearance for downward tooltips */
-    padding-bottom: 35px; 
-    /* Prevents parent containers from masking out the text bounding box */
-    overflow: visible; 
+    overflow: hidden;
+    background: rgba(20, 7, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass);
+    border-radius: 24px;
+    padding: 0 45px; /* Clean breathing area for left/right anchored arrows */
+    box-sizing: border-box;
 }
 
-/* Horizontal Scroll Node Viewport */
+/* Horizontal Scroll Viewport - Rigid Left Alignment */
 .peer-active-hub {
     display: flex;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
+    justify-content: flex-start; /* Keeps items consistently left-aligned */
     overflow-x: auto;
-    /* Critical: allows tooltips to spill outside the scroll section bounds */
-    overflow-y: visible; 
+    overflow-y: hidden;
     white-space: nowrap;
-    /* Internal bottom offset guarantees track boundary spacing */
-    padding: 10px 4px 25px 4px; 
-    margin-bottom: -25px;
+    width: 100%;
+    height: 100%;
+    padding: 0 4px;
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -90,49 +93,67 @@ body.copy-flash {
     display: none;
 }
 
-/* Scroll Navigation Buttons */
+/* Absolute Anchored Navigation Controls */
 .scroll-nav-btn {
-    background: rgba(20, 7, 0, 0.6);
-    border: 1px solid rgba(255, 115, 0, 0.2);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: transparent; /* Seamless transparent background matching context */
+    border: none;
     color: var(--primary);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 3110;
+    z-index: 3120;
     transition: all 0.2s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    flex-shrink: 0;
-    /* Aligns buttons with upper avatars instead of the extended container box */
-    align-self: flex-start; 
-    margin-top: 26px; 
+}
+
+.scroll-nav-btn.prev {
+    left: 4px;
+}
+
+.scroll-nav-btn.next {
+    right: 4px;
 }
 
 .scroll-nav-btn:hover {
-    background: var(--primary);
-    color: #000;
+    color: #fff;
+    transform: scale(1.1);
 }
 
+/* Base Wrapper for single item units */
 .peer-wrapper {
     position: relative;
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    /* Negative margin pulls elements slightly over each other */
-    margin-right: 2px; 
+    width: 64px; /* Strict uniform sizing constraints */
+    height: 90px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), order 0.4s ease;
 }
 
-/* Chat Avatar Layout Bubble */
-.peer-avatar-bubble {
-    width: 64px;
-    height: 64px;
+/* Offline state modifications (Shrink and Grayscale instead of disappearing) */
+.peer-wrapper.is-offline {
+    filter: grayscale(100%);
+    transform: scale(0.85);
+}
+
+/* Consistent Avatar Node Dimensions */
+.peer-avatar-bubble, 
+.group-chat-bubble {
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.peer-avatar-bubble {
     background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
     border: 2px solid #666;
     cursor: pointer;
@@ -144,11 +165,7 @@ body.copy-flash {
     transform: scale(1.05);
 }
 
-/* Group Chat Static Node Bubble */
 .group-chat-bubble {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
     background: var(--primary);
     color: #000;
     display: flex;
@@ -166,13 +183,12 @@ body.copy-flash {
     border-color: #fff;
 }
 
-/* Notification Dot Overlay on Sender Avatars */
 .peer-notif-dot {
     position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 12px;
-    height: 12px;
+    top: 2px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
     background-color: var(--primary);
     border: 2px solid var(--surface);
     border-radius: 50%;
@@ -185,32 +201,21 @@ body.copy-flash {
     display: block;
 }
 
-/* Clean, Fully Visible Downward Hover Context Labels */
+/* Persistent, clearly readable text names arranged beneath avatars */
 .peer-name-hover {
-    position: absolute;
-    left: 50%;
-    /* Pushes the label fully clear of the avatar border radius */
-    bottom: -25px; 
-    transform: translateX(-50%) translateY(4px);
-    background: var(--surface);
-    border: 1px solid var(--primary);
-    padding: 4px 10px;
-    border-radius: 6px;
+    margin-top: 6px;
     font-size: 0.65rem;
     font-weight: 700;
     color: white;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Overrides container stack rules to prevent cropping */
-    z-index: 4500; 
+    opacity: 1; /* Made persistent */
+    pointer-events: auto;
 }
 
-.peer-wrapper:hover .peer-name-hover {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
 
 
 /* ==========================================================================
