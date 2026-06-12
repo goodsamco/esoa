@@ -1032,7 +1032,7 @@
                     if (uid === userId) return;
                     const peer = users[uid];
                     
-                    // FIXED: Safeguard to completely drop nodes when user data is removed or null
+                    // Drop layout rendering if user tracking payload is missing or null
                     if (!peer || !peer.uid) return;
 
                     const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
@@ -1385,11 +1385,20 @@
         window.onload = () => {             
             setTimeout(() => updateFocus(0), 100);             
             allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });                    
+            
+            // Wire up scroll navigation buttons explicitly
+            const hubContainer = document.getElementById('peerActiveHub');
+            const navBtns = document.querySelectorAll('.scroll-nav-btn');
+            if (hubContainer && navBtns.length >= 2) {
+                navBtns[0].onclick = () => hubContainer.scrollBy({ left: -120, behavior: 'smooth' });
+                navBtns[1].onclick = () => hubContainer.scrollBy({ left: 120, behavior: 'smooth' });
+            }
+
             lucide.createIcons();             
             startIdle();         
         };                                
         
-        function toggleModal(id, show) {             
+        window.toggleModal = function(id, show) {             
             const modal = document.getElementById(id);             
             if (show) {                 
                 document.getElementById('hospCharges').value = '';                 
@@ -1403,20 +1412,20 @@
             }         
         }                                
         
-        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }                                
+        window.closeOutside = function(e, id) { if (e.target.id === id) toggleModal(id, false); }                                
         
-        function calcSr() {             
+        window.calcSr = function() {             
             const charges = parseFloat(document.getElementById('hospCharges').value) || 0;                    
             const rate = parseFloat(document.getElementById('caseRate').value) || 0;             
             document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);                
         }                                
         
-        function copyModalValue() {             
+        window.copyModalValue = function() {             
             const val = document.getElementById('finalDiscount').innerText;                    
             navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); });         
         }                                
         
-        function openList(cat) {             
+        window.openList = function(cat) {             
             const listCont = document.getElementById('listContainer');                    
             listCont.innerHTML = '';             
             document.getElementById('listTitle').innerText = cat.toUpperCase();             
@@ -1457,7 +1466,7 @@
         
         function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }                                
         
-        function updateFocus(index) {             
+        window.updateFocus = function(index) {             
             currentFocusedIndex = index;                    
             const targetRow = allRows[index];             
             if (!targetRow) return;             
@@ -1469,7 +1478,7 @@
             targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });                
         }                                
         
-        function executeCopy(row, text, index) {                        
+        window.executeCopy = function(row, text, index) {                        
             updateFocus(index);                        
             navigator.clipboard.writeText(text).then(() => {                                
                 document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active'));                 
@@ -1489,9 +1498,9 @@
             });                
         }                                
         
-        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); }         
-        function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); }         
-        function resetFocus() { updateFocus(0); }                                
+        window.copyFocusedItem = function() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); }         
+        window.nextFocus = function() { updateFocus((currentFocusedIndex + 1) % allRows.length); }         
+        window.resetFocus = function() { updateFocus(0); }                                
         
         let idleTimer;         
         function startIdle() { magnetBtn.classList.add('idle'); }         
