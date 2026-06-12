@@ -955,6 +955,8 @@
 
             currentUserName = data.customName || "Operator";
             currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+            
+            // Format identity string safely down to one word
             document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
 
             const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
@@ -984,20 +986,21 @@
                 document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
             }
 
-            set(ref(rtdb, 'presence/' + userId), {
-                uid: userId,
-                name: currentUserName,
-                avatar: currentUserAvatarRaw,
-                timestamp: Date.now()
-            });
-
-            updateDoc(userDocRef, { isOnline: true });
+            if (!document.hidden) {
+                set(ref(rtdb, 'presence/' + userId), {
+                    uid: userId,
+                    name: currentUserName,
+                    avatar: currentUserAvatarRaw,
+                    timestamp: Date.now()
+                });
+                updateDoc(userDocRef, { isOnline: true });
+            }
         } else {
             window.location.href = "login.html";
         }
     });
 
-    // Initialize Group Chat Pin Head fixed element once
+    // Mount structural group chat interface elements permanently inside container once
     const hub = document.getElementById('peerActiveHub');
     hub.innerHTML = '';
 
@@ -1025,12 +1028,12 @@
 
     bindBackgroundGcListener();
 
-    // Track active peer instances smoothly inside the Realtime Database reference
+    // Re-architected Presence Pipeline: Target DOM elements directly without wiping innerHTML
     const presenceRef = ref(rtdb, 'presence');
     onValue(presenceRef, (snapshot) => {
         const users = snapshot.val() || {};
-        
-        // Remove peer components that aren't marked active or left completely
+
+        // Drop peer interfaces whose source objects disappeared or turned inactive
         const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
         existingNodes.forEach(node => {
             const nodeUid = node.id.replace('peer-node-', '');
@@ -1039,13 +1042,14 @@
             }
         });
 
-        // Insert or sync updating structural state metrics for active entities
+        // Loop over live users inside snapshot metrics
         Object.keys(users).forEach(uid => {
             if (uid === userId) return;
             const peer = users[uid];
             if (!peer || !peer.uid) return;
 
-            const firstNameOnly = peer.name ? peer.name.split(' ')[0] : "Operator";
+            // Enforce single word constraint rules safely
+            const singleWordLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
             const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
             let peerContainer = document.getElementById(`peer-node-${peer.uid}`);
 
@@ -1057,14 +1061,14 @@
                 const imgNode = document.createElement('img');
                 imgNode.className = 'peer-avatar-bubble';
                 imgNode.src = cleanAvatarSrc;
-                imgNode.onclick = () => initTransientChatChannel(peer.uid, firstNameOnly);
+                imgNode.onclick = () => initTransientChatChannel(peer.uid, singleWordLabel);
 
                 const dotNode = document.createElement('div');
                 dotNode.className = 'peer-notif-dot';
 
                 const nameTag = document.createElement('div');
                 nameTag.className = 'peer-name-hover';
-                nameTag.innerText = firstNameOnly;
+                nameTag.innerText = singleWordLabel;
 
                 peerContainer.appendChild(imgNode);
                 peerContainer.appendChild(dotNode);
@@ -1073,11 +1077,11 @@
 
                 bindBackgroundNotifListener(peer.uid);
             } else {
-                // Update dynamic values if item profile modifications execute live
+                // Keep values updated without triggering visual alignment glitches
                 const img = peerContainer.querySelector('.peer-avatar-bubble');
                 if (img) img.src = cleanAvatarSrc;
                 const tag = peerContainer.querySelector('.peer-name-hover');
-                if (tag) tag.innerText = firstNameOnly;
+                if (tag) tag.innerText = singleWordLabel;
             }
         });
         lucide.createIcons();
@@ -1183,7 +1187,10 @@
     function initTransientChatChannel(partnerId, partnerName) {
         isGroupChat = false;
         selectedActiveChatPartnerId = partnerId;
-        document.getElementById('chatTargetName').innerText = `${partnerName}`;
+        
+        // Isolate single word tag cleanly inside header assignments
+        const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
+        document.getElementById('chatTargetName').innerText = `${cleanName}`;
         document.getElementById('chatScroller').innerHTML = '';
         document.getElementById('chatDock').style.display = 'flex';
 
@@ -1386,12 +1393,19 @@
         selectedActiveChatPartnerId = null;
     };
 
+    // Watch visibility states smoothly to prevent ghost statuses when backgrounded
     document.addEventListener('visibilitychange', () => {
         if (!userId) return;
         if (document.hidden) {
             set(ref(rtdb, 'presence/' + userId), null);
             updateDoc(doc(db, "accounts", userId), { isOnline: false });
         } else {
+            set(ref(rtdb, 'presence/' + userId), {
+                uid: userId,
+                name: currentUserName,
+                avatar: currentUserAvatarRaw,
+                timestamp: Date.now()
+            });
             updateDoc(doc(db, "accounts", userId), { isOnline: true });
         }
     });
