@@ -56,7 +56,7 @@
             top: 20px;
             left: 20px;
             display: flex;
-            gap: 6px;
+            gap: -22px;
             align-items: center;
             z-index: 3000;
         }
@@ -68,8 +68,8 @@
         }
 
         .peer-avatar-bubble {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
             background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
@@ -81,6 +81,28 @@
         .peer-avatar-bubble:hover {
             border-color: var(--primary);
             transform: scale(1.05);
+        }
+
+        /* Group Chat Static Node Bubble */
+        .group-chat-bubble {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: all 0.2s ease;
+            box-shadow: 0 0 8px rgba(255, 115, 0, 0.4);
+        }
+
+        .group-chat-bubble:hover {
+            transform: scale(1.05);
+            background: #fff;
+            border-color: #fff;
         }
 
         /* Notification Dot overlay on sender avatar */
@@ -132,7 +154,7 @@
             right: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             z-index: 3000;
             background: rgba(20, 7, 0, 0.4);
             backdrop-filter: blur(20px);
@@ -143,8 +165,8 @@
         }
 
         .top-btn {
-            width: 46px;
-            height: 46px;
+            width: 38px;
+            height: 38px;
             background: var(--surface);
             border: 1px solid rgba(255, 115, 0, 0.2);
             border-radius: 14px;
@@ -205,8 +227,8 @@
             position: fixed;
             bottom: 26vh;
             right: 20px;
-            width: 300px;
-            height: 360px;
+            width: 340px;
+            height: 440px;
             background: var(--modal-bg);
             border: 1px solid var(--glass);
             border-radius: 20px;
@@ -246,29 +268,144 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 14px;
+        }
+
+        /* Message Structure Enhancements for Content and Reactions */
+        .msg-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            position: relative;
+        }
+
+        .msg-wrapper.incoming {
+            align-self: flex-start;
+        }
+
+        .msg-wrapper.outgoing {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        /* GC Metadata Structure Row styling */
+        .msg-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        
+        .msg-wrapper.outgoing .msg-meta-row {
+            flex-direction: row-reverse;
+        }
+
+        .msg-gc-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--primary);
+        }
+
+        .msg-author-tag {
+            font-size: 0.65rem;
+            color: #aaa;
+            font-weight: 700;
+        }
+
+        .msg-time-tag {
+            font-size: 0.6rem;
+            color: #666;
+            font-weight: 400;
         }
 
         .msg-bubble {
             padding: 8px 12px;
             border-radius: 12px;
             font-size: 0.85rem;
-            max-width: 80%;
             word-wrap: break-word;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
         }
 
         .msg-bubble.incoming {
             background: rgba(255, 255, 255, 0.06);
-            align-self: flex-start;
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .msg-bubble.outgoing {
             background: var(--primary);
-            align-self: flex-end;
             color: #000;
             font-weight: 600;
+        }
+
+        /* Reactions container styles */
+        .msg-reaction-container {
+            display: flex;
+            gap: 4px;
+            margin-top: -4px;
+            z-index: 10;
+            background: #140700;
+            border: 1px solid rgba(255, 115, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            align-items: center;
+        }
+
+        .reaction-pill {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+        }
+
+        .reaction-pill.user-voted {
+            background: rgba(255, 115, 0, 0.2);
+            border-radius: 4px;
+            padding: 0 2px;
+        }
+
+        .reaction-count {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* Floating Reaction Picker popover overlay */
+        .reaction-picker-tray {
+            position: absolute;
+            background: #1c0d07;
+            border: 1px solid var(--primary);
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: flex;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 4000;
+            top: -35px;
+        }
+        
+        .msg-wrapper.incoming .reaction-picker-tray {
+            left: 0;
+        }
+
+        .msg-wrapper.outgoing .reaction-picker-tray {
+            right: 0;
+        }
+
+        .reaction-option {
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.1s ease;
+        }
+
+        .reaction-option:hover {
+            transform: scale(1.25);
         }
 
         .chat-input-row {
@@ -593,8 +730,7 @@
     <div class="top-nav">
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> <button
             class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i
-                data-lucide="user-check"></i></button> <button class="top-btn" title="Next" onclick="nextFocus()"><i
-                data-lucide="chevron-down"></i></button>
+                data-lucide="user-check"></i></button>
 
         <div class="user-identity-card">
             <img id="userDisplayAvatar" class="profile-avatar-node"
@@ -611,7 +747,7 @@
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Transient text node..."
+            <input type="text" id="chatMsgInput" placeholder="Aa"
                 onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
@@ -665,7 +801,8 @@
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
     <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> <button class="btn-main-copy"
-            id="magnetBtn"></button> </div>
+            id="magnetBtn">COPY</button>
+    </div>
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -688,10 +825,10 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -713,9 +850,13 @@
             window.location.href = "login.html";
         }
 
+        let currentUserName = "Operator";
+        let currentUserAvatarRaw = "avatar-m1";
         let selectedActiveChatPartnerId = null;
+        let isGroupChat = false;
         let transientChatListenerRemoveHook = null;
         const mappedRouteTrackingHooks = {};
+        let backgroundGcTrackingHook = null;
 
         const premium3dAssets = {
             'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
@@ -755,12 +896,26 @@
         }
 
         const userDocRef = doc(db, "accounts", userId);
+        
+        // Listen to Account configurations and track administration restriction gates
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
-                document.getElementById('userDisplayName').innerText = data.customName || "Operator";
 
-                const matchedAvatar = premium3dAssets[data.avatarUrl] || data.avatarUrl || premium3dAssets['avatar-m1'];
+                // CRITICAL SAFETY GUARDRAIL: Check if access has been disabled by dashboard admin panel
+                if (data.esoaDisabled === true) {
+                    alert("Your access to eSOA has been suspended by management.");
+                    // Soft-drop presence status values clean on redirect
+                    set(ref(rtdb, 'presence/' + userId), null);
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                currentUserName = data.customName || "Operator";
+                currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+                document.getElementById('userDisplayName').innerText = currentUserName;
+
+                const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
                 document.getElementById('userDisplayAvatar').src = matchedAvatar;
 
                 if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
@@ -787,22 +942,50 @@
                     document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
                 }
 
+                // Push status data updates to Realtime Database
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId,
-                    name: data.customName || "User Room",
-                    avatar: data.avatarUrl || 'avatar-m1',
+                    name: currentUserName,
+                    avatar: currentUserAvatarRaw,
                     timestamp: Date.now()
                 });
+
+                // Update active tracking parameters inside Firestore
+                updateDoc(userDocRef, { isOnline: true });
+
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // Left Alignment Display Synchronizer Engine with Native Hover Popovers and Active Badging
         const presenceRef = ref(rtdb, 'presence');
         onValue(presenceRef, (snapshot) => {
             const hub = document.getElementById('peerActiveHub');
             hub.innerHTML = '';
+
+            const gcWrapper = document.createElement('div');
+            gcWrapper.className = 'peer-wrapper';
+            gcWrapper.id = 'gc-hub-node';                        
+            const gcBubble = document.createElement('div');
+            gcBubble.className = 'group-chat-bubble';
+            gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
+            gcBubble.onclick = () => initGroupChatChannel();
+
+            const gcDotNode = document.createElement('div');
+            gcDotNode.className = 'peer-notif-dot';
+            gcDotNode.id = 'gc-notif-dot';
+
+            const gcNameTag = document.createElement('div');
+            gcNameTag.className = 'peer-name-hover';
+            gcNameTag.innerText = "GROUP CHAT";
+
+            gcWrapper.appendChild(gcBubble);
+            gcWrapper.appendChild(gcDotNode);
+            gcWrapper.appendChild(gcNameTag);
+            hub.appendChild(gcWrapper);
+
+            bindBackgroundGcListener();
+
             if (snapshot.exists()) {
                 const users = snapshot.val();
                 Object.keys(users).forEach(uid => {
@@ -831,42 +1014,112 @@
                     wrapper.appendChild(nameTag);
                     hub.appendChild(wrapper);
 
-                    // Map notification badge monitoring listeners to background threads
                     bindBackgroundNotifListener(peer.uid);
                 });
             }
+            lucide.createIcons();
         });
 
         function bindBackgroundNotifListener(partnerId) {
             if (mappedRouteTrackingHooks[partnerId]) return;
-
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
 
             let initialSyncComplete = false;
-
-            // Check once to skip initial historical processing count overhead
-            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
-
+            onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                        
             const hook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (!initialSyncComplete) return;
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
                     if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
                         const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-                        if (peerContainer) {
-                            peerContainer.classList.add('has-unread');
+                        if (peerContainer) peerContainer.classList.add('has-unread');
+                    }
+                }
+            });
+            mappedRouteTrackingHooks[partnerId] = hook;
+
+            onValue(chatRouteRef, (snapshot) => {
+                if (!initialSyncComplete) return;
+                if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
+                    const messages = snapshot.val();
+                    Object.keys(messages).forEach(mId => {
+                        const m = messages[mId];
+                        if (m.reactions) {
+                            Object.keys(m.reactions).forEach(uId => {
+                                if (uId !== userId) {
+                                    const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                                    if (peerContainer) peerContainer.classList.add('has-unread');
+                                }
+                            });
                         }
+                    });
+                }
+            });
+        }
+
+        function bindBackgroundGcListener() {
+            if (backgroundGcTrackingHook) return;
+            const gcRouteRef = ref(rtdb, `group_chat/messages`);
+
+            let initialSyncComplete = false;
+            onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+            backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+                if (!initialSyncComplete) return;
+                if (childSnap.exists()) {
+                    const msg = childSnap.val();
+                    if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                        const gcContainer = document.getElementById('gc-hub-node');
+                        if (gcContainer) gcContainer.classList.add('has-unread');
                     }
                 }
             });
 
-            mappedRouteTrackingHooks[partnerId] = hook;
+            onValue(gcRouteRef, (snapshot) => {
+                if (!initialSyncComplete) return;
+                if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                    const messages = snapshot.val();
+                    Object.keys(messages).forEach(mId => {
+                        const m = messages[mId];
+                        if (m.reactions) {
+                            Object.keys(m.reactions).forEach(uId => {
+                                if (uId !== userId) {
+                                    const gcContainer = document.getElementById('gc-hub-node');
+                                    if (gcContainer) gcContainer.classList.add('has-unread');
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function initGroupChatChannel() {
+            isGroupChat = true;
+            selectedActiveChatPartnerId = "BARANGAY_GC";
+            document.getElementById('chatTargetName').innerText = `Group Chat`;
+            document.getElementById('chatScroller').innerHTML = '';
+            document.getElementById('chatDock').style.display = 'flex';
+
+            const gcContainer = document.getElementById('gc-hub-node');
+            if (gcContainer) gcContainer.classList.remove('has-unread');
+
+            cleanupTransientListeners();
+
+            const chatRouteRef = ref(rtdb, `group_chat/messages`);
+            transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
+                if (childSnap.exists()) {
+                    const msg = childSnap.val();
+                    appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+                }
+            });
         }
 
         function initTransientChatChannel(partnerId, partnerName) {
+            isGroupChat = false;
             selectedActiveChatPartnerId = partnerId;
-            document.getElementById('chatTargetName').innerText = `Chat with ${partnerName}`;
+            document.getElementById('chatTargetName').innerText = `${partnerName}`;
             document.getElementById('chatScroller').innerHTML = '';
             document.getElementById('chatDock').style.display = 'flex';
 
@@ -875,17 +1128,20 @@
                 peerContainer.classList.remove('has-unread');
             }
 
-            if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
+            cleanupTransientListeners();
 
             const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
             const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-
             transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
                 if (childSnap.exists()) {
                     const msg = childSnap.val();
-                    appendBubbleToScroller(msg.text, msg.sender === userId ? 'outgoing' : 'incoming');
+                    appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
                 }
             });
+        }
+
+        function cleanupTransientListeners() {
+            if (transientChatListenerRemoveHook) { transientChatListenerRemoveHook(); transientChatListenerRemoveHook = null; }
         }
 
         window.sendChatPayload = function () {
@@ -893,54 +1149,313 @@
             const text = input.value.trim();
             if (!text || !selectedActiveChatPartnerId) return;
 
-            const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-            const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-
-            const newMsgRef = push(chatRouteRef);
-            set(newMsgRef, { sender: userId, text: text, timestamp: Date.now() });
+            if (isGroupChat) {
+                const chatRouteRef = ref(rtdb, `group_chat/messages`);
+                const newMsgRef = push(chatRouteRef);
+                set(newMsgRef, {
+                    sender: userId,
+                    senderName: currentUserName,
+                    senderAvatar: currentUserAvatarRaw,
+                    text: text,
+                    timestamp: Date.now()
+                });
+            } else {
+                const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+                const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+                const newMsgRef = push(chatRouteRef);
+                set(newMsgRef, { 
+                    sender: userId, 
+                    text: text, 
+                    timestamp: Date.now() 
+                 });
+            }
             input.value = '';
         };
 
-        function appendBubbleToScroller(text, direction) {
-            const view = document.getElementById('chatScroller');
+        function appendBubbleToScroller(msg, msgId, direction) {
+            const view = document.getElementById('chatScroller');                        
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${direction}`;
+            wrapper.id = `msg-wrap-${msgId}`;
+
+            const msgTime = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+            if (isGroupChat) {
+                const metaRow = document.createElement('div');
+                metaRow.className = 'msg-meta-row';
+
+                const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
+                const avatarNode = document.createElement('img');
+                avatarNode.className = 'msg-gc-avatar';
+                avatarNode.src = avatarSrc;
+
+                const authorTag = document.createElement('div');
+                authorTag.className = 'msg-author-tag';
+                authorTag.innerText = msg.senderName || "Operator";
+
+                const timeTag = document.createElement('div');
+                timeTag.className = 'msg-time-tag';
+                timeTag.innerText = msgTime;
+
+                metaRow.appendChild(avatarNode);
+                metaRow.appendChild(authorTag);
+                metaRow.appendChild(timeTag);
+                wrapper.appendChild(metaRow);
+            }
+
             const bbl = document.createElement('div');
             bbl.className = `msg-bubble ${direction}`;
-            bbl.innerText = text;
-            view.appendChild(bbl);
+            bbl.innerText = msg.text;                        
+            bbl.onclick = (e) => {
+                e.stopPropagation();
+                toggleReactionPicker(msgId, wrapper);
+            };
+
+            wrapper.appendChild(bbl);
+
+            const rxContainer = document.createElement('div');
+            rxContainer.className = 'msg-reaction-container';
+            rxContainer.id = `rx-container-${msgId}`;
+            rxContainer.style.display = 'none';
+            wrapper.appendChild(rxContainer);
+
+            view.appendChild(wrapper);
             view.scrollTop = view.scrollHeight;
+
+            syncReactionsDisplay(msgId);
+        }
+
+        function toggleReactionPicker(msgId, wrapper) {
+            const activeTray = document.getElementById(`tray-${msgId}`);
+            if (activeTray) {
+                activeTray.remove();
+                return;
+            }
+
+            document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
+
+            const tray = document.createElement('div');
+            tray.className = 'reaction-picker-tray';
+            tray.id = `tray-${msgId}`;
+
+            const emojis = ['😂', '😢', '😡', '🖕'];
+            emojis.forEach(emoji => {
+                const opt = document.createElement('div');
+                opt.className = 'reaction-option';
+                opt.innerText = emoji;
+                opt.onclick = (e) => {
+                    e.stopPropagation();
+                    submitReaction(msgId, emoji);
+                    tray.remove();
+                };
+                tray.appendChild(opt);
+            });
+
+            wrapper.appendChild(tray);
+        }
+
+        function submitReaction(msgId, emoji) {
+            let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
+            if (isGroupChat) {
+                path = `group_chat/messages/${msgId}/reactions/${userId}`;
+            }
+
+            const rxRef = ref(rtdb, path);
+            onValue(rxRef, (snapshot) => {
+                if (snapshot.exists() && snapshot.val() === emoji) {
+                    remove(rxRef);
+                } else {
+                    set(rxRef, emoji);
+                }
+            }, { onlyOnce: true });
+        }
+
+        function syncReactionsDisplay(msgId) {
+            let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
+            if (isGroupChat) {
+                path = `group_chat/messages/${msgId}/reactions`;
+            }
+
+            onValue(ref(rtdb, path), (snapshot) => {
+                const container = document.getElementById(`rx-container-${msgId}`);
+                if (!container) return;
+
+                container.innerHTML = '';
+                if (!snapshot.exists()) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                const reactionData = snapshot.val();
+                const summary = {};
+                Object.keys(reactionData).forEach(uid => {
+                    const emo = reactionData[uid];
+                    if (!summary[emo]) summary[emo] = { count: 0, userVoted: false };
+                    summary[emo].count++;
+                    if (uid === userId) summary[emo].userVoted = true;
+                });
+
+                Object.keys(summary).forEach(emo => {
+                    const pill = document.createElement('div');
+                    pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                        
+                    if (isGroupChat) {
+                        pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
+                    } else {
+                        pill.innerHTML = `<span>${emo}</span>`;
+                    }                                        
+                    pill.onclick = (e) => {
+                        e.stopPropagation();
+                        submitReaction(msgId, emo);
+                    };
+                    container.appendChild(pill);
+                });
+
+                container.style.display = 'flex';
+            });
         }
 
         window.closeChatSession = function () {
             document.getElementById('chatDock').style.display = 'none';
-            if (transientChatListenerRemoveHook) transientChatListenerRemoveHook();
+            cleanupTransientListeners();
             selectedActiveChatPartnerId = null;
         };
 
+        // Standard clean exit listener updating user presence indicators across database types
         window.addEventListener('beforeunload', () => {
-            if (userId) set(ref(rtdb, 'presence/' + userId), null);
+            if (userId) {
+                set(ref(rtdb, 'presence/' + userId), null);
+                // Mark user as offline inside Firestore directly before closing
+                updateDoc(doc(db, "accounts", userId), { isOnline: false });
+            }
+        });
+
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
         });
     </script>
+    
+    <script>                
+        let textTimeout; let currentFocusedIndex = 0;        
+        const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');        
+        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };                
+        
+        window.onload = () => { 
+            setTimeout(() => updateFocus(0), 100); 
+            allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });        
+            lucide.createIcons(); 
+            startIdle(); 
+        };                
+        
+        function toggleModal(id, show) { 
+            const modal = document.getElementById(id); 
+            if (show) { 
+                document.getElementById('hospCharges').value = ''; 
+                document.getElementById('caseRate').value = '';        
+                document.getElementById('finalDiscount').innerText = '0.00'; 
+                modal.style.display = 'flex'; 
+                setTimeout(() => modal.classList.add('active'), 10); 
+            } else { 
+                modal.classList.remove('active'); 
+                setTimeout(() => modal.style.display = 'none', 400);        
+            } 
+        }                
+        
+        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }                
+        
+        function calcSr() { 
+            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;        
+            const rate = parseFloat(document.getElementById('caseRate').value) || 0; 
+            document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);        
+        }                
+        
+        function copyModalValue() { 
+            const val = document.getElementById('finalDiscount').innerText;        
+            navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); 
+        }                
+        
+        function openList(cat) { 
+            const listCont = document.getElementById('listContainer');        
+            listCont.innerHTML = ''; 
+            document.getElementById('listTitle').innerText = cat.toUpperCase(); 
+            extraItems[cat].forEach(text => { 
+                const div = document.createElement('div'); 
+                div.className = 'list-item'; 
+                div.innerText = text; 
+                div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; 
+                listCont.appendChild(div); 
+            });        
+            window.toggleModal('listModal', true); 
+        }        
+        
+        function flashMagnet() {    
+            magnetBtn.innerText = "COPIED!";    
+            magnetBtn.classList.add('success-state');    
+            document.body.classList.add('copy-flash');
 
-    <script>        let textTimeout; let currentFocusedIndex = 0; const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
-        const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
-        window.onload = () => { setTimeout(() => updateFocus(0), 100); allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); }); lucide.createIcons(); startIdle(); };
-        function toggleModal(id, show) { const modal = document.getElementById(id); if (show) { document.getElementById('hospCharges').value = ''; document.getElementById('caseRate').value = ''; document.getElementById('finalDiscount').innerText = '0.00'; modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); } else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); } }
-        function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }
-        function calcSr() { const charges = parseFloat(document.getElementById('hospCharges').value) || 0; const rate = parseFloat(document.getElementById('caseRate').value) || 0; document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2); }
-        function copyModalValue() { const val = document.getElementById('finalDiscount').innerText; navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); }); }
-        function openList(cat) { const listCont = document.getElementById('listContainer'); listCont.innerHTML = ''; document.getElementById('listTitle').innerText = cat.toUpperCase(); extraItems[cat].forEach(text => { const div = document.createElement('div'); div.className = 'list-item'; div.innerText = text; div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); }; listCont.appendChild(div); }); toggleModal('listModal', true); }
-        function flashMagnet() { magnetBtn.innerText = "COPIED!"; magnetBtn.classList.add('success-state'); document.body.classList.add('copy-flash'); setTimeout(() => { magnetBtn.innerText = ""; magnetBtn.classList.remove('success-state'); document.body.classList.remove('copy-flash'); }, 600); }
-        document.addEventListener('mousemove', (e) => { const threshold = window.innerHeight * 0.75; if (e.clientY > threshold) { const centerX = window.innerWidth / 2; const centerY = window.innerHeight - (window.innerHeight * 0.125); const pullX = (e.clientX - centerX) * 0.3; const pullY = (e.clientY - centerY) * 0.4; magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; } else { resetMagnet(); } });
-        function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
-        function updateFocus(index) { currentFocusedIndex = index; const targetRow = allRows[index]; if (!targetRow) return; const rect = targetRow.getBoundingClientRect(); const containerRect = container.getBoundingClientRect(); highlighter.style.opacity = "1"; highlighter.style.top = (rect.top - containerRect.top) + "px"; highlighter.style.height = rect.height + "px"; targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-        function executeCopy(row, text, index) {
-            updateFocus(index); navigator.clipboard.writeText(text).then(() => {
-                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); clearTimeout(textTimeout); const textElement = row.querySelector('.text-content'); textElement.classList.add('text-active'); flashMagnet();
-                let nextIdx = (index + 1) % allRows.length; const rowText = row.innerText.toUpperCase(); if (rowText.includes("IV CATHETER G. 20")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); } else if (rowText.includes("IV CATHETER G. 24")) { nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); } setTimeout(() => updateFocus(nextIdx), 450); textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
-            });
-        }
-        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } function resetFocus() { updateFocus(0); }
-        let idleTimer; function startIdle() { magnetBtn.classList.add('idle'); } function stopIdle() { magnetBtn.classList.remove('idle'); } function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));    </script>
+            setTimeout(() => {        
+                magnetBtn.innerText = "COPY";        
+                magnetBtn.classList.remove('success-state');        
+                document.body.classList.remove('copy-flash');    
+            }, 600);
+        }                
+        
+        document.addEventListener('mousemove', (e) => { 
+            const threshold = window.innerHeight * 0.75; 
+            if (e.clientY > threshold) { 
+                const centerX = window.innerWidth / 2; 
+                const centerY = window.innerHeight - (window.innerHeight * 0.125); 
+                const pullX = (e.clientX - centerX) * 0.3; 
+                const pullY = (e.clientY - centerY) * 0.4; 
+                magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`; 
+            } else { 
+                resetMagnet(); 
+            } 
+        });                
+        
+        function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }                
+        
+        function updateFocus(index) { 
+            currentFocusedIndex = index;        
+            const targetRow = allRows[index]; 
+            if (!targetRow) return; 
+            const rect = targetRow.getBoundingClientRect(); 
+            const containerRect = container.getBoundingClientRect(); 
+            highlighter.style.opacity = "1";        
+            highlighter.style.top = (rect.top - containerRect.top) + "px"; 
+            highlighter.style.height = rect.height + "px"; 
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });        
+        }                
+        
+        function executeCopy(row, text, index) {            
+            updateFocus(index);            
+            navigator.clipboard.writeText(text).then(() => {                
+                document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active')); 
+                clearTimeout(textTimeout); 
+                const textElement = row.querySelector('.text-content'); 
+                textElement.classList.add('text-active'); 
+                flashMagnet();                
+                let nextIdx = (index + 1) % allRows.length; 
+                const rowText = row.innerText.toUpperCase(); 
+                if (rowText.includes("IV CATHETER G. 20")) { 
+                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET")); 
+                } else if (rowText.includes("IV CATHETER G. 24")) { 
+                    nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET")); 
+                } 
+                setTimeout(() => updateFocus(nextIdx), 450); 
+                textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);            
+            });        
+        }                
+        
+        function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); } 
+        function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); } 
+        function resetFocus() { updateFocus(0); }                
+        
+        let idleTimer; 
+        function startIdle() { magnetBtn.classList.add('idle'); } 
+        function stopIdle() { magnetBtn.classList.remove('idle'); } 
+        function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); } 
+        ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));   
+    </script>
 </body>
 
 </html>
