@@ -943,7 +943,7 @@
         return "255,115,0";
     }
 
-    // Inject continuous visual style transforms dynamically for fluid animations
+    // Injected styles to visually handle both "Away" (tab backgrounded) and "Offline" (tab closed entirely)
     const styleSheet = document.createElement("style");
     styleSheet.innerText = `
         .peer-wrapper {
@@ -952,15 +952,26 @@
         .peer-avatar-bubble {
             transition: filter 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
         }
+        /* Tab hidden / Unfocused State */
         .peer-wrapper.is-away {
-            transform: scale(0.85);
-            opacity: 0.65;
+            opacity: 0.75;
         }
         .peer-wrapper.is-away .peer-avatar-bubble {
-            filter: grayscale(100%);
+            filter: saturate(50%);
         }
         .peer-wrapper.is-away .peer-notif-dot {
-            background-color: #94a3b8 !important;
+            background-color: #e2e8f0 !important;
+        }
+        /* Entirely Offline / Tab Closed State */
+        .peer-wrapper.is-offline {
+            transform: scale(0.8);
+            opacity: 0.4;
+        }
+        .peer-wrapper.is-offline .peer-avatar-bubble {
+            filter: grayscale(100%);
+        }
+        .peer-wrapper.is-offline .peer-notif-dot {
+            background-color: #64748b !important;
         }
     `;
     document.head.appendChild(styleSheet);
@@ -1009,12 +1020,18 @@
             }
 
             const myPresenceRef = ref(rtdb, 'presence/' + userId);
-            onDisconnect(myPresenceRef).remove();
+            
+            // On tab close/kill, switch 'status' field to offline instead of completely destroying the DB node
+            onDisconnect(myPresenceRef).update({
+                status: 'offline',
+                isAway: false
+            });
 
             set(myPresenceRef, {
                 uid: userId,
                 name: currentUserName,
                 avatar: currentUserAvatarRaw,
+                status: 'online',
                 isAway: document.hidden,
                 timestamp: Date.now()
             });
@@ -1054,13 +1071,7 @@
     onValue(presenceRef, (snapshot) => {
         const users = snapshot.val() || {};
 
-        const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
-        existingNodes.forEach(node => {
-            const nodeUid = node.id.replace('peer-node-', '');
-            if (!users[nodeUid] || nodeUid === userId) {
-                node.remove();
-            }
-        });
+        // REMOVED: The logic that strips absent user nodes out of the document has been completely deleted.
 
         Object.keys(users).forEach(uid => {
             if (uid === userId) return;
@@ -1101,11 +1112,15 @@
                 if (tag) tag.innerText = singleWordLabel;
             }
 
-            // Animate element state changes fluidly using toggle attributes
-            if (peer.isAway) {
-                peerContainer.classList.add('is-away');
-            } else {
+            // Dynamically manage UI visual states based on current state trees
+            if (peer.status === 'offline') {
+                peerContainer.classList.add('is-offline');
                 peerContainer.classList.remove('is-away');
+            } else if (peer.isAway) {
+                peerContainer.classList.add('is-away');
+                peerContainer.classList.remove('is-offline');
+            } else {
+                peerContainer.classList.remove('is-away', 'is-offline');
             }
         });
         lucide.createIcons();
@@ -1419,9 +1434,10 @@
         updateDoc(ref(rtdb, 'presence/' + userId), { isAway: document.hidden });
     });
 
+    // Handle immediate tab closures/logouts manually before server heartbeat sync drops
     window.addEventListener('beforeunload', () => {
         if (userId) {
-            set(ref(rtdb, 'presence/' + userId), null);
+            updateDoc(ref(rtdb, 'presence/' + userId), { status: 'offline', isAway: false });
             updateDoc(doc(db, "accounts", userId), { isOnline: false });
         }
     });
@@ -1429,128 +1445,6 @@
     window.addEventListener('click', () => {
         document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
     });
-</script>
-
-<script>
-    let textTimeout; let currentFocusedIndex = 0;
-    const allRows = document.querySelectorAll('.item-row'); const highlighter = document.getElementById('highlighter'); const container = document.getElementById('mainContainer'); const magnetBtn = document.getElementById('magnetBtn');
-    const extraItems = { lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL", "CHEMISTRY: ALT"], supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "COTTON BALLS, 3'S/PACK", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] };
-    
-    window.onload = () => {
-        setTimeout(() => updateFocus(0), 100);
-        allRows.forEach((row, idx) => { row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); });
-        lucide.createIcons();
-        startIdle();
-    };
-    
-    function toggleModal(id, show) {
-        const modal = document.getElementById(id);
-        if (show) {
-            document.getElementById('hospCharges').value = '';
-            document.getElementById('caseRate').value = '';
-            document.getElementById('finalDiscount').innerText = '0.00';
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('active'), 10);
-        } else {
-            modal.classList.remove('active');
-            setTimeout(() => modal.style.display = 'none', 400);
-        }
-    }
-    
-    function closeOutside(e, id) { if (e.target.id === id) toggleModal(id, false); }
-    
-    function calcSr() {
-        const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
-        const rate = parseFloat(document.getElementById('caseRate').value) || 0;
-        document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
-    }
-    
-    function copyModalValue() {
-        const val = document.getElementById('finalDiscount').innerText;
-        navigator.clipboard.writeText(val).then(() => { flashMagnet(); toggleModal('srModal', false); });
-    }
-    
-    function openList(cat) {
-        const listCont = document.getElementById('listContainer');
-        listCont.innerHTML = '';
-        document.getElementById('listTitle').innerText = cat.toUpperCase();
-        extraItems[cat].forEach(text => {
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerText = text;
-            div.onclick = () => { navigator.clipboard.writeText(text); toggleModal('listModal', false); flashMagnet(); };
-            listCont.appendChild(div);
-        });
-        window.toggleModal('listModal', true);
-    }
-    
-    function flashMagnet() {
-        magnetBtn.innerText = "COPIED!";
-        magnetBtn.classList.add('success-state');
-        document.body.classList.add('copy-flash');
-        setTimeout(() => {
-            magnetBtn.innerText = "COPY";
-            magnetBtn.classList.remove('success-state');
-            document.body.classList.remove('copy-flash');
-        }, 600);
-    }
-    
-    document.addEventListener('mousemove', (e) => {
-        const threshold = window.innerHeight * 0.75;
-        if (e.clientY > threshold) {
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight - (window.innerHeight * 0.125);
-            const pullX = (e.clientX - centerX) * 0.3;
-            const pullY = (e.clientY - centerY) * 0.4;
-            magnetBtn.style.transform = `translate(${pullX}px, ${pullY}px)`;
-        } else {
-            resetMagnet();
-        }
-    });
-    
-    function resetMagnet() { magnetBtn.style.transform = `translate(0, 0)`; }
-    
-    function updateFocus(index) {
-        currentFocusedIndex = index;
-        const targetRow = allRows[index];
-        if (!targetRow) return;
-        const rect = targetRow.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        highlighter.style.opacity = "1";
-        highlighter.style.top = (rect.top - containerRect.top) + "px";
-        highlighter.style.height = rect.height + "px";
-        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    
-    function executeCopy(row, text, index) {
-        updateFocus(index);
-        navigator.clipboard.writeText(text).then(() => {
-            document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active'));
-            clearTimeout(textTimeout);
-            const textElement = row.querySelector('.text-content');
-            textElement.classList.add('text-active');
-            flashMagnet();
-            let nextIdx = (index + 1) % allRows.length;
-            const rowText = row.innerText.toUpperCase();
-            if (rowText.includes("IV CATHETER G. 20")) {
-                nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET"));
-            } else if (rowText.includes("IV CATHETER G. 24")) {
-                nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET"));
-            }
-            setTimeout(() => updateFocus(nextIdx), 450);
-            textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
-        });
-    }
-    
-    function copyFocusedItem() { executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); }
-    function nextFocus() { updateFocus((currentFocusedIndex + 1) % allRows.length); }
-    function resetFocus() { updateFocus(0); }
-    
-    let idleTimer;
-    function startIdle() { magnetBtn.classList.add('idle'); }
-    function stopIdle() { magnetBtn.classList.remove('idle'); }
-    function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); }
-    ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));
 </script>
 </body>
 
