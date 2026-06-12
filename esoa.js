@@ -564,6 +564,23 @@ window.addEventListener('DOMContentLoaded', () => {
     container = document.getElementById('mainContainer');
     magnetBtn = document.getElementById('magnetBtn');
 
+    // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
+    const hubContainer = document.getElementById('peerActiveHub');
+    const prevBtn = document.querySelector('.scroll-nav-btn.prev');
+    const nextBtn = document.querySelector('.scroll-nav-btn.next');
+
+    if (prevBtn && nextBtn && hubContainer) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hubContainer.scrollBy({ left: -150, behavior: 'smooth' });
+        });
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hubContainer.scrollBy({ left: 150, behavior: 'smooth' });
+        });
+    }
+
+    // PRESERVED: 100% of your original structural timing and copy lifecycles
     setTimeout(() => updateFocus(0), 100);
     allRows.forEach((row, idx) => { 
         row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); 
