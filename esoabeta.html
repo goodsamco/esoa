@@ -109,13 +109,15 @@
     color: #000;
 }
 
-        .peer-wrapper {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
+.peer-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    /* Negative margin pulls them over each other */
+    margin-right: -16px; 
+}
 
         /* Chat Avatar Layout Bubble */
         .peer-avatar-bubble {
