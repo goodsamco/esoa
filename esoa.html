@@ -988,13 +988,21 @@
             }
 
 // Push initialization updates directly without inspecting tab visibility states
-set(ref(rtdb, 'presence/' + userId), {
-    uid: userId,
-    name: currentUserName,
-    avatar: currentUserAvatarRaw,
-    timestamp: Date.now()
-});
-updateDoc(userDocRef, { isOnline: true });
+// Create a reference to this user's presence node
+            const myPresenceRef = ref(rtdb, 'presence/' + userId);
+
+            // CRITICAL: Tell the server to automatically wipe this node when the connection drops/closes
+            remove(onDisconnect(myPresenceRef));
+
+            // Now safely push the online status
+            set(myPresenceRef, {
+                uid: userId,
+                name: currentUserName,
+                avatar: currentUserAvatarRaw,
+                timestamp: Date.now()
+            });
+            
+            updateDoc(userDocRef, { isOnline: true });
         } else {
             window.location.href = "login.html";
         }
