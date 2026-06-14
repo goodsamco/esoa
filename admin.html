@@ -1,18 +1,23 @@
-<!--
-<!DOCTYPE html><html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eSOA - Admin Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0b0f1a;
-            --surface: #161e2d;
+            --surface: rgba(22, 30, 45, 0.7);
+            --surface-card: rgba(0, 0, 0, 0.25);
             --primary: #38bdf8;
-            --success: #ffee00;
+            --success: #22c55e;
+            --warning: #eab308;
             --danger: #ef4444;
             --text-main: #f1f5f9;
             --text-muted: #64748b;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --fallback-avatar: url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&q=80');
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -23,48 +28,64 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
         .container {
             width: 100%;
-            max-width: 650px;
+            max-width: 750px;
             background: var(--surface);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            box-sizing: border-box;
         }
         h2 {
-            font-size: 1.1rem;
-            color: var(--primary);
+            font-size: 1.25rem;
+            color: #fff;
             text-transform: uppercase;
             letter-spacing: 0.15em;
-            margin-bottom: 20px;
+            margin-top: 0;
+            margin-bottom: 25px;
             text-align: center;
+            font-weight: 800;
         }
         
         /* Navigation Tabs */
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding-bottom: 10px;
+            gap: 6px;
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
         }
         .tab-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 8px 16px;
-            font-weight: 600;
+            padding: 10px 18px;
+            font-weight: 700;
             font-size: 0.85rem;
             cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s ease;
+            border-radius: 10px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            text-align: center;
+        }
+        .tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
         }
         .tab-btn.active {
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--primary);
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
         }
-
         .tab-content {
             display: none;
         }
@@ -72,87 +93,181 @@
             display: block;
         }
 
-        /* Lists and Cards */
-        .user-card, .chat-card {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255,255,255,0.05);
+        /* Standardized Cards */
+        .user-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-glass);
             padding: 16px;
-            border-radius: 14px;
+            border-radius: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
-        .chat-card {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
+        .user-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
         }
-        .user-info .name { font-weight: 600; font-size: 1rem; color: #fff;}
-        .user-info .username { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;}
+        .user-meta-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+        .avatar-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid var(--border-glass);
+            flex-shrink: 0;
+            background-image: var(--fallback-avatar);
+        }
+        .user-info { text-align: left; }
+        .user-info .name { font-weight: 700; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 8px;}
+        .user-info .username { font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;}
+        
+        .request-details {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            background: rgba(56, 189, 248, 0.04);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            color: #e2e8f0;
+        }
         
         .status-badge {
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 600;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 30px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
-        .status-badge.active { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .status-badge.offline { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+        .status-badge.active { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .status-badge.offline { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.2); }
 
-        /* Buttons */
+        /* Action Handlers */
+        .action-actions { display: flex; gap: 8px; }
+
+        /* Modern Action Buttons */
         .btn {
-            color: var(--bg);
             border: none;
             padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 800;
+            border-radius: 12px;
+            font-weight: 700;
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s ease;
+            letter-spacing: 0.5px;
         }
-        .btn:hover { transform: scale(1.03); }
-        .btn-approve { background: var(--primary); }
-        .btn-approve:hover { background: var(--success); }
-        .btn-disable { background: #ea580c; color: #fff; }
-        .btn-enable { background: #16a34a; color: #fff; }
+        .btn-approve { background: var(--primary); color: #000; }
+        .btn-approve:hover { background: #7dd3fc; transform: translateY(-1px); }
+        .btn-reject { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-reject:hover { background: var(--danger); color: #fff; }
+        .btn-disable { background: rgba(234, 88, 12, 0.1); color: #f97316; border: 1px solid rgba(234, 88, 12, 0.2); }
+        .btn-disable:hover { background: #ea580c; color: #fff; }
+        .btn-enable { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .btn-enable:hover { background: #16a34a; color: #fff; }
 
-        /* Chat view styling */
-        .chat-meta {
-            font-size: 0.8rem;
-            color: var(--primary);
-            font-weight: 600;
+        /* ==========================================================================
+           RECONSTRUCTED CHAT MONITOR DESIGN SYSTEM
+           ========================================================================== */
+        .chat-monitor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .chat-monitor-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-monitor-container::-webkit-scrollbar-thumb {
+            background: var(--border-glass);
+            border-radius: 10px;
+        }
+        .chat-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-glass);
+            padding: 14px 16px;
+            border-radius: 18px;
+            transition: border-color 0.2s ease;
+        }
+        .chat-row:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .chat-bubble-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .chat-header-line {
             display: flex;
             justify-content: space-between;
-            width: 100%;
+            align-items: center;
         }
-        .chat-msg {
-            font-size: 0.9rem;
-            color: var(--text-main);
-            background: rgba(255,255,255,0.02);
-            padding: 8px 12px;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
+        .chat-user-names {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #fff;
         }
-        .chat-time {
-            font-size: 0.75rem;
+        .chat-channel-tag {
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
             color: var(--text-muted);
+            border: 1px solid var(--border-glass);
+        }
+        .chat-channel-tag.group-type {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+            border-color: rgba(56, 189, 248, 0.2);
+        }
+        .chat-body-text {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-top: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            word-break: break-word;
+        }
+        .chat-time-stamp {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-align: right;
+            margin-top: 2px;
         }
 
         .empty-state {
             text-align: center;
             color: var(--text-muted);
-            padding: 30px 0;
+            padding: 40px 0;
             font-size: 0.95rem;
+            font-weight: 500;
         }
         .logout-link {
-            margin-top: 20px;
+            margin-top: 25px;
             color: var(--text-muted);
             text-decoration: none;
             font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
         }
         .logout-link:hover { color: var(--primary); }
+        hr { border: 0; border-top: 1px solid var(--border-glass); margin: 25px 0; }
     </style>
 </head>
 <body>
@@ -161,21 +276,26 @@
     <h2>Management Dashboard</h2>
     
     <div class="tabs">
-        <button class="tab-btn active" id="btn-approvals">Approvals</button>
-        <button class="tab-btn" id="btn-activity">Active & Access Control</button>
+        <button class="tab-btn active" id="btn-approvals">Registrations</button>
+        <button class="tab-btn" id="btn-updates">Data Updates</button>
+        <button class="tab-btn" id="btn-activity">Active Controls</button>
         <button class="tab-btn" id="btn-chats">Chat Monitor</button>
     </div>
 
     <div id="approvals" class="tab-content active">
-        <div id="userList">Loading registrations...</div>
+        <div id="userList" class="chat-monitor-container">Loading registrations...</div>
+    </div>
+
+    <div id="updates" class="tab-content">
+        <div id="updateRequestList" class="chat-monitor-container">Loading data adjustment entries...</div>
     </div>
 
     <div id="activity" class="tab-content">
-        <div id="activeUserList">Loading accounts...</div>
+        <div id="activeUserList" class="chat-monitor-container">Loading accounts...</div>
     </div>
 
     <div id="chats" class="tab-content">
-        <div id="chatLogsList">Loading live conversations...</div>
+        <div id="chatLogsList" class="chat-monitor-container">Loading live conversations...</div>
     </div>
 </div>
 
@@ -183,7 +303,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -205,22 +325,30 @@
         window.location.href = "login.html";
     }
 
-    // Local runtime cache memory lookup layout to map matching names effortlessly
+    // Comprehensive relational user tracking cache maps
     const cachedUserDirectory = {};
+    const premium3dAssets = {
+        'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
+        'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+        'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+        'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'
+    };
 
-    // --- POPULATE AND SYNC ACCOUNT NAMES ---
     function syncUserDirectory() {
         const q = query(collection(db, "accounts"));
         onSnapshot(q, (snapshot) => {
             snapshot.forEach(uDoc => {
                 const data = uDoc.data();
-                cachedUserDirectory[uDoc.id] = data.customName || data.name || `@${data.username}`;
+                cachedUserDirectory[uDoc.id] = {
+                    fullName: data.customName || data.name || `@${data.username}`,
+                    avatar: data.avatarUrl || ''
+                };
             });
         });
     }
     syncUserDirectory();
 
-    // --- TAB 1: PENDING APPROVALS ---
+    // --- TAB 1: PENDING REGISTRATION APPROVALS ---
     async function loadPendingUsers() {
         const container = document.getElementById('userList');
         container.innerHTML = "";
@@ -229,25 +357,29 @@
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
-                container.innerHTML = `<div class="empty-state">No accounts requiring attention right now.</div>`;
+                container.innerHTML = `<div class="empty-state">No accounts requiring registration attention right now.</div>`;
                 return;
             }
 
             snapshot.forEach((userDoc) => {
                 const data = userDoc.data();
+                const userAvatar = data.avatarUrl ? `style="background-image: url('${data.avatarUrl}')"` : '';
                 const card = document.createElement('div');
                 card.className = "user-card";
                 card.innerHTML = `
-                    <div class="user-info">
-                        <div class="name">${data.name || data.customName}</div>
-                        <div class="username">@${data.username}</div>
+                    <div class="user-meta-wrapper">
+                        <div class="avatar-circle" ${userAvatar}></div>
+                        <div class="user-info">
+                            <div class="name">${data.name || data.customName}</div>
+                            <div class="username">@${data.username}</div>
+                        </div>
                     </div>
-                    <button class="btn btn-approve" data-id="${userDoc.id}">APPROVE</button>
+                    <button class="btn btn-approve btn-approve-reg" data-id="${userDoc.id}">APPROVE</button>
                 `;
                 container.appendChild(card);
             });
 
-            document.querySelectorAll('.btn-approve').forEach(btn => {
+            document.querySelectorAll('.btn-approve-reg').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const id = e.target.getAttribute('data-id');
                     await updateDoc(doc(db, "accounts", id), { status: "approved" });
@@ -259,7 +391,81 @@
         }
     }
 
-    // --- TAB 2: ACTIVE STATUS & ACCESS CONTROL ---
+    // --- TAB 2: DATA MODIFICATION LEDGER CONTROLS ---
+    function listenToUpdateRequests() {
+        const container = document.getElementById('updateRequestList');
+        const q = query(collection(db, "update_requests"), where("status", "==", "pending"));
+
+        onSnapshot(q, (snapshot) => {
+            container.innerHTML = "";
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No pending account changes or data adjustment requests.</div>`;
+                return;
+            }
+
+            snapshot.forEach((reqDoc) => {
+                const data = reqDoc.data();
+                const card = document.createElement('div');
+                card.className = "user-card";
+                const printableType = data.requestType.toUpperCase();
+                
+                const userObj = cachedUserDirectory[data.accountId] || { fullName: data.currentUsername, avatar: '' };
+                const userAvatar = userObj.avatar ? `style="background-image: url('${userObj.avatar}')"` : '';
+
+                card.innerHTML = `
+                    <div class="user-meta-wrapper">
+                        <div class="avatar-circle" ${userAvatar}></div>
+                        <div class="user-info">
+                            <div class="name">${userObj.fullName}</div>
+                            <div class="username">Current Handle: @${data.currentUsername}</div>
+                            <div class="request-details">
+                                <strong>REQUESTED CHANGE:</strong> New ${printableType} ➡️ <span style="color:var(--primary); font-weight:700;">${data.newValue}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-actions">
+                        <button class="btn btn-approve btn-req-approve" data-reqid="${reqDoc.id}" data-accid="${data.accountId}" data-type="${data.requestType}" data-value="${data.newValue}">APPROVE</button>
+                        <button class="btn btn-reject btn-req-reject" data-reqid="${reqDoc.id}">REJECT</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            container.querySelectorAll('.btn-req-approve').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const reqId = e.target.getAttribute('data-reqid');
+                    const accId = e.target.getAttribute('data-accid');
+                    const fieldType = e.target.getAttribute('data-type');
+                    const finalValue = e.target.getAttribute('data-value');
+
+                    const updatePayload = {};
+                    if (fieldType === 'name') updatePayload.name = finalValue;
+                    if (fieldType === 'username') updatePayload.username = finalValue;
+                    if (fieldType === 'password') updatePayload.password = finalValue;
+
+                    try {
+                        await updateDoc(doc(db, "accounts", accId), updatePayload);
+                        await deleteDoc(doc(db, "update_requests", reqId));
+                    } catch (err) {
+                        alert("Update operation failed: " + err.message);
+                    }
+                });
+            });
+
+            container.querySelectorAll('.btn-req-reject').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const reqId = e.target.getAttribute('data-reqid');
+                    try {
+                        await deleteDoc(doc(db, "update_requests", reqId));
+                    } catch (err) {
+                        alert("Rejection cleanup failed: " + err.message);
+                    }
+                });
+            });
+        });
+    }
+
+    // --- TAB 3: ACTIVE STATUS MANAGEMENT ---
     function listenToUserActivity() {
         const container = document.getElementById('activeUserList');
         const q = query(collection(db, "accounts"), where("status", "!=", "pending"));
@@ -275,19 +481,23 @@
                 const data = userDoc.data();
                 const isOnline = data.isOnline === true; 
                 const isEsoaDisabled = data.esoaDisabled === true;
+                const userAvatar = data.avatarUrl ? `style="background-image: url('${data.avatarUrl}')"` : '';
 
                 const card = document.createElement('div');
                 card.className = "user-card";
                 card.innerHTML = `
-                    <div class="user-info">
-                        <div class="name">
-                            ${data.customName || data.name} 
-                            <span class="status-badge ${isOnline ? 'active' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                    <div class="user-meta-wrapper">
+                        <div class="avatar-circle" ${userAvatar}></div>
+                        <div class="user-info">
+                            <div class="name">
+                                ${data.customName || data.name} 
+                                <span class="status-badge ${isOnline ? 'active' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                            </div>
+                            <div class="username">@${data.username} ${isEsoaDisabled ? '<span style="color:var(--danger); font-weight:700; font-size:0.75rem;">(SUSPENDED)</span>' : ''}</div>
                         </div>
-                        <div class="username">@${data.username} ${isEsoaDisabled ? '<span style="color:var(--danger); font-size:0.75rem;">(eSOA Disabled)</span>' : ''}</div>
                     </div>
                     <button class="btn ${isEsoaDisabled ? 'btn-enable' : 'btn-disable'}" data-id="${userDoc.id}" data-disabled="${isEsoaDisabled}">
-                        ${isEsoaDisabled ? 'Enable eSOA' : 'Disable eSOA'}
+                        ${isEsoaDisabled ? 'Enable Access' : 'Suspend Access'}
                     </button>
                 `;
                 container.appendChild(card);
@@ -305,52 +515,52 @@
         });
     }
 
-    // --- TAB 3: REALTIME DATABASE CHAT MONITOR ---
+    // --- TAB 4: REAL CHAT MONITOR PRODUCTION LOGIC ---
     function listenToRTDBChats() {
         const container = document.getElementById('chatLogsList');
-        
-        // Listen into RTDB structure configurations directly 
         const sessionsRef = ref(rtdb);
-        
+
         onValue(sessionsRef, (snapshot) => {
             container.innerHTML = "";
             const masterData = snapshot.val() || {};
-            
             const rawAggregatedMessages = [];
 
-            // 1. Gather Group Chat Data
+            // 1. Resolve Global Group Channel Activity Logs
             if (masterData.group_chat && masterData.group_chat.messages) {
                 Object.keys(masterData.group_chat.messages).forEach(mId => {
                     const item = masterData.group_chat.messages[mId];
+                    const cachedSender = cachedUserDirectory[item.sender] || { fullName: item.senderName || "User", avatar: "" };
+                    
                     rawAggregatedMessages.push({
-                        sender: item.senderName || cachedUserDirectory[item.sender] || item.sender || "Unknown",
-                        receiver: "👥 BARANGAY GROUP CHAT",
+                        senderName: cachedSender.fullName,
+                        senderAvatar: cachedSender.avatar,
+                        channelLabel: "GROUP CHAT",
+                        isGroup: true,
                         text: item.text,
                         timestamp: item.timestamp || 0
                     });
                 });
             }
 
-            // 2. Gather Private Sessions Data
+            // 2. Resolve Dynamic Direct P2P Messaging Sessions
             if (masterData.sessions) {
                 Object.keys(masterData.sessions).forEach(sessionKey => {
                     const track = masterData.sessions[sessionKey];
                     Object.keys(track).forEach(mId => {
                         const item = track[mId];
-                        // Ignore standard presence indicators or misaligned payload paths
                         if (!item.text) return; 
-                        
-                        // Parse composite room structural logic ids
+
                         const impliedIds = sessionKey.split('_');
-                        const parsedSenderName = cachedUserDirectory[item.sender] || item.sender || "User";
+                        const cachedSender = cachedUserDirectory[item.sender] || { fullName: "User", avatar: "" };
                         
-                        // Find target recipient ID out of combination array
                         const destinationId = impliedIds.find(id => id !== item.sender) || "User Partner";
-                        const parsedReceiverName = cachedUserDirectory[destinationId] || destinationId;
+                        const cachedReceiver = cachedUserDirectory[destinationId] || { fullName: "User Partner", avatar: "" };
 
                         rawAggregatedMessages.push({
-                            sender: parsedSenderName,
-                            receiver: `👤 ${parsedReceiverName}`,
+                            senderName: cachedSender.fullName,
+                            senderAvatar: cachedSender.avatar,
+                            channelLabel: `DM ➔ ${cachedReceiver.fullName}`,
+                            isGroup: false,
                             text: item.text,
                             timestamp: item.timestamp || 0
                         });
@@ -359,53 +569,62 @@
             }
 
             if (rawAggregatedMessages.length === 0) {
-                container.innerHTML = `<div class="empty-state">No chat records detected over database feeds.</div>`;
+                container.innerHTML = `<div class="empty-state">No real-time conversation data detected streaming over logs.</div>`;
                 return;
             }
 
             // Sort chronologically (newest at the top)
             rawAggregatedMessages.sort((x, y) => y.timestamp - x.timestamp);
 
-            // Display records sequentially 
+            // Print entries out cleanly inside the structural matrix logs view
             rawAggregatedMessages.forEach(msg => {
                 const formattedTime = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                const inlineAvatar = msg.senderAvatar ? `style="background-image: url('${msg.senderAvatar}')"` : '';
+                
                 const card = document.createElement('div');
-                card.className = "chat-card";
+                card.className = "chat-row";
                 card.innerHTML = `
-                    <div class="chat-meta">
-                        <span><strong>${msg.sender}</strong> ➡️ <em>${msg.receiver}</em></span>
-                        <span class="chat-time">${formattedTime}</span>
+                    <div class="avatar-circle" ${inlineAvatar}></div>
+                    <div class="chat-bubble-area">
+                        <div class="chat-header-line">
+                            <span class="chat-user-names">${msg.senderName}</span>
+                            <span class="chat-channel-tag ${msg.isGroup ? 'group-type' : ''}">${msg.channelLabel}</span>
+                        </div>
+                        <div class="chat-body-text">${msg.text}</div>
+                        <div class="chat-time-stamp">${formattedTime}</div>
                     </div>
-                    <div class="chat-msg">${msg.text}</div>
                 `;
                 container.appendChild(card);
             });
         });
     }
 
-    // Tab Navigation Logic
+    // View State Navigation Toggle Engine Matrix
     window.switchTab = function(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
+                
         document.getElementById(tabId).classList.add('active');
         document.getElementById('btn-' + tabId).classList.add('active');
     };
 
-    // Bind navigation triggers natively
     document.getElementById('btn-approvals').onclick = () => window.switchTab('approvals');
+    document.getElementById('btn-updates').onclick = () => window.switchTab('updates');
     document.getElementById('btn-activity').onclick = () => window.switchTab('activity');
     document.getElementById('btn-chats').onclick = () => window.switchTab('chats');
 
-    // Initialize sequences
+    // Run structural setups on layout compile complete
     window.onload = () => {
         loadPendingUsers();
+        listenToUpdateRequests();
         listenToUserActivity();
         listenToRTDBChats();
     };
 </script>
-</body></html>
--->
+</body>
+</html>
+
+<!--
 
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
