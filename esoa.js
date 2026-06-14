@@ -38,31 +38,27 @@ const mappedRouteTrackingHooks = {};
 let backgroundGcTrackingHook = null;
 
 // Premium Assets Lookup Matrix
-const premium3dAssets = {
-    'avatar-m1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
-    'avatar-m2': 'https://api.dicebear.com/7.x/notionists/svg?seed=Jack',
-    'avatar-m3': 'https://api.dicebear.com/7.x/notionists/svg?seed=Oliver',
-    'avatar-f1': 'https://api.dicebear.com/7.x/notionists/svg?seed=Lily',
-    'avatar-f2': 'https://api.dicebear.com/7.x/notionists/svg?seed=Chloe',
-    'avatar-f3': 'https://api.dicebear.com/7.x/notionists/svg?seed=Ruby',
-    'animal-g1': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty',
-    'animal-g2': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi',
-    'animal-g3': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Daisy',
-    'animal-m1': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Rocky',
-    'animal-m2': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Spike',
-    'animal-m3': 'https://api.dicebear.com/7.x/thumbs/svg?seed=Rex',
-    'plant-1': 'https://api.dicebear.com/7.x/shapes/svg?seed=Rose',
-    'plant-2': 'https://api.dicebear.com/7.x/shapes/svg?seed=Fern',
-    'plant-3': 'https://api.dicebear.com/7.x/shapes/svg?seed=Ivy',
-    'bg-theme-1': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-    'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
-    'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
-    'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
-    'btn-theme-1': 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300',
-    'btn-theme-2': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300',
-    'btn-theme-3': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300',
-    'btn-theme-4': 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300'
-};
+        const premium3dAssets = {
+            'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+            'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
+            'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
+            'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
+            'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
+            'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
+            'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
+            'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
+            'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg',
+            'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
+            'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+            'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+            'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+            'btn-theme-1': 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300',
+            'btn-theme-2': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300',
+            'btn-theme-3': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300',
+            'btn-theme-4': 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300'
+        };
+
 
 function hexToRgb(hex) {
     let c;
