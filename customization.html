@@ -1,38 +1,30 @@
-
-<!DOCTYPE html>
-<html lang="en">
-
+<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eSOA - Customize Studio</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
             --bg: #0b0f1a;
-            --surface: #140700;
-            --primary: #ff7300;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #22c55e;
             --success: #ffee00;
             --text-main: #f1f5f9;
-            --glass: rgba(255, 115, 0, 0.15);
+            --glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
         }
-
         ::-webkit-scrollbar {
             width: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: var(--bg);
         }
-
         ::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
         }
-
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
@@ -47,7 +39,6 @@
             background-size: cover;
             background-attachment: fixed;
         }
-
         /* Fixed Upper Left Floating Navigation Action Node */
         .fixed-back-deck {
             position: fixed;
@@ -55,24 +46,22 @@
             left: 20px;
             z-index: 5000;
         }
-
         .floating-action-circle {
             width: 48px;
             height: 48px;
-            background: rgba(20, 7, 0, 0.6);
+            background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass);
+            border: 1px solid var(--border-glass);
             border-radius: 50%;
             color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
         .floating-action-circle:hover {
             background: var(--primary);
             color: #000;
@@ -80,125 +69,102 @@
             border-color: var(--primary);
             box-shadow: 0 0 20px var(--primary);
         }
-
         .container {
             width: 100%;
             max-width: 480px;
             background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             padding: 25px;
             border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--glass);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid var(--border-glass);
             position: relative;
             z-index: 10;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            box-sizing: border-box;
         }
-
         h2 {
-            font-size: 1.1rem;
-            color: var(--primary);
+            font-size: 1rem;
+            color: var(--text-main);
             text-transform: uppercase;
             letter-spacing: 0.15em;
             text-align: center;
             margin-bottom: 25px;
             font-weight: 800;
-            transition: color 0.3s ease;
         }
-
         .section-title {
-            font-size: 0.75rem;
-            color: var(--primary);
+            font-size: 0.72rem;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.15em;
-            margin: 35px 0 12px 5px;
+            margin: 30px 0 12px 2px;
             font-weight: 800;
-            border-left: 3px solid var(--primary);
-            padding-left: 8px;
-            transition: color 0.3s ease, border-color 0.3s ease;
+            padding-left: 2px;
         }
-
-        .sub-group-title {
-            font-size: 0.65rem;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin: 20px 0 8px 5px;
-            font-weight: 600;
-        }
-
         input[type="text"] {
             width: 100%;
             background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass);
+            border: 1px solid var(--border-glass);
             padding: 14px;
             border-radius: 14px;
             color: white;
             font-size: 0.95rem;
             box-sizing: border-box;
-            transition: border 0.3s, box-shadow 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
             margin-top: 5px;
             outline: none;
         }
-
         input[type="text"]:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 10px var(--glass);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
         }
-
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-bottom: 12px;
         }
-
         .avatar-grid {
             grid-template-columns: repeat(3, 1fr);
         }
-
         .option-card {
-            background: rgba(0, 0, 0, 0.25);
-            border: 2px solid transparent;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1.5px solid rgba(255,255,255,0.03);
             padding: 12px 8px;
             border-radius: 16px;
             cursor: pointer;
             text-align: center;
-            font-size: 0.75rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.72rem;
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             overflow: hidden;
             color: var(--text-main);
         }
-
         .option-card:hover {
             border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.03);
         }
-
         .option-card.selected {
             border-color: var(--primary);
-            background: var(--glass);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.03);
         }
-
         .avatar-frame {
-            width: 65px;
-            height: 65px;
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
             object-fit: cover;
-            background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
-            border: 2px solid rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
             transition: border-color 0.2s ease, transform 0.2s ease;
         }
-
         .option-card.selected .avatar-frame {
             border-color: var(--primary);
-            transform: scale(1.02);
+            transform: scale(1.03);
         }
-
         .theme-visual-preview {
             width: 100%;
             height: 65px;
@@ -206,31 +172,35 @@
             object-fit: cover;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
         .slider-box {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--glass);
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-glass);
             border-radius: 16px;
             padding: 16px;
             margin-top: 8px;
             margin-bottom: 15px;
         }
-
+        .slider-control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .slider-wrapper-main {
+            flex-grow: 1;
+        }
         .slider-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
-
         .slider-label {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #94a3b8;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
         .slider-preview {
             width: 36px;
             height: 24px;
@@ -238,28 +208,53 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: background-color 0.2s;
         }
-
         .spectrum-range {
             -webkit-appearance: none;
             width: 100%;
-            height: 8px;
+            height: 6px;
             border-radius: 5px;
             outline: none;
             cursor: pointer;
             background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
         }
-
         .spectrum-range::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #ffffff;
             border: 2px solid #000;
             cursor: pointer;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
         }
-
+        /* Broken line expansion dynamic node */
+        .broken-circle-trigger {
+            width: 42px;
+            height: 42px;
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            background: transparent;
+        }
+        .broken-circle-trigger:hover, .broken-circle-trigger.active {
+            border-color: var(--primary);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .expandable-input-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s ease;
+        }
+        .expandable-input-wrapper.open {
+            max-height: 90px;
+            margin-top: 15px;
+        }
         /* Persistent Lower Horizon Floating Control Deck */
         .bottom-action-dock {
             position: fixed;
@@ -274,20 +269,19 @@
             background: linear-gradient(to top, rgba(11, 15, 26, 0.95) 40%, rgba(11, 15, 26, 0));
             pointer-events: none;
         }
-
         .btn-save {
             width: 260px;
-            height: 56px;
+            height: 54px;
             background: var(--primary);
             color: #000;
             border: none;
             border-radius: 35px;
             font-weight: 800;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             text-transform: uppercase;
             letter-spacing: 2px;
             cursor: pointer;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: auto;
             display: flex;
@@ -295,18 +289,15 @@
             justify-content: center;
             gap: 10px;
         }
-
         .btn-save:hover {
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 15px 30px var(--glass);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.05);
         }
-
         .logout-zone {
             text-align: center;
-            margin-top: 25px;
-            margin-bottom: 15px;
+            margin-top: 30px;
+            margin-bottom: 10px;
         }
-
         .logout-zone a {
             color: #64748b;
             font-size: 0.82rem;
@@ -314,14 +305,157 @@
             font-weight: 600;
             transition: color 0.2s;
         }
-
         .logout-zone a:hover {
             color: var(--primary);
         }
+
+        /* Glassmorphic Core Studio Loader Backdrop */
+        .studio-loader-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 10, 19, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
+        }
+        .studio-loader-backdrop.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loader-spinner-node {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spinNode 0.8s linear infinite;
+        }
+        .loader-text-node {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #94a3b8;
+            font-weight: 800;
+        }
+        @keyframes spinNode {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Sleek Status Modal UI Layer */
+        .studio-modal-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .studio-modal-layer.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .studio-modal-card {
+            width: 100%;
+            max-width: 360px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 30px 24px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-sizing: border-box;
+        }
+        .studio-modal-layer.open .studio-modal-card {
+            transform: scale(1);
+        }
+        .modal-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #22c55e;
+            margin: 0 auto 16px auto;
+        }
+        .modal-icon-wrapper.error-state {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #ef4448;
+        }
+        .modal-heading {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .modal-body-text {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .modal-action-btn {
+            width: 100%;
+            height: 46px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .modal-action-btn:shadow {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
-
 <body>
+
+    <div class="studio-loader-backdrop" id="studioLoader">
+        <div class="loader-spinner-node"></div>
+        <div class="loader-text-node">Loading Studio Nodes...</div>
+    </div>
+
+    <div class="studio-modal-layer" id="studioAlertModal">
+        <div class="studio-modal-card">
+            <div class="modal-icon-wrapper" id="modalIconContainer">
+                <i data-lucide="check-circle-2" id="modalIcon"></i>
+            </div>
+            <div class="modal-heading" id="modalTitle">Preferences Saved</div>
+            <div class="modal-body-text" id="modalMsg">Your dynamic configuration node properties updated.</div>
+            <button class="modal-action-btn" id="modalCloseBtn">Proceed</button>
+        </div>
+    </div>
 
     <div class="fixed-back-deck">
         <div class="floating-action-circle" onclick="window.location.href='esoa.html'" title="Return to Core Engine">
@@ -330,129 +464,84 @@
     </div>
 
     <div class="container" id="configContainer">
-        <h2>ENVIRONMENT PROFILE SETUP</h2>
+        <h2>ENVIRONMENT STUDIO</h2>
 
         <div class="section-title">Display Name</div>
         <input type="text" id="customName" placeholder="Enter custom display name...">
 
-        <div class="section-title">Identity Node Avatar Core</div>
-
-        <div class="slider-box" style="margin-bottom: 20px;">
-            <span class="slider-label">Inject Personal Custom Avatar URL:</span>
-            <input type="text" id="avatarUrlInput" placeholder="https://example.com/your-photo.png"
-                style="margin-top: 8px;">
-        </div>
-
-        <div class="sub-group-title">Universal Human Avatars</div>
+        <div class="section-title">Profile Identity Node</div>
         <div class="grid avatar-grid">
-            <div class="option-card" data-type="avatar" data-val="avatar-m1"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix"><span>Avatar 1</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-m2"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack"><span>Avatar 2</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-m3"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Oliver"><span>Avatar 3</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-f1"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Lily"><span>Avatar 4</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-f2"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Chloe"><span>Avatar 5</span></div>
-            <div class="option-card" data-type="avatar" data-val="avatar-f3"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Ruby"><span>Avatar 6</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg"><img class="avatar-frame" src="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg"><span>Profile 1</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg"><img class="avatar-frame" src="https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg"><span>Profile 2</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s"><img class="avatar-frame" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s"><span>Profile 3</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360"><img class="avatar-frame" src="https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360"><span>Profile 4</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp"><img class="avatar-frame" src="https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp"><span>Profile 5</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg"><img class="avatar-frame" src="https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg"><span>Profile 6</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg"><img class="avatar-frame" src="https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg"><span>Profile 7</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg"><img class="avatar-frame" src="https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg"><span>Profile 8</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg"><img class="avatar-frame" src="https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg"><span>Profile 9</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg"><img class="avatar-frame" src="https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg"><span>Profile 10</span></div>
         </div>
 
-        <div class="sub-group-title">3D Animal Avatars</div>
-        <div class="grid avatar-grid">
-            <div class="option-card" data-type="avatar" data-val="animal-g1"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty"><span>Bunny</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-g2"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Mimi"><span>Cat</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-g3"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Daisy"><span>Panda</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-m1"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rocky"><span>Wolf</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-m2"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Spike"><span>Lion</span></div>
-            <div class="option-card" data-type="avatar" data-val="animal-m3"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/thumbs/svg?seed=Rex"><span>Bear</span></div>
+        <div class="slider-box" style="margin-top: 15px;">
+            <span class="slider-label">Or Link Personal Identity URL:</span>
+            <input type="text" id="avatarUrlInput" placeholder="https://example.com/your-photo.png" style="margin-top: 8px;">
         </div>
 
-        <div class="sub-group-title">3D Plant Avatars</div>
-        <div class="grid avatar-grid">
-            <div class="option-card" data-type="avatar" data-val="plant-1"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/shapes/svg?seed=Rose"><span>Cactus</span></div>
-            <div class="option-card" data-type="avatar" data-val="plant-2"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/shapes/svg?seed=Fern"><span>Sprout</span></div>
-            <div class="option-card" data-type="avatar" data-val="plant-3"><img class="avatar-frame"
-                    src="https://api.dicebear.com/7.x/shapes/svg?seed=Ivy"><span>Flower</span></div>
-        </div>
-
-        <div class="section-title">Canvas Wallpaper Background</div>
+        <div class="section-title">Background Customizer</div>
         <div class="grid">
-            <div class="option-card" data-type="bgType" data-val="bg-theme-1"><img class="theme-visual-preview"
-                    src="https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150"><span>Teal</span>
-            </div>
-            <div class="option-card" data-type="bgType" data-val="bg-theme-2"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150"><span>Neon Lines</span>
-            </div>
-            <div class="option-card" data-type="bgType" data-val="bg-theme-3"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150"><span>Fluid Mesh</span>
-            </div>
-            <div class="option-card" data-type="bgType" data-val="bg-theme-4"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=150"><span>Ocean Minimal</span>
-            </div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-1"><img class="theme-visual-preview" src="https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150"><span>Teal</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-2"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150"><span>Neon Lines</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-3"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150"><span>Fluid Mesh</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-4"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=150"><span>Ocean Minimal</span></div>
         </div>
 
         <div class="slider-box">
-            <div class="slider-header">
-                <span class="slider-label">Solid Color Wallpaper Slider:</span>
-                <div id="bgPreview" class="slider-preview" style="background-color: hsl(200, 70%, 15%);"></div>
+            <div class="slider-control-row">
+                <div class="slider-wrapper-main">
+                    <div class="slider-header">
+                        <span class="slider-label">Solid Wallpaper Slider:</span>
+                        <div id="bgPreview" class="slider-preview" style="background-color: hsl(200, 70%, 15%);"></div>
+                    </div>
+                    <input type="range" id="bgHueSlider" class="spectrum-range" min="0" max="360" value="200">
+                </div>
+                <button type="button" class="broken-circle-trigger" id="toggleBgUrl" title="Toggle External Link Resource">
+                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                </button>
             </div>
-            <input type="range" id="bgHueSlider" class="spectrum-range" min="0" max="360" value="200">
-
-            <div style="margin-top: 12px;">
-                <label class="slider-label">Or Paste Personal Custom Image URL:</label>
+            <div class="expandable-input-wrapper" id="bgUrlWrapper">
+                <label class="slider-label">Paste Personal Custom Background URL:</label>
                 <input type="text" id="bgUrlInput" placeholder="https://example.com/your-wallpaper.jpg">
             </div>
         </div>
 
-        <div class="section-title">Copy Action Button Texture</div>
-        <div class="grid">
-            <div class="option-card" data-type="btnType" data-val="btn-theme-1"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=150"><span>Holo Foil</span>
-            </div>
-            <div class="option-card" data-type="btnType" data-val="btn-theme-2"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=150"><span>Spectrum
-                    Chrome</span></div>
-            <div class="option-card" data-type="btnType" data-val="btn-theme-3"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150"><span>Carbon Fiber</span>
-            </div>
-            <div class="option-card" data-type="btnType" data-val="btn-theme-4"><img class="theme-visual-preview"
-                    src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=150"><span>Liquid Aurora</span>
-            </div>
-        </div>
-
+        <div class="section-title">Accent Color Base</div>
         <div class="slider-box">
             <div class="slider-header">
-                <span class="slider-label">Solid Action Button Color Slider:</span>
+                <span class="slider-label">Solid Theme Accent Slider:</span>
                 <div id="btnPreview" class="slider-preview" style="background-color: hsl(195, 100%, 60%);"></div>
             </div>
             <input type="range" id="btnHueSlider" class="spectrum-range" min="0" max="360" value="195">
+        </div>
 
-            <div style="margin-top: 12px;">
-                <label class="slider-label">Or Paste Personal Custom Button URL:</label>
-                <input type="text" id="btnUrlInput" placeholder="https://example.com/your-texture.jpg">
-            </div>
+        <div style="display: none;">
+            <div class="option-card" data-type="btnType" data-val="btn-theme-1"></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-2"></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-3"></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-4"></div>
+            <input type="text" id="btnUrlInput">
         </div>
 
         <div class="section-title">Interface Typography Font</div>
         <div class="grid">
-            <div class="option-card" data-type="font" data-val="'Inter', sans-serif"
-                style="font-family: 'Inter', sans-serif;">Inter System</div>
-            <div class="option-card" data-type="font" data-val="'Poppins', sans-serif"
-                style="font-family: 'Poppins', sans-serif;">Poppins Geometric</div>
-            <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace"
-                style="font-family: 'Roboto Mono', monospace;">Developer Code</div>
-            <div class="option-card" data-type="font" data-val="'Playfair Display', serif"
-                style="font-family: 'Playfair Display', serif;">Classic Serif</div>
+            <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter System</div>
+            <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Geo</div>
+            <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Dev Code</div>
+            <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Classic Serif</div>
+            <div class="option-card" data-type="font" data-val="'Plus Jakarta Sans', sans-serif" style="font-family: 'Plus Jakarta Sans', sans-serif;">Jakarta Neo</div>
+            <div class="option-card" data-type="font" data-val="'Space Grotesk', sans-serif" style="font-family: 'Space Grotesk', sans-serif;">Grotesk Tech</div>
+            <div class="option-card" data-type="font" data-val="'Outfit', sans-serif" style="font-family: 'Outfit', sans-serif;">Outfit Minimal</div>
+            <div class="option-card" data-type="font" data-val="'JetBrains Mono', monospace" style="font-family: 'JetBrains Mono', monospace;">JetBrains Monospace</div>
         </div>
 
         <div class="logout-zone">
@@ -513,6 +602,48 @@
         const btnPreview = document.getElementById('btnPreview');
         const btnUrlInput = document.getElementById('btnUrlInput');
 
+        const toggleBgUrlBtn = document.getElementById('toggleBgUrl');
+        const bgUrlWrapper = document.getElementById('bgUrlWrapper');
+        
+        // Studio Modal DOM Pointers
+        const studioLoader = document.getElementById('studioLoader');
+        const studioAlertModal = document.getElementById('studioAlertModal');
+        const modalIconContainer = document.getElementById('modalIconContainer');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMsg = document.getElementById('modalMsg');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        let redirectOnClose = null;
+
+        toggleBgUrlBtn.addEventListener('click', () => {
+            toggleBgUrlBtn.classList.toggle('active');
+            bgUrlWrapper.classList.toggle('open');
+        });
+
+        // Universal Custom Alert Modal Trigger Logic
+        function showStudioModal(title, text, isError = false, redirectUrl = null) {
+            modalTitle.textContent = title;
+            modalMsg.textContent = text;
+            redirectOnClose = redirectUrl;
+
+            if (isError) {
+                modalIconContainer.classList.add('error-state');
+                modalIcon.setAttribute('data-lucide', 'alert-circle');
+            } else {
+                modalIconContainer.classList.remove('error-state');
+                modalIcon.setAttribute('data-lucide', 'check-circle-2');
+            }
+            lucide.createIcons();
+            studioAlertModal.classList.add('open');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            studioAlertModal.classList.remove('open');
+            if (redirectOnClose) {
+                window.location.href = redirectOnClose;
+            }
+        });
+
         function hexToRgb(hex) {
             let c;
             if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
@@ -521,7 +652,7 @@
                 c = '0x' + c.join('');
                 return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',');
             }
-            return "255,115,0";
+            return "34,197,94";
         }
 
         function hslToHex(h, s, l) {
@@ -535,12 +666,9 @@
             return `#${f(0)}${f(8)}${f(4)}`;
         }
 
-        /* Real-Time Preview Synchronization Engine */
         function applyRealtimeThemePreview() {
-            // Font Sync
             document.body.style.fontFamily = configData.font;
 
-            // Background Base Sync
             if (configData.bgMode === "image") {
                 const realImg = premium3dAssets[configData.bgValue] || configData.bgValue;
                 document.body.style.backgroundImage = `url('${realImg}')`;
@@ -549,8 +677,7 @@
                 document.body.style.backgroundColor = configData.bgValue;
             }
 
-            // Parse theme primary dynamic colors cleanly
-            let targetHexColor = "#ff7300";
+            let targetHexColor = "#22c55e";
             if (configData.btnMode === "color") {
                 if (configData.btnValue.includes('hsl')) {
                     const match = configData.btnValue.match(/\d+/g);
@@ -560,17 +687,13 @@
                 } else {
                     targetHexColor = configData.btnValue;
                 }
-            } else {
-                targetHexColor = "#ff7300"; // Seamless fallback state 
             }
 
-            // Inject variables instantly to prevent throwing off the user interface
             document.documentElement.style.setProperty('--primary', targetHexColor);
             const rgbVals = hexToRgb(targetHexColor);
             document.documentElement.style.setProperty('--glass', `rgba(${rgbVals}, 0.15)`);
         }
 
-        // Solid Hue Controls
         bgHueSlider.addEventListener('input', () => {
             configData.bgMode = "color";
             configData.bgValue = `hsl(${bgHueSlider.value}, 70%, 15%)`;
@@ -585,25 +708,14 @@
             configData.btnValue = `hsl(${btnHueSlider.value}, 100%, 60%)`;
             btnPreview.style.backgroundColor = configData.btnValue;
             btnUrlInput.value = "";
-            document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
             applyRealtimeThemePreview();
         });
 
-        // Custom URL Input Pipeline Processing Channels
         bgUrlInput.addEventListener('input', () => {
             if (bgUrlInput.value.trim() !== "") {
                 configData.bgMode = "image";
                 configData.bgValue = bgUrlInput.value.trim();
                 document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
-                applyRealtimeThemePreview();
-            }
-        });
-
-        btnUrlInput.addEventListener('input', () => {
-            if (btnUrlInput.value.trim() !== "") {
-                configData.btnMode = "image";
-                configData.btnValue = btnUrlInput.value.trim();
-                document.querySelectorAll('.option-card[data-type="btnType"]').forEach(c => c.classList.remove('selected'));
                 applyRealtimeThemePreview();
             }
         });
@@ -615,11 +727,11 @@
             }
         });
 
-        // Preset UI Grid Click Mapping
         document.querySelectorAll('.option-card').forEach(card => {
             card.addEventListener('click', () => {
                 const type = card.getAttribute('data-type');
                 const val = card.getAttribute('data-val');
+                if (!type) return;
 
                 document.querySelectorAll(`.option-card[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
@@ -636,16 +748,10 @@
                     configData.bgValue = val;
                     bgUrlInput.value = "";
                 }
-                if (type === "btnType") {
-                    configData.btnMode = "image";
-                    configData.btnValue = val;
-                    btnUrlInput.value = "";
-                }
                 applyRealtimeThemePreview();
             });
         });
 
-        // State Recovery Pipeline
         async function fetchSavedConfigurations() {
             try {
                 const docRef = doc(db, "accounts", userId);
@@ -671,7 +777,6 @@
                         if (card) card.classList.add('selected');
                     }
 
-                    // Restore Wallpapers
                     if (data.bgMode === "image") {
                         configData.bgMode = "image";
                         configData.bgValue = data.bgValue;
@@ -680,6 +785,8 @@
                             card.classList.add('selected');
                         } else {
                             bgUrlInput.value = data.bgValue;
+                            toggleBgUrlBtn.classList.add('active');
+                            bgUrlWrapper.classList.add('open');
                         }
                     } else if (data.bgValue && data.bgValue.includes('hsl')) {
                         configData.bgMode = "color";
@@ -689,17 +796,7 @@
                         if (match) bgHueSlider.value = match[0];
                     }
 
-                    // Restore Buttons
-                    if (data.btnMode === "image") {
-                        configData.btnMode = "image";
-                        configData.btnValue = data.btnValue;
-                        const card = document.querySelector(`.option-card[data-type="btnType"][data-val="${data.btnValue}"]`);
-                        if (card) {
-                            card.classList.add('selected');
-                        } else {
-                            btnUrlInput.value = data.btnValue;
-                        }
-                    } else if (data.btnValue && data.btnValue.includes('hsl')) {
+                    if (data.btnValue && data.btnValue.includes('hsl')) {
                         configData.btnMode = "color";
                         configData.btnValue = data.btnValue;
                         btnPreview.style.backgroundColor = data.btnValue;
@@ -707,11 +804,13 @@
                         if (match) btnHueSlider.value = match[0];
                     }
 
-                    // Initialize layout setup based on structural database profiles instantly
                     applyRealtimeThemePreview();
                 }
             } catch (e) {
                 console.log("State recovery execution failure:", e);
+            } finally {
+                // Terminate loader display stack seamlessly
+                studioLoader.classList.add('hidden');
             }
         }
 
@@ -740,11 +839,10 @@
                 localStorage.setItem("btnValue", payload.btnValue);
                 localStorage.setItem("fontFamily", payload.fontFamily);
 
-                alert("Preferences Saved Successfully!");
-                window.location.href = "esoa.html";
+                showStudioModal("Preferences Saved Successfully!", "Your dynamic configuration matrix values have updated seamlessly.", false, "esoa.html");
 
             } catch (err) {
-                alert("Error saving preferences: " + err.message);
+                showStudioModal("Error Saving Preferences", err.message, true);
             }
         });
 
@@ -754,5 +852,4 @@
         };
     </script>
 </body>
-
 </html>
