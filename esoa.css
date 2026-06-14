@@ -867,10 +867,12 @@ h2 {
 }*/
 
 .btn-main-copy.success-state {
+    background: #fbff00 !important;
     background-image: none !important;
-    background-color: #fbff00;
-    color: #000;
-    border-radius: 35px;
+    color: #000 !important;
+
+    opacity: 1 !important;
+    filter: none !important;
 
     animation: flashFade 0.9s ease-out forwards;
 }
