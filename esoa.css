@@ -560,33 +560,61 @@ body.copy-flash {
     font-weight: 600;
 }
 
-/* Reactions Container Styles */
+/* =========================================================
+   REACTIONS CONTAINER (VISUALLY HIDDEN BUT STRUCTURE KEPT)
+   ========================================================= */
+
 .msg-reaction-container {
     display: flex;
     gap: 4px;
     margin-top: -4px;
     z-index: 10;
-    background: #140700;
-    border: 1px solid rgba(255, 115, 0, 0.3);
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+
+    /* invisible container */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+
     align-items: center;
 }
+
+/* =========================================================
+   REACTION PILL (INDIVIDUAL REACTION ITEM)
+   ========================================================= */
 
 .reaction-pill {
     display: flex;
     align-items: center;
     gap: 2px;
     cursor: pointer;
+
+    /* keep it minimal */
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+
+    transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.reaction-pill.user-voted {
-    background: rgba(255, 115, 0, 0.2);
-    border-radius: 4px;
-    padding: 0 2px;
+.reaction-pill:hover {
+    transform: scale(1.1);
 }
+
+/* =========================================================
+   USER VOTED STATE (SUBTLE HIGHLIGHT ONLY)
+   ========================================================= */
+
+.reaction-pill.user-voted {
+    background: rgba(255, 115, 0, 0.12);
+    padding: 0 2px;
+    border-radius: 4px;
+}
+
+/* =========================================================
+   REACTION COUNT TEXT
+   ========================================================= */
 
 .reaction-count {
     font-size: 0.65rem;
@@ -594,20 +622,33 @@ body.copy-flash {
     color: var(--primary);
 }
 
-/* Floating Reaction Picker Popover Overlay */
+/* =========================================================
+   FLOATING REACTION PICKER (POPOVER)
+   ========================================================= */
+
 .reaction-picker-tray {
     position: absolute;
-    background: #1c0d07;
-    border: 1px solid var(--primary);
+
+    /* keep visible but lightweight */
+    background: rgba(28, 13, 7, 0.35);
+    border: 1px solid rgba(255, 115, 0, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
     padding: 4px 8px;
     border-radius: 20px;
+
     display: flex;
     gap: 6px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+
     z-index: 4000;
+
     top: -35px;
 }
 
+/* position based on message side */
 .msg-wrapper.incoming .reaction-picker-tray {
     left: 0;
 }
@@ -616,14 +657,20 @@ body.copy-flash {
     right: 0;
 }
 
+/* =========================================================
+   REACTION OPTIONS (EMOJIS)
+   ========================================================= */
+
 .reaction-option {
     cursor: pointer;
     font-size: 1.1rem;
-    transition: transform 0.1s ease;
+
+    transition: transform 0.12s ease, filter 0.12s ease;
 }
 
 .reaction-option:hover {
     transform: scale(1.25);
+    filter: brightness(1.2);
 }
 
 .chat-input-row {
