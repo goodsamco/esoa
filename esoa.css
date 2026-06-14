@@ -52,7 +52,7 @@ body.copy-flash {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #331a10;
+    background: var(--primary);
     border-radius: 10px;
 }
 
