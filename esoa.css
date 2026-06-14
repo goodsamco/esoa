@@ -48,20 +48,30 @@ body.copy-flash {
 
 
 /* ==========================================================================
-   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX)
-   EDGE-TO-EDGE AVATARS + FLOATING GLASS NAV BUTTONS
+   3. PEER PRESENCE DISPLAY & HUB (MATCHES .container STYLE)
    ========================================================================== */
 
-/* Main layout frame around peer elements */
 .peer-wrapper-row {
     position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
 
-    width: calc(100% - 40px);
-    max-width: 600px;
+    width: 100%;
+    max-width: 400px;
+
     height: 130px;
+
+    background: var(--surface);
+
+    padding: 20px;
+
+    border-radius: 24px;
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 115, 0, 0.1);
+
+    box-sizing: border-box;
 
     display: flex;
     align-items: center;
@@ -69,56 +79,40 @@ body.copy-flash {
     z-index: 3100;
 
     overflow: hidden;
-
-    background: rgba(20, 7, 0, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-
-    border: 1px solid var(--glass);
-    border-radius: 24px;
-
-    padding: 0;
-
-    box-sizing: border-box;
 }
 
-/* Viewport slider view tracking */
+/* Scroll area */
 .peer-active-hub {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-
     width: 100%;
     height: 100%;
+
+    display: flex;
+    align-items: center;
 
     overflow-x: auto;
     overflow-y: hidden;
 
-    white-space: nowrap;
     scroll-behavior: smooth;
 
     scrollbar-width: none;
     -ms-overflow-style: none;
-
-    padding: 0;
-    margin: 0;
 }
 
 .peer-active-hub::-webkit-scrollbar {
     display: none;
 }
 
-/* Small edge protection so first/last avatar don't get clipped */
+/* First and last avatars don't touch rounded corners */
 .peer-wrapper:first-child {
-    margin-left: 8px;
+    margin-left: 4px;
 }
 
 .peer-wrapper:last-child {
-    margin-right: 8px;
+    margin-right: 4px;
 }
 
 /* ==========================================================================
-   FLOATING GLASS NAV BUTTONS
+   3.1 FLOATING NAVIGATION BUTTONS
    ========================================================================== */
 
 .scroll-nav-btn {
@@ -126,22 +120,20 @@ body.copy-flash {
     top: 50%;
     transform: translateY(-50%);
 
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 115, 0, 0.05);
+    border: 1px solid rgba(255, 115, 0, 0.15);
+
+    color: var(--primary);
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 50%;
-
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-
-    border: 1px solid rgba(255, 255, 255, 0.12);
-
-    color: #fff;
     cursor: pointer;
 
     z-index: 3200;
@@ -149,19 +141,7 @@ body.copy-flash {
     opacity: 0;
     pointer-events: none;
 
-    transition:
-        opacity 0.25s ease,
-        transform 0.2s ease,
-        background 0.2s ease,
-        border-color 0.2s ease;
-}
-
-.scroll-nav-btn.prev {
-    left: 8px;
-}
-
-.scroll-nav-btn.next {
-    right: 8px;
+    transition: all 0.25s ease;
 }
 
 .peer-wrapper-row:hover .scroll-nav-btn {
@@ -169,27 +149,27 @@ body.copy-flash {
     pointer-events: auto;
 }
 
+.scroll-nav-btn.prev {
+    left: 10px;
+}
+
+.scroll-nav-btn.next {
+    right: 10px;
+}
+
 .scroll-nav-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.25);
-}
-
-.scroll-nav-btn.prev:hover {
-    transform: translateY(-50%) translateX(-2px) scale(1.08);
-}
-
-.scroll-nav-btn.next:hover {
-    transform: translateY(-50%) translateX(2px) scale(1.08);
+    background: var(--primary);
+    color: #000;
+    transform: translateY(-50%) scale(1.08);
 }
 
 .scroll-nav-btn svg {
     width: 18px;
     height: 18px;
-    stroke-width: 3;
 }
 
 /* ==========================================================================
-   PROFILE WRAPPERS
+   3.2 PROFILE WRAPPERS
    ========================================================================== */
 
 .peer-wrapper {
@@ -207,8 +187,7 @@ body.copy-flash {
 
     transition:
         transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        order 0.4s ease;
+        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .peer-wrapper.is-offline {
@@ -216,7 +195,6 @@ body.copy-flash {
     transform: scale(0.82);
 }
 
-/* Profiles normalized parameters */
 .peer-avatar-bubble,
 .group-chat-bubble {
     width: 70px;
@@ -225,23 +203,18 @@ body.copy-flash {
     border-radius: 50%;
     object-fit: cover;
 
-    box-sizing: border-box;
     flex-shrink: 0;
 }
 
 .peer-avatar-bubble {
-    background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
     border: 2px solid #666;
-
     cursor: pointer;
-
-    transition: all 0.2s ease;
+    transition: all .2s ease;
 }
 
 .peer-avatar-bubble:hover {
     border-color: var(--primary);
     transform: scale(1.06);
-    z-index: 10;
 }
 
 .group-chat-bubble {
@@ -252,20 +225,15 @@ body.copy-flash {
     align-items: center;
     justify-content: center;
 
-    cursor: pointer;
-
     border: 2px solid var(--primary);
 
-    transition: all 0.2s ease;
-
-    box-shadow: 0 0 8px rgba(255, 115, 0, 0.35);
+    transition: all .2s ease;
 }
 
 .group-chat-bubble:hover {
-    transform: scale(1.06);
     background: #fff;
     border-color: #fff;
-    z-index: 10;
+    transform: scale(1.06);
 }
 
 /* Notification dot */
@@ -277,13 +245,12 @@ body.copy-flash {
     width: 12px;
     height: 12px;
 
-    background-color: var(--primary);
-    border: 2px solid var(--surface);
     border-radius: 50%;
 
-    display: none;
+    background: var(--primary);
+    border: 2px solid var(--surface);
 
-    z-index: 3010;
+    display: none;
 
     box-shadow: 0 0 8px var(--primary);
 }
@@ -292,24 +259,22 @@ body.copy-flash {
     display: block;
 }
 
-/* User name */
+/* Username */
 .peer-name-hover {
     margin-top: 6px;
+
+    width: 100%;
+
+    text-align: center;
 
     font-size: 0.65rem;
     font-weight: 700;
 
-    color: white;
-
-    text-align: center;
-    width: 100%;
+    color: #fff;
 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
-    opacity: 1;
-    pointer-events: auto;
 }
 
 /* ==========================================================================
