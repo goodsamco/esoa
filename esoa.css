@@ -48,7 +48,8 @@ body.copy-flash {
 
 
 /* ==========================================================================
-   3. PEER PRESENCE DISPLAY & HUB (MATCHES .container STYLE)
+   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX)
+   EDGE-TO-EDGE AVATARS + FLOATING HALF-OUTSIDE NAV BUTTONS
    ========================================================================== */
 
 .peer-wrapper-row {
@@ -57,62 +58,63 @@ body.copy-flash {
     left: 50%;
     transform: translateX(-50%);
 
-    width: 100%;
-    max-width: 400px;
+    width: calc(100% - 40px);
+    max-width: 600px;
 
     height: 130px;
-
-    background: var(--surface);
-
-    padding: 20px;
-
-    border-radius: 24px;
-
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(255, 115, 0, 0.1);
-
-    box-sizing: border-box;
 
     display: flex;
     align-items: center;
 
     z-index: 3100;
 
-    overflow: hidden;
+    /* allow nav buttons to stick outside */
+    overflow: visible;
+
+    background: rgba(20, 7, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border: 1px solid var(--glass);
+    border-radius: 24px;
+
+    box-sizing: border-box;
 }
 
-/* Scroll area */
+/* ==========================================================================
+   SCROLL HUB
+   ========================================================================== */
+
 .peer-active-hub {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
     width: 100%;
     height: 100%;
 
-    display: flex;
-    align-items: center;
-
     overflow-x: auto;
     overflow-y: hidden;
+
+    white-space: nowrap;
 
     scroll-behavior: smooth;
 
     scrollbar-width: none;
     -ms-overflow-style: none;
+
+    border-radius: 24px;
+
+    padding: 0;
+    margin: 0;
 }
 
 .peer-active-hub::-webkit-scrollbar {
     display: none;
 }
 
-/* First and last avatars don't touch rounded corners */
-.peer-wrapper:first-child {
-    margin-left: 4px;
-}
-
-.peer-wrapper:last-child {
-    margin-right: 4px;
-}
-
 /* ==========================================================================
-   3.1 FLOATING NAVIGATION BUTTONS
+   FLOATING NAV BUTTONS
    ========================================================================== */
 
 .scroll-nav-btn {
@@ -123,16 +125,20 @@ body.copy-flash {
     width: 38px;
     height: 38px;
 
-    border-radius: 50%;
-
-    background: rgba(255, 115, 0, 0.05);
-    border: 1px solid rgba(255, 115, 0, 0.15);
-
-    color: var(--primary);
-
     display: flex;
     align-items: center;
     justify-content: center;
+
+    border-radius: 50%;
+
+    background: rgba(255, 115, 0, 0.08);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 115, 0, 0.15);
+
+    color: var(--primary);
 
     cursor: pointer;
 
@@ -141,35 +147,49 @@ body.copy-flash {
     opacity: 0;
     pointer-events: none;
 
-    transition: all 0.25s ease;
+    transition:
+        opacity 0.25s ease,
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
 }
 
+/* Half inside, half outside */
+.scroll-nav-btn.prev {
+    left: -19px;
+}
+
+.scroll-nav-btn.next {
+    right: -19px;
+}
+
+/* Reveal on hover */
 .peer-wrapper-row:hover .scroll-nav-btn {
     opacity: 1;
     pointer-events: auto;
 }
 
-.scroll-nav-btn.prev {
-    left: 10px;
-}
-
-.scroll-nav-btn.next {
-    right: 10px;
-}
-
 .scroll-nav-btn:hover {
-    background: var(--primary);
-    color: #000;
-    transform: translateY(-50%) scale(1.08);
+    background: rgba(255, 115, 0, 0.18);
+    border-color: rgba(255, 115, 0, 0.35);
+}
+
+.scroll-nav-btn.prev:hover {
+    transform: translateY(-50%) translateX(-2px) scale(1.08);
+}
+
+.scroll-nav-btn.next:hover {
+    transform: translateY(-50%) translateX(2px) scale(1.08);
 }
 
 .scroll-nav-btn svg {
     width: 18px;
     height: 18px;
+    stroke-width: 2.75;
 }
 
 /* ==========================================================================
-   3.2 PROFILE WRAPPERS
+   PROFILE WRAPPERS
    ========================================================================== */
 
 .peer-wrapper {
@@ -187,13 +207,18 @@ body.copy-flash {
 
     transition:
         transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        order 0.4s ease;
 }
 
 .peer-wrapper.is-offline {
     filter: grayscale(100%);
     transform: scale(0.82);
 }
+
+/* ==========================================================================
+   AVATARS
+   ========================================================================== */
 
 .peer-avatar-bubble,
 .group-chat-bubble {
@@ -204,17 +229,22 @@ body.copy-flash {
     object-fit: cover;
 
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .peer-avatar-bubble {
+    background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
     border: 2px solid #666;
+
     cursor: pointer;
-    transition: all .2s ease;
+
+    transition: all 0.2s ease;
 }
 
 .peer-avatar-bubble:hover {
     border-color: var(--primary);
     transform: scale(1.06);
+    z-index: 10;
 }
 
 .group-chat-bubble {
@@ -227,18 +257,29 @@ body.copy-flash {
 
     border: 2px solid var(--primary);
 
-    transition: all .2s ease;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+    box-shadow: 0 0 8px rgba(255, 115, 0, 0.35);
 }
 
 .group-chat-bubble:hover {
+    transform: scale(1.06);
+
     background: #fff;
     border-color: #fff;
-    transform: scale(1.06);
+
+    z-index: 10;
 }
 
-/* Notification dot */
+/* ==========================================================================
+   NOTIFICATION DOT
+   ========================================================================== */
+
 .peer-notif-dot {
     position: absolute;
+
     top: 4px;
     right: 8px;
 
@@ -248,9 +289,12 @@ body.copy-flash {
     border-radius: 50%;
 
     background: var(--primary);
+
     border: 2px solid var(--surface);
 
     display: none;
+
+    z-index: 3010;
 
     box-shadow: 0 0 8px var(--primary);
 }
@@ -259,24 +303,29 @@ body.copy-flash {
     display: block;
 }
 
-/* Username */
+/* ==========================================================================
+   USER NAME
+   ========================================================================== */
+
 .peer-name-hover {
     margin-top: 6px;
 
     width: 100%;
-
-    text-align: center;
 
     font-size: 0.65rem;
     font-weight: 700;
 
     color: #fff;
 
+    text-align: center;
+
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
 
+    opacity: 1;
+    pointer-events: auto;
+}
 /* ==========================================================================
    4. NAVIGATION CONTROL BARS
    ========================================================================== */
