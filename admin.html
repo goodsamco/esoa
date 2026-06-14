@@ -443,6 +443,9 @@
                 const profileObj = cachedUserDirectory[data.accountId] || { displayName: data.currentUsername, avatarUrl: "" };
                 const userAvatar = profileObj.avatarUrl ? `style="background-image: url('${profileObj.avatarUrl}')"` : '';
 
+                // SECURE MASKING: Never expose actual password characters inside dashboard markup nodes
+                const valueDisplay = (data.requestType === 'password') ? '••••••••' : data.newValue;
+
                 card.innerHTML = `
                     <div class="identity-block">
                         <div class="avatar-node" ${userAvatar}></div>
@@ -450,7 +453,7 @@
                             <div class="name">Account: ${profileObj.displayName}</div>
                             <div class="username">Current Username Handle: @${data.currentUsername}</div>
                             <div class="request-details">
-                                <strong>REQUESTED CHANGE:</strong> New ${printableType} ➡️ <span style="color:var(--primary); font-weight:600;">${data.newValue}</span>
+                                <strong>REQUESTED CHANGE:</strong> New ${printableType} ➡️ <span style="color:var(--primary); font-weight:600;">${valueDisplay}</span>
                             </div>
                         </div>
                     </div>
@@ -479,7 +482,8 @@
                         await deleteDoc(doc(db, "update_requests", reqId));
                     } catch (err) {
                         alert("Update operation failed: " + err.message);
-                    }                });
+                    }
+                });
             });
 
             container.querySelectorAll('.btn-req-reject').forEach(btn => {
@@ -528,8 +532,7 @@
                     </div>
                     <button class="btn ${isEsoaDisabled ? 'btn-enable' : 'btn-disable'}" data-id="${userDoc.id}" data-disabled="${isEsoaDisabled}">
                         ${isEsoaDisabled ? 'Enable eSOA' : 'Disable eSOA'}
-                    </button>
-                `;
+                    </button>                `;
                 container.appendChild(card);
             });
 
@@ -653,7 +656,6 @@
 </script>
 </body>
 </html>
-
 <!--
 
 <!DOCTYPE html><html lang="en"><head>
