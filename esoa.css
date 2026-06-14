@@ -707,7 +707,16 @@ body.copy-flash {
     font-weight: 800;
     cursor: pointer;
 }
-
+/* ==========================================================================
+   IMAGE CHATS
+   ========================================================================== */
+.msg-bubble img {
+    display: block;
+    max-width: 180px;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+}
 
 /* ==========================================================================
    8. CORE LAYOUT CONTAINERS & GRID LINES
