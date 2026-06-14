@@ -291,15 +291,15 @@
 
     <div id="forgotSection" class="hidden">
         <h2>ACCOUNT UPDATE</h2>
-        <p style="font-size:0.8rem; color:#64748b; margin-top:-15px; margin-bottom:20px;">Verify your identity to request an account update.</p>
+        <p style="font-size:0.8rem; color:#64748b; margin-top:-15px; margin-bottom:20px;">Verify identity using your registered Name and Username.</p>
         <form id="forgotForm">
             <div class="input-group">
-                <label>CURRENT USERNAME (FOR VERIFICATION)</label>
-                <input type="text" id="recUser" required placeholder="your_username">
+                <label>YOUR REGISTERED FULL NAME</label>
+                <input type="text" id="recName" required placeholder="John Doe">
             </div>
             <div class="input-group">
-                <label>CURRENT PASSWORD (FOR VERIFICATION)</label>
-                <input type="password" id="recPass" required placeholder="••••••••">
+                <label>CURRENT USERNAME</label>
+                <input type="text" id="recUser" required placeholder="your_username">
             </div>
             <div class="input-group">
                 <label>WHAT DO YOU WANT TO UPDATE?</label>
@@ -318,7 +318,7 @@
             </div>
             <div class="input-group field-group hidden" id="groupNewName">
                 <label>NEW FULL NAME</label>
-                <input type="text" id="newName" placeholder="John Doe" disabled>
+                <input type="text" id="newName" placeholder="Jane Doe" disabled>
             </div>
             <div class="input-group field-group hidden" id="groupNewUser">
                 <label>NEW USERNAME</label>
@@ -438,22 +438,22 @@
         }
     });
 
-    // Handle Account Update / Recovery submission
+    // Handle Account Update / Recovery submission without requiring current password
     document.getElementById('forgotForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const recName = document.getElementById('recName').value.trim();
         const recUser = document.getElementById('recUser').value.trim().toLowerCase();
-        const recPass = document.getElementById('recPass').value;
         const typeSelected = updateType.value;
         const msg = document.getElementById('forgotMsg');
 
         try {
-            // 1. Verify that user credentials match an active profile
-            const q = query(collection(db, "accounts"), where("username", "==", recUser), where("password", "==", recPass));
+            // 1. Verify identity matching Full Name and Username
+            const q = query(collection(db, "accounts"), where("username", "==", recUser), where("name", "==", recName));
             const querySnap = await getDocs(q);
 
             if (querySnap.empty) {
                 msg.style.color = "#ef4444";
-                msg.innerText = "Identity verification failed. Invalid current credentials.";
+                msg.innerText = "Identity verification failed. Name and Username combination not found.";
                 return;
             }
 
