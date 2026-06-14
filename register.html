@@ -182,7 +182,6 @@
 </script>
 </body></html>
 
--->
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -362,3 +361,358 @@
     });
 </script>
 </body></html>
+
+-->
+
+
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #38bdf8;
+            --text-main: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            padding: 20px 10px;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid var(--border-glass);
+            box-sizing: border-box;
+        }
+        h2 {
+            font-size: 1.1rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 800;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+        }
+        .input-group label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 800;
+            margin-left: 2px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .label-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 14px;
+            color: white;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            outline: none;
+        }
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+        }
+        /* Strength Indicator Node Styling */
+        .strength-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: flex;
+            gap: 2px;
+        }
+        .strength-bar {
+            height: 100%;
+            flex: 1;
+            transition: background-color 0.3s ease;
+            background: transparent;
+        }
+        .btn-submit {
+            width: 100%;
+            height: 52px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 35px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.03);
+        }
+        .msg {
+            margin-top: 20px;
+            font-size: 0.82rem;
+            min-height: 20px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .link-text {
+            display: inline-block;
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 0.82rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .link-text:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>CREATE ACCOUNT</h2>
+    <form id="regForm">
+        <div class="input-group">
+            <label>FULL NAME</label>
+            <input type="text" id="regName" required autocomplete="name">
+        </div>
+        <div class="input-group">
+            <div class="label-wrapper">
+                <label>USERNAME</label>
+                <span id="usernameStatus" class="status-badge"></span>
+            </div>
+            <input type="text" id="regUser" required autocomplete="username">
+        </div>
+        <div class="input-group">
+            <div class="label-wrapper">
+                <label>PASSWORD</label>
+                <span id="strengthText" class="status-badge"></span>
+            </div>
+            <input type="password" id="regPass" required autocomplete="new-password">
+            <div class="strength-container">
+                <div class="strength-bar" id="bar1"></div>
+                <div class="strength-bar" id="bar2"></div>
+                <div class="strength-bar" id="bar3"></div>
+            </div>
+        </div>
+        <button type="submit" class="btn-submit">REGISTER</button>
+    </form>
+    <div class="msg" id="regMsg"></div>
+    <div style="text-align: center;">
+        <a href="login.html" class="link-text">Already have an account? Login</a>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const accountsRef = collection(db, "accounts");
+
+    const regUser = document.getElementById('regUser');
+    const usernameStatus = document.getElementById('usernameStatus');
+    const regPass = document.getElementById('regPass');
+    const strengthText = document.getElementById('strengthText');
+    
+    let debounceTimer;
+    let isUsernameValid = false;
+
+    // Real-Time Asynchronous Username Validation Engine
+    async function verifyUsernameUniqueness(username) {
+        const cleanUser = username.trim().toLowerCase();
+        if (!cleanUser) {
+            usernameStatus.innerText = "";
+            isUsernameValid = false;
+            return;
+        }
+
+        try {
+            const qUser = query(accountsRef, where("username", "==", cleanUser));
+            const querySnap = await getDocs(qUser);
+            
+            if (!querySnap.empty) {
+                usernameStatus.style.color = "#ef4444";
+                usernameStatus.innerText = "Taken";
+                isUsernameValid = false;
+            } else {
+                usernameStatus.style.color = "#22c55e";
+                usernameStatus.innerText = "Available";
+                isUsernameValid = true;
+            }
+        } catch (err) {
+            console.error("Asynchronous validation channel failure:", err);
+        }
+    }
+
+    regUser.addEventListener('input', () => {
+        usernameStatus.style.color = "#64748b";
+        usernameStatus.innerText = "Checking...";
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            verifyUsernameUniqueness(regUser.value);
+        }, 400);
+    });
+
+    regUser.addEventListener('blur', () => {
+        verifyUsernameUniqueness(regUser.value);
+    });
+
+    // Real-Time Complex Password Strength Evaluation
+    regPass.addEventListener('input', () => {
+        const val = regPass.value;
+        const bar1 = document.getElementById('bar1');
+        const bar2 = document.getElementById('bar2');
+        const bar3 = document.getElementById('bar3');
+        
+        // Compute scoring matrix metrics
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (/[0-9]/.test(val) && /[a-zA-Z]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        // Reset display vectors
+        bar1.style.background = "transparent";
+        bar2.style.background = "transparent";
+        bar3.style.background = "transparent";
+
+        if (val.length === 0) {
+            strengthText.innerText = "";
+            return;
+        }
+
+        if (score === 1) {
+            strengthText.style.color = "#ef4444";
+            strengthText.innerText = "Weak";
+            bar1.style.background = "#ef4444";
+        } else if (score === 2) {
+            strengthText.style.color = "#eab308";
+            strengthText.innerText = "Medium";
+            bar1.style.background = "#eab308";
+            bar2.style.background = "#eab308";
+        } else if (score === 3) {
+            strengthText.style.color = "#22c55e";
+            strengthText.innerText = "Strong";
+            bar1.style.background = "#22c55e";
+            bar2.style.background = "#22c55e";
+            bar3.style.background = "#22c55e";
+        }
+    });
+
+    // Main Registration Form Submission Handler
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('regName').value.trim();
+        const username = regUser.value.trim().toLowerCase();
+        const password = regPass.value;
+        const msg = document.getElementById('regMsg');
+
+        // Block submission if asynchronous verification tracking is pending or falsy
+        if (!isUsernameValid) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Please resolve username availability before continuing.";
+            return;
+        }
+
+        try {
+            // Determine structural ecosystem profile count status
+            const allSnap = await getDocs(accountsRef);
+            const isFirst = allSnap.empty;
+
+            await addDoc(accountsRef, {
+                name: name,
+                username: username,
+                password: password, 
+                role: isFirst ? "admin" : "user",
+                status: isFirst ? "approved" : "pending"
+            });
+
+            msg.style.color = "#ffee00";
+            msg.innerText = isFirst ? "Admin registered! Redirecting..." : "Registration submitted! Awaiting admin approval.";
+            setTimeout(() => window.location.href = "login.html", 2500);
+
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Error: " + err.message;
+        }
+    });
+</script>
+</body>
+</html>
