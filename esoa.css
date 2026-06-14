@@ -852,7 +852,7 @@ h2 {
 }*/
 .btn-main-copy.success-state {
     background-image: none !important;
-    background-color: color-mix(in srgb, var(--primary) 60%, white);
+    background-color: color-mix(in srgb, var(--primary) 30%, white);
     color: #000;
     text-shadow: none;
     box-shadow: 0 0 25px rgba(255, 115, 0, 0.5);
