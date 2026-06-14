@@ -387,43 +387,95 @@ body.copy-flash {
 /* ==========================================================================
    6. REAL-TIME SESSION CHAT PANEL DOCK
    ========================================================================== */
+/* ==========================================================================
+   CHAT DOCKING PANEL
+   ========================================================================== */
+
 .chat-docking-panel {
     position: fixed;
+
     bottom: 26vh;
     right: 20px;
+
     width: 340px;
     height: 440px;
-    background: var(--modal-bg);
-    border: 1px solid var(--glass);
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+
     display: none;
     flex-direction: column;
+
     z-index: 3500;
+
     overflow: hidden;
+
+    /* Match Sections 3 & 8 */
+    background: rgba(20, 7, 0, 0.45);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255, 115, 0, 0.1);
+
+    border-radius: 24px;
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
 }
 
+/* ==========================================================================
+   CHAT HEADER
+   ========================================================================== */
+
 .chat-header-bar {
-    background: rgba(0, 0, 0, 0.4);
-    padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--glass);
+
+    padding: 14px 16px;
+
+    background: rgba(255, 255, 255, 0.03);
+
+    border-bottom: 1px solid rgba(255, 115, 0, 0.1);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .chat-header-bar span {
     font-size: 0.8rem;
     font-weight: 800;
+
     color: var(--primary);
+
     text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
+/* Close button consistency */
 .chat-close-trigger {
-    background: transparent;
+    width: 32px;
+    height: 32px;
+
     border: none;
-    color: #666;
+    border-radius: 50%;
+
+    background: rgba(255, 115, 0, 0.05);
+
+    border: 1px solid rgba(255, 115, 0, 0.15);
+
+    color: var(--primary);
+
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all 0.2s ease;
+}
+
+.chat-close-trigger:hover {
+    background: var(--primary);
+    color: #000;
+    transform: scale(1.05);
 }
 
 .chat-scroller-view {
@@ -756,22 +808,33 @@ h2 {
    ========================================================================== */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0);
-    backdrop-filter: blur(0px);
+    inset: 0;
+
     display: none;
     justify-content: center;
     align-items: center;
+
     z-index: 4000;
-    transition: all 0.3s ease;
+
+    /* Match Sections 3 & 8 */
+    background: rgba(20, 7, 0, 0.55);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    transition:
+        background 0.3s ease,
+        backdrop-filter 0.3s ease,
+        -webkit-backdrop-filter 0.3s ease;
 }
 
 .modal-overlay.active {
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
+    display: flex;
+
+    background: rgba(20, 7, 0, 0.75);
+
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 }
 
 .modal-content {
