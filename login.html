@@ -1,3 +1,4 @@
+<!--
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -165,6 +166,352 @@
         } catch (err) {
             msg.style.color = "#ef4444";
             msg.innerText = "Authentication error: " + err.message;
+        }
+    });
+</script>
+</body></html>
+-->
+
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: #161e2d;
+            --primary: #38bdf8;
+            --text-main: #f1f5f9;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 380px;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .input-group label {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-left: 5px;
+            letter-spacing: 1px;
+        }
+        input, select {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px;
+            margin-top: 6px;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border 0.3s ease, opacity 0.3s ease;
+        }
+        input:focus, select:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+        }
+        input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: rgba(0,0,0,0.5);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: var(--bg);
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+        .btn-submit:hover { transform: translateY(-2px); background: #6feeff; }
+        .msg { margin-top: 15px; font-size: 0.85rem; min-height: 20px; }
+        .link-text {
+            display: inline-block;
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .link-text:hover { color: var(--primary); }
+        .hidden { display: none; }
+    </style></head><body>
+
+<div class="container">
+    <div id="loginSection">
+        <h2>ACCOUNT LOGIN</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>USERNAME</label>
+                <input type="text" id="logUser" required placeholder="username">
+            </div>
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="logPass" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-submit">LOG IN</button>
+        </form>
+        <div class="msg" id="logMsg"></div>
+        <a id="toForgotBtn" class="link-text">Forgot Credentials / Password?</a><br>
+        <a href="register.html" class="link-text">No account? Register here</a>
+    </div>
+
+    <div id="forgotSection" class="hidden">
+        <h2>ACCOUNT UPDATE</h2>
+        <p style="font-size:0.8rem; color:#64748b; margin-top:-15px; margin-bottom:20px;">Verify your identity to request an account update.</p>
+        <form id="forgotForm">
+            <div class="input-group">
+                <label>CURRENT USERNAME (FOR VERIFICATION)</label>
+                <input type="text" id="recUser" required placeholder="your_username">
+            </div>
+            <div class="input-group">
+                <label>CURRENT PASSWORD (FOR VERIFICATION)</label>
+                <input type="password" id="recPass" required placeholder="••••••••">
+            </div>
+            <div class="input-group">
+                <label>WHAT DO YOU WANT TO UPDATE?</label>
+                <select id="updateType">
+                    <option value="password">Update Password</option>
+                    <option value="name">Update Full Name</option>
+                    <option value="username">Update Username</option>
+                </select>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+
+            <div class="input-group field-group" id="groupNewPass">
+                <label>NEW PASSWORD</label>
+                <input type="password" id="newPass" placeholder="••••••••">
+            </div>
+            <div class="input-group field-group hidden" id="groupNewName">
+                <label>NEW FULL NAME</label>
+                <input type="text" id="newName" placeholder="John Doe" disabled>
+            </div>
+            <div class="input-group field-group hidden" id="groupNewUser">
+                <label>NEW USERNAME</label>
+                <input type="text" id="newUser" placeholder="newusername123" disabled>
+            </div>
+
+            <button type="submit" class="btn-submit">SUBMIT REQUEST</button>
+        </form>
+        <div class="msg" id="forgotMsg"></div>
+        <a id="toLoginBtn" class="link-text">Back to Login</a>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const loginSection = document.getElementById('loginSection');
+    const forgotSection = document.getElementById('forgotSection');
+    const updateType = document.getElementById('updateType');
+
+    // Toggle views
+    document.getElementById('toForgotBtn').addEventListener('click', () => {
+        loginSection.classList.add('hidden');
+        forgotSection.classList.remove('hidden');
+    });
+    document.getElementById('toLoginBtn').addEventListener('click', () => {
+        forgotSection.classList.add('hidden');
+        loginSection.classList.remove('hidden');
+    });
+
+    // Control Dynamic UI disabling/enabling fields natively 
+    updateType.addEventListener('change', (e) => {
+        const value = e.target.value;
+        
+        // Hide and disable all conditional inputs
+        document.querySelectorAll('.field-group').forEach(group => group.classList.add('hidden'));
+        document.getElementById('newPass').disabled = true;
+        document.getElementById('newName').disabled = true;
+        document.getElementById('newUser').disabled = true;
+        document.getElementById('newPass').required = false;
+        document.getElementById('newName').required = false;
+        document.getElementById('newUser').required = false;
+
+        // Enable and show only chosen variation
+        if (value === 'password') {
+            document.getElementById('groupNewPass').classList.remove('hidden');
+            document.getElementById('newPass').disabled = false;
+            document.getElementById('newPass').required = true;
+        } else if (value === 'name') {
+            document.getElementById('groupNewName').classList.remove('hidden');
+            document.getElementById('newName').disabled = false;
+            document.getElementById('newName').required = true;
+        } else if (value === 'username') {
+            document.getElementById('groupNewUser').classList.remove('hidden');
+            document.getElementById('newUser').disabled = false;
+            document.getElementById('newUser').required = true;
+        }
+    });
+
+    // Handle Authentication Login Form
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('logUser').value.trim().toLowerCase();
+        const password = document.getElementById('logPass').value;
+        const msg = document.getElementById('logMsg');
+
+        try {
+            const q = query(collection(db, "accounts"), where("username", "==", username), where("password", "==", password));
+            const querySnap = await getDocs(q);
+
+            if (querySnap.empty) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Invalid username or password.";
+                return;
+            }
+
+            const userDoc = querySnap.docs[0];
+            const userData = userDoc.data();
+
+            localStorage.setItem("userId", userDoc.id);
+            localStorage.setItem("userRole", userData.role);
+            localStorage.setItem("userName", userData.name);
+
+            if (userData.role === "admin") {
+                msg.style.color = "#ffee00";
+                msg.innerText = "Welcome back Admin. Loading panel...";
+                setTimeout(() => window.location.href = "admin.html", 1000);
+            } else {
+                if (userData.status === "pending") {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "Your account is awaiting Admin approval.";
+                    localStorage.clear();
+                } else {
+                    msg.style.color = "#ffee00";
+                    msg.innerText = "Login successful! Loading options...";
+                    setTimeout(() => window.location.href = "customization.html", 1000);
+                }
+            }
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Authentication error: " + err.message;
+        }
+    });
+
+    // Handle Account Update / Recovery submission
+    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const recUser = document.getElementById('recUser').value.trim().toLowerCase();
+        const recPass = document.getElementById('recPass').value;
+        const typeSelected = updateType.value;
+        const msg = document.getElementById('forgotMsg');
+
+        try {
+            // 1. Verify that user credentials match an active profile
+            const q = query(collection(db, "accounts"), where("username", "==", recUser), where("password", "==", recPass));
+            const querySnap = await getDocs(q);
+
+            if (querySnap.empty) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Identity verification failed. Invalid current credentials.";
+                return;
+            }
+
+            const userDoc = querySnap.docs[0];
+            const userId = userDoc.id;
+            let requestedValue = "";
+
+            // Gather value targeting the unlocked parsed element data
+            if (typeSelected === "password") {
+                requestedValue = document.getElementById('newPass').value;
+            } else if (typeSelected === "name") {
+                requestedValue = document.getElementById('newName').value.trim();
+            } else if (typeSelected === "username") {
+                requestedValue = document.getElementById('newUser').value.trim().toLowerCase();
+                
+                // Extra security: Ensure proposed unique user element doesn't exist
+                const uniqueCheck = query(collection(db, "accounts"), where("username", "==", requestedValue));
+                const uniqueSnap = await getDocs(uniqueCheck);
+                if (!uniqueSnap.empty) {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "The proposed new username is already taken.";
+                    return;
+                }
+            }
+
+            if (!requestedValue) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Please fill out the selected update field.";
+                return;
+            }
+
+            // 2. Add structural document to separate update_requests ledger for Admin actioning
+            await addDoc(collection(db, "update_requests"), {
+                accountId: userId,
+                currentUsername: recUser,
+                requestType: typeSelected, // "password", "name", or "username"
+                newValue: requestedValue,
+                status: "pending",
+                timestamp: new Date().toISOString()
+            });
+
+            msg.style.color = "#ffee00";
+            msg.innerText = "Update request submitted! Awaiting admin approval.";
+            document.getElementById('forgotForm').reset();
+            
+            // Re-trigger defaults layout resets
+            updateType.value = "password";
+            updateType.dispatchEvent(new Event('change'));
+
+            setTimeout(() => {
+                forgotSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+                msg.innerText = "";
+            }, 3000);
+
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Submission error: " + err.message;
         }
     });
 </script>
