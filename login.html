@@ -80,7 +80,7 @@
         .avatar-slot {
             width: 0px;
             height: 50px;
-            border-radius: 12px;
+            border-radius: 50%; /* Perfect circle profile presentation */
             background-size: cover;
             background-position: center;
             border: 1px solid transparent;
@@ -88,6 +88,7 @@
             transform: scale(0.8);
             transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
             flex-shrink: 0;
+            order: 2; /* Forces the element to position beautifully on the right of the input */
         }
         input, select {
             width: 100%;
@@ -100,6 +101,7 @@
             box-sizing: border-box;
             transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
             outline: none;
+            order: 1;
         }
         input:focus, select:focus {
             border-color: var(--primary);
@@ -162,8 +164,8 @@
             <div class="input-group">
                 <label>USERNAME</label>
                 <div class="field-container" id="loginFieldContainer">
-                    <div class="avatar-slot" id="loginAvatar"></div>
                     <input type="text" id="logUser" required autocomplete="username">
+                    <div class="avatar-slot" id="loginAvatar"></div>
                 </div>
             </div>
             <div class="input-group">
@@ -194,8 +196,8 @@
             <div class="input-group">
                 <label>USERNAME</label>
                 <div class="field-container" id="forgotFieldContainer">
-                    <div class="avatar-slot" id="forgotAvatar"></div>
                     <input type="text" id="recUser" required>
+                    <div class="avatar-slot" id="forgotAvatar"></div>
                 </div>
             </div>
 
@@ -308,7 +310,6 @@
         document.documentElement.style.setProperty('--primary', defaults.primary);
         document.documentElement.style.setProperty('--glass', defaults.glass);
 
-        // Retract both slots safely
         ['login', 'forgot'].forEach(prefix => {
             const container = document.getElementById(`${prefix}FieldContainer`);
             const slot = document.getElementById(`${prefix}Avatar`);
@@ -338,15 +339,15 @@
             if (!querySnap.empty) {
                 const userData = querySnap.docs[0].data();
                 
-                // Trigger profile layout slide calculation
-                const userAvatar = userData.profilePic || defaults.avatar;
+                // Read from database real avatar path string
+                const userAvatar = userData.avatarUrl || defaults.avatar;
                 slot.style.backgroundImage = `url('${userAvatar}')`;
                 container.classList.add('profile-active');
                 slot.style.width = "50px";
                 slot.style.opacity = "1";
                 slot.style.transform = "scale(1)";
 
-                // Apply customization maps
+                // Apply dynamic theme structures
                 if (userData.fontFamily) document.body.style.fontFamily = userData.fontFamily;
                 
                 if (userData.bgMode === "image") {
@@ -372,7 +373,6 @@
                 slot.style.borderColor = translatedHex;
                 document.documentElement.style.setProperty('--glass', `rgba(${hexToRgb(translatedHex)}, 0.15)`);
             } else {
-                // Not matched yet -> Keep fallback rules intact
                 container.classList.remove('profile-active');
                 slot.style.width = "0px";
                 slot.style.opacity = "0";
@@ -380,11 +380,10 @@
                 slot.style.borderColor = "transparent";
             }
         } catch (e) {
-            console.error("Layout dynamic state resolution fault:", e);
+            console.error("Layout state resolution error:", e);
         }
     }
 
-    // Debounce watcher to keep input processing completely lagless
     function assignRealtimeSync(inputId, prefix) {
         const el = document.getElementById(inputId);
         el.addEventListener('input', (e) => {
@@ -396,14 +395,13 @@
             }
             searchDebounceTimeout = setTimeout(() => {
                 evaluateUsernameInput(val, prefix);
-            }, 250); // Fluid 250ms lookup thread latency window
+            }, 250);
         });
     }
 
     assignRealtimeSync('logUser', 'login');
     assignRealtimeSync('recUser', 'forgot');
 
-    // Dynamic recovery selector state switcher Matrix
     updateType.addEventListener('change', (e) => {
         const value = e.target.value;
         document.querySelectorAll('.field-group').forEach(group => group.classList.add('hidden'));
@@ -462,14 +460,14 @@
             localStorage.setItem("userRole", userData.role);
             localStorage.setItem("userName", userData.name);
 
-            // Wipe credentials RIGHT BEFORE moving views
-            userEl.value = "";
-            passEl.value = "";
-
             if (userData.role === "admin") {
                 msg.style.color = "#ffee00";
                 msg.innerText = "Welcome back Admin. Loading panel...";
-                setTimeout(() => window.location.href = "admin.html", 1000);
+                setTimeout(() => {
+                    userEl.value = "";
+                    passEl.value = "";
+                    window.location.href = "admin.html";
+                }, 1000);
             } else {
                 if (userData.status === "pending") {
                     msg.style.color = "#ef4444";
@@ -479,7 +477,11 @@
                 } else {
                     msg.style.color = "#ffee00";
                     msg.innerText = "Login successful! Loading options...";
-                    setTimeout(() => window.location.href = "customization.html", 1000);
+                    setTimeout(() => {
+                        userEl.value = "";
+                        passEl.value = "";
+                        window.location.href = "customization.html";
+                    }, 1000);
                 }
             }
         } catch (err) {
@@ -554,15 +556,12 @@
 
             msg.style.color = "#ffee00";
             msg.innerText = "Request logged! Redirecting to login view...";
-            
-            // Wipe data elements clean instantly right before fallback animation takes over
-            document.getElementById('forgotForm').reset();
-            resetToDefaultTheme();
-            
-            updateType.value = "password";
-            updateType.dispatchEvent(new Event('change'));
 
             setTimeout(() => {
+                document.getElementById('forgotForm').reset();
+                resetToDefaultTheme();
+                updateType.value = "password";
+                updateType.dispatchEvent(new Event('change'));
                 forgotSection.classList.add('hidden');
                 loginSection.classList.remove('hidden');
                 msg.innerText = "";
