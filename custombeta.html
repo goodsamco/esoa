@@ -1,0 +1,675 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Customize Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #22c55e; /* Defaulting to modern vibrant green variant like your design layout preview */
+            --success: #ffee00;
+            --text-main: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 100px 10px 140px 10px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, background-image 0.3s ease;
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        /* Fixed Upper Left Floating Navigation Action Node */
+        .fixed-back-deck {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 5000;
+        }
+        .floating-action-circle {
+            width: 48px;
+            height: 48px;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 50%;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .floating-action-circle:hover {
+            background: var(--primary);
+            color: #000;
+            transform: scale(1.1) rotate(-5deg);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid var(--border-glass);
+            position: relative;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+        h2 {
+            font-size: 1rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 800;
+        }
+        .section-title {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin: 30px 0 12px 2px;
+            font-weight: 800;
+            padding-left: 2px;
+        }
+        input[type="text"] {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 14px;
+            color: white;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            margin-top: 5px;
+            outline: none;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .avatar-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .option-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1.5px solid rgba(255,255,255,0.03);
+            padding: 12px 8px;
+            border-radius: 16px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.72rem;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+        .option-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .option-card.selected {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.03);
+        }
+        .avatar-frame {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .option-card.selected .avatar-frame {
+            border-color: var(--primary);
+            transform: scale(1.03);
+        }
+        .theme-visual-preview {
+            width: 100%;
+            height: 65px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .slider-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+        }
+        .slider-control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .slider-wrapper-main {
+            flex-grow: 1;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .slider-label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .slider-preview {
+            width: 36px;
+            height: 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: background-color 0.2s;
+        }
+        .spectrum-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+        }
+        .spectrum-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #000;
+            cursor: pointer;
+        }
+        /* Broken line expansion dynamic node */
+        .broken-circle-trigger {
+            width: 42px;
+            height: 42px;
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            background: transparent;
+        }
+        .broken-circle-trigger:hover, .broken-circle-trigger.active {
+            border-color: var(--primary);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .expandable-input-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s ease;
+        }
+        .expandable-input-wrapper.open {
+            max-height: 90px;
+            margin-top: 15px;
+        }
+        /* Persistent Lower Horizon Floating Control Deck */
+        .bottom-action-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            z-index: 4000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to top, rgba(11, 15, 26, 0.95) 40%, rgba(11, 15, 26, 0));
+            pointer-events: none;
+        }
+        .btn-save {
+            width: 260px;
+            height: 54px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 35px;
+            font-weight: 800;
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-save:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.05);
+        }
+        .logout-zone {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+        .logout-zone a {
+            color: #64748b;
+            font-size: 0.82rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .logout-zone a:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="fixed-back-deck">
+        <div class="floating-action-circle" onclick="window.location.href='esoa.html'" title="Return to Core Engine">
+            <i data-lucide="arrow-left"></i>
+        </div>
+    </div>
+
+    <div class="container" id="configContainer">
+        <h2>ENVIRONMENT STUDIO</h2>
+
+        <div class="section-title">Display Name</div>
+        <input type="text" id="customName" placeholder="Enter custom display name...">
+
+        <div class="section-title">Profile Identity Node</div>
+        <div class="grid avatar-grid">
+            <div class="option-card" data-type="avatar" data-val="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg"><img class="avatar-frame" src="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg"><span>Profile 1</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg"><img class="avatar-frame" src="https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg"><span>Profile 2</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s"><img class="avatar-frame" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s"><span>Profile 3</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360"><img class="avatar-frame" src="https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360"><span>Profile 4</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp"><img class="avatar-frame" src="https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp"><span>Profile 5</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg"><img class="avatar-frame" src="https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg"><span>Profile 6</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg"><img class="avatar-frame" src="https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg"><span>Profile 7</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg"><img class="avatar-frame" src="https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg"><span>Profile 8</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg"><img class="avatar-frame" src="https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg"><span>Profile 9</span></div>
+            <div class="option-card" data-type="avatar" data-val="https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg"><img class="avatar-frame" src="https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg"><span>Profile 10</span></div>
+        </div>
+
+        <div class="slider-box" style="margin-top: 15px;">
+            <span class="slider-label">Or Link Personal Identity URL:</span>
+            <input type="text" id="avatarUrlInput" placeholder="https://example.com/your-photo.png" style="margin-top: 8px;">
+        </div>
+
+        <div class="section-title">Background Customizer</div>
+        <div class="grid">
+            <div class="option-card" data-type="bgType" data-val="bg-theme-1"><img class="theme-visual-preview" src="https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150"><span>Teal</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-2"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150"><span>Neon Lines</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-3"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150"><span>Fluid Mesh</span></div>
+            <div class="option-card" data-type="bgType" data-val="bg-theme-4"><img class="theme-visual-preview" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=150"><span>Ocean Minimal</span></div>
+        </div>
+
+        <div class="slider-box">
+            <div class="slider-control-row">
+                <div class="slider-wrapper-main">
+                    <div class="slider-header">
+                        <span class="slider-label">Solid Wallpaper Slider:</span>
+                        <div id="bgPreview" class="slider-preview" style="background-color: hsl(200, 70%, 15%);"></div>
+                    </div>
+                    <input type="range" id="bgHueSlider" class="spectrum-range" min="0" max="360" value="200">
+                </div>
+                <button type="button" class="broken-circle-trigger" id="toggleBgUrl" title="Toggle External Link Resource">
+                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+            <div class="expandable-input-wrapper" id="bgUrlWrapper">
+                <label class="slider-label">Paste Personal Custom Background URL:</label>
+                <input type="text" id="bgUrlInput" placeholder="https://example.com/your-wallpaper.jpg">
+            </div>
+        </div>
+
+        <div class="section-title">Accent Color Base</div>
+        <div class="slider-box">
+            <div class="slider-header">
+                <span class="slider-label">Solid Theme Accent Slider:</span>
+                <div id="btnPreview" class="slider-preview" style="background-color: hsl(195, 100%, 60%);"></div>
+            </div>
+            <input type="range" id="btnHueSlider" class="spectrum-range" min="0" max="360" value="195">
+        </div>
+
+        <div style="display: none;">
+            <div class="option-card" data-type="btnType" data-val="btn-theme-1"></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-2"></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-3"></div>
+            <div class="option-card" data-type="btnType" data-val="btn-theme-4"></div>
+            <input type="text" id="btnUrlInput">
+        </div>
+
+        <div class="section-title">Interface Typography Font</div>
+        <div class="grid">
+            <div class="option-card" data-type="font" data-val="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter System</div>
+            <div class="option-card" data-type="font" data-val="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins Geo</div>
+            <div class="option-card" data-type="font" data-val="'Roboto Mono', monospace" style="font-family: 'Roboto Mono', monospace;">Dev Code</div>
+            <div class="option-card" data-type="font" data-val="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Classic Serif</div>
+            <div class="option-card" data-type="font" data-val="'Plus Jakarta Sans', sans-serif" style="font-family: 'Plus Jakarta Sans', sans-serif;">Jakarta Neo</div>
+            <div class="option-card" data-type="font" data-val="'Space Grotesk', sans-serif" style="font-family: 'Space Grotesk', sans-serif;">Grotesk Tech</div>
+            <div class="option-card" data-type="font" data-val="'Outfit', sans-serif" style="font-family: 'Outfit', sans-serif;">Outfit Minimal</div>
+            <div class="option-card" data-type="font" data-val="'JetBrains Mono', monospace" style="font-family: 'JetBrains Mono', monospace;">JetBrains Monospace</div>
+        </div>
+
+        <div class="logout-zone">
+            <a href="#" onclick="localStorage.clear(); window.location.href='login.html'">Logout Session</a>
+        </div>
+    </div>
+
+    <div class="bottom-action-dock">
+        <button class="btn-save" id="btnSaveConfig">
+            <i data-lucide="save"></i>
+            <span>Save & Launch</span>
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+            authDomain: "svls-289ee.firebaseapp.com",
+            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+            projectId: "svls-289ee",
+            storageBucket: "svls-289ee.firebasestorage.app",
+            messagingSenderId: "500705386198",
+            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+            measurementId: "G-5TNBMQ2HN5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userId = localStorage.getItem("userId");
+        if (!userId) window.location.href = "login.html";
+
+        const premium3dAssets = {
+            'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
+            'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+            'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+            'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'
+        };
+
+        const configData = {
+            avatar: "",
+            bgMode: "color",
+            bgValue: "hsl(200, 70%, 15%)",
+            btnMode: "color",
+            btnValue: "hsl(195, 100%, 60%)",
+            font: "'Inter', sans-serif"
+        };
+
+        const bgHueSlider = document.getElementById('bgHueSlider');
+        const bgPreview = document.getElementById('bgPreview');
+        const bgUrlInput = document.getElementById('bgUrlInput');
+        const avatarUrlInput = document.getElementById('avatarUrlInput');
+
+        const btnHueSlider = document.getElementById('btnHueSlider');
+        const btnPreview = document.getElementById('btnPreview');
+        const btnUrlInput = document.getElementById('btnUrlInput');
+
+        // Toggle Expandable Background URL Node Logic
+        const toggleBgUrlBtn = document.getElementById('toggleBgUrl');
+        const bgUrlWrapper = document.getElementById('bgUrlWrapper');
+        
+        toggleBgUrlBtn.addEventListener('click', () => {
+            toggleBgUrlBtn.classList.toggle('active');
+            bgUrlWrapper.classList.toggle('open');
+        });
+
+        function hexToRgb(hex) {
+            let c;
+            if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+                c = hex.substring(1).split('');
+                if (c.length == 3) { c = [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+                c = '0x' + c.join('');
+                return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',');
+            }
+            return "34,197,94";
+        }
+
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+
+        function applyRealtimeThemePreview() {
+            document.body.style.fontFamily = configData.font;
+
+            if (configData.bgMode === "image") {
+                const realImg = premium3dAssets[configData.bgValue] || configData.bgValue;
+                document.body.style.backgroundImage = `url('${realImg}')`;
+            } else {
+                document.body.style.backgroundImage = "none";
+                document.body.style.backgroundColor = configData.bgValue;
+            }
+
+            let targetHexColor = "#22c55e";
+            if (configData.btnMode === "color") {
+                if (configData.btnValue.includes('hsl')) {
+                    const match = configData.btnValue.match(/\d+/g);
+                    if (match && match.length >= 3) {
+                        targetHexColor = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
+                    }
+                } else {
+                    targetHexColor = configData.btnValue;
+                }
+            }
+
+            document.documentElement.style.setProperty('--primary', targetHexColor);
+            const rgbVals = hexToRgb(targetHexColor);
+            document.documentElement.style.setProperty('--glass', `rgba(${rgbVals}, 0.15)`);
+        }
+
+        bgHueSlider.addEventListener('input', () => {
+            configData.bgMode = "color";
+            configData.bgValue = `hsl(${bgHueSlider.value}, 70%, 15%)`;
+            bgPreview.style.backgroundColor = configData.bgValue;
+            bgUrlInput.value = "";
+            document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
+            applyRealtimeThemePreview();
+        });
+
+        btnHueSlider.addEventListener('input', () => {
+            configData.btnMode = "color";
+            configData.btnValue = `hsl(${btnHueSlider.value}, 100%, 60%)`;
+            btnPreview.style.backgroundColor = configData.btnValue;
+            btnUrlInput.value = "";
+            applyRealtimeThemePreview();
+        });
+
+        bgUrlInput.addEventListener('input', () => {
+            if (bgUrlInput.value.trim() !== "") {
+                configData.bgMode = "image";
+                configData.bgValue = bgUrlInput.value.trim();
+                document.querySelectorAll('.option-card[data-type="bgType"]').forEach(c => c.classList.remove('selected'));
+                applyRealtimeThemePreview();
+            }
+        });
+
+        avatarUrlInput.addEventListener('input', () => {
+            if (avatarUrlInput.value.trim() !== "") {
+                configData.avatar = avatarUrlInput.value.trim();
+                document.querySelectorAll('.option-card[data-type="avatar"]').forEach(c => c.classList.remove('selected'));
+            }
+        });
+
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const type = card.getAttribute('data-type');
+                const val = card.getAttribute('data-val');
+                if (!type) return;
+
+                document.querySelectorAll(`.option-card[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+
+                if (type === "avatar") {
+                    configData.avatar = val;
+                    avatarUrlInput.value = "";
+                }
+                if (type === "font") {
+                    configData.font = val;
+                }
+                if (type === "bgType") {
+                    configData.bgMode = "image";
+                    configData.bgValue = val;
+                    bgUrlInput.value = "";
+                }
+                applyRealtimeThemePreview();
+            });
+        });
+
+        async function fetchSavedConfigurations() {
+            try {
+                const docRef = doc(db, "accounts", userId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.customName) document.getElementById('customName').value = data.customName;
+
+                    if (data.avatarUrl) {
+                        configData.avatar = data.avatarUrl;
+                        const card = document.querySelector(`.option-card[data-type="avatar"][data-val="${data.avatarUrl}"]`);
+                        if (card) {
+                            card.classList.add('selected');
+                        } else {
+                            avatarUrlInput.value = data.avatarUrl;
+                        }
+                    }
+
+                    if (data.fontFamily) {
+                        configData.font = data.fontFamily;
+                        const card = document.querySelector(`.option-card[data-type="font"][data-val="${data.fontFamily}"]`);
+                        if (card) card.classList.add('selected');
+                    }
+
+                    if (data.bgMode === "image") {
+                        configData.bgMode = "image";
+                        configData.bgValue = data.bgValue;
+                        const card = document.querySelector(`.option-card[data-type="bgType"][data-val="${data.bgValue}"]`);
+                        if (card) {
+                            card.classList.add('selected');
+                        } else {
+                            bgUrlInput.value = data.bgValue;
+                            toggleBgUrlBtn.classList.add('active');
+                            bgUrlWrapper.classList.add('open');
+                        }
+                    } else if (data.bgValue && data.bgValue.includes('hsl')) {
+                        configData.bgMode = "color";
+                        configData.bgValue = data.bgValue;
+                        bgPreview.style.backgroundColor = data.bgValue;
+                        const match = data.bgValue.match(/\d+/);
+                        if (match) bgHueSlider.value = match[0];
+                    }
+
+                    if (data.btnValue && data.btnValue.includes('hsl')) {
+                        configData.btnMode = "color";
+                        configData.btnValue = data.btnValue;
+                        btnPreview.style.backgroundColor = data.btnValue;
+                        const match = data.btnValue.match(/\d+/);
+                        if (match) btnHueSlider.value = match[0];
+                    }
+
+                    applyRealtimeThemePreview();
+                }
+            } catch (e) {
+                console.log("State recovery execution failure:", e);
+            }
+        }
+
+        document.getElementById('btnSaveConfig').addEventListener('click', async () => {
+            const customName = document.getElementById('customName').value.trim();
+
+            try {
+                const docRef = doc(db, "accounts", userId);
+                const payload = {
+                    customName: customName || localStorage.getItem("userName"),
+                    avatarUrl: configData.avatar,
+                    bgMode: configData.bgMode,
+                    bgValue: configData.bgValue,
+                    btnMode: configData.btnMode,
+                    btnValue: configData.btnValue,
+                    fontFamily: configData.font
+                };
+
+                await updateDoc(docRef, payload);
+
+                localStorage.setItem("userName", payload.customName);
+                localStorage.setItem("avatarUrl", payload.avatarUrl);
+                localStorage.setItem("bgMode", payload.bgMode);
+                localStorage.setItem("bgValue", payload.bgValue);
+                localStorage.setItem("btnMode", payload.btnMode);
+                localStorage.setItem("btnValue", payload.btnValue);
+                localStorage.setItem("fontFamily", payload.fontFamily);
+
+                alert("Preferences Saved Successfully!");
+                window.location.href = "esoa.html";
+
+            } catch (err) {
+                alert("Error saving preferences: " + err.message);
+            }
+        });
+
+        window.onload = () => {
+            fetchSavedConfigurations();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
