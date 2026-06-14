@@ -313,73 +313,102 @@ function bindBackgroundGcListener() {
 
 
 /* ==========================================================================
-   CHAT CORE STATE
+   6. CHAT STATE
    ========================================================================== */
 let isGroupChat = false;
 let selectedActiveChatPartnerId = null;
 let transientChatListenerRemoveHook = null;
 
 /* ==========================================================================
+   SAFETY HELPERS
+   ========================================================================== */
+function el(id) {
+    return document.getElementById(id);
+}
+
+/* ==========================================================================
    INIT GROUP CHAT
    ========================================================================== */
 function initGroupChatChannel() {
-    isGroupChat = true;
-    selectedActiveChatPartnerId = "BARANGAY_GC";
+    try {
+        isGroupChat = true;
+        selectedActiveChatPartnerId = "BARANGAY_GC";
 
-    document.getElementById('chatTargetName').innerText = `Group Chat`;
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
+        const dock = el("chatDock");
+        const scroller = el("chatScroller");
+        const title = el("chatTargetName");
 
-    cleanupTransientListeners();
+        if (!dock || !scroller || !title) return;
 
-    const chatRouteRef = ref(rtdb, `group_chat/messages`);
+        title.innerText = "Group Chat";
+        scroller.innerHTML = "";
+        dock.style.display = "flex";
 
-    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (snap) => {
-        if (!snap.exists()) return;
+        cleanupTransientListeners();
 
-        const msg = snap.val();
-        appendBubbleToScroller(
-            msg,
-            snap.key,
-            msg.sender === userId ? 'outgoing' : 'incoming'
-        );
-    });
+        const chatRef = ref(rtdb, "group_chat/messages");
+
+        transientChatListenerRemoveHook = onChildAdded(chatRef, (snap) => {
+            if (!snap.exists()) return;
+
+            const msg = snap.val();
+            appendBubbleToScroller(
+                msg,
+                snap.key,
+                msg.sender === userId ? "outgoing" : "incoming"
+            );
+        });
+
+    } catch (err) {
+        console.error("initGroupChatChannel error:", err);
+    }
 }
 
 /* ==========================================================================
    INIT PRIVATE CHAT
    ========================================================================== */
 function initTransientChatChannel(partnerId, partnerName) {
-    isGroupChat = false;
-    selectedActiveChatPartnerId = partnerId;
+    try {
+        isGroupChat = false;
+        selectedActiveChatPartnerId = partnerId;
 
-    document.getElementById('chatTargetName').innerText =
-        partnerName ? partnerName.split(' ')[0] : "Operator";
+        const dock = el("chatDock");
+        const scroller = el("chatScroller");
+        const title = el("chatTargetName");
 
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
+        if (!dock || !scroller || !title) return;
 
-    cleanupTransientListeners();
+        title.innerText = partnerName ? partnerName.split(" ")[0] : "Chat";
+        scroller.innerHTML = "";
+        dock.style.display = "flex";
 
-    const channelSessionKey =
-        userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+        cleanupTransientListeners();
 
-    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+        const sessionKey =
+            userId < partnerId
+                ? `${userId}_${partnerId}`
+                : `${partnerId}_${userId}`;
 
-    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (snap) => {
-        if (!snap.exists()) return;
+        const chatRef = ref(rtdb, `sessions/${sessionKey}`);
 
-        const msg = snap.val();
-        appendBubbleToScroller(
-            msg,
-            snap.key,
-            msg.sender === userId ? 'outgoing' : 'incoming'
-        );
-    });
+        transientChatListenerRemoveHook = onChildAdded(chatRef, (snap) => {
+            if (!snap.exists()) return;
+
+            const msg = snap.val();
+            appendBubbleToScroller(
+                msg,
+                snap.key,
+                msg.sender === userId ? "outgoing" : "incoming"
+            );
+        });
+
+    } catch (err) {
+        console.error("initTransientChatChannel error:", err);
+    }
 }
 
 /* ==========================================================================
-   CLEANUP
+   CLEANUP LISTENERS
    ========================================================================== */
 function cleanupTransientListeners() {
     if (transientChatListenerRemoveHook) {
@@ -389,68 +418,75 @@ function cleanupTransientListeners() {
 }
 
 /* ==========================================================================
-   SEND MESSAGE (TEXT ONLY, SAFE)
+   SEND MESSAGE
    ========================================================================== */
 window.sendChatPayload = function () {
-    const input = document.getElementById('chatMsgInput');
-    const text = input.value.trim();
+    try {
+        const input = el("chatMsgInput");
+        if (!input) return;
 
-    if (!text || !selectedActiveChatPartnerId) return;
+        const text = input.value.trim();
+        if (!text || !selectedActiveChatPartnerId) return;
 
-    const payload = {
-        sender: userId,
-        text,
-        timestamp: Date.now()
-    };
+        const baseMsg = {
+            sender: userId,
+            text,
+            timestamp: Date.now()
+        };
 
-    if (isGroupChat) {
-        payload.senderName = currentUserName;
-        payload.senderAvatar = currentUserAvatarRaw;
+        if (isGroupChat) {
+            baseMsg.senderName = currentUserName;
+            baseMsg.senderAvatar = currentUserAvatarRaw;
 
-        push(ref(rtdb, `group_chat/messages`), payload);
-    } else {
-        const channelSessionKey =
-            userId < selectedActiveChatPartnerId
-                ? `${userId}_${selectedActiveChatPartnerId}`
-                : `${selectedActiveChatPartnerId}_${userId}`;
+            push(ref(rtdb, "group_chat/messages"), baseMsg);
+        } else {
+            const sessionKey =
+                userId < selectedActiveChatPartnerId
+                    ? `${userId}_${selectedActiveChatPartnerId}`
+                    : `${selectedActiveChatPartnerId}_${userId}`;
 
-        push(ref(rtdb, `sessions/${channelSessionKey}`), payload);
+            push(ref(rtdb, `sessions/${sessionKey}`), baseMsg);
+        }
+
+        input.value = "";
+
+    } catch (err) {
+        console.error("sendChatPayload error:", err);
     }
-
-    input.value = '';
 };
 
 /* ==========================================================================
-   MESSAGE RENDERER (TEXT + IMAGE SUPPORT)
+   MESSAGE RENDERER (TEXT + IMAGE SAFE)
    ========================================================================== */
 function appendBubbleToScroller(msg, msgId, direction) {
-    const view = document.getElementById('chatScroller');
+    const view = el("chatScroller");
+    if (!view) return;
 
-    const wrapper = document.createElement('div');
+    const wrapper = document.createElement("div");
     wrapper.className = `msg-wrapper ${direction}`;
     wrapper.id = `msg-${msgId}`;
 
-    /* ================= META (GROUP CHAT ONLY) ================= */
+    /* META (group only) */
     if (isGroupChat) {
-        const meta = document.createElement('div');
-        meta.className = 'msg-meta-row';
+        const meta = document.createElement("div");
+        meta.className = "msg-meta-row";
 
-        const avatar = document.createElement('img');
-        avatar.className = 'msg-gc-avatar';
-        avatar.src = msg.senderAvatar || '';
+        const avatar = document.createElement("img");
+        avatar.className = "msg-gc-avatar";
+        avatar.src = msg.senderAvatar || "";
 
-        const name = document.createElement('div');
-        name.className = 'msg-author-tag';
-        name.innerText = msg.senderName || 'User';
+        const name = document.createElement("div");
+        name.className = "msg-author-tag";
+        name.innerText = msg.senderName || "User";
 
-        const time = document.createElement('div');
-        time.className = 'msg-time-tag';
+        const time = document.createElement("div");
+        time.className = "msg-time-tag";
         time.innerText = msg.timestamp
             ? new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit'
+                  hour: "2-digit",
+                  minute: "2-digit"
               })
-            : '';
+            : "";
 
         meta.appendChild(avatar);
         meta.appendChild(name);
@@ -458,25 +494,26 @@ function appendBubbleToScroller(msg, msgId, direction) {
         wrapper.appendChild(meta);
     }
 
-    /* ================= MESSAGE BUBBLE ================= */
-    const bubble = document.createElement('div');
+    /* BUBBLE */
+    const bubble = document.createElement("div");
     bubble.className = `msg-bubble ${direction}`;
 
-    /* ===== IMAGE SUPPORT ===== */
+    const text = msg.text || "";
+
     const isImage =
-        typeof msg.text === 'string' &&
-        (msg.text.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
-         msg.text.startsWith('http') && msg.text.includes('image'));
+        typeof text === "string" &&
+        (text.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+         text.startsWith("http") && text.includes("image"));
 
     if (isImage) {
-        const img = document.createElement('img');
-        img.src = msg.text;
-        img.style.maxWidth = '180px';
-        img.style.maxHeight = '180px';
-        img.style.borderRadius = '12px';
+        const img = document.createElement("img");
+        img.src = text;
+        img.style.maxWidth = "180px";
+        img.style.maxHeight = "180px";
+        img.style.borderRadius = "12px";
         bubble.appendChild(img);
     } else {
-        bubble.innerText = msg.text;
+        bubble.innerText = text;
     }
 
     bubble.onclick = (e) => {
@@ -486,9 +523,9 @@ function appendBubbleToScroller(msg, msgId, direction) {
 
     wrapper.appendChild(bubble);
 
-    /* ================= REACTIONS ================= */
-    const rx = document.createElement('div');
-    rx.className = 'msg-reaction-container';
+    /* REACTIONS CONTAINER */
+    const rx = document.createElement("div");
+    rx.className = "msg-reaction-container";
     rx.id = `rx-${msgId}`;
     wrapper.appendChild(rx);
 
@@ -502,16 +539,14 @@ function appendBubbleToScroller(msg, msgId, direction) {
    REACTION PICKER
    ========================================================================== */
 function toggleReactionPicker(msgId, wrapper) {
-    document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
+    document.querySelectorAll(".reaction-picker-tray").forEach(e => e.remove());
 
-    const tray = document.createElement('div');
-    tray.className = 'reaction-picker-tray';
+    const tray = document.createElement("div");
+    tray.className = "reaction-picker-tray";
 
-    const emojis = ['😂', '😢', '😡', '👍'];
-
-    emojis.forEach((emo) => {
-        const opt = document.createElement('div');
-        opt.className = 'reaction-option';
+    ["😂", "😢", "😡", "👍"].forEach((emo) => {
+        const opt = document.createElement("div");
+        opt.className = "reaction-option";
         opt.innerText = emo;
 
         opt.onclick = (e) => {
@@ -527,64 +562,71 @@ function toggleReactionPicker(msgId, wrapper) {
 }
 
 /* ==========================================================================
-   SAFE REACTION WRITE (FIXED - NO onValue BUG)
+   SAFE REACTION WRITE (FIXED FIREBASE v9 STYLE)
    ========================================================================== */
 async function submitReaction(msgId, emoji) {
-    const base =
-        isGroupChat
+    try {
+        const basePath = isGroupChat
             ? `group_chat/messages/${msgId}/reactions/${userId}`
-            : `sessions/${userId < selectedActiveChatPartnerId
-                ? `${userId}_${selectedActiveChatPartnerId}`
-                : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
+            : `sessions/${
+                userId < selectedActiveChatPartnerId
+                    ? `${userId}_${selectedActiveChatPartnerId}`
+                    : `${selectedActiveChatPartnerId}_${userId}`
+            }/${msgId}/reactions/${userId}`;
 
-    const rxRef = ref(rtdb, base);
+        const rxRef = ref(rtdb, basePath);
 
-    const snap = await get(rxRef);
+        const snap = await get(rxRef);
 
-    if (snap.exists() && snap.val() === emoji) {
-        await remove(rxRef);
-    } else {
-        await set(rxRef, emoji);
+        if (snap.exists() && snap.val() === emoji) {
+            await remove(rxRef);
+        } else {
+            await set(rxRef, emoji);
+        }
+
+    } catch (err) {
+        console.error("submitReaction error:", err);
     }
 }
 
 /* ==========================================================================
-   SYNC REACTIONS DISPLAY
+   SYNC REACTIONS
    ========================================================================== */
 function syncReactionsDisplay(msgId) {
     const path = isGroupChat
         ? `group_chat/messages/${msgId}/reactions`
-        : `sessions/${userId < selectedActiveChatPartnerId
-            ? `${userId}_${selectedActiveChatPartnerId}`
-            : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
+        : `sessions/${
+            userId < selectedActiveChatPartnerId
+                ? `${userId}_${selectedActiveChatPartnerId}`
+                : `${selectedActiveChatPartnerId}_${userId}`
+        }/${msgId}/reactions`;
 
     onValue(ref(rtdb, path), (snap) => {
-        const container = document.getElementById(`rx-${msgId}`);
+        const container = el(`rx-${msgId}`);
         if (!container) return;
 
-        container.innerHTML = '';
+        container.innerHTML = "";
 
         if (!snap.exists()) {
-            container.style.display = 'none';
+            container.style.display = "none";
             return;
         }
 
         const data = snap.val();
         const summary = {};
 
-        Object.entries(data).forEach(([uid, emo]) => {
-            if (!summary[emo]) summary[emo] = 0;
-            summary[emo]++;
+        Object.values(data).forEach((emo) => {
+            summary[emo] = (summary[emo] || 0) + 1;
         });
 
-        Object.keys(summary).forEach((emo) => {
-            const pill = document.createElement('div');
-            pill.className = 'reaction-pill';
-            pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo]}</span>`;
+        Object.entries(summary).forEach(([emo, count]) => {
+            const pill = document.createElement("div");
+            pill.className = "reaction-pill";
+            pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${count}</span>`;
             container.appendChild(pill);
         });
 
-        container.style.display = 'flex';
+        container.style.display = "flex";
     });
 }
 
@@ -592,11 +634,19 @@ function syncReactionsDisplay(msgId) {
    CLOSE CHAT
    ========================================================================== */
 window.closeChatSession = function () {
-    document.getElementById('chatDock').style.display = 'none';
+    const dock = el("chatDock");
+    if (dock) dock.style.display = "none";
+
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
 
+/* ==========================================================================
+   GLOBAL EXPORTS (IMPORTANT FOR HTML onclick)
+   ========================================================================== */
+window.initGroupChatChannel = initGroupChatChannel;
+window.initTransientChatChannel = initTransientChatChannel;
+window.sendChatPayload = sendChatPayload;
 
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
