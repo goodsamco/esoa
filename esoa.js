@@ -75,7 +75,7 @@ function hexToRgb(hex) {
 /* ==========================================================================
    3. FIRESTORE CUSTOM PROFILE REAL-TIME TRACKING
    ========================================================================== */
-const userDocRef = doc(db, "accounts", userId);
+/* const userDocRef = doc(db, "accounts", userId);
         
 onSnapshot(userDocRef, (snapshot) => {
     if (snapshot.exists()) {
@@ -131,6 +131,105 @@ onSnapshot(userDocRef, (snapshot) => {
         }
     } else {
         window.location.href = "login.html";
+    }
+});
+*/
+
+/* ==========================================================================
+   3. FIRESTORE CUSTOM PROFILE REAL-TIME TRACKING & INACTIVITY WATCHER
+   ========================================================================== */
+const userDocRef = doc(db, "accounts", userId);
+let inactivityTimeout = null;
+const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 Hours in milliseconds
+
+// Pure function to systematically strip credentials and session states
+function forceLogoutUser() {
+    console.log("Session expired due to inactivity.");
+    // Clear presence state before leaving
+    set(ref(rtdb, 'presence/' + userId), null);
+    
+    // Wipe local application storage contexts
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Push layout state away
+    window.location.href = "login.html";
+}
+
+// Resets the countdown timer whenever user engagement is intercepted
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(forceLogoutUser, INACTIVITY_LIMIT);
+}
+
+// Bind native input listener streams to supervise interaction activity
+function startInactivityWatcher() {
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    activityEvents.forEach(eventType => {
+        window.addEventListener(eventType, resetInactivityTimer, { passive: true });
+    });
+    
+    // Initialize the baseline interval timer on runtime execution
+    resetInactivityTimer();
+}
+
+onSnapshot(userDocRef, (snapshot) => {
+    if (snapshot.exists()) {
+        const data = snapshot.data();
+
+        if (data.esoaDisabled === true) {
+            alert("Your access to eSOA has been suspended by management.");
+            forceLogoutUser();
+            return;
+        }
+
+        currentUserName = data.customName || "Operator";
+        currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+        
+        document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+
+        const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
+        document.getElementById('userDisplayAvatar').src = matchedAvatar;
+
+        if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
+
+        if (data.bgMode === "image") {
+            const bgImg = premium3dAssets[data.bgValue] || data.bgValue;
+            document.body.style.backgroundImage = `url('${bgImg}')`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundAttachment = "fixed";
+        } else if (data.bgValue) {
+            document.body.style.backgroundImage = "none";
+            document.body.style.backgroundColor = data.bgValue;
+        }
+
+        const magnetBtn = document.getElementById('magnetBtn');
+        if (data.btnMode === "image") {
+            const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
+            magnetBtn.style.backgroundImage = `url('${btnImg}')`;
+            magnetBtn.style.backgroundColor = "transparent";
+        } else if (data.btnValue) {
+            magnetBtn.style.backgroundImage = "none";
+            document.documentElement.style.setProperty('--primary', data.btnValue);
+            const parsedRgb = hexToRgb(data.btnValue);
+            document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
+        }
+
+        if (!document.hidden) {
+            set(ref(rtdb, 'presence/' + userId), {
+                uid: userId,
+                name: currentUserName,
+                avatar: currentUserAvatarRaw,
+                timestamp: Date.now()
+            });
+            updateDoc(userDocRef, { isOnline: true });
+        }
+        
+        // Start monitoring interaction profiles once valid session snapshots are bound
+        startInactivityWatcher();
+    } else {
+        forceLogoutUser();
     }
 });
 
