@@ -233,6 +233,86 @@ onValue(presenceRef, (snapshot) => {
 
 
 /* ==========================================================================
+   5. BACKGROUND CHAT NOTIFICATION HOOKS
+   ========================================================================== */
+function bindBackgroundNotifListener(partnerId) {
+    if (mappedRouteTrackingHooks[partnerId]) return;
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+
+    let initialSyncComplete = false;
+    onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                                    
+    
+    const hook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
+                const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                if (peerContainer) peerContainer.classList.add('has-unread');
+            }
+        }
+    });
+    mappedRouteTrackingHooks[partnerId] = hook;
+
+    onValue(chatRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                            if (peerContainer) peerContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+function bindBackgroundGcListener() {
+    if (backgroundGcTrackingHook) return;
+    const gcRouteRef = ref(rtdb, `group_chat/messages`);
+
+    let initialSyncComplete = false;
+    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                const gcContainer = document.getElementById('gc-hub-node');
+                if (gcContainer) gcContainer.classList.add('has-unread');
+            }
+        }
+    });
+
+    onValue(gcRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const gcContainer = document.getElementById('gc-hub-node');
+                            if (gcContainer) gcContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
+        }
+    });
+    }
+
+
+/* ==========================================================================
    CHAT CORE STATE
    ========================================================================== */
 let isGroupChat = false;
@@ -516,6 +596,7 @@ window.closeChatSession = function () {
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
+
 
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
