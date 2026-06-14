@@ -826,15 +826,19 @@ h2 {
     letter-spacing: 2px;
     position: relative;
     overflow: hidden;
+
     background-color: var(--primary);
     color: #000;
+
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
+
     background-image: url('https://sklepagatesting.github.io/resources/Images/mclaren.png');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    filter: drop-shadow(0 0 12px rgba(255, 115, 0, 0.65));
+
+    filter: drop-shadow(0 0 12px rgba(var(--btn-glow), 0.65));
 }
 
 .bottom-zone:hover .btn-main-copy:not(.success-state) {
