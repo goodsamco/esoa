@@ -815,10 +815,6 @@ h2 {
     align-items: center;
 
     z-index: 4000;
-
-    /* Match Sections 3 & 8 */
-    background: rgba(20, 7, 0, 0.55);
-
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 
@@ -838,26 +834,51 @@ h2 {
 }
 
 .modal-content {
-    background: var(--modal-bg);
-    width: 90%;
-    max-width: 380px;
-    padding: 40px 30px;
-    border-radius: 32px;
-    border: 1px solid var(--glass);
     position: relative;
+
+    width: 90%;
+    max-width: 400px;
+
+    padding: 30px 24px;
+
     text-align: center;
-    opacity: 0;
-    transform: scale(0.6) translateY(40px);
-    filter: blur(15px);
-    transition: all 0.35s cubic-bezier(0.15, 1, 0.3, 1.1);
+
+    /* Match Sections 3 & 8 */
+    background: rgba(20, 7, 0, 0.45);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255, 115, 0, 0.1);
+
+    border-radius: 24px;
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+
+    box-sizing: border-box;
+
     max-height: 80vh;
     overflow-y: auto;
+
+    /* Animation */
+    opacity: 0;
+
+    transform: scale(0.85) translateY(24px);
+
+    filter: blur(10px);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s cubic-bezier(0.15, 1, 0.3, 1.1),
+        filter 0.35s ease;
 }
 
 .modal-overlay.active .modal-content {
     opacity: 1;
+
     transform: scale(1) translateY(0);
-    filter: blur(0px);
+
+    filter: blur(0);
 }
 
 .list-item {
