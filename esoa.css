@@ -57,37 +57,51 @@ body.copy-flash {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
+
     width: calc(100% - 40px);
     max-width: 600px;
     height: 130px;
+
     display: flex;
     align-items: center;
+
     z-index: 3100;
+
     overflow: hidden;
+
     background: rgba(20, 7, 0, 0.4);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+
     border: 1px solid var(--glass);
     border-radius: 24px;
-    padding: 0 45px;
+
+    /* Dedicated arrow lanes */
+    padding-left: 55px;
+    padding-right: 55px;
+
     box-sizing: border-box;
 }
 
 /* Viewport slider view tracking */
 .peer-active-hub {
     display: flex;
-    gap: -14px;
     align-items: center;
     justify-content: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
+
     width: 100%;
     height: 100%;
-    padding: 0 10px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    white-space: nowrap;
     scroll-behavior: smooth;
+
     scrollbar-width: none;
     -ms-overflow-style: none;
+
+    padding: 0;
 }
 
 .peer-active-hub::-webkit-scrollbar {
@@ -95,49 +109,53 @@ body.copy-flash {
 }
 
 /* ==========================================================================
-   3.1 FLOATING ICON-ONLY NAVIGATION BUTTONS
+   3.1 NAVIGATION BUTTONS
    ========================================================================== */
 
 .scroll-nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+
     width: 32px;
     height: 32px;
-    border: none;
-    background: transparent;
-    color: var(--primary);
+
     display: flex;
     align-items: center;
     justify-content: center;
+
+    border: none;
+    background: transparent;
+
+    color: rgba(255,255,255,0.8);
     cursor: pointer;
-    z-index: 3120;
+
+    z-index: 3200;
 
     opacity: 0;
     pointer-events: none;
 
     text-shadow:
-        0 0 8px rgba(0, 0, 0, 0.8),
-        0 0 16px rgba(0, 0, 0, 0.6);
+        0 0 8px rgba(0,0,0,0.8),
+        0 0 16px rgba(0,0,0,0.6);
 
     transition:
-        opacity 0.3s ease,
-        color 0.2s ease,
-        transform 0.2s ease;
+        opacity 0.25s ease,
+        transform 0.2s ease,
+        color 0.2s ease;
 }
 
-.scroll-nav-btn.prev {
-    left: 8px;
-}
-
-.scroll-nav-btn.next {
-    right: 8px;
-}
-
-/* Reveal buttons only when hovering container */
 .peer-wrapper-row:hover .scroll-nav-btn {
     opacity: 1;
     pointer-events: auto;
+}
+
+.scroll-nav-btn.prev {
+    left: 12px;
+}
+
+.scroll-nav-btn.next {
+    right: 12px;
 }
 
 .scroll-nav-btn:hover {
@@ -145,17 +163,17 @@ body.copy-flash {
 }
 
 .scroll-nav-btn.prev:hover {
-    transform: translateY(-50%) translateX(-2px) scale(1.1);
+    transform: translateY(-50%) translateX(-3px) scale(1.1);
 }
 
 .scroll-nav-btn.next:hover {
-    transform: translateY(-50%) translateX(2px) scale(1.1);
+    transform: translateY(-50%) translateX(3px) scale(1.1);
 }
 
 .scroll-nav-btn svg {
-    width: 22px;
-    height: 22px;
-    stroke-width: 2.5;
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.75;
 }
 
 /* ==========================================================================
@@ -164,13 +182,17 @@ body.copy-flash {
 
 .peer-wrapper {
     position: relative;
+
     display: inline-flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+
     flex-shrink: 0;
+
     width: 78px;
     height: 115px;
+
     transition:
         transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
         filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
@@ -187,8 +209,10 @@ body.copy-flash {
 .group-chat-bubble {
     width: 70px;
     height: 70px;
+
     border-radius: 50%;
     object-fit: cover;
+
     box-sizing: border-box;
     flex-shrink: 0;
 }
@@ -196,7 +220,9 @@ body.copy-flash {
 .peer-avatar-bubble {
     background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
     border: 2px solid #666;
+
     cursor: pointer;
+
     transition: all 0.2s ease;
 }
 
@@ -209,12 +235,17 @@ body.copy-flash {
 .group-chat-bubble {
     background: var(--primary);
     color: #000;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     cursor: pointer;
+
     border: 2px solid var(--primary);
+
     transition: all 0.2s ease;
+
     box-shadow: 0 0 8px rgba(255, 115, 0, 0.35);
 }
 
@@ -230,13 +261,18 @@ body.copy-flash {
     position: absolute;
     top: 4px;
     right: 8px;
+
     width: 12px;
     height: 12px;
+
     background-color: var(--primary);
     border: 2px solid var(--surface);
     border-radius: 50%;
+
     display: none;
+
     z-index: 3010;
+
     box-shadow: 0 0 8px var(--primary);
 }
 
@@ -247,18 +283,22 @@ body.copy-flash {
 /* User name */
 .peer-name-hover {
     margin-top: 6px;
+
     font-size: 0.65rem;
     font-weight: 700;
+
     color: white;
+
     text-align: center;
     width: 100%;
+
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
     opacity: 1;
     pointer-events: auto;
 }
-
 /* ==========================================================================
    4. NAVIGATION CONTROL BARS
    ========================================================================== */
