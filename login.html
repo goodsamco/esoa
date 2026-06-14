@@ -732,7 +732,10 @@
 
             <div class="input-group">
                 <label>USERNAME</label>
-                <input type="text" id="recUser" required>
+                    <div style="display: flex; align-items: center; gap: 10px; position: relative; width: 100%;">
+                    <div id="userProfilePic" style="width: 0px; height: 50px; border-radius: 12px; background-size: cover; background-position: center; border: 1px solid var(--border-glass); opacity: 0; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.4s ease; transform: scale(0.8); flex-shrink: 0; overflow: hidden;"></div>
+                    <input type="text" id="logUser" required autocomplete="username" style="flex-grow: 1; transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;">
+                </div>
             </div>
 
             <div class="input-group hidden" id="groupVerifyPass">
@@ -785,13 +788,14 @@
     const loginSection = document.getElementById('loginSection');
     const forgotSection = document.getElementById('forgotSection');
     const updateType = document.getElementById('updateType');
+    const profilePic = document.getElementById('userProfilePic');
 
-    // Default configuration backup fallback
     const defaults = {
         bg: '#0b0f1a',
         primary: '#38bdf8',
         font: "'Inter', sans-serif",
-        glass: 'rgba(56, 189, 248, 0.15)'
+        glass: 'rgba(56, 189, 248, 0.15)',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80' // High-end default avatar fallback
     };
 
     const premium3dAssets = {
@@ -811,7 +815,7 @@
         loginSection.classList.remove('hidden');
     });
 
-    // Helper utilities for look translation
+    // Helper utilities for design translation
     function hexToRgb(hex) {
         let c;
         if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
@@ -834,7 +838,7 @@
         return `#${f(0)}${f(8)}${f(4)}`;
     }
 
-    // Smoothly restore initial base styling configurations
+    // Smoothly restore initial styling setups & hide avatar slot cleanly
     function resetToDefaultTheme() {
         if (document.body.style.backgroundImage !== "none" || document.body.style.backgroundColor !== defaults.bg) {
             document.body.style.backgroundImage = "none";
@@ -843,9 +847,13 @@
             document.documentElement.style.setProperty('--primary', defaults.primary);
             document.documentElement.style.setProperty('--glass', defaults.glass);
         }
+        // Collapses the profile asset area flawlessly
+        profilePic.style.width = "0px";
+        profilePic.style.opacity = "0";
+        profilePic.style.transform = "scale(0.8)";
     }
 
-    // High performance dynamic theme parsing and fallback evaluation engine
+    // Dynamic engine pulling and transforming user environments
     async function loadUserThemeDynamic(inputUsername) {
         const usernameClean = inputUsername.trim().toLowerCase();
         if (!usernameClean) {
@@ -860,12 +868,19 @@
             if (!querySnap.empty) {
                 const userData = querySnap.docs[0].data();
                 
-                // 1. Map Typography Node
+                // Pop Profile Pic Element into layout dynamically matching field height
+                const targetPic = userData.profilePic || defaults.avatar;
+                profilePic.style.backgroundImage = `url('${targetPic}')`;
+                profilePic.style.width = "50px"; 
+                profilePic.style.opacity = "1";
+                profilePic.style.transform = "scale(1)";
+
+                // Map Typography
                 if (userData.fontFamily) {
                     document.body.style.fontFamily = userData.fontFamily;
                 }
 
-                // 2. Map Canvas Wallpaper Node
+                // Map Canvas Wallpaper
                 if (userData.bgMode === "image") {
                     const mappedImg = premium3dAssets[userData.bgValue] || userData.bgValue;
                     document.body.style.backgroundImage = `url('${mappedImg}')`;
@@ -874,7 +889,7 @@
                     document.body.style.backgroundColor = userData.bgValue;
                 }
 
-                // 3. Map Color Identity Vector
+                // Map Primary Color
                 let translatedHex = defaults.primary;
                 if (userData.btnMode === "color" && userData.btnValue) {
                     if (userData.btnValue.includes('hsl')) {
@@ -891,31 +906,25 @@
                 const rgbValues = hexToRgb(translatedHex);
                 document.documentElement.style.setProperty('--glass', `rgba(${rgbValues}, 0.15)`);
             } else {
-                // If it doesn't match any database entries, reset gracefully
                 resetToDefaultTheme();
             }
         } catch (e) {
-            console.log("Style population failure tracking:", e);
+            console.log("Style population error tracking:", e);
             resetToDefaultTheme();
         }
     }
 
-    // Real-time listener configuration to handle instant user data modification
-    const syncFields = ['logUser', 'recUser'];
-    syncFields.forEach(fieldId => {
-        const element = document.getElementById(fieldId);
-        if (element) {
-            element.addEventListener('blur', (e) => loadUserThemeDynamic(e.target.value));
-            element.addEventListener('input', (e) => {
-                // Instantly clean styling variables if user completely empties the input field
-                if (!e.target.value.trim()) {
-                    resetToDefaultTheme();
-                }
-            });
-        }
+    // Bind reactive layout adjustments to user typing states
+    document.getElementById('logUser').addEventListener('blur', (e) => loadUserThemeDynamic(e.target.value));
+    document.getElementById('logUser').addEventListener('input', (e) => {
+        if (!e.target.value.trim()) resetToDefaultTheme();
+    });
+    document.getElementById('recUser').addEventListener('blur', (e) => loadUserThemeDynamic(e.target.value));
+    document.getElementById('recUser').addEventListener('input', (e) => {
+        if (!e.target.value.trim()) resetToDefaultTheme();
     });
 
-    // Form Layout Switching Matrix logic
+    // Form Layout Switching matrix logic
     updateType.addEventListener('change', (e) => {
         const value = e.target.value;
         
@@ -952,11 +961,13 @@
         }
     });
 
-    // Standard Submit login execution block
+    // Standard Login Form Processing Vector
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = document.getElementById('logUser').value.trim().toLowerCase();
-        const password = document.getElementById('logPass').value;
+        const usernameField = document.getElementById('logUser');
+        const passwordField = document.getElementById('logPass');
+        const username = usernameField.value.trim().toLowerCase();
+        const password = passwordField.value;
         const msg = document.getElementById('logMsg');
 
         try {
@@ -976,6 +987,11 @@
             localStorage.setItem("userRole", userData.role);
             localStorage.setItem("userName", userData.name);
 
+            // SUCCESS STATE: Clear out authorization credentials explicitly
+            usernameField.value = "";
+            passwordField.value = "";
+            resetToDefaultTheme();
+
             if (userData.role === "admin") {
                 msg.style.color = "#ffee00";
                 msg.innerText = "Welcome back Admin. Loading panel...";
@@ -988,7 +1004,7 @@
                 } else {
                     msg.style.color = "#ffee00";
                     msg.innerText = "Login successful! Loading options...";
-                    setTimeout(() => window.location.href = "esoa.html", 1000);
+                    setTimeout(() => window.location.href = "customization.html", 1000);
                 }
             }
         } catch (err) {
@@ -1000,7 +1016,8 @@
     // Handle account structural edits processing
     document.getElementById('forgotForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const recUser = document.getElementById('recUser').value.trim().toLowerCase();
+        const recUserField = document.getElementById('recUser');
+        const recUser = recUserField.value.trim().toLowerCase();
         const typeSelected = updateType.value;
         const msg = document.getElementById('forgotMsg');
 
@@ -1064,7 +1081,10 @@
 
             msg.style.color = "#ffee00";
             msg.innerText = "Request logged! Redirecting to login view...";
+            
+            // SUCCESS STATE: Complete Form Reset and Fallback
             document.getElementById('forgotForm').reset();
+            resetToDefaultTheme();
             
             updateType.value = "password";
             updateType.dispatchEvent(new Event('change'));
