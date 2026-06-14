@@ -48,8 +48,7 @@ body.copy-flash {
 
 
 /* ==========================================================================
-   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX)
-   MATCHES MAIN CONTAINER WIDTH
+   3. PEER PRESENCE DISPLAY & HUB (MATCH MAIN CONTAINER)
    ========================================================================== */
 
 .peer-wrapper-row {
@@ -58,9 +57,9 @@ body.copy-flash {
     left: 50%;
     transform: translateX(-50%);
 
-    /* EXACT SAME WIDTH LOGIC AS .container */
-    width: 100%;
-    max-width: 400px;
+    /* Match main container width */
+    width: calc(100% - 40px);
+    max-width: 442px;
 
     height: 130px;
 
@@ -80,7 +79,7 @@ body.copy-flash {
 
     z-index: 3100;
 
-    /* allow nav buttons outside */
+    /* allows nav to sit outside */
     overflow: visible;
 }
 
