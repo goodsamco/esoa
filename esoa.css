@@ -897,6 +897,7 @@ h2 {
 /* ==========================================================================
    10. SYSTEM MODAL BOX OVERLAYS
    ========================================================================== */
+/*
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -953,8 +954,72 @@ filter: none;
     transform: scale(1) translateY(0);
 
     filter: blur(0);
+} */
+/* ==========================================================================
+   10. SYSTEM MODAL BOX OVERLAYS (OPTIMIZED PERFORMANCE)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 4000;
+    
+    /* 1. Use a fixed blur instead of animating it */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0);
+
+    /* 2. Animate opacity and background color only */
+    opacity: 0;
+    transition: 
+        opacity 0.22s ease, 
+        background-color 0.22s ease;
 }
 
+/* Use a separate utility class or handle display state in tandem with JS */
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 400px;
+    padding: 30px 24px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.04);
+    
+    /* Removed individual backdrop-filter to prevent double processing stacking contexts */
+    
+    border: 1px solid rgba(255, 115, 0, 0.15);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+    max-height: 80vh;
+    overflow-y: auto;
+    
+    /* 3. Keep performance properties entirely isolated */
+    opacity: 0;
+    transform: scale(0.92) translateY(15px);
+    will-change: transform, opacity; /* Hints GPU to separate this layer */
+    
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active .modal-content {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+/* ends here */
 .list-item {
     padding: 16px;
     margin: 8px 0;
