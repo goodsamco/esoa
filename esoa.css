@@ -48,8 +48,9 @@ body.copy-flash {
 
 
 /* ==========================================================================
-   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX) - HOVER REVEAL & MASKED VIA CSS
+   3. PEER PRESENCE DISPLAY & HUB (TOP MATRIX)
    ========================================================================== */
+
 /* Main layout frame around peer elements */
 .peer-wrapper-row {
     position: fixed;
@@ -58,7 +59,7 @@ body.copy-flash {
     transform: translateX(-50%);
     width: calc(100% - 40px);
     max-width: 600px;
-    height: 130px; 
+    height: 130px;
     display: flex;
     align-items: center;
     z-index: 3100;
@@ -68,16 +69,16 @@ body.copy-flash {
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass);
     border-radius: 24px;
-    padding: 0 45px; 
+    padding: 0 45px;
     box-sizing: border-box;
 }
 
 /* Viewport slider view tracking */
 .peer-active-hub {
     display: flex;
-    gap: -14px; 
+    gap: -14px;
     align-items: center;
-    justify-content: flex-start; 
+    justify-content: flex-start;
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
@@ -93,53 +94,74 @@ body.copy-flash {
     display: none;
 }
 
-/* Absolute Anchored Navigation Controls - Hidden by Default */
+/* ==========================================================================
+   3.1 FLOATING ICON-ONLY NAVIGATION BUTTONS
+   ========================================================================== */
+
 .scroll-nav-btn {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
     border: none;
+    background: transparent;
     color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 3120;
-    opacity: 0; /* Fully hidden by default */
-    pointer-events: none; /* Prevents capturing clicks while invisible */
-    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, transform 0.2s ease;
+
+    opacity: 0;
+    pointer-events: none;
+
+    text-shadow:
+        0 0 8px rgba(0, 0, 0, 0.8),
+        0 0 16px rgba(0, 0, 0, 0.6);
+
+    transition:
+        opacity 0.3s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
-/* Left side navigation layout using a smooth, completely transparent mask */
 .scroll-nav-btn.prev {
-    left: 0;
-    background: linear-gradient(to right, rgba(20, 7, 0, 0.6) 0%, rgba(20, 7, 0, 0) 100%);
+    left: 8px;
 }
 
-/* Right side navigation layout using a smooth, completely transparent mask */
 .scroll-nav-btn.next {
-    right: 0;
-    background: linear-gradient(to left, rgba(20, 7, 0, 0.6) 0%, rgba(20, 7, 0, 0) 100%);
+    right: 8px;
 }
 
-/* REVEAL TRIGGER ON CONTAINER HOVER: Instantly handles visibility when mouse enters */
+/* Reveal buttons only when hovering container */
 .peer-wrapper-row:hover .scroll-nav-btn {
     opacity: 1;
-    pointer-events: auto; /* Restores clicking action during hover state */
+    pointer-events: auto;
 }
 
 .scroll-nav-btn:hover {
     color: #fff;
 }
+
 .scroll-nav-btn.prev:hover {
-    transform: scale(1.05) translateX(-2px);
-}
-.scroll-nav-btn.next:hover {
-    transform: scale(1.05) translateX(2px);
+    transform: translateY(-50%) translateX(-2px) scale(1.1);
 }
 
-/* Profile wrapper containers */
+.scroll-nav-btn.next:hover {
+    transform: translateY(-50%) translateX(2px) scale(1.1);
+}
+
+.scroll-nav-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2.5;
+}
+
+/* ==========================================================================
+   3.2 PROFILE WRAPPERS
+   ========================================================================== */
+
 .peer-wrapper {
     position: relative;
     display: inline-flex;
@@ -147,9 +169,12 @@ body.copy-flash {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 78px; 
+    width: 78px;
     height: 115px;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), order 0.4s ease;
+    transition:
+        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        order 0.4s ease;
 }
 
 .peer-wrapper.is-offline {
@@ -158,10 +183,10 @@ body.copy-flash {
 }
 
 /* Profiles normalized parameters */
-.peer-avatar-bubble, 
+.peer-avatar-bubble,
 .group-chat-bubble {
-    width: 70px; 
-    height: 70px; 
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     object-fit: cover;
     box-sizing: border-box;
@@ -178,7 +203,7 @@ body.copy-flash {
 .peer-avatar-bubble:hover {
     border-color: var(--primary);
     transform: scale(1.06);
-    z-index: 10; 
+    z-index: 10;
 }
 
 .group-chat-bubble {
@@ -200,6 +225,7 @@ body.copy-flash {
     z-index: 10;
 }
 
+/* Notification dot */
 .peer-notif-dot {
     position: absolute;
     top: 4px;
@@ -218,6 +244,7 @@ body.copy-flash {
     display: block;
 }
 
+/* User name */
 .peer-name-hover {
     margin-top: 6px;
     font-size: 0.65rem;
