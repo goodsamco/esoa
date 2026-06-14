@@ -1,3 +1,4 @@
+<!--
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -148,6 +149,187 @@
         try {
             const accountsRef = collection(db, "accounts");
             
+            // Check uniqueness
+            const qUser = query(accountsRef, where("username", "==", username));
+            const querySnap = await getDocs(qUser);
+            if (!querySnap.empty) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Username already taken.";
+                return;
+            }
+
+            // Determine if first account
+            const allSnap = await getDocs(accountsRef);
+            const isFirst = allSnap.empty;
+
+            await addDoc(accountsRef, {
+                name: name,
+                username: username,
+                password: password, // Note: In production systems, passwords should be encrypted
+                role: isFirst ? "admin" : "user",
+                status: isFirst ? "approved" : "pending"
+            });
+
+            msg.style.color = "#ffee00";
+            msg.innerText = isFirst ? "Admin registered! Redirecting..." : "Registration submitted! Awaiting admin approval.";
+            setTimeout(() => window.location.href = "login.html", 2500);
+
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Error: " + err.message;
+        }
+    });
+</script>
+</body></html>
+
+-->
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: #161e2d;
+            --primary: #38bdf8;
+            --text-main: #f1f5f9;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 380px;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .input-group label {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-left: 5px;
+            letter-spacing: 1px;
+        }
+        input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px;
+            margin-top: 6px;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border 0.3s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: var(--bg);
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            background: #6feeff;
+        }
+        .msg {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            min-height: 20px;
+        }
+        .link-text {
+            display: inline-block;
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .link-text:hover { color: var(--primary); }
+    </style></head><body>
+
+<div class="container">
+    <h2>CREATE ACCOUNT</h2>
+    <form id="regForm">
+        <div class="input-group">
+            <label>FULL NAME</label>
+            <input type="text" id="regName" required placeholder="John Doe">
+        </div>
+        <div class="input-group">
+            <label>USERNAME</label>
+            <input type="text" id="regUser" required placeholder="johndoe123">
+        </div>
+        <div class="input-group">
+            <label>PASSWORD</label>
+            <input type="password" id="regPass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-submit">REGISTER</button>
+    </form>
+    <div class="msg" id="regMsg"></div>
+    <a href="login.html" class="link-text">Already have an account? Login</a></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('regName').value.trim();
+        const username = document.getElementById('regUser').value.trim().toLowerCase();
+        const password = document.getElementById('regPass').value;
+        const msg = document.getElementById('regMsg');
+
+        try {
+            const accountsRef = collection(db, "accounts");
+                        
             // Check uniqueness
             const qUser = query(accountsRef, where("username", "==", username));
             const querySnap = await getDocs(qUser);
