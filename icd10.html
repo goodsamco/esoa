@@ -3,82 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICD10 Reference Hub - Interactive View</title>
+    <title>ICD10 & Reference Registry</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Using your native system stylesheets -->
     <link rel="stylesheet" href="esoa.css">
+
     <style>
-        /* Global Variable Integration */
-        :root {
-            --bg: #111111;
-            --surface: #1b1b1b;
-            --primary: #e5e5e5;
-            --success: #fbff00;
-            --text-main: #fafafa;
-            --glass: rgba(255, 255, 255, 0.08);
-            --modal-bg: rgba(17, 17, 17, 0.98);
-            --text-muted: #aaaaaa;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        /* Top Navigation Header bar matches your custom system layout */
-        .top-nav {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            padding: 20px;
-            background: rgba(17, 17, 17, 0.8);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--glass);
-        }
-
-        .top-btn {
-            background: var(--surface);
-            border: 1px solid var(--glass);
-            color: var(--text-main);
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: all 0.2s ease;
-        }
-
-        .top-btn.active {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-color: var(--success);
-        }
-
-        /* Utility Workspace Control Strip */
+        /* Minimal additions leveraging your global variables to layout search/add tools */
         .utility-control-strip {
             max-width: 600px;
-            margin: 30px auto 10px auto;
+            margin: 20px auto;
             display: flex;
-            gap: 12px;
-            padding: 0 20px;
+            gap: 10px;
+            padding: 0 16px;
             align-items: center;
         }
-
         .search-wrapper {
             flex-grow: 1;
-            position: relative;
         }
-
         .search-wrapper input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 11px 14px;
             background: var(--surface);
             border: 1px solid var(--glass);
             color: var(--text-main);
@@ -86,541 +34,370 @@
             font-family: 'Inter', sans-serif;
             font-size: 14px;
             box-sizing: border-box;
-            transition: border-color 0.2s;
         }
-
         .search-wrapper input:focus {
             outline: none;
             border-color: var(--success);
         }
-
         .action-icon-btn {
             background: var(--surface);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            padding: 12px;
+            padding: 11px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            transition: all 0.2s ease;
         }
-
         .action-icon-btn:hover, .action-icon-btn.active-mode {
             border-color: var(--success);
             color: var(--success);
-            background: var(--glass);
         }
-
-        /* Lists Container Core Layout Layout */
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            padding-bottom: 100px;
-        }
-
-        h2 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            margin: 30px 0 15px 4px;
-            border-left: 3px solid var(--success);
-            padding-left: 10px;
-        }
-
-        .list-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .item-row {
-            background: var(--surface);
-            border: 1px solid var(--glass);
-            padding: 14px 18px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .item-row:hover {
-            border-color: rgba(251, 255, 0, 0.4);
-            transform: translateX(2px);
-        }
-
-        /* Typography Separation Engine */
-        .item-code {
+        
+        /* Persistent layout font size configuration */
+        .item-row .item-code-prefix {
             font-family: 'Roboto Mono', monospace;
             color: var(--success);
             font-weight: 600;
-            margin-right: 12px;
-            white-space: nowrap;
+            margin-right: 10px;
         }
-
-        .item-desc {
+        .item-row .item-desc-text {
             font-size: 13px;
-            color: var(--text-muted);
+            color: #aaaaaa;
         }
 
-        /* Sorting / Edit Mode Modifier Styles */
+        /* Movable state triggers */
         .edit-mode-active .item-row {
-            cursor: grab;
-            border: 1px dashed rgba(251, 255, 0, 0.3);
+            cursor: grab !important;
+            border: 1px dashed rgba(251, 255, 0, 0.4) !important;
         }
-        
-        .edit-mode-active .item-row:active {
-            cursor: grabbing;
-        }
-
         .item-row.dragging {
-            opacity: 0.5;
+            opacity: 0.4;
             background: var(--glass);
-        }
-
-        /* Copy Notification System Overlay */
-        .toast-popup {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #222;
-            border: 1px solid var(--success);
-            color: var(--text-main);
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 14px;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .toast-popup.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        /* Modal Layout Structures */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--modal-bg);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--surface);
-            border: 1px solid var(--glass);
-            padding: 30px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 450px;
-            box-sizing: border-box;
-        }
-
-        .modal-content h3 {
-            margin-top: 0;
-            font-family: 'Poppins', sans-serif;
-            color: var(--success);
-            letter-spacing: 1px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 12px;
-            background: var(--bg);
-            color: var(--text-main);
-            border: 1px solid var(--glass);
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: var(--success);
-        }
-
-        .modal-action-btn {
-            background: var(--success);
-            color: #000;
-            padding: 14px;
-            width: 100%;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 10px;
-        }
-
-        .modal-close-btn {
-            background: transparent;
-            color: var(--text-muted);
-            border: none;
-            width: 100%;
-            margin-top: 15px;
-            cursor: pointer;
-            font-size: 13px;
         }
     </style>
 </head>
-<body>
+<body onmouseleave="resetMagnet()">
 
+    <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
+    </div>
+
+    <!-- Active view navigation header -->
     <div class="top-nav">
-        <button class="top-btn" title="Reset Data" onclick="resetView()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Reset" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
         <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope" style="background-color: rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 2px;"></i></button>
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
+
+    <!-- Realtime management utilities replacing the old copy button panel -->
     <div class="utility-control-strip">
         <div class="search-wrapper">
-            <input type="text" id="liveSearchInput" placeholder="Search codes, descriptions, or locations..." oninput="executeRealtimeSearch()">
+            <input type="text" id="registrySearch" placeholder="Search diagnosis, category, or place..." oninput="filterRegistryRealtime()">
         </div>
-        <button class="action-icon-btn" title="Add Item" onclick="toggleModal('addRecordModal', true)">
-            <i data-lucide="plus-circle"></i>
-        </button>
-        <button class="action-icon-btn" id="editSortToggleBtn" title="Arrange / Drag Items" onclick="toggleSortingMode()">
-            <i data-lucide="arrow-up-down"></i>
-        </button>
+        <button class="action-icon-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)"><i data-lucide="plus-circle"></i></button>
+        <button class="action-icon-btn" id="sortToggleTrigger" title="Rearrange View" onclick="toggleMovableLayout()"><i data-lucide="arrow-up-down"></i></button>
     </div>
 
+    <!-- Layout matches your container hierarchy exactly -->
     <div class="container" id="mainContainer">
-        
+        <div id="highlighter"></div>
+
         <h2>ICD-10 Diagnostic Codes</h2>
-        <div class="list-group" id="icd10-list">
-            <div class="item-row" data-type="icd" data-code="J06.9" data-desc="UPPER RESPIRATORY TRACT INFECTION" onclick="processCopy(this)">
-                <div><span class="item-code">J06.9</span><span class="item-desc">UPPER RESPIRATORY TRACT INFECTION</span></div>
+        <div id="icd-section-group">
+            <div class="item-row" data-ref-type="icd" data-code="J06.9" data-val="UPPER RESPIRATORY TRACT INFECTION" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">J06.9</span><span class="item-desc-text">UPPER RESPIRATORY TRACT INFECTION</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="M06.99" data-desc="ARTHRITIS" onclick="processCopy(this)">
-                <div><span class="item-code">M06.99</span><span class="item-desc">ARTHRITIS</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="M06.99" data-val="ARTHRITIS" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">M06.99</span><span class="item-desc-text">ARTHRITIS</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="I10.1" data-desc="HYPERTENSION STAGE II" onclick="processCopy(this)">
-                <div><span class="item-code">I10.1</span><span class="item-desc">HYPERTENSION STAGE II</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="I10.1" data-val="HYPERTENSION STAGE II" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">I10.1</span><span class="item-desc-text">HYPERTENSION STAGE II</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="I10.9" data-desc="ESSENTIAL HYPERTENSION" onclick="processCopy(this)">
-                <div><span class="item-code">I10.9</span><span class="item-desc">ESSENTIAL HYPERTENSION</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="I10.9" data-val="ESSENTIAL HYPERTENSION" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">I10.9</span><span class="item-desc-text">ESSENTIAL HYPERTENSION</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="K29.9" data-desc="GASTRITIS" onclick="processCopy(this)">
-                <div><span class="item-code">K29.9</span><span class="item-desc">GASTRITIS</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="K29.9" data-val="GASTRITIS" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">K29.9</span><span class="item-desc-text">GASTRITIS</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="G44.2" data-desc="TENSION HEADACHE" onclick="processCopy(this)">
-                <div><span class="item-code">G44.2</span><span class="item-desc">TENSION HEADACHE</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="G44.2" data-val="TENSION HEADACHE" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">G44.2</span><span class="item-desc-text">TENSION HEADACHE</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="H81.1" data-desc="BENIGN PAROXYSMAL VERTIGO" onclick="processCopy(this)">
-                <div><span class="item-code">H81.1</span><span class="item-desc">BENIGN PAROXYSMAL VERTIGO</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="H81.1" data-val="BENIGN PAROXYSMAL VERTIGO" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">H81.1</span><span class="item-desc-text">BENIGN PAROXYSMAL VERTIGO</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="K29.1" data-desc="ACUTE GASTRITIS" onclick="processCopy(this)">
-                <div><span class="item-code">K29.1</span><span class="item-desc">ACUTE GASTRITIS</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="K29.1" data-val="ACUTE GASTRITIS" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">K29.1</span><span class="item-desc-text">ACUTE GASTRITIS</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="K27.9" data-desc="PEPTIC ULCER" onclick="processCopy(this)">
-                <div><span class="item-code">K27.9</span><span class="item-desc">PEPTIC ULCER</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="K27.9" data-val="PEPTIC ULCER" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">K27.9</span><span class="item-desc-text">PEPTIC ULCER</span></span>
             </div>
-            <div class="item-row" data-type="icd" data-code="H60.3" data-desc="EXTERNAL INFECTIVE OTITIS" onclick="processCopy(this)">
-                <div><span class="item-code">H60.3</span><span class="item-desc">EXTERNAL INFECTIVE OTITIS</span></div>
-            </div>
-        </div>
-
-        <h2>PhilHealth Member Categories</h2>
-        <div class="list-group" id="member-list">
-            <div class="item-row" data-type="member" data-code="POS INCAPABLE" data-desc="POS INCAPABLE - INDIGENT" onclick="processCopy(this)">
-                <div><span class="item-code">POS INCAPABLE</span><span class="item-desc">INDIGENT</span></div>
-            </div>
-            <div class="item-row" data-type="member" data-code="NTHS" data-desc="NTHS - INDIGENT" onclick="processCopy(this)">
-                <div><span class="item-code">NTHS</span><span class="item-desc">INDIGENT</span></div>
-            </div>
-            <div class="item-row" data-type="member" data-code="LISTAHAN" data-desc="LISTAHAN - INDIGENT" onclick="processCopy(this)">
-                <div><span class="item-code">LISTAHAN</span><span class="item-desc">INDIGENT</span></div>
-            </div>
-            <div class="item-row" data-type="member" data-code="DIRECT" data-desc="DIRECT CONTRIBUTOR - INDIVIDUAL PAYING" onclick="processCopy(this)">
-                <div><span class="item-code">DIRECT</span><span class="item-desc">CONTRIBUTOR - INDIVIDUAL PAYING</span></div>
+            <div class="item-row" data-ref-type="icd" data-code="H60.3" data-val="EXTERNAL INFECTIVE OTITIS" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">H60.3</span><span class="item-desc-text">EXTERNAL INFECTIVE OTITIS</span></span>
             </div>
         </div>
 
-        <h2>Geographic Zip Codes</h2>
-        <div class="list-group" id="zipcode-list">
-            <div class="item-row" data-type="zipcode" data-code="9417" data-desc="ARAKAN" onclick="processCopy(this)">
-                <div><span class="item-code">9417</span><span class="item-desc">ARAKAN</span></div>
+        <h2>MEMBER CATEGORY</h2>
+        <div id="member-section-group">
+            <div class="item-row" data-ref-type="misc" data-code="POS INCAPABLE" data-val="POS INCAPABLE - INDIGENT" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">POS INCAPABLE</span><span class="item-desc-text">INDIGENT</span></span>
             </div>
-            <div class="item-row" data-type="zipcode" data-code="9415" data-desc="ALEOSAN" onclick="processCopy(this)">
-                <div><span class="item-code">9415</span><span class="item-desc">ALEOSAN</span></div>
+            <div class="item-row" data-ref-type="misc" data-code="NTHS" data-val="NTHS - INDIGENT" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">NTHS</span><span class="item-desc-text">INDIGENT</span></span>
             </div>
-            <div class="item-row" data-type="zipcode" data-code="9400" data-desc="PIGKAWAYAN" onclick="processCopy(this)">
-                <div><span class="item-code">9400</span><span class="item-desc">PIGKAWAYAN</span></div>
+            <div class="item-row" data-ref-type="misc" data-code="LISTAHAN" data-val="LISTAHAN - INDIGENT" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">LISTAHAN</span><span class="item-desc-text">INDIGENT</span></span>
             </div>
-            <div class="item-row" data-type="zipcode" data-code="9410" data-desc="MIDSAYAP" onclick="processCopy(this)">
-                <div><span class="item-code">9410</span><span class="item-desc">MIDSAYAP</span></div>
+            <div class="item-row" data-ref-type="misc" data-code="DIRECT" data-val="DIRECT CONTRIBUTOR - INDIVIDUAL PAYING" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">DIRECT</span><span class="item-desc-text">CONTRIBUTOR - INDIVIDUAL PAYING</span></span>
             </div>
         </div>
 
+        <h2>ZIPCODE</h2>
+        <div id="zip-section-group">
+            <div class="item-row" data-ref-type="misc" data-code="9417" data-val="ARAKAN - 9417" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">9417</span><span class="item-desc-text">ARAKAN</span></span>
+            </div>
+            <div class="item-row" data-ref-type="misc" data-code="9415" data-val="ALEOSAN - 9415" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">9415</span><span class="item-desc-text">ALEOSAN</span></span>
+            </div>
+            <div class="item-row" data-ref-type="misc" data-code="9400" data-val="PIGKAWAYAN - 9400" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">9400</span><span class="item-desc-text">PIGKAWAYAN</span></span>
+            </div>
+            <div class="item-row" data-ref-type="misc" data-code="9410" data-val="MIDSAYAP - 9410" onclick="handleSelectiveCopy(this)">
+                <span class="text-content"><span class="item-code-prefix">9410</span><span class="item-desc-text">MIDSAYAP</span></span>
+            </div>
+        </div>
     </div>
 
-    <div class="toast-popup" id="clipboardToast">Value Copied to Clipboard!</div>
-
+    <!-- Responsive Multi-Category Modal Entry -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>ADD DATABASE REFERENCE</h3>
-            
+            <h3>ADD DATABASE RECORD</h3>
             <div class="input-group">
-                <label>Reference Category</label>
-                <select id="modalCategorySelector" onchange="adaptModalFields()">
+                <label>Category Type</label>
+                <select id="modalTypeSelector" onchange="synchronizeModalInputs()" style="width:100%; padding:10px; background:var(--bg); color:var(--text-main); border:1px solid var(--glass); border-radius:6px;">
                     <option value="icd">ICD10 Diagnosis Code</option>
-                    <option value="member">PhilHealth Membership</option>
-                    <option value="zipcode">Zip Code Mapping</option>
+                    <option value="member">Member Category</option>
+                    <option value="zipcode">Zipcode / Location</option>
                 </select>
             </div>
-
             <div class="input-group">
-                <label id="codeLabel">Diagnosis Code</label>
-                <input id="inputPrimaryCode" type="text" placeholder="e.g., J06.9">
-            </div>
-
+                 <label id="primaryFieldLabel">Diagnosis Code</label>
+                 <input id="newRecordKey" type="text" placeholder="e.g., J06.9">
+             </div>
             <div class="input-group">
-                <label id="descLabel">Description Text</label>
-                <input id="inputDescription" type="text" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
-            </div>
-
-            <button class="modal-action-btn" onclick="commitRecordToSystem()">Commit to Database</button>
-            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+                 <label id="secondaryFieldLabel">Description Value</label>
+                 <input id="newRecordValue" type="text" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
+             </div>
+            <div class="modal-copy-zone" onclick="pushRecordToDatabase()">SAVE TO DATABASE</div>
+             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
 
+    <!-- Active Senior Discount Modal mapping native functions -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>DISCOUNT SYSTEM</h3>
-            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Close</button>
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group">
+                 <label>HOSPITAL CHARGES</label>
+                 <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()">
+             </div>
+            <div class="input-group">
+                 <label>CASE RATE (PHIC)</label>
+                 <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()">
+             </div>
+            <div class="modal-result"><div id="finalDiscount">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div>
+             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
+    <!-- Native Architecture scripts load -->
+    <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Global State Monitoring Variables
-        let isSortingEnabled = false;
+        let layoutMovableActive = false;
+        const rtdb = getDatabase();
+        const db = getFirestore();
 
-        // 1. Realtime Data Filter Module
-        window.executeRealtimeSearch = function() {
-            const query = document.getElementById('liveSearchInput').value.toLowerCase().trim();
-            const items = document.querySelectorAll('.item-row');
+        // Realtime View Filtering Engine
+        window.filterRegistryRealtime = function() {
+            const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.item-row');
 
-            items.forEach(item => {
-                const searchCode = item.getAttribute('data-code').toLowerCase();
-                const searchDesc = item.getAttribute('data-desc').toLowerCase();
-                
-                if (searchCode.includes(query) || searchDesc.includes(query)) {
-                    item.style.display = 'flex';
+            rows.forEach(row => {
+                const code = row.getAttribute('data-code').toLowerCase();
+                const textVal = row.getAttribute('data-val').toLowerCase();
+                if (code.includes(query) || textVal.includes(query)) {
+                    row.style.display = 'flex';
                 } else {
-                    item.style.display = 'none';
+                    row.style.display = 'none';
                 }
             });
         };
 
-        // 2. Intelligent Selective Copy System
-        window.processCopy = function(element) {
-            if (isSortingEnabled) return; // Block copy routines if reordering view
+        // Intelligent Copy Context Extraction
+        window.handleSelectiveCopy = function(element) {
+            if (layoutMovableActive) return; // Prevent copies while in reorder state
 
-            const type = element.getAttribute('data-type');
-            let copyPayload = "";
+            const type = element.getAttribute('data-ref-type');
+            const dataVal = element.getAttribute('data-val');
+            let finalCopyString = dataVal;
 
+            // Safe fallback rule if data-val includes a hyphen for non-icd items
             if (type === 'icd') {
-                // Extracts and saves only the raw description text for ICD entries
-                copyPayload = element.getAttribute('data-desc');
-            } else {
-                // Saves code alongside properties for membership/zip maps
-                copyPayload = `${element.getAttribute('data-code')} - ${element.getAttribute('data-desc')}`;
+                finalCopyString = dataVal; // Copies clean description text exclusively
             }
 
-            navigator.clipboard.writeText(copyPayload).then(() => {
-                showToast(`Copied: "${copyPayload}"`);
+            navigator.clipboard.writeText(finalCopyString).then(() => {
+                // Flash look feedback using your global classes or inline styles
+                const textNode = element.querySelector('.item-desc-text');
+                const originalText = textNode.textContent;
+                textNode.textContent = "COPIED TO CLIPBOARD!";
+                setTimeout(() => { textNode.textContent = originalText; }, 1000);
             });
         };
 
-        // 3. Contextual Modal Customizer
-        window.adaptModalFields = function() {
-            const mode = document.getElementById('modalCategorySelector').value;
-            const codeLabel = document.getElementById('codeLabel');
-            const descLabel = document.getElementById('descLabel');
-            const codeInput = document.getElementById('inputPrimaryCode');
-            const descInput = document.getElementById('inputDescription');
+        // Responsive Modal Adaptive Interface Configurator
+        window.synchronizeModalInputs = function() {
+            const currentType = document.getElementById('modalTypeSelector').value;
+            const primaryLabel = document.getElementById('primaryFieldLabel');
+            const secondaryLabel = document.getElementById('secondaryFieldLabel');
+            const primaryInput = document.getElementById('newRecordKey');
+            const secondaryInput = document.getElementById('newRecordValue');
 
-            if (mode === 'icd') {
-                codeLabel.textContent = "Diagnosis Code";
-                descLabel.textContent = "Diagnosis Description";
-                codeInput.placeholder = "e.g., J06.9";
-                descInput.placeholder = "e.g., UPPER RESPIRATORY TRACT INFECTION";
-            } else if (mode === 'member') {
-                codeLabel.textContent = "Membership Code";
-                descLabel.textContent = "Category Group Name";
-                codeInput.placeholder = "e.g., DIRECT";
-                descInput.placeholder = "e.g., CONTRIBUTOR - INDIVIDUAL PAYING";
-            } else if (mode === 'zipcode') {
-                codeLabel.textContent = "Zip Code";
-                descLabel.textContent = "Municipality Name";
-                codeInput.placeholder = "e.g., 9402";
-                descInput.placeholder = "e.g., M'LANG";
+            if (currentType === 'icd') {
+                primaryLabel.textContent = "Diagnosis Code";
+                secondaryLabel.textContent = "Diagnosis Description";
+                primaryInput.placeholder = "e.g., J06.9";
+                secondaryInput.placeholder = "e.g., UPPER RESPIRATORY TRACT INFECTION";
+            } else if (currentType === 'member') {
+                primaryLabel.textContent = "Membership Code";
+                secondaryLabel.textContent = "Full Category Specifier";
+                primaryInput.placeholder = "e.g., DIRECT";
+                secondaryInput.placeholder = "e.g., DIRECT CONTRIBUTOR - INDIVIDUAL PAYING";
+            } else if (currentType === 'zipcode') {
+                primaryLabel.textContent = "Zipcode";
+                secondaryLabel.textContent = "Municipality Name";
+                primaryInput.placeholder = "e.g., 9417";
+                secondaryInput.placeholder = "e.g., ARAKAN";
             }
         };
 
-        // 4. Client-DB Sync Commit Layer
-        window.commitRecordToSystem = async function() {
-            const cat = document.getElementById('modalCategorySelector').value;
-            const code = document.getElementById('inputPrimaryCode').value.trim();
-            const desc = document.getElementById('inputDescription').value.trim();
+        // Complete Database Storage Engine Commits
+        window.pushRecordToDatabase = async function() {
+            const type = document.getElementById('modalTypeSelector').value;
+            const key = document.getElementById('newRecordKey').value.trim();
+            const val = document.getElementById('newRecordValue').value.trim();
 
-            if (!code || !desc) {
-                alert("Please fill out all dataset parameters before committing.");
-                return;
-            }
+            if (!key || !val) return alert("All reference data components must be specified.");
 
-            // UI Append Strategy
-            const containerMap = { icd: 'icd10-list', member: 'member-list', zipcode: 'zipcode-list' };
-            const targetContainer = document.getElementById(containerMap[cat]);
+            const referencePayload = { code: key, description: val, syncedAt: Date.now() };
 
-            if (targetContainer) {
-                const newRow = document.createElement('div');
-                newRow.className = 'item-row';
-                newRow.setAttribute('data-type', cat);
-                newRow.setAttribute('data-code', code);
-                newRow.setAttribute('data-desc', desc);
-                newRow.onclick = function() { window.processCopy(this); };
-                newRow.innerHTML = `<div><span class="item-code">${code}</span><span class="item-desc">${desc}</span></div>`;
+            try {
+                // Syncing out to Realtime Database and Firestore instances
+                await set(push(ref(rtdb, `clinical_references/${type}`)), referencePayload);
+                await setDoc(doc(db, `registry_${type}`, key), referencePayload);
+
+                // Inject dynamically straight to live interface list to avoid hard breaks
+                const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+                const targetNode = document.getElementById(sectionMap[type]);
                 
-                targetContainer.appendChild(newRow);
-                setupDragEvents(newRow);
-            }
+                if (targetNode) {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'item-row';
+                    rowDiv.setAttribute('data-ref-type', type);
+                    rowDiv.setAttribute('data-code', key);
+                    rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+                    rowDiv.onclick = function() { handleSelectiveCopy(this); };
+                    rowDiv.innerHTML = `<span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>`;
+                    
+                    targetNode.appendChild(rowDiv);
+                    bindDragDropSequence(rowDiv);
+                }
 
-            showToast("Record locally buffered. Database sync engaged.");
-            toggleModal('addRecordModal', false);
-            
-            // Clear input contexts
-            document.getElementById('inputPrimaryCode').value = "";
-            document.getElementById('inputDescription').value = "";
+                toggleModal('addRecordModal', false);
+                document.getElementById('newRecordKey').value = "";
+                document.getElementById('newRecordValue').value = "";
+            } catch (err) {
+                console.error("Database initialization fault: ", err);
+            }
         };
 
-        // 5. Drag and Drop Interactive Sorting Module
-        window.toggleSortingMode = function() {
-            isSortingEnabled = !isSortingEnabled;
+        // Live Reordering Layout Mechanics
+        window.toggleMovableLayout = function() {
+            layoutMovableActive = !layoutMovableActive;
             const container = document.getElementById('mainContainer');
-            const toggleBtn = document.getElementById('editSortToggleBtn');
+            const triggerBtn = document.getElementById('sortToggleTrigger');
 
-            if (isSortingEnabled) {
+            if (layoutMovableActive) {
                 container.classList.add('edit-mode-active');
-                toggleBtn.classList.add('active-mode');
-                showToast("Edit mode active. Drag elements to reorder.");
+                triggerBtn.classList.add('active-mode');
+                triggerBtn.style.color = "var(--success)";
             } else {
                 container.classList.remove('edit-mode-active');
-                toggleBtn.classList.remove('active-mode');
-                showToast("Layout organization locked.");
+                triggerBtn.classList.remove('active-mode');
+                triggerBtn.style.color = "";
             }
         };
 
-        function setupDragEvents(row) {
-            row.addEventListener('dragstart', () => {
-                if (!isSortingEnabled) return;
-                row.classList.add('dragging');
-            });
-
-            row.addEventListener('dragend', () => {
-                row.classList.remove('dragging');
-            });
+        function bindDragDropSequence(element) {
+            element.setAttribute('draggable', 'true');
+            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+            element.addEventListener('dragend', () => element.classList.remove('dragging'));
         }
 
-        // Initialize drag listeners across containers
-        document.querySelectorAll('.list-group').forEach(list => {
-            list.addEventListener('dragover', e => {
-                if (!isSortingEnabled) return;
+        // Connect reorder vectors across structural reference wrappers
+        document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                if (!layoutMovableActive) return;
                 e.preventDefault();
-                const afterElement = getDragAfterElement(list, e.clientY);
-                const draggingItem = document.querySelector('.dragging');
-                if (draggingItem && draggingItem.getAttribute('data-type') === list.id.split('-')[0]) {
-                    if (afterElement == null) {
-                        list.appendChild(draggingItem);
+                const activeDragging = document.querySelector('.dragging');
+                if (activeDragging && activeDragging.getAttribute('data-ref-type') === (zone.id === 'icd-section-group' ? 'icd' : 'misc')) {
+                    const boundingElement = getDragLocationSpace(zone, e.clientY);
+                    if (boundingElement == null) {
+                        zone.appendChild(activeDragging);
                     } else {
-                        list.insertBefore(draggingItem, afterElement);
+                        zone.insertBefore(activeDragging, boundingElement);
                     }
                 }
             });
         });
 
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.item-row:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
+        function getDragLocationSpace(container, yPoint) {
+            const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+            return elements.reduce((closest, child) => {
+                const boundary = child.getBoundingClientRect();
+                const separation = yPoint - boundary.top - boundary.height / 2;
+                if (separation < 0 && separation > closest.offset) {
+                    return { offset: separation, element: child };
                 } else {
                     return closest;
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // 6. Support Infrastructure Subroutines
-        window.toggleModal = function(id, show) {
-            const target = document.getElementById(id);
-            if (target) {
-                target.style.display = show ? 'flex' : 'none';
-                if (show && id === 'addRecordModal') adaptModalFields();
-            }
-        };
-
-        window.closeOutside = function(e, id) {
-            if (e.target === document.getElementById(id)) toggleModal(id, false);
-        };
-
-        function showToast(msg) {
-            const toast = document.getElementById('clipboardToast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        window.resetView = function() {
-            document.getElementById('liveSearchInput').value = "";
-            executeRealtimeSearch();
-            if (isSortingEnabled) toggleSortingMode();
+        window.resetViewRegistry = function() {
+            document.getElementById('registrySearch').value = "";
+            filterRegistryRealtime();
+            if (layoutMovableActive) toggleMovableLayout();
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.item-row').forEach(bindDragDropSequence);
             if (window.lucide) window.lucide.createIcons();
-            document.querySelectorAll('.item-row').forEach(row => {
-                row.setAttribute('draggable', 'true');
-                setupDragEvents(row);
-            });
         });
     </script>
-
-        <script type="module" src="esoa.js"></script>
 </body>
 </html>
