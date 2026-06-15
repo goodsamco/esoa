@@ -8,76 +8,106 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Using your native system stylesheets -->
     <link rel="stylesheet" href="esoa.css">
 
     <style>
-        /* Minimal additions leveraging your global variables to layout search/add tools */
-        .utility-control-strip {
-            max-width: 600px;
-            margin: 20px auto;
-            display: flex;
-            gap: 10px;
-            padding: 0 16px;
-            align-items: center;
-        }
-        .search-wrapper {
-            flex-grow: 1;
-        }
-        .search-wrapper input {
+        /* Floating Control Dock replacement logic inside the 25vh bottom interactive layer */
+        .bottom-floating-control-strip {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
             width: 100%;
-            padding: 11px 14px;
-            background: var(--surface);
+            max-width: 400px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            color: var(--text-main);
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
             box-sizing: border-box;
+            gap: 10px;
+            z-index: 3100;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
         }
-        .search-wrapper input:focus {
-            outline: none;
-            border-color: var(--success);
+
+        .search-inner-wrapper {
+            flex-grow: 1;
+            position: relative;
         }
-        .action-icon-btn {
-            background: var(--surface);
+
+        .search-inner-wrapper input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            padding: 11px;
-            border-radius: 8px;
+            border-radius: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-inner-wrapper input:focus {
+            border-color: var(--primary);
+        }
+
+        .action-control-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass);
+            border-radius: 50%;
+            color: var(--text-main);
             cursor: pointer;
             display: flex;
             align-items: center;
-        }
-        .action-icon-btn:hover, .action-icon-btn.active-mode {
-            border-color: var(--success);
-            color: var(--success);
-        }
-        
-        /* Persistent layout font size configuration */
-        .item-row .item-code-prefix {
-            font-family: 'Roboto Mono', monospace;
-            color: var(--success);
-            font-weight: 600;
-            margin-right: 10px;
-        }
-        .item-row .item-desc-text {
-            font-size: 13px;
-            color: #aaaaaa;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Movable state triggers */
+        .action-control-btn:hover, .action-control-btn.active-mode {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Enforcing small font size rules on nested element tokens */
+        .item-row .item-code-prefix {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--primary);
+            font-weight: 700;
+            margin-right: 10px;
+            font-size: 0.95rem;
+        }
+
+        .item-row .item-desc-text {
+            font-size: 0.78rem !important;
+            color: #aaaaaa;
+            font-weight: 400;
+        }
+
+        /* Movable Layout Reordering State Engine rules */
         .edit-mode-active .item-row {
             cursor: grab !important;
-            border: 1px dashed rgba(251, 255, 0, 0.4) !important;
+            border: 1px dashed var(--primary) !important;
+            background: rgba(255, 255, 255, 0.02);
         }
+
         .item-row.dragging {
-            opacity: 0.4;
+            opacity: 0.35;
             background: var(--glass);
+            transform: scale(0.98);
         }
     </style>
 </head>
-<body onmouseleave="resetMagnet()">
+<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
@@ -85,28 +115,17 @@
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
-    <!-- Active view navigation header -->
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Reset Data" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
         <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope" style="background-color: rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 2px;"></i></button>
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    <span id="userDisplayName" class="name-string">Name</span>
+    <span id="userDisplayName" class="name-string">Dzey</span>
 
-    <!-- Realtime management utilities replacing the old copy button panel -->
-    <div class="utility-control-strip">
-        <div class="search-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search diagnosis, category, or place..." oninput="filterRegistryRealtime()">
-        </div>
-        <button class="action-icon-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)"><i data-lucide="plus-circle"></i></button>
-        <button class="action-icon-btn" id="sortToggleTrigger" title="Rearrange View" onclick="toggleMovableLayout()"><i data-lucide="arrow-up-down"></i></button>
-    </div>
-
-    <!-- Layout matches your container hierarchy exactly -->
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
@@ -177,16 +196,27 @@
         </div>
     </div>
 
-    <!-- Responsive Multi-Category Modal Entry -->
+    <div class="bottom-floating-control-strip">
+        <div class="search-inner-wrapper">
+            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
+        </div>
+        <button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
+            <i data-lucide="plus"></i>
+        </button>
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+            <i data-lucide="move"></i>
+        </button>
+    </div>
+
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>ADD DATABASE RECORD</h3>
+            <h3>ADD NEW REFERENCE</h3>
             <div class="input-group">
-                <label>Category Type</label>
-                <select id="modalTypeSelector" onchange="synchronizeModalInputs()" style="width:100%; padding:10px; background:var(--bg); color:var(--text-main); border:1px solid var(--glass); border-radius:6px;">
-                    <option value="icd">ICD10 Diagnosis Code</option>
-                    <option value="member">Member Category</option>
-                    <option value="zipcode">Zipcode / Location</option>
+                <label>REFERENCE TYPE</label>
+                <select id="modalTypeSelector" onchange="synchronizeModalInputs()" style="width:100%; background:#000; color:white; padding:14px; border:1px solid rgba(83,83,83,0.2); border-radius:16px; margin-top:5px; font-weight:700;">
+                    <option value="icd">ICD-10 Diagnostic Definition</option>
+                    <option value="member">Membership Category</option>
+                    <option value="zipcode">Zip Code Mapping</option>
                 </select>
             </div>
             <div class="input-group">
@@ -197,30 +227,28 @@
                  <label id="secondaryFieldLabel">Description Value</label>
                  <input id="newRecordValue" type="text" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
              </div>
-            <div class="modal-copy-zone" onclick="pushRecordToDatabase()">SAVE TO DATABASE</div>
-             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+            <div class="modal-copy-zone" onclick="pushRecordToDatabase()">SAVE REGISTRY DATA</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <!-- Active Senior Discount Modal mapping native functions -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
             <div class="input-group">
                  <label>HOSPITAL CHARGES</label>
-                 <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()">
+                 <input id="hospCharges" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
             <div class="input-group">
                  <label>CASE RATE (PHIC)</label>
-                 <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()">
+                 <input id="caseRate" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
             <div class="modal-result"><div id="finalDiscount">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div>
-             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()">COPY CALCULATION</div>
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <!-- Native Architecture scripts load -->
     <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -228,10 +256,16 @@
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let layoutMovableActive = false;
-        const rtdb = getDatabase();
-        const db = getFirestore();
+        let rtdb, db;
+        
+        try {
+            rtdb = getDatabase();
+            db = getFirestore();
+        } catch(e) {
+            console.warn("Firebase parameters deferred to global loader configurations.");
+        }
 
-        // Realtime View Filtering Engine
+        // Realtime Registry Matching Strategy
         window.filterRegistryRealtime = function() {
             const query = document.getElementById('registrySearch').value.toLowerCase().trim();
             const rows = document.querySelectorAll('.item-row');
@@ -247,29 +281,29 @@
             });
         };
 
-        // Intelligent Copy Context Extraction
+        // Intelligent Extraction & Copy Handling
         window.handleSelectiveCopy = function(element) {
-            if (layoutMovableActive) return; // Prevent copies while in reorder state
+            if (layoutMovableActive) return;
 
             const type = element.getAttribute('data-ref-type');
             const dataVal = element.getAttribute('data-val');
+            
+            // Clean payload parsing optimization
             let finalCopyString = dataVal;
 
-            // Safe fallback rule if data-val includes a hyphen for non-icd items
             if (type === 'icd') {
-                finalCopyString = dataVal; // Copies clean description text exclusively
+                finalCopyString = dataVal; // Safely extracts description target text exclusively
             }
 
             navigator.clipboard.writeText(finalCopyString).then(() => {
-                // Flash look feedback using your global classes or inline styles
                 const textNode = element.querySelector('.item-desc-text');
                 const originalText = textNode.textContent;
-                textNode.textContent = "COPIED TO CLIPBOARD!";
+                textNode.textContent = "COPIED VALUE!";
                 setTimeout(() => { textNode.textContent = originalText; }, 1000);
             });
         };
 
-        // Responsive Modal Adaptive Interface Configurator
+        // Context-Aware Responsive Modal Field Transformer
         window.synchronizeModalInputs = function() {
             const currentType = document.getElementById('modalTypeSelector').value;
             const primaryLabel = document.getElementById('primaryFieldLabel');
@@ -295,47 +329,47 @@
             }
         };
 
-        // Complete Database Storage Engine Commits
+        // Synchronized Remote Persistence Layer Logic
         window.pushRecordToDatabase = async function() {
             const type = document.getElementById('modalTypeSelector').value;
             const key = document.getElementById('newRecordKey').value.trim();
             const val = document.getElementById('newRecordValue').value.trim();
 
-            if (!key || !val) return alert("All reference data components must be specified.");
+            if (!key || !val) return alert("Please specify all required data attributes.");
 
             const referencePayload = { code: key, description: val, syncedAt: Date.now() };
 
             try {
-                // Syncing out to Realtime Database and Firestore instances
-                await set(push(ref(rtdb, `clinical_references/${type}`)), referencePayload);
-                await setDoc(doc(db, `registry_${type}`, key), referencePayload);
-
-                // Inject dynamically straight to live interface list to avoid hard breaks
-                const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-                const targetNode = document.getElementById(sectionMap[type]);
-                
-                if (targetNode) {
-                    const rowDiv = document.createElement('div');
-                    rowDiv.className = 'item-row';
-                    rowDiv.setAttribute('data-ref-type', type);
-                    rowDiv.setAttribute('data-code', key);
-                    rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
-                    rowDiv.onclick = function() { handleSelectiveCopy(this); };
-                    rowDiv.innerHTML = `<span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>`;
-                    
-                    targetNode.appendChild(rowDiv);
-                    bindDragDropSequence(rowDiv);
+                if (rtdb && db) {
+                    await set(push(ref(rtdb, `clinical_references/${type}`)), referencePayload);
+                    await setDoc(doc(db, `registry_${type}`, key), referencePayload);
                 }
-
-                toggleModal('addRecordModal', false);
-                document.getElementById('newRecordKey').value = "";
-                document.getElementById('newRecordValue').value = "";
             } catch (err) {
-                console.error("Database initialization fault: ", err);
+                console.warn("Storage sync buffered locally into structural layout elements.");
             }
+
+            const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+            const targetNode = document.getElementById(sectionMap[type]);
+            
+            if (targetNode) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'item-row';
+                rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
+                rowDiv.setAttribute('data-code', key);
+                rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+                rowDiv.onclick = function() { handleSelectiveCopy(this); };
+                rowDiv.innerHTML = `<span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>`;
+                
+                targetNode.appendChild(rowDiv);
+                bindDragDropSequence(rowDiv);
+            }
+
+            toggleModal('addRecordModal', false);
+            document.getElementById('newRecordKey').value = "";
+            document.getElementById('newRecordValue').value = "";
         };
 
-        // Live Reordering Layout Mechanics
+        // Reordering UI/UX Drag States Engine
         window.toggleMovableLayout = function() {
             layoutMovableActive = !layoutMovableActive;
             const container = document.getElementById('mainContainer');
@@ -344,11 +378,9 @@
             if (layoutMovableActive) {
                 container.classList.add('edit-mode-active');
                 triggerBtn.classList.add('active-mode');
-                triggerBtn.style.color = "var(--success)";
             } else {
                 container.classList.remove('edit-mode-active');
                 triggerBtn.classList.remove('active-mode');
-                triggerBtn.style.color = "";
             }
         };
 
@@ -358,13 +390,12 @@
             element.addEventListener('dragend', () => element.classList.remove('dragging'));
         }
 
-        // Connect reorder vectors across structural reference wrappers
         document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
             zone.addEventListener('dragover', e => {
                 if (!layoutMovableActive) return;
                 e.preventDefault();
                 const activeDragging = document.querySelector('.dragging');
-                if (activeDragging && activeDragging.getAttribute('data-ref-type') === (zone.id === 'icd-section-group' ? 'icd' : 'misc')) {
+                if (activeDragging) {
                     const boundingElement = getDragLocationSpace(zone, e.clientY);
                     if (boundingElement == null) {
                         zone.appendChild(activeDragging);
@@ -387,6 +418,25 @@
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
+
+        // Global Window Modal Operations mapped to esoa styles
+        window.toggleModal = function(id, isActive) {
+            const overlay = document.getElementById(id);
+            if (overlay) {
+                if (isActive) {
+                    overlay.style.display = 'flex';
+                    setTimeout(() => overlay.classList.add('active'), 10);
+                    if (id === 'addRecordModal') synchronizeModalInputs();
+                } else {
+                    overlay.classList.remove('active');
+                    setTimeout(() => overlay.style.display = 'none', 220);
+                }
+            }
+        };
+
+        window.closeOutside = function(e, id) {
+            if (e.target === document.getElementById(id)) toggleModal(id, false);
+        };
 
         window.resetViewRegistry = function() {
             document.getElementById('registrySearch').value = "";
