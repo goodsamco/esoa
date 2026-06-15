@@ -8,11 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- References your master stylesheet rules directly -->
     <link rel="stylesheet" href="esoa.css">
 
     <style>
-        /* Floating Control Dock matching old .bottom-zone parameters but stacked perfectly above the profile layer */
+        /* Custom layout correction mapping variables dynamically sourced from local storage engines */
+        :root {
+            --runtime-accent: var(--primary);
+        }
+
+        /* Floating Control Dock perfectly stacked above the profile layout */
         .bottom-floating-control-strip {
             position: fixed;
             bottom: 110px; 
@@ -55,7 +59,7 @@
         }
 
         .search-inner-wrapper input:focus {
-            border-color: var(--accent-color, var(--primary, #e5e5e5));
+            border-color: var(--runtime-accent) !important;
         }
 
         .action-control-btn {
@@ -64,7 +68,7 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass);
             border-radius: 50%;
-            color: var(--accent-color, var(--primary, #e5e5e5)); 
+            color: var(--runtime-accent) !important; 
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -73,16 +77,16 @@
         }
 
         .action-control-btn:hover, .action-control-btn.active-mode {
-            background: var(--accent-color, var(--primary, #e5e5e5));
-            color: #000;
-            border-color: var(--accent-color, var(--primary, #e5e5e5));
+            background: var(--runtime-accent) !important;
+            color: #000 !important;
+            border-color: var(--runtime-accent) !important;
             transform: translateY(-2px);
         }
 
-        /* Enforcing clean operational font sizing styles mapped to runtime color attributes */
+        /* Direct adaptive typography setups with explicit structural fallbacks */
         .item-row .item-code-prefix {
             font-family: 'Roboto Mono', monospace;
-            color: var(--accent-color, var(--primary, #e5e5e5));
+            color: var(--runtime-accent) !important;
             font-weight: 700;
             margin-right: 10px;
             font-size: 0.95rem;
@@ -117,9 +121,9 @@
         }
 
         .context-action-node.edit-trigger:hover {
-            background: var(--success, #fbff00);
+            background: var(--success);
             color: #000;
-            border-color: var(--success, #fbff00);
+            border-color: var(--success);
         }
 
         .context-action-node.delete-trigger:hover {
@@ -131,7 +135,7 @@
         /* Movable Layout Reordering & Administrative active states */
         .edit-mode-active .item-row {
             cursor: grab !important;
-            border: 1px dashed var(--accent-color, var(--primary, #e5e5e5)) !important;
+            border: 1px dashed var(--runtime-accent) !important;
             background: rgba(255, 255, 255, 0.02);
         }
 
@@ -148,14 +152,12 @@
 </head>
 <body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
-    <!-- Peer Presence Header Hub -->
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
         <div class="peer-active-hub" id="peerActiveHub"></div>
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
-    <!-- Active View Navigation Header -->
     <div class="top-nav">
         <button class="top-btn" title="Reset Data" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
@@ -164,11 +166,9 @@
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <!-- Profile Placement Context Nodes -->
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     <span id="userDisplayName" class="name-string">Dzey</span>
 
-    <!-- Master Layout Data Container Grid Layout -->
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
@@ -182,7 +182,6 @@
         <div id="zip-section-group"></div>
     </div>
 
-    <!-- Floating System Controls Bar (Stacked immediately above profile vectors) -->
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
             <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
@@ -195,7 +194,6 @@
         </button>
     </div>
 
-    <!-- Responsive Adaptive Insertion & Inline Edit Modal Overlay -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
@@ -216,12 +214,11 @@
                  <label id="secondaryFieldLabel">Description Value</label>
                  <input id="newRecordValue" type="text" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
              </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()">SAVE REGISTRY DATA</div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--runtime-accent); color: #000;">SAVE REGISTRY DATA</div>
             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <!-- Dynamic Senior Cost Calculation Overlay Modal -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -233,17 +230,16 @@
                  <label>CASE RATE (PHIC)</label>
                  <input id="caseRate" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
-            <div class="modal-result"><div id="finalDiscount">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()">COPY CALCULATION</div>
+            <div class="modal-result" style="border-color: var(--runtime-accent);"><div id="finalDiscount" style="color: var(--runtime-accent);">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--runtime-accent); color: #000;">COPY CALCULATION</div>
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <!-- System JavaScript Logic Modules -->
     <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let layoutMovableActive = false;
@@ -267,7 +263,7 @@
                 { code: "E11.9", desc: "DIABETES MELLITUS" },
                 { code: "B34.9", desc: "VIRAL INFECTION" },
                 { code: "BO1.9", desc: "VARICELLA" },
-                { code: "S01.9", desc: "OPEN WOUND OF HEAD" },
+                { code: "S01.9", desc: "OPEN WOUND of HEAD" },
                 { code: "L03.9", desc: "CELLULITIS" },
                 { code: "L03.2", desc: "CELLULITIS OF FACE" },
                 { code: "J20.9", desc: "ACUTE BRONCHITIS" },
@@ -322,11 +318,18 @@
             console.warn("Firebase execution parameters derived locally.");
         }
 
-        // Resolves dynamic visual styling parameters matching modern customization engine setups
+        // Resolves dynamic visual styling parameters matching the accent extraction engine configuration
         function pullParsedAccentColor() {
-            const runtimeAccent = localStorage.getItem('accentColor') || localStorage.getItem('customAccent') || getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
-            if (runtimeAccent) {
-                document.documentElement.style.setProperty('--accent-color', runtimeAccent);
+            // Evaluates local variables first, then scrapes custom root setups, matching how background/bg handles fallbacks
+            let customAccent = localStorage.getItem('accentColor') || localStorage.getItem('customAccent');
+            
+            if (!customAccent) {
+                const computed = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                if (computed) customAccent = computed;
+            }
+            
+            if (customAccent) {
+                document.documentElement.style.setProperty('--runtime-accent', customAccent);
             }
         }
 
@@ -355,7 +358,6 @@
 
                 if (activeList.length === 0) {
                     activeList = baseDataset[type];
-                    // Sync up local base state definitions to remote storage on fresh instance setups
                     try {
                         if (rtdb) {
                             for(const item of activeList) {
@@ -417,10 +419,6 @@
             const dataVal = element.getAttribute('data-val');
             let finalCopyString = dataVal;
 
-            if (type === 'icd') {
-                finalCopyString = dataVal; 
-            }
-
             navigator.clipboard.writeText(finalCopyString).then(() => {
                 const textNode = element.querySelector('.item-desc-text');
                 const originalText = textNode.textContent;
@@ -473,7 +471,7 @@
             
             const codeVal = rowElement.getAttribute('data-code');
             document.getElementById('newRecordKey').value = codeVal;
-            document.getElementById('newRecordKey').disabled = true; // Protect baseline key mappings on updates
+            document.getElementById('newRecordKey').disabled = true; 
             
             const dataVal = rowElement.getAttribute('data-val');
             document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
@@ -501,7 +499,7 @@
             }
         };
 
-        // Synchronized Remote Persistence Layer Handling
+        // Synchronized Remote Persistence Layer Handling Additions & Updates
         window.pushRecordToDatabase = async function() {
             const type = document.getElementById('modalTypeSelector').value;
             const key = document.getElementById('newRecordKey').value.trim();
@@ -590,7 +588,7 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Global Window Modal Operations mapped to esoa styles
+        // Global Window Modal Operations
         window.toggleModal = function(id, isActive) {
             const overlay = document.getElementById(id);
             if (overlay) {
