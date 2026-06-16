@@ -235,6 +235,46 @@ onSnapshot(userDocRef, (snapshot) => {
 
 
 /* ==========================================================================
+   TYPING INDICATOR HUB LISTENER
+   ========================================================================== */
+const typingHooks = {};
+
+function bindTypingIndicator(partnerId, displayName) {
+    if (typingHooks[partnerId]) return;
+
+    const channelSessionKey =
+        userId < partnerId
+            ? `${userId}_${partnerId}`
+            : `${partnerId}_${userId}`;
+
+    const typingRef = ref(
+        rtdb,
+        `typing/${channelSessionKey}/${partnerId}`
+    );
+
+    typingHooks[partnerId] = onValue(typingRef, (snapshot) => {
+        const peerNode = document.getElementById(`peer-node-${partnerId}`);
+        if (!peerNode) return;
+
+        const tag = peerNode.querySelector('.peer-name-hover');
+        if (!tag) return;
+
+        if (snapshot.val() === true) {
+            tag.innerHTML = `
+                <span class="typing-dot">.</span>
+                <span class="typing-dot">.</span>
+                <span class="typing-dot">.</span>
+            `;
+            tag.dataset.typing = "true";
+        } else {
+            tag.textContent = displayName;
+            tag.dataset.typing = "false";
+        }
+    });
+}
+
+
+/* ==========================================================================
    4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB)
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
@@ -242,7 +282,7 @@ hub.innerHTML = '';
 
 const gcWrapper = document.createElement('div');
 gcWrapper.className = 'peer-wrapper';
-gcWrapper.id = 'gc-hub-node';                                    
+gcWrapper.id = 'gc-hub-node';
 
 const gcBubble = document.createElement('div');
 gcBubble.className = 'group-chat-bubble';
@@ -268,27 +308,39 @@ const presenceRef = ref(rtdb, 'presence');
 onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
 
-    // 1. Mark matching profile entries as offline if absent from current RTDB snapshot data
+    // Mark absent users offline
     const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
     existingNodes.forEach(node => {
         const nodeUid = node.id.replace('peer-node-', '');
+
         if (!users[nodeUid] || nodeUid === userId) {
             node.classList.add('is-offline');
-            node.style.order = "1"; // Auto-rearranges to the end of the container grid
+            node.style.order = "1";
         }
     });
 
-    // 2. Loop through current system users and map nodes dynamically
+    // Realtime peer synchronization
     Object.keys(users).forEach(uid => {
         if (uid === userId) return;
+
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        const singleWordLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
-        const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
-        let peerContainer = document.getElementById(`peer-node-${peer.uid}`);
+        const singleWordLabel =
+            peer.name
+                ? peer.name.split(' ')[0]
+                : "Operator";
+
+        const cleanAvatarSrc =
+            premium3dAssets[peer.avatar] ||
+            peer.avatar ||
+            premium3dAssets['avatar-m1'];
+
+        let peerContainer =
+            document.getElementById(`peer-node-${peer.uid}`);
 
         if (!peerContainer) {
+
             peerContainer = document.createElement('div');
             peerContainer.className = 'peer-wrapper';
             peerContainer.id = `peer-node-${peer.uid}`;
@@ -296,7 +348,11 @@ onValue(presenceRef, (snapshot) => {
             const imgNode = document.createElement('img');
             imgNode.className = 'peer-avatar-bubble';
             imgNode.src = cleanAvatarSrc;
-            imgNode.onclick = () => initTransientChatChannel(peer.uid, singleWordLabel);
+            imgNode.onclick = () =>
+                initTransientChatChannel(
+                    peer.uid,
+                    singleWordLabel
+                );
 
             const dotNode = document.createElement('div');
             dotNode.className = 'peer-notif-dot';
@@ -304,29 +360,47 @@ onValue(presenceRef, (snapshot) => {
             const nameTag = document.createElement('div');
             nameTag.className = 'peer-name-hover';
             nameTag.innerText = singleWordLabel;
+            nameTag.dataset.typing = "false";
 
             peerContainer.appendChild(imgNode);
             peerContainer.appendChild(dotNode);
             peerContainer.appendChild(nameTag);
+
             hub.appendChild(peerContainer);
 
             bindBackgroundNotifListener(peer.uid);
+
+            // Typing listener
+            bindTypingIndicator(
+                peer.uid,
+                singleWordLabel
+            );
+
         } else {
-            const img = peerContainer.querySelector('.peer-avatar-bubble');
-            if (img) img.src = cleanAvatarSrc;
-            const tag = peerContainer.querySelector('.peer-name-hover');
-            if (tag) tag.innerText = singleWordLabel;
+
+            const img =
+                peerContainer.querySelector('.peer-avatar-bubble');
+
+            if (img) {
+                img.src = cleanAvatarSrc;
+            }
+
+            const tag =
+                peerContainer.querySelector('.peer-name-hover');
+
+            if (tag && tag.dataset.typing !== "true") {
+                tag.innerText = singleWordLabel;
+            }
         }
 
-        // Active node recovery normalization state parameters
         peerContainer.classList.remove('is-offline');
-        peerContainer.style.order = "0"; // Auto-rearranges back to the front left side positions
+        peerContainer.style.order = "0";
     });
-    if (window.lucide) window.lucide.createIcons();
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 });
-
-
-
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS
    ========================================================================== */
