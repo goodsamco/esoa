@@ -1092,8 +1092,6 @@ h2 {
     border-radius: 50%;
     background: currentColor;
     display: inline-block;
-    position: relative;
-    top: 4px; /* only moves the dots, not the name/profile */
 
     opacity: 0.35;
     animation: typingPulse 1.2s infinite ease-in-out;
@@ -1110,11 +1108,9 @@ h2 {
 @keyframes typingPulse {
     0%, 60%, 100% {
         opacity: 0.3;
-        transform: translateY(0) scale(1);
     }
 
     30% {
         opacity: 1;
-        transform: translateY(-2px) scale(1.5);
     }
 }
