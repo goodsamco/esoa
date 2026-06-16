@@ -522,6 +522,22 @@ function initTransientChatChannel(partnerId, partnerName) {
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+   const input = document.getElementById('chatMsgInput');
+
+input.oninput = () => {
+    const typingRef = ref(
+        rtdb,
+        `typing/${channelSessionKey}/${userId}`
+    );
+
+    set(typingRef, true);
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+        set(typingRef, false);
+    }, 1500);
+};
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
@@ -561,6 +577,17 @@ window.sendChatPayload = function () {
           });
     }
     input.value = '';
+   if (!isGroupChat) {
+    const channelSessionKey =
+        userId < selectedActiveChatPartnerId
+            ? `${userId}_${selectedActiveChatPartnerId}`
+            : `${selectedActiveChatPartnerId}_${userId}`;
+
+    set(
+        ref(rtdb, `typing/${channelSessionKey}/${userId}`),
+        false
+    );
+}
 };
 
 function appendBubbleToScroller(msg, msgId, direction) {
@@ -704,6 +731,20 @@ function syncReactionsDisplay(msgId) {
 }
 
 window.closeChatSession = function () {
+
+    if (!isGroupChat && selectedActiveChatPartnerId) {
+
+        const channelSessionKey =
+            userId < selectedActiveChatPartnerId
+                ? `${userId}_${selectedActiveChatPartnerId}`
+                : `${selectedActiveChatPartnerId}_${userId}`;
+
+        set(
+            ref(rtdb, `typing/${channelSessionKey}/${userId}`),
+            false
+        );
+    }
+
     document.getElementById('chatDock').style.display = 'none';
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
