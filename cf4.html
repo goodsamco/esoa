@@ -360,8 +360,23 @@
         <button class="top-btn active" title="CF4 Form" onclick="window.location.href='cf4.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    <span id="userDisplayName" class="name-string">EJ</span>
+ <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
+
+
+    <div class="chat-docking-panel" id="chatDock">
+        <div class="chat-header-bar">
+            <span id="chatTargetName">Active Session Chat</span>
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+        </div>
+        
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
+    </div>
 
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
