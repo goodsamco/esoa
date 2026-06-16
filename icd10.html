@@ -11,9 +11,12 @@
     <link rel="stylesheet" href="esoa.css">
 
     <style>
-        /* Custom layout correction mapping variables dynamically sourced from local storage engines */
         :root {
-             var(--primary);
+            /* Fallback value established if local storage parameters haven't compiled yet */
+            --primary: hsl(111, 100%, 60%);
+            --glass: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --success: #00e676;
         }
 
         /* Floating Control Dock perfectly stacked above the profile layout */
@@ -167,7 +170,7 @@
     </div>
 
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    <span id="userDisplayName" class="name-string">Dzey</span>
+    <span id="userDisplayName" class="name-string">EJ</span>
 
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
@@ -246,7 +249,6 @@
         let rtdb, db;
         let activeEditRow = null;
 
-        // Strict Dataset Registry Seed Definitions
         const baseDataset = {
             icd: [
                 { code: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
@@ -318,35 +320,30 @@
             console.warn("Firebase execution parameters derived locally.");
         }
 
-        // Resolves dynamic visual styling parameters matching the accent extraction engine configuration
-function pullParsedAccentColor() {
-    let customAccent =
-        localStorage.getItem('accentColor') ||
-        localStorage.getItem('customAccent');
+        function pullParsedAccentColor() {
+            let customAccent =
+                localStorage.getItem('btnValue') ||
+                localStorage.getItem('accentColor') ||
+                localStorage.getItem('customAccent');
 
-    if (customAccent) {
-        document.documentElement.style.setProperty(
-            '--primary',
-            customAccent
-        );
-    }
-}
+            if (customAccent) {
+                document.documentElement.style.setProperty(
+                    '--primary',
+                    customAccent
+                );
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
-    pullParsedAccentColor();
+            pullParsedAccentColor();
 
-    const activeBtn = document.querySelector('.top-btn.active');
-
-    if (activeBtn) {
-        activeBtn.style.borderColor =
-            getComputedStyle(document.documentElement)
-                .getPropertyValue('--primary');
-
-        activeBtn.style.color =
-            getComputedStyle(document.documentElement)
-                .getPropertyValue('--primary');
-    }
-});
+            const activeBtn = document.querySelector('.top-btn.active');
+            if (activeBtn) {
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                activeBtn.style.borderColor = primaryColor;
+                activeBtn.style.color = primaryColor;
+            }
+        });
 
         // Database Synced Initialization Layer
         async function initializeRegistryData() {
@@ -639,4 +636,3 @@ function pullParsedAccentColor() {
     </script>
 </body>
 </html>
-
