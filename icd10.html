@@ -12,7 +12,6 @@
 
     <style>
         :root {
-            /* Fallback value established if local storage parameters haven't compiled yet */
             --primary: hsl(111, 100%, 60%);
             --glass: rgba(255, 255, 255, 0.08);
             --text-main: #ffffff;
@@ -60,6 +59,34 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Top Search Results Block */
+        .search-priority-view {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .searching-active .search-priority-view {
+            display: flex;
+        }
+
+        .searching-active .category-header,
+        .searching-active .section-group-wrapper {
+            display: none !important;
+        }
+
+        .search-priority-view h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--primary);
+            text-transform: uppercase;
         }
 
         /* Inline structural action link positioned after the fifth block element */
@@ -162,15 +189,13 @@
             display: none;
         }
 
-        /* Force block element overrides during active sorting or searching states */
-        .edit-mode-active .item-row.hidden-overflow-item,
-        .searching-active .item-row.hidden-overflow-item {
+        /* Force block element overrides during active sorting states */
+        .edit-mode-active .item-row.hidden-overflow-item {
             display: flex !important;
         }
 
-        /* Automatically mask expand buttons when absolute visibility controls are forced */
-        .edit-mode-active .expand-list-action-trigger,
-        .searching-active .expand-list-action-trigger {
+        /* Automatically mask expand buttons when layout overrides are active */
+        .edit-mode-active .expand-list-action-trigger {
             display: none !important;
         }
 
@@ -265,6 +290,12 @@
 
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
+
+        <!-- Realtime Prioritized Search View Target Element -->
+        <div class="search-priority-view" id="prioritySearchView">
+            <h3>Top Search Matches</h3>
+            <div id="searchResultTargetGroup"></div>
+        </div>
 
         <!-- ICD-10 Accordion -->
         <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
@@ -436,14 +467,10 @@
                 localStorage.getItem('customAccent');
 
             if (customAccent) {
-                document.documentElement.style.setProperty(
-                    '--primary',
-                    customAccent
-                );
+                document.documentElement.style.setProperty('--primary', customAccent);
             }
         }
 
-        // Toggle Expand/Collapse Core Accordions
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
@@ -458,7 +485,7 @@
             }
         };
 
-        // Inline structural show/hide toggle framework
+        // Fixed View/Hide Toggle Functionality
         window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
             const container = document.getElementById(targetGroupId);
             if (!container) return;
@@ -467,12 +494,10 @@
             const rows = container.querySelectorAll('.item-row');
             
             if (!isExpanded) {
-                // Show everything
                 rows.forEach(r => r.classList.remove('hidden-overflow-item'));
                 buttonElement.setAttribute('data-expanded', 'true');
                 buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
             } else {
-                // Hide past index threshold (keep first 5 items)
                 rows.forEach((r, idx) => {
                     if (idx >= 5) r.classList.add('hidden-overflow-item');
                 });
@@ -482,10 +507,8 @@
             if (window.lucide) window.lucide.createIcons();
         };
 
-        // Database Synced Initialization Layer
         async function initializeRegistryData() {
             pullParsedAccentColor();
-            
             const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
             
             for (const type of ['icd', 'member', 'zipcode']) {
@@ -494,7 +517,6 @@
                 targetContainer.innerHTML = '';
 
                 let activeList = [];
-
                 try {
                     if (rtdb) {
                         const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
@@ -503,25 +525,16 @@
                             activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
                         }
                     }
-                } catch (e) { console.warn("RTDB fetching faulted; switching fallback parameters."); }
+                } catch (e) { console.warn("RTDB fault fallback."); }
 
                 if (activeList.length === 0) {
                     activeList = baseDataset[type];
-                    try {
-                        if (rtdb) {
-                            for(const item of activeList) {
-                                const sanitizedKey = item.code.replace(/[.#$\[\]]/g, "_");
-                                await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), { code: item.code, description: item.desc });
-                            }
-                        }
-                    } catch(err) {}
                 }
 
                 activeList.forEach((item, index) => {
                     appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
                 });
 
-                // Inject structured action toggler if database rows cross the index thresholds
                 if (activeList.length > 5) {
                     const expandBtn = document.createElement('button');
                     expandBtn.className = 'expand-list-action-trigger';
@@ -550,54 +563,53 @@
                 </div>
             `;
             
-            // Appends nice and clean right before the list layout buttons if they exist
             const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
             if (actionTriggerLink) {
                 container.insertBefore(rowDiv, actionTriggerLink);
-                
-                // Update dynamic button totals if a fresh database add occurs
-                const rowsCount = container.querySelectorAll('.item-row').length;
-                if (actionTriggerLink.getAttribute('data-expanded') === 'false') {
-                    actionTriggerLink.innerHTML = `Show all (${rowsCount}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                }
             } else {
                 container.appendChild(rowDiv);
             }
             bindDragDropSequence(rowDiv);
         }
 
-        // Reverted Standard Realtime Search Match Implementation
+        // Prioritized Realtime Top-View Search Logic with Dynamic Node Cloning
         window.filterRegistryRealtime = function() {
             const query = document.getElementById('registrySearch').value.toLowerCase().trim();
             const container = document.getElementById('mainContainer');
-            const rows = document.querySelectorAll('.item-row');
+            const searchTargetGroup = document.getElementById('searchResultTargetGroup');
 
-            if (query !== "") {
-                container.classList.add('searching-active');
-            } else {
+            // Clear layout stack completely when search goes empty
+            searchTargetGroup.innerHTML = '';
+
+            if (query === "") {
                 container.classList.remove('searching-active');
+                return;
             }
 
-            rows.forEach(row => {
+            container.classList.add('searching-active');
+            const originalRows = container.querySelectorAll('.section-group-inner .item-row');
+
+            originalRows.forEach(row => {
                 const code = row.getAttribute('data-code').toLowerCase();
                 const textVal = row.getAttribute('data-val').toLowerCase();
+
                 if (code.includes(query) || textVal.includes(query)) {
-                    row.style.display = 'flex';
-                } else {
-                    row.style.display = 'none';
+                    const clonedRow = row.cloneNode(true);
+                    clonedRow.classList.remove('hidden-overflow-item');
+                    clonedRow.style.display = 'flex';
+                    
+                    // Re-bind action pointers to cloned rows
+                    clonedRow.onclick = function() { handleSelectiveCopy(this); };
+                    searchTargetGroup.appendChild(clonedRow);
                 }
             });
         };
 
-        // Intelligent Extraction & Copy Handling with Reset Action
         window.handleSelectiveCopy = function(element) {
             if (layoutMovableActive) return;
-
-            const type = element.getAttribute('data-ref-type');
             const dataVal = element.getAttribute('data-val');
-            let finalCopyString = dataVal;
 
-            navigator.clipboard.writeText(finalCopyString).then(() => {
+            navigator.clipboard.writeText(dataVal).then(() => {
                 const textNode = element.querySelector('.item-desc-text');
                 const originalText = textNode.textContent;
                 textNode.textContent = "COPIED VALUE!";
@@ -609,7 +621,6 @@
             });
         };
 
-        // Context-Aware Responsive Modal Field Transformer
         window.synchronizeModalInputs = function() {
             const currentType = document.getElementById('modalTypeSelector').value;
             const primaryLabel = document.getElementById('primaryFieldLabel');
@@ -618,24 +629,17 @@
             const secondaryInput = document.getElementById('newRecordValue');
 
             if (currentType === 'icd') {
-                primaryLabel.textContent = "Diagnosis Code";
-                secondaryLabel.textContent = "Diagnosis Description";
-                primaryInput.placeholder = "e.g., J06.9";
-                secondaryInput.placeholder = "e.g., UPPER RESPIRATORY TRACT INFECTION";
+                primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
+                primaryInput.placeholder = "e.g., J06.9"; secondaryInput.placeholder = "e.g., UPPER RESPIRATORY TRACT INFECTION";
             } else if (currentType === 'member') {
-                primaryLabel.textContent = "Membership Code";
-                secondaryLabel.textContent = "Full Category Specifier";
-                primaryInput.placeholder = "e.g., DIRECT";
-                secondaryInput.placeholder = "e.g., CONTRIBUTOR - INDIVIDUAL PAYING";
+                primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
+                primaryInput.placeholder = "e.g., DIRECT"; secondaryInput.placeholder = "e.g., CONTRIBUTOR - INDIVIDUAL PAYING";
             } else if (currentType === 'zipcode') {
-                primaryLabel.textContent = "Zipcode";
-                secondaryLabel.textContent = "Municipality Name";
-                primaryInput.placeholder = "e.g., 9417";
-                secondaryInput.placeholder = "e.g., ARAKAN";
+                primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
+                primaryInput.placeholder = "e.g., 9417"; secondaryInput.placeholder = "e.g., ARAKAN";
             }
         };
 
-        // Multi-use Administrative Inline Modification Launchers
         window.openInlineEdit = function(rowElement) {
             activeEditRow = rowElement;
             const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
@@ -659,39 +663,20 @@
 
         window.deleteInlineRow = async function(rowElement) {
             if(confirm("Are you certain you want to destroy this reference record?")) {
-                const container = rowElement.closest('.section-group-inner');
                 const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
                              (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
                 const key = rowElement.getAttribute('data-code');
                 const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
                 try {
-                    if (rtdb) {
-                        await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
-                    }
-                    if (db) {
-                        await deleteDoc(doc(db, `registry_${type}`, key));
-                    }
-                } catch(e) { console.warn("Remote database target drop failed."); }
+                    if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
+                } catch(e) { console.warn("Database drop failed."); }
                 
                 rowElement.remove();
-
-                // Refresh button calculation values dynamically if a row is deleted
-                if (container) {
-                    const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
-                    const currentRows = container.querySelectorAll('.item-row');
-                    if (actionTriggerLink) {
-                        if (currentRows.length <= 5) {
-                            actionTriggerLink.remove();
-                        } else if (actionTriggerLink.getAttribute('data-expanded') === 'false') {
-                            actionTriggerLink.innerHTML = `Show all (${currentRows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                        }
-                    }
-                }
+                resetViewRegistry();
             }
         };
 
-        // Synchronized Remote Persistence Layer Handling Additions & Updates
         window.pushRecordToDatabase = async function() {
             const type = document.getElementById('modalTypeSelector').value;
             const key = document.getElementById('newRecordKey').value.trim();
@@ -703,13 +688,8 @@
             const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
             try {
-                if (rtdb) {
-                    await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
-                }
-                if (db) {
-                    await setDoc(doc(db, `registry_${type}`, key), referencePayload);
-                }
-            } catch (err) { console.warn("Storage runtime write operations captured locally."); }
+                if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
+            } catch (err) { console.warn("Storage runtime error."); }
 
             if (activeEditRow) {
                 activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
@@ -720,41 +700,25 @@
                 if (targetNode) {
                     const currentCount = targetNode.querySelectorAll('.item-row').length;
                     appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
-
-                    // Inject structured action toggler dynamically if this fresh addition exceeds the limit thresholds
-                    if (currentCount === 5) {
-                        const expandBtn = document.createElement('button');
-                        expandBtn.className = 'expand-list-action-trigger';
-                        expandBtn.setAttribute('data-expanded', 'false');
-                        expandBtn.innerHTML = `Show all (6) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                        expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
-                        targetNode.appendChild(expandBtn);
-                    }
                 }
             }
 
             toggleModal('addRecordModal', false);
-            activeEditRow = null;
-            document.getElementById('newRecordKey').value = "";
-            document.getElementById('newRecordKey').disabled = false;
-            document.getElementById('newRecordValue').value = "";
-            if (window.lucide) window.lucide.createIcons();
+            resetViewRegistry();
         };
 
-        // Reordering UI/UX Drag States Engine
         window.toggleMovableLayout = function() {
             layoutMovableActive = !layoutMovableActive;
             const container = document.getElementById('mainContainer');
             const triggerBtn = document.getElementById('sortToggleTrigger');
             const wrappers = document.querySelectorAll('.section-group-wrapper');
-            const chevrons = document.querySelectorAll('.category-header .chevron-icon');
 
             if (layoutMovableActive) {
+                document.getElementById('registrySearch').value = "";
+                container.classList.remove('searching-active');
                 container.classList.add('edit-mode-active');
                 triggerBtn.classList.add('active-mode');
-                // Force wrapper viewframes open during rearrange cycles
                 wrappers.forEach(w => w.classList.remove('collapsed'));
-                chevrons.forEach(c => c.style.transform = "rotate(0deg)");
             } else {
                 container.classList.remove('edit-mode-active');
                 triggerBtn.classList.remove('active-mode');
@@ -775,13 +739,9 @@
                 if (activeDragging) {
                     const boundingElement = getDragLocationSpace(zone, e.clientY);
                     if (boundingElement == null) {
-                        // Insert ahead of the layout action links if present
                         const expandActionLink = zone.querySelector('.expand-list-action-trigger');
-                        if (expandActionLink) {
-                            zone.insertBefore(activeDragging, expandActionLink);
-                        } else {
-                            zone.appendChild(activeDragging);
-                        }
+                        if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
+                        else zone.appendChild(activeDragging);
                     } else {
                         zone.insertBefore(activeDragging, boundingElement);
                     }
@@ -802,7 +762,6 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Global Window Modal Operations
         window.toggleModal = function(id, isActive) {
             const overlay = document.getElementById(id);
             if (overlay) {
@@ -830,6 +789,7 @@
             document.getElementById('registrySearch').value = "";
             filterRegistryRealtime();
             if (layoutMovableActive) toggleMovableLayout();
+            initializeRegistryData();
         };
 
         document.addEventListener('DOMContentLoaded', () => {
