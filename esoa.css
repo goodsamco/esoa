@@ -1075,38 +1075,50 @@ h2 {
 
 
 
+/* ==========================================================================
+   HUB TYPING INDICATOR
+   ========================================================================== */
+
 .peer-name-hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
+}
+
+.peer-name-hover[data-typing="true"] {
+    padding-top: 6px;
 }
 
 .typing-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: currentColor;
     display: inline-block;
-    animation: typingPulse 1.2s infinite;
+    position: relative;
+    top: 3px;
+
+    opacity: 0.35;
+    animation: typingPulse 1.2s infinite ease-in-out;
 }
 
 .typing-dot:nth-child(2) {
-    animation-delay: .2s;
+    animation-delay: 0.2s;
 }
 
 .typing-dot:nth-child(3) {
-    animation-delay: .4s;
+    animation-delay: 0.4s;
 }
 
 @keyframes typingPulse {
     0%, 60%, 100% {
-        opacity: .25;
-        transform: translateY(0);
+        opacity: 0.3;
+        transform: scale(1);
     }
 
     30% {
         opacity: 1;
-        transform: translateY(-3px);
+        transform: scale(1.5);
     }
 }
