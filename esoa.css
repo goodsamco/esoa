@@ -1077,44 +1077,44 @@ h2 {
 
 /* ==========================================================================
    HUB TYPING INDICATOR
-   NO LAYOUT SHIFT
+   MATCHES PEER-NAME-HOVER WITHOUT SHIFTING LAYOUT
    ========================================================================== */
 
 .peer-name-hover {
-    position: relative;
-}
 
-/* typing dots container */
-.peer-name-hover .typing-container {
-    position: absolute;
+    width: 100%;
 
-    left: 50%;
-    top: 50%;
+    font-size: 0.65rem;
+    font-weight: 700;
 
-    transform: translate(-50%, -50%);
+    color: white;
+
+    text-align: center;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     display: flex;
     align-items: center;
     justify-content: center;
-
     gap: 3px;
-
-    width: 100%;
 }
 
 
-/* dots */
+/* typing dots */
 .typing-dot {
     width: 6px;
     height: 6px;
 
-    border-radius: 50%;
+    flex-shrink: 0;
 
+    border-radius: 50%;
     background: currentColor;
 
-    display: block;
+    display: inline-block;
 
-    opacity: .35;
+    opacity: 0.35;
 
     animation: typingPulse 1.2s infinite ease-in-out;
 }
@@ -1131,7 +1131,7 @@ h2 {
 
 @keyframes typingPulse {
 
-    0%,60%,100% {
+    0%, 60%, 100% {
         opacity: .35;
     }
 
