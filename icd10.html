@@ -179,6 +179,53 @@
             transform: translateY(-2px);
         }
 
+        /* Custom Dropdown Field Mechanics Setup */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .custom-select-wrapper select {
+            width: 100%;
+            background: #000 !important;
+            color: white !important;
+            padding: 12px;
+            border: 1px solid rgba(83, 83, 83, 0.3);
+            border-radius: 16px;
+            font-size: 0.8rem !important;
+            font-weight: 600;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .custom-select-wrapper::after {
+            content: '▼';
+            font-size: 0.65rem;
+            color: var(--primary);
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* Scaled Modal Typography and Fields Layout */
+        .modal-content .input-group label {
+            font-size: 0.72rem !important;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-content .input-group input {
+            font-size: 0.8rem !important;
+            padding: 12px !important;
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(83, 83, 83, 0.3) !important;
+            color: #fff !important;
+        }
+
         /* Direct adaptive typography setups with explicit structural rules */
         .item-row {
             display: flex;
@@ -279,7 +326,6 @@
         
         <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
         
-        <!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
         <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
         
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
@@ -291,13 +337,11 @@
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
-        <!-- Realtime Prioritized Search View Target Element -->
         <div class="search-priority-view" id="prioritySearchView">
             <h3>Top Search Matches</h3>
             <div id="searchResultTargetGroup"></div>
         </div>
 
-        <!-- ICD-10 Accordion -->
         <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
             <h2>ICD-10 Diagnostic Codes</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -306,7 +350,6 @@
             <div class="section-group-inner" id="icd-section-group"></div>
         </div>
 
-        <!-- ZIPCODE Accordion -->
         <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
             <h2>ZIPCODE</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -315,7 +358,6 @@
             <div class="section-group-inner" id="zip-section-group"></div>
         </div>
 
-        <!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
         <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
             <h2>MEMBER CATEGORY</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -341,21 +383,25 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
             <input type="hidden" id="editRowTargetId" value="">
+            
             <div class="input-group" id="modalTypeSelectorGroup">
                 <label>REFERENCE TYPE</label>
-                <select id="modalTypeSelector" onchange="synchronizeModalInputs()" style="width:100%; background:#000; color:white; padding:14px; border:1px solid rgba(83,83,83,0.2); border-radius:16px; margin-top:5px; font-weight:700;">
-                    <option value="icd">ICD-10 Diagnostic Definition</option>
-                    <option value="member">Membership Category</option>
-                    <option value="zipcode">Zip Code Mapping</option>
-                </select>
+                <div class="custom-select-wrapper">
+                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+                        <option value="icd">ICD-10 Diagnostic Definition</option>
+                        <option value="member">Membership Category</option>
+                        <option value="zipcode">Zip Code Mapping</option>
+                    </select>
+                </div>
             </div>
+            
             <div class="input-group">
                  <label id="primaryFieldLabel">Diagnosis Code</label>
-                 <input id="newRecordKey" type="text" placeholder="e.g., J06.9">
+                 <input id="newRecordKey" type="text">
              </div>
             <div class="input-group">
                  <label id="secondaryFieldLabel">Description Value</label>
-                 <input id="newRecordValue" type="text" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
+                 <input id="newRecordValue" type="text">
              </div>
             <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000;">SAVE REGISTRY DATA</div>
             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
@@ -367,11 +413,11 @@
             <h3>DISCOUNT CALCULATOR</h3>
             <div class="input-group">
                  <label>HOSPITAL CHARGES</label>
-                 <input id="hospCharges" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()">
+                 <input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
             <div class="input-group">
                  <label>CASE RATE (PHIC)</label>
-                 <input id="caseRate" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()">
+                 <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
             <div class="modal-result" style="border-color: var(--primary);"><div id="finalDiscount" style="color: var(--primary);">0.00</div></div>
             <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000;">COPY CALCULATION</div>
@@ -578,11 +624,12 @@
             const container = document.getElementById('mainContainer');
             const searchTargetGroup = document.getElementById('searchResultTargetGroup');
 
-            // Clear layout stack completely when search goes empty
             searchTargetGroup.innerHTML = '';
 
             if (query === "") {
                 container.classList.remove('searching-active');
+                // Lightweight internal re-hide loop instead of deep dynamic rebuilding
+                fineTuneResetElements();
                 return;
             }
 
@@ -597,13 +644,37 @@
                     const clonedRow = row.cloneNode(true);
                     clonedRow.classList.remove('hidden-overflow-item');
                     clonedRow.style.display = 'flex';
-                    
-                    // Re-bind action pointers to cloned rows
                     clonedRow.onclick = function() { handleSelectiveCopy(this); };
                     searchTargetGroup.appendChild(clonedRow);
                 }
             });
         };
+
+        // Fine-Tune Reset Utility: Performs light re-hiding over matching data targets
+        function fineTuneResetElements() {
+            const groups = ['icd-section-group', 'member-section-group', 'zip-section-group'];
+            groups.forEach(id => {
+                const target = document.getElementById(id);
+                if (!target) return;
+                
+                const rows = target.querySelectorAll('.item-row');
+                rows.forEach((row, idx) => {
+                    if (idx >= 5) {
+                        row.classList.add('hidden-overflow-item');
+                    } else {
+                        row.classList.remove('hidden-overflow-item');
+                    }
+                    row.style.display = 'flex';
+                });
+
+                const triggerBtn = target.querySelector('.expand-list-action-trigger');
+                if (triggerBtn) {
+                    triggerBtn.setAttribute('data-expanded', 'false');
+                    triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                }
+            });
+            if (window.lucide) window.lucide.createIcons();
+        }
 
         window.handleSelectiveCopy = function(element) {
             if (layoutMovableActive) return;
@@ -625,18 +696,13 @@
             const currentType = document.getElementById('modalTypeSelector').value;
             const primaryLabel = document.getElementById('primaryFieldLabel');
             const secondaryLabel = document.getElementById('secondaryFieldLabel');
-            const primaryInput = document.getElementById('newRecordKey');
-            const secondaryInput = document.getElementById('newRecordValue');
 
             if (currentType === 'icd') {
                 primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
-                primaryInput.placeholder = "e.g., J06.9"; secondaryInput.placeholder = "e.g., UPPER RESPIRATORY TRACT INFECTION";
             } else if (currentType === 'member') {
                 primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
-                primaryInput.placeholder = "e.g., DIRECT"; secondaryInput.placeholder = "e.g., CONTRIBUTOR - INDIVIDUAL PAYING";
             } else if (currentType === 'zipcode') {
                 primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
-                primaryInput.placeholder = "e.g., 9417"; secondaryInput.placeholder = "e.g., ARAKAN";
             }
         };
 
@@ -722,6 +788,7 @@
             } else {
                 container.classList.remove('edit-mode-active');
                 triggerBtn.classList.remove('active-mode');
+                fineTuneResetElements();
             }
         };
 
@@ -775,6 +842,8 @@
                         document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
                         document.getElementById('modalTypeSelectorGroup').style.display = 'block';
                         document.getElementById('newRecordKey').disabled = false;
+                        document.getElementById('newRecordKey').value = "";
+                        document.getElementById('newRecordValue').value = "";
                         activeEditRow = null;
                     }, 220);
                 }
@@ -789,7 +858,7 @@
             document.getElementById('registrySearch').value = "";
             filterRegistryRealtime();
             if (layoutMovableActive) toggleMovableLayout();
-            initializeRegistryData();
+            fineTuneResetElements();
         };
 
         document.addEventListener('DOMContentLoaded', () => {
