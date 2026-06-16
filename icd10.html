@@ -162,13 +162,15 @@
             display: none;
         }
 
-        /* Force block element overrides during active sorting layout states */
-        .edit-mode-active .item-row.hidden-overflow-item {
+        /* Force block element overrides during active sorting or searching states */
+        .edit-mode-active .item-row.hidden-overflow-item,
+        .searching-active .item-row.hidden-overflow-item {
             display: flex !important;
         }
 
         /* Automatically mask expand buttons when absolute visibility controls are forced */
-        .edit-mode-active .expand-list-action-trigger {
+        .edit-mode-active .expand-list-action-trigger,
+        .searching-active .expand-list-action-trigger {
             display: none !important;
         }
 
@@ -456,16 +458,28 @@
             }
         };
 
-        // Inline manual list expansion toggler 
-        window.revealFullSectionList = function(buttonElement, targetGroupId) {
+        // Inline structural show/hide toggle framework
+        window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
             const container = document.getElementById(targetGroupId);
             if (!container) return;
             
-            const rows = container.querySelectorAll('.item-row.hidden-overflow-item');
-            rows.forEach(r => {
-                r.classList.remove('hidden-overflow-item');
-            });
-            buttonElement.remove();
+            const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
+            const rows = container.querySelectorAll('.item-row');
+            
+            if (!isExpanded) {
+                // Show everything
+                rows.forEach(r => r.classList.remove('hidden-overflow-item'));
+                buttonElement.setAttribute('data-expanded', 'true');
+                buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
+            } else {
+                // Hide past index threshold (keep first 5 items)
+                rows.forEach((r, idx) => {
+                    if (idx >= 5) r.classList.add('hidden-overflow-item');
+                });
+                buttonElement.setAttribute('data-expanded', 'false');
+                buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+            }
+            if (window.lucide) window.lucide.createIcons();
         };
 
         // Database Synced Initialization Layer
@@ -507,12 +521,13 @@
                     appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
                 });
 
-                // Inject structural expand anchor directly if data layer counts pass index thresholds
+                // Inject structured action toggler if database rows cross the index thresholds
                 if (activeList.length > 5) {
                     const expandBtn = document.createElement('button');
                     expandBtn.className = 'expand-list-action-trigger';
+                    expandBtn.setAttribute('data-expanded', 'false');
                     expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                    expandBtn.onclick = function() { revealFullSectionList(this, sectionMap[type]); };
+                    expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
                     targetContainer.appendChild(expandBtn);
                 }
             }
@@ -535,10 +550,16 @@
                 </div>
             `;
             
-            // Ensure runtime nodes append nicely right ahead of any appended expand trigger links
+            // Appends nice and clean right before the list layout buttons if they exist
             const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
             if (actionTriggerLink) {
                 container.insertBefore(rowDiv, actionTriggerLink);
+                
+                // Update dynamic button totals if a fresh database add occurs
+                const rowsCount = container.querySelectorAll('.item-row').length;
+                if (actionTriggerLink.getAttribute('data-expanded') === 'false') {
+                    actionTriggerLink.innerHTML = `Show all (${rowsCount}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                }
             } else {
                 container.appendChild(rowDiv);
             }
@@ -548,7 +569,14 @@
         // Reverted Standard Realtime Search Match Implementation
         window.filterRegistryRealtime = function() {
             const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+            const container = document.getElementById('mainContainer');
             const rows = document.querySelectorAll('.item-row');
+
+            if (query !== "") {
+                container.classList.add('searching-active');
+            } else {
+                container.classList.remove('searching-active');
+            }
 
             rows.forEach(row => {
                 const code = row.getAttribute('data-code').toLowerCase();
@@ -631,6 +659,7 @@
 
         window.deleteInlineRow = async function(rowElement) {
             if(confirm("Are you certain you want to destroy this reference record?")) {
+                const container = rowElement.closest('.section-group-inner');
                 const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
                              (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
                 const key = rowElement.getAttribute('data-code');
@@ -646,6 +675,19 @@
                 } catch(e) { console.warn("Remote database target drop failed."); }
                 
                 rowElement.remove();
+
+                // Refresh button calculation values dynamically if a row is deleted
+                if (container) {
+                    const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+                    const currentRows = container.querySelectorAll('.item-row');
+                    if (actionTriggerLink) {
+                        if (currentRows.length <= 5) {
+                            actionTriggerLink.remove();
+                        } else if (actionTriggerLink.getAttribute('data-expanded') === 'false') {
+                            actionTriggerLink.innerHTML = `Show all (${currentRows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                        }
+                    }
+                }
             }
         };
 
@@ -678,6 +720,16 @@
                 if (targetNode) {
                     const currentCount = targetNode.querySelectorAll('.item-row').length;
                     appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
+
+                    // Inject structured action toggler dynamically if this fresh addition exceeds the limit thresholds
+                    if (currentCount === 5) {
+                        const expandBtn = document.createElement('button');
+                        expandBtn.className = 'expand-list-action-trigger';
+                        expandBtn.setAttribute('data-expanded', 'false');
+                        expandBtn.innerHTML = `Show all (6) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                        expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
+                        targetNode.appendChild(expandBtn);
+                    }
                 }
             }
 
