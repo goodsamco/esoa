@@ -178,11 +178,11 @@
         <h2>ICD-10 Diagnostic Codes</h2>
         <div id="icd-section-group"></div>
 
-        <h2>MEMBER CATEGORY</h2>
-        <div id="member-section-group"></div>
-
         <h2>ZIPCODE</h2>
         <div id="zip-section-group"></div>
+
+        <h2>MEMBER CATEGORY</h2>
+        <div id="member-section-group"></div>
     </div>
 
     <div class="bottom-floating-control-strip">
@@ -380,7 +380,9 @@
                     } catch(err) {}
                 }
 
-                activeList.forEach(item => {
+                // Strictly slices array data sets down to an initial 5 entries limit
+                const slicedList = activeList.slice(0, 5);
+                slicedList.forEach(item => {
                     appendRowToDOM(targetContainer, type, item.code, item.desc);
                 });
             }
