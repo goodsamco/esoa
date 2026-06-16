@@ -261,12 +261,11 @@ function bindTypingIndicator(partnerId, displayName) {
 
         if (snapshot.val() === true) {
          tag.innerHTML = `
-         <div class="typing-container">
-             <span class="typing-dot"></span>
-             <span class="typing-dot"></span>
-             <span class="typing-dot"></span>
-         </div>
-         `;
+tag.innerHTML = `
+<span class="typing-dot"></span>
+<span class="typing-dot"></span>
+<span class="typing-dot"></span>
+`;
             tag.dataset.typing = "true";
         } else {
             tag.textContent = displayName;
