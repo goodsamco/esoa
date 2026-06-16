@@ -19,6 +19,47 @@
             --success: #00e676;
         }
 
+        /* Category Header Accordion Styling */
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
+        }
+
+        .category-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .category-header .chevron-icon {
+            color: var(--primary);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-group-wrapper {
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .section-group-wrapper.collapsed {
+            grid-template-rows: 0fr;
+        }
+
+        .section-group-wrapper.collapsed .category-header .chevron-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-group-inner {
+            min-height: 0;
+        }
+
         /* Floating Control Dock perfectly stacked above the profile layout */
         .bottom-floating-control-strip {
             position: fixed;
@@ -87,6 +128,21 @@
         }
 
         /* Direct adaptive typography setups with explicit structural fallbacks */
+        .item-row {
+            display: flex;
+            margin: 8px 0;
+        }
+        
+        .item-row.hidden-overflow-item {
+            display: none;
+        }
+
+        /* Force visibility overrides during search operations or sorting layers */
+        .searching-active .item-row.hidden-overflow-item,
+        .edit-mode-active .item-row.hidden-overflow-item {
+            display: flex !important;
+        }
+
         .item-row .item-code-prefix {
             font-family: 'Roboto Mono', monospace;
             color: var(--primary) !important;
@@ -165,13 +221,11 @@
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
         
-        <!-- eSOA Page Button (Inactive) -->
         <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
         
-        <!-- Active ICD10 Codes Page Button with subtle lighter background -->
+        <!-- Active ICD10 Codes Page Button with subtle lighter background match -->
         <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
         
-        <!-- CF4 Button -->
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
@@ -181,14 +235,38 @@
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
-        <h2>ICD-10 Diagnostic Codes</h2>
-        <div id="icd-section-group"></div>
+        <!-- ICD-10 Accordion -->
+        <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
+            <h2>ICD-10 Diagnostic Codes</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="icd-wrapper">
+            <div class="section-group-inner">
+                <div id="icd-section-group"></div>
+            </div>
+        </div>
 
-        <h2>ZIPCODE</h2>
-        <div id="zip-section-group"></div>
+        <!-- ZIPCODE Accordion -->
+        <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
+            <h2>ZIPCODE</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="zip-wrapper">
+            <div class="section-group-inner">
+                <div id="zip-section-group"></div>
+            </div>
+        </div>
 
-        <h2>MEMBER CATEGORY</h2>
-        <div id="member-section-group"></div>
+        <!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
+        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+            <h2>MEMBER CATEGORY</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="member-wrapper">
+            <div class="section-group-inner">
+                <div id="member-section-group"></div>
+            </div>
+        </div>
     </div>
 
     <div class="bottom-floating-control-strip">
@@ -340,16 +418,20 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            pullParsedAccentColor();
-
-            const activeBtn = document.querySelector('.top-btn.active');
-            if (activeBtn) {
-                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-                activeBtn.style.borderColor = primaryColor;
-                activeBtn.style.color = primaryColor;
+        // Toggle Expand/Collapse Core Accordions
+        window.toggleCategoryAccordion = function(wrapperId, headerElement) {
+            if (layoutMovableActive) return; // Lock toggle interaction during drag layout changes
+            const wrapper = document.getElementById(wrapperId);
+            const chevron = headerElement.querySelector('.chevron-icon');
+            
+            if (wrapper.classList.contains('collapsed')) {
+                wrapper.classList.remove('collapsed');
+                chevron.style.transform = "rotate(0deg)";
+            } else {
+                wrapper.classList.add('collapsed');
+                chevron.style.transform = "rotate(-90deg)";
             }
-        });
+        };
 
         // Database Synced Initialization Layer
         async function initializeRegistryData() {
@@ -386,18 +468,17 @@
                     } catch(err) {}
                 }
 
-                // Strictly slices array data sets down to an initial 5 entries limit
-                const slicedList = activeList.slice(0, 5);
-                slicedList.forEach(item => {
-                    appendRowToDOM(targetContainer, type, item.code, item.desc);
+                // Append all rows but mask items indices > 4 behind toggle rules
+                activeList.forEach((item, index) => {
+                    appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
                 });
             }
             if (window.lucide) window.lucide.createIcons();
         }
 
-        function appendRowToDOM(container, type, key, val) {
+        function appendRowToDOM(container, type, key, val, isOverflowItem) {
             const rowDiv = document.createElement('div');
-            rowDiv.className = 'item-row';
+            rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
             rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
             rowDiv.setAttribute('data-code', key);
             rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
@@ -418,7 +499,16 @@
         // Realtime Registry Matching Strategy
         window.filterRegistryRealtime = function() {
             const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+            const container = document.getElementById('mainContainer');
             const rows = document.querySelectorAll('.item-row');
+
+            if (query !== "") {
+                container.classList.add('searching-active');
+                // Temporarily expand accordion drop frames during live typing searches
+                document.querySelectorAll('.section-group-wrapper').forEach(w => w.classList.remove('collapsed'));
+            } else {
+                container.classList.remove('searching-active');
+            }
 
             rows.forEach(row => {
                 const code = row.getAttribute('data-code').toLowerCase();
@@ -546,7 +636,8 @@
                 const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
                 const targetNode = document.getElementById(sectionMap[type]);
                 if (targetNode) {
-                    appendRowToDOM(targetNode, type, key, val);
+                    const currentCount = targetNode.querySelectorAll('.item-row').length;
+                    appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
                 }
             }
 
@@ -563,10 +654,15 @@
             layoutMovableActive = !layoutMovableActive;
             const container = document.getElementById('mainContainer');
             const triggerBtn = document.getElementById('sortToggleTrigger');
+            const wrappers = document.querySelectorAll('.section-group-wrapper');
+            const chevrons = document.querySelectorAll('.category-header .chevron-icon');
 
             if (layoutMovableActive) {
                 container.classList.add('edit-mode-active');
                 triggerBtn.classList.add('active-mode');
+                // Automatically force expand all categories to reveal hidden rows for easy sorting
+                wrappers.forEach(w => w.classList.remove('collapsed'));
+                chevrons.forEach(c => c.style.transform = "rotate(0deg)");
             } else {
                 container.classList.remove('edit-mode-active');
                 triggerBtn.classList.remove('active-mode');
