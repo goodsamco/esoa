@@ -59,7 +59,7 @@
         }
 
         .search-inner-wrapper input:focus {
-            border-color: var(--runtime-accent) !important;
+            border-color: var(--primary) !important;
         }
 
         .action-control-btn {
@@ -68,7 +68,7 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass);
             border-radius: 50%;
-            color: var(--runtime-accent) !important; 
+            color: var(--primary) !important; 
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -77,16 +77,16 @@
         }
 
         .action-control-btn:hover, .action-control-btn.active-mode {
-            background: var(--runtime-accent) !important;
+            background: var(--primary) !important;
             color: #000 !important;
-            border-color: var(--runtime-accent) !important;
+            border-color: var(--primary) !important;
             transform: translateY(-2px);
         }
 
         /* Direct adaptive typography setups with explicit structural fallbacks */
         .item-row .item-code-prefix {
             font-family: 'Roboto Mono', monospace;
-            color: var(--runtime-accent) !important;
+            color: var(--primary) !important;
             font-weight: 700;
             margin-right: 10px;
             font-size: 0.95rem;
@@ -135,7 +135,7 @@
         /* Movable Layout Reordering & Administrative active states */
         .edit-mode-active .item-row {
             cursor: grab !important;
-            border: 1px dashed var(--runtime-accent) !important;
+            border: 1px dashed var(--primary) !important;
             background: rgba(255, 255, 255, 0.02);
         }
 
@@ -214,7 +214,7 @@
                  <label id="secondaryFieldLabel">Description Value</label>
                  <input id="newRecordValue" type="text" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
              </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--runtime-accent); color: #000;">SAVE REGISTRY DATA</div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000;">SAVE REGISTRY DATA</div>
             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
@@ -230,8 +230,8 @@
                  <label>CASE RATE (PHIC)</label>
                  <input id="caseRate" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
-            <div class="modal-result" style="border-color: var(--runtime-accent);"><div id="finalDiscount" style="color: var(--runtime-accent);">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--runtime-accent); color: #000;">COPY CALCULATION</div>
+            <div class="modal-result" style="border-color: var(--primary);"><div id="finalDiscount" style="color: var(--primary);">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000;">COPY CALCULATION</div>
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
@@ -319,19 +319,34 @@
         }
 
         // Resolves dynamic visual styling parameters matching the accent extraction engine configuration
-        function pullParsedAccentColor() {
-            // Evaluates local variables first, then scrapes custom root setups, matching how background/bg handles fallbacks
-            let customAccent = localStorage.getItem('accentColor') || localStorage.getItem('customAccent');
-            
-            if (!customAccent) {
-                const computed = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-                if (computed) customAccent = computed;
-            }
-            
-            if (customAccent) {
-                document.documentElement.style.setProperty('--runtime-accent', customAccent);
-            }
-        }
+function pullParsedAccentColor() {
+    let customAccent =
+        localStorage.getItem('accentColor') ||
+        localStorage.getItem('customAccent');
+
+    if (customAccent) {
+        document.documentElement.style.setProperty(
+            '--primary',
+            customAccent
+        );
+    }
+}
+
+        document.addEventListener('DOMContentLoaded', () => {
+    pullParsedAccentColor();
+
+    const activeBtn = document.querySelector('.top-btn.active');
+
+    if (activeBtn) {
+        activeBtn.style.borderColor =
+            getComputedStyle(document.documentElement)
+                .getPropertyValue('--primary');
+
+        activeBtn.style.color =
+            getComputedStyle(document.documentElement)
+                .getPropertyValue('--primary');
+    }
+});
 
         // Database Synced Initialization Layer
         async function initializeRegistryData() {
