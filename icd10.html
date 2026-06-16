@@ -19,7 +19,7 @@
             --success: #00e676;
         }
 
-        /* Category Header Accordion Styling */
+        /* Category Header Chevron indicator styles */
         .category-header {
             display: flex;
             align-items: center;
@@ -58,6 +58,31 @@
 
         .section-group-inner {
             min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Inline structural action link positioned after the fifth block element */
+        .expand-list-action-trigger {
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: left;
+            padding: 6px 4px;
+            margin-top: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+            width: fit-content;
+        }
+
+        .expand-list-action-trigger:hover {
+            opacity: 0.8;
         }
 
         /* Floating Control Dock perfectly stacked above the profile layout */
@@ -127,7 +152,7 @@
             transform: translateY(-2px);
         }
 
-        /* Direct adaptive typography setups with explicit structural fallbacks */
+        /* Direct adaptive typography setups with explicit structural rules */
         .item-row {
             display: flex;
             margin: 8px 0;
@@ -137,10 +162,14 @@
             display: none;
         }
 
-        /* Force visibility overrides during search operations or sorting layers */
-        .searching-active .item-row.hidden-overflow-item,
+        /* Force block element overrides during active sorting layout states */
         .edit-mode-active .item-row.hidden-overflow-item {
             display: flex !important;
+        }
+
+        /* Automatically mask expand buttons when absolute visibility controls are forced */
+        .edit-mode-active .expand-list-action-trigger {
+            display: none !important;
         }
 
         .item-row .item-code-prefix {
@@ -223,7 +252,7 @@
         
         <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
         
-        <!-- Active ICD10 Codes Page Button with subtle lighter background match -->
+        <!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
         <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
         
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
@@ -241,9 +270,7 @@
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
         <div class="section-group-wrapper" id="icd-wrapper">
-            <div class="section-group-inner">
-                <div id="icd-section-group"></div>
-            </div>
+            <div class="section-group-inner" id="icd-section-group"></div>
         </div>
 
         <!-- ZIPCODE Accordion -->
@@ -252,9 +279,7 @@
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
         <div class="section-group-wrapper" id="zip-wrapper">
-            <div class="section-group-inner">
-                <div id="zip-section-group"></div>
-            </div>
+            <div class="section-group-inner" id="zip-section-group"></div>
         </div>
 
         <!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
@@ -263,9 +288,7 @@
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
         <div class="section-group-wrapper" id="member-wrapper">
-            <div class="section-group-inner">
-                <div id="member-section-group"></div>
-            </div>
+            <div class="section-group-inner" id="member-section-group"></div>
         </div>
     </div>
 
@@ -420,7 +443,7 @@
 
         // Toggle Expand/Collapse Core Accordions
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
-            if (layoutMovableActive) return; // Lock toggle interaction during drag layout changes
+            if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
             const chevron = headerElement.querySelector('.chevron-icon');
             
@@ -431,6 +454,18 @@
                 wrapper.classList.add('collapsed');
                 chevron.style.transform = "rotate(-90deg)";
             }
+        };
+
+        // Inline manual list expansion toggler 
+        window.revealFullSectionList = function(buttonElement, targetGroupId) {
+            const container = document.getElementById(targetGroupId);
+            if (!container) return;
+            
+            const rows = container.querySelectorAll('.item-row.hidden-overflow-item');
+            rows.forEach(r => {
+                r.classList.remove('hidden-overflow-item');
+            });
+            buttonElement.remove();
         };
 
         // Database Synced Initialization Layer
@@ -468,10 +503,18 @@
                     } catch(err) {}
                 }
 
-                // Append all rows but mask items indices > 4 behind toggle rules
                 activeList.forEach((item, index) => {
                     appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
                 });
+
+                // Inject structural expand anchor directly if data layer counts pass index thresholds
+                if (activeList.length > 5) {
+                    const expandBtn = document.createElement('button');
+                    expandBtn.className = 'expand-list-action-trigger';
+                    expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                    expandBtn.onclick = function() { revealFullSectionList(this, sectionMap[type]); };
+                    targetContainer.appendChild(expandBtn);
+                }
             }
             if (window.lucide) window.lucide.createIcons();
         }
@@ -492,23 +535,20 @@
                 </div>
             `;
             
-            container.appendChild(rowDiv);
+            // Ensure runtime nodes append nicely right ahead of any appended expand trigger links
+            const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+            if (actionTriggerLink) {
+                container.insertBefore(rowDiv, actionTriggerLink);
+            } else {
+                container.appendChild(rowDiv);
+            }
             bindDragDropSequence(rowDiv);
         }
 
-        // Realtime Registry Matching Strategy
+        // Reverted Standard Realtime Search Match Implementation
         window.filterRegistryRealtime = function() {
             const query = document.getElementById('registrySearch').value.toLowerCase().trim();
-            const container = document.getElementById('mainContainer');
             const rows = document.querySelectorAll('.item-row');
-
-            if (query !== "") {
-                container.classList.add('searching-active');
-                // Temporarily expand accordion drop frames during live typing searches
-                document.querySelectorAll('.section-group-wrapper').forEach(w => w.classList.remove('collapsed'));
-            } else {
-                container.classList.remove('searching-active');
-            }
 
             rows.forEach(row => {
                 const code = row.getAttribute('data-code').toLowerCase();
@@ -660,7 +700,7 @@
             if (layoutMovableActive) {
                 container.classList.add('edit-mode-active');
                 triggerBtn.classList.add('active-mode');
-                // Automatically force expand all categories to reveal hidden rows for easy sorting
+                // Force wrapper viewframes open during rearrange cycles
                 wrappers.forEach(w => w.classList.remove('collapsed'));
                 chevrons.forEach(c => c.style.transform = "rotate(0deg)");
             } else {
@@ -683,7 +723,13 @@
                 if (activeDragging) {
                     const boundingElement = getDragLocationSpace(zone, e.clientY);
                     if (boundingElement == null) {
-                        zone.appendChild(activeDragging);
+                        // Insert ahead of the layout action links if present
+                        const expandActionLink = zone.querySelector('.expand-list-action-trigger');
+                        if (expandActionLink) {
+                            zone.insertBefore(activeDragging, expandActionLink);
+                        } else {
+                            zone.appendChild(activeDragging);
+                        }
                     } else {
                         zone.insertBefore(activeDragging, boundingElement);
                     }
