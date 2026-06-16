@@ -1079,7 +1079,7 @@ h2 {
    HUB TYPING INDICATOR
    MATCHES PEER-NAME-HOVER WITHOUT SHIFTING LAYOUT
    ========================================================================== */
-
+/*
 .peer-name-hover {
     margin-top: 6px;
 
@@ -1101,7 +1101,7 @@ h2 {
     justify-content: center;
     gap: 3px;
 }
-
+*/
 
 /* typing dots */
 .typing-dot {
