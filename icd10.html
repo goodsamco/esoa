@@ -13,7 +13,7 @@
     <style>
         /* Custom layout correction mapping variables dynamically sourced from local storage engines */
         :root {
-            --runtime-accent: var(--primary);
+             var(--primary);
         }
 
         /* Floating Control Dock perfectly stacked above the profile layout */
@@ -68,7 +68,7 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass);
             border-radius: 50%;
-            color: var(--primary) !important; 
+            color: var(--primary) !important;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -78,8 +78,8 @@
 
         .action-control-btn:hover, .action-control-btn.active-mode {
             background: var(--primary) !important;
-            color: #000 !important;
             border-color: var(--primary) !important;
+            color: #000 !important;
             transform: translateY(-2px);
         }
 
