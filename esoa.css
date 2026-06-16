@@ -1087,12 +1087,12 @@ h2 {
 }
 
 .peer-name-hover[data-typing="true"] {
-    padding-top: 6px;
+    padding-top: 1px;
 }
 
 .typing-dot {
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: currentColor;
     display: inline-block;
