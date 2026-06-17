@@ -1362,3 +1362,78 @@ h2 {
     left: auto;
     right: 10px;
 }
+
+
+/* ==========================================================================
+   PROFILE ATTACHED STATUS NOTE SYSTEM Layouts
+   ========================================================================== */
+
+/* Context wrapper around profile actions to manage stacking bounds */
+.profile-avatar-node {
+    position: fixed;
+    bottom: 45px;
+    right: 25px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+    border: 2px solid var(--primary);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 2500; 
+}
+
+/* Floating status layout balanced cleanly right over the avatar circle */
+.profile-status-note-bubble {
+    position: fixed;
+    bottom: 98px; /* Perfectly clears the 48px avatar node + padding */
+    right: 25px;
+    background: var(--surface);
+    color: var(--text-main);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    max-width: 110px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    z-index: 2501;
+    text-align: center;
+    pointer-events: none;
+    transform-origin: bottom center;
+    animation: idleFloat 3.5s ease-in-out infinite;
+}
+
+/* Minimalist dynamic utility node for profile updates on pointer hover */
+.profile-note-action-trigger {
+    position: fixed;
+    bottom: 78px;
+    right: 38px; /* Center-aligned relative to the 48px width layout */
+    background: var(--primary);
+    color: #000000;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    cursor: pointer;
+    z-index: 2502;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+/* Reveal functional modification target layout on hovering the localized workspace zone */
+.profile-avatar-node:hover + .profile-note-action-trigger,
+.profile-note-action-trigger:hover {
+    opacity: 1;
+    transform: scale(1);
+}
