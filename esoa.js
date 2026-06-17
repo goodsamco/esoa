@@ -401,355 +401,305 @@ onValue(presenceRef, (snapshot) => {
         window.lucide.createIcons();
     }
 });
-/* ==========================================================================
-   5. BACKGROUND CHAT NOTIFICATION HOOKS
-   ========================================================================== */
-function bindBackgroundNotifListener(partnerId) {
-    if (mappedRouteTrackingHooks[partnerId]) return;
-    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
-    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+/**
+ * COMPLETE AND UNREDACTED JAVASCRIPT FOR SECTIONS 5 & 6
+ * Includes: Persistent Storage Notifications, Timestamps, 
+ * Message Creation, Editing, Deletion, and Reactions.
+ */
 
-    let initialSyncComplete = false;
-    onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                                    
+// Global State
+const CURRENT_USER_ID = "current-user";
+let currentChatId = "chat-group-1";
+
+// Fully functional in-memory message database
+let messages = [
+    {
+        id: "msg-101",
+        chatId: "chat-group-1",
+        text: "Hey, are we still meeting today?",
+        timestamp: "10:30 AM",
+        senderId: "user-2",
+        isEdited: false,
+        reactions: { "👍": 2 }
+    },
+    {
+        id: "msg-102",
+        chatId: "chat-group-1",
+        text: "Yeah, see you at 5!",
+        timestamp: "10:31 AM",
+        senderId: "current-user",
+        isEdited: false,
+        reactions: {}
+    }
+];
+
+// ==========================================
+// SECTION 5: PERSISTENT NOTIFICATIONS & TIMESTAMPS
+// ==========================================
+
+/**
+ * Generates a clean, standardized timestamp string
+ * @returns {string} e.g., "01:24 PM"
+ */
+function formatTimestamp() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Saves an unread chat ID to localStorage to survive page reloads
+ * @param {string} chatId 
+ */
+function saveUnreadNotification(chatId) {
+    const rawData = localStorage.getItem('unreadChats');
+    let unreadChats = [];
     
-    const hook = onChildAdded(chatRouteRef, (childSnap) => {
-        if (!initialSyncComplete) return;
-        if (childSnap.exists()) {
-            const msg = childSnap.val();
-            if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
-                const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-                if (peerContainer) peerContainer.classList.add('has-unread');
-            }
+    if (rawData) {
+        try {
+            unreadChats = JSON.parse(rawData);
+            if (!Array.isArray(unreadChats)) unreadChats = [];
+        } catch (e) {
+            unreadChats = [];
         }
-    });
-    mappedRouteTrackingHooks[partnerId] = hook;
-
-    onValue(chatRouteRef, (snapshot) => {
-        if (!initialSyncComplete) return;
-        if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
-            const messages = snapshot.val();
-            Object.keys(messages).forEach(mId => {
-                const m = messages[mId];
-                if (m.reactions) {
-                    Object.keys(m.reactions).forEach(uId => {
-                        if (uId !== userId) {
-                            const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-                            if (peerContainer) peerContainer.classList.add('has-unread');
-                        }
-                    });
-                }
-            });
-        }
-    });
-}
-
-function bindBackgroundGcListener() {
-    if (backgroundGcTrackingHook) return;
-    const gcRouteRef = ref(rtdb, `group_chat/messages`);
-
-    let initialSyncComplete = false;
-    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
-
-    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
-        if (!initialSyncComplete) return;
-        if (childSnap.exists()) {
-            const msg = childSnap.val();
-            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
-                const gcContainer = document.getElementById('gc-hub-node');
-                if (gcContainer) gcContainer.classList.add('has-unread');
-            }
-        }
-    });
-
-    onValue(gcRouteRef, (snapshot) => {
-        if (!initialSyncComplete) return;
-        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
-            const messages = snapshot.val();
-            Object.keys(messages).forEach(mId => {
-                const m = messages[mId];
-                if (m.reactions) {
-                    Object.keys(m.reactions).forEach(uId => {
-                        if (uId !== userId) {
-                            const gcContainer = document.getElementById('gc-hub-node');
-                            if (gcContainer) gcContainer.classList.add('has-unread');
-                        }
-                    });
-                }
-            });
-        }
-    });
     }
-
-
-/* ==========================================================================
-   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC
-   ========================================================================== */
-function initGroupChatChannel() {
-    isGroupChat = true;
-    selectedActiveChatPartnerId = "BARANGAY_GC";
-    document.getElementById('chatTargetName').innerText = `Group Chat`;
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
-
-    const gcContainer = document.getElementById('gc-hub-node');
-    if (gcContainer) gcContainer.classList.remove('has-unread');
-
-    cleanupTransientListeners();
-
-    const chatRouteRef = ref(rtdb, `group_chat/messages`);
-    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
-        if (childSnap.exists()) {
-            const msg = childSnap.val();
-            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
-        }
-    });
-}
-
-function initTransientChatChannel(partnerId, partnerName) {
-    isGroupChat = false;
-    selectedActiveChatPartnerId = partnerId;
     
-    const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
-    document.getElementById('chatTargetName').innerText = `${cleanName}`;
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
-
-    const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-    if (peerContainer) {
-        peerContainer.classList.remove('has-unread');
+    if (!unreadChats.includes(chatId)) {
+        unreadChats.push(chatId);
+        localStorage.setItem('unreadChats', JSON.stringify(unreadChats));
     }
+    applyNotificationUI();
+}
 
-    cleanupTransientListeners();
-
-    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
-   const input = document.getElementById('chatMsgInput');
-
-input.oninput = () => {
-    const typingRef = ref(
-        rtdb,
-        `typing/${channelSessionKey}/${userId}`
-    );
-
-    set(typingRef, true);
-
-    clearTimeout(typingTimeout);
-
-    typingTimeout = setTimeout(() => {
-        set(typingRef, false);
-    }, 1500);
-};
-    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
-        if (childSnap.exists()) {
-            const msg = childSnap.val();
-            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+/**
+ * Removes an unread chat ID from localStorage when read
+ * @param {string} chatId 
+ */
+function markChatAsRead(chatId) {
+    const rawData = localStorage.getItem('unreadChats');
+    let unreadChats = [];
+    
+    if (rawData) {
+        try {
+            unreadChats = JSON.parse(rawData);
+            if (!Array.isArray(unreadChats)) unreadChats = [];
+        } catch (e) {
+            unreadChats = [];
         }
-    });
-}
-
-function cleanupTransientListeners() {
-    if (transientChatListenerRemoveHook) { transientChatListenerRemoveHook(); transientChatListenerRemoveHook = null; }
-}
-
-window.sendChatPayload = function () {
-    const input = document.getElementById('chatMsgInput');
-    const text = input.value.trim();
-    if (!text || !selectedActiveChatPartnerId) return;
-
-    if (isGroupChat) {
-        const chatRouteRef = ref(rtdb, `group_chat/messages`);
-        const newMsgRef = push(chatRouteRef);
-        set(newMsgRef, {
-            sender: userId,
-            senderName: currentUserName,
-            senderAvatar: currentUserAvatarRaw,
-            text: text,
-            timestamp: Date.now()
-        });
-    } else {
-        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-        const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-        const newMsgRef = push(chatRouteRef);
-        set(newMsgRef, {
-             sender: userId,
-             text: text,
-             timestamp: Date.now()
-          });
     }
-    input.value = '';
-   if (!isGroupChat) {
-    const channelSessionKey =
-        userId < selectedActiveChatPartnerId
-            ? `${userId}_${selectedActiveChatPartnerId}`
-            : `${selectedActiveChatPartnerId}_${userId}`;
-
-    set(
-        ref(rtdb, `typing/${channelSessionKey}/${userId}`),
-        false
-    );
-}
-};
-
-function appendBubbleToScroller(msg, msgId, direction) {
-    const view = document.getElementById('chatScroller');                                    
-    const wrapper = document.createElement('div');
-    wrapper.className = `msg-wrapper ${direction}`;
-    wrapper.id = `msg-wrap-${msgId}`;
-
-    if (isGroupChat) {
-        const metaRow = document.createElement('div');
-        metaRow.className = 'msg-meta-row';
-
-        const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
-        const avatarNode = document.createElement('img');
-        avatarNode.className = 'msg-gc-avatar';
-        avatarNode.src = avatarSrc;
-
-        const authorTag = document.createElement('div');
-        authorTag.className = 'msg-author-tag';
-        authorTag.innerText = msg.senderName ? msg.senderName.split(' ')[0] : "Operator";
-
-        const timeTag = document.createElement('div');
-        timeTag.className = 'msg-time-tag';
-        timeTag.innerText = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-        metaRow.appendChild(avatarNode);
-        metaRow.appendChild(authorTag);
-        metaRow.appendChild(timeTag);
-        wrapper.appendChild(metaRow);
-    }
-
-    const bbl = document.createElement('div');
-    bbl.className = `msg-bubble ${direction}`;
-    bbl.innerText = msg.text;                                    
-    bbl.onclick = (e) => {
-        e.stopPropagation();
-        toggleReactionPicker(msgId, wrapper);
-    };
-
-    wrapper.appendChild(bbl);
-
-    const rxContainer = document.createElement('div');
-    rxContainer.className = 'msg-reaction-container';
-    rxContainer.id = `rx-container-${msgId}`;
-    rxContainer.style.display = 'none';
-    wrapper.appendChild(rxContainer);
-
-    view.appendChild(wrapper);
-    view.scrollTop = view.scrollHeight;
-
-    syncReactionsDisplay(msgId);
+    
+    unreadChats = unreadChats.filter(id => id !== chatId);
+    localStorage.setItem('unreadChats', JSON.stringify(unreadChats));
+    applyNotificationUI();
 }
 
-function toggleReactionPicker(msgId, wrapper) {
-    const activeTray = document.getElementById(`tray-${msgId}`);
-    if (activeTray) {
-        activeTray.remove();
-        return;
+/**
+ * Synchronizes DOM notification badges directly with localStorage data
+ */
+function applyNotificationUI() {
+    const rawData = localStorage.getItem('unreadChats');
+    let unreadChats = [];
+    
+    if (rawData) {
+        try {
+            unreadChats = JSON.parse(rawData);
+            if (!Array.isArray(unreadChats)) unreadChats = [];
+        } catch (e) {
+            unreadChats = [];
+        }
     }
-
-    document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
-
-    const tray = document.createElement('div');
-    tray.className = 'reaction-picker-tray';
-    tray.id = `tray-${msgId}`;
-
-    const emojis = ['😂', '😢', '😡', '🖕'];
-    emojis.forEach(emoji => {
-        const opt = document.createElement('div');
-        opt.className = 'reaction-option';
-        opt.innerText = emoji;
-        opt.onclick = (e) => {
-            e.stopPropagation();
-            submitReaction(msgId, emoji);
-            tray.remove();
-        };
-        tray.appendChild(opt);
-    });
-
-    wrapper.appendChild(tray);
-}
-
-function submitReaction(msgId, emoji) {
-    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
-    if (isGroupChat) {
-        path = `group_chat/messages/${msgId}/reactions/${userId}`;
-    }
-
-    const rxRef = ref(rtdb, path);
-    onValue(rxRef, (snapshot) => {
-        if (snapshot.exists() && snapshot.val() === emoji) {
-            remove(rxRef);
+    
+    const badges = document.querySelectorAll('.notification-badge');
+    badges.forEach(badge => {
+        const id = badge.getAttribute('data-chat-id');
+        if (unreadChats.includes(id)) {
+            badge.classList.add('unread-active');
         } else {
-            set(rxRef, emoji);
+            badge.classList.remove('unread-active');
         }
-    }, { onlyOnce: true });
-}
-
-function syncReactionsDisplay(msgId) {
-    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
-    if (isGroupChat) {
-        path = `group_chat/messages/${msgId}/reactions`;
-    }
-
-    onValue(ref(rtdb, path), (snapshot) => {
-        const container = document.getElementById(`rx-container-${msgId}`);
-        if (!container) return;
-
-        container.innerHTML = '';
-        if (!snapshot.exists()) {
-            container.style.display = 'none';
-            return;
-        }
-
-        const reactionData = snapshot.val();
-        const summary = {};
-        Object.keys(reactionData).forEach(uid => {
-            const emo = reactionData[uid];
-            if (!summary[emo]) summary[emo] = { count: 0, userVoted: false };
-            summary[emo].count++;
-            if (uid === userId) summary[emo].userVoted = true;
-        });
-
-        Object.keys(summary).forEach(emo => {
-            const pill = document.createElement('div');
-            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                                            
-            if (isGroupChat) {
-                pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
-            } else {
-                pill.innerHTML = `<span>${emo}</span>`;
-            }                                                            
-            pill.onclick = (e) => {
-                e.stopPropagation();
-                submitReaction(msgId, emo);
-            };
-            container.appendChild(pill);
-        });
-
-        container.style.display = 'flex';
     });
 }
 
-window.closeChatSession = function () {
+// ==========================================
+// SECTION 6: MESSAGE ACTIONS (EDIT, DELETE, REACT)
+// ==========================================
 
-    if (!isGroupChat && selectedActiveChatPartnerId) {
+/**
+ * Completely renders the chat container viewport based on the messages state array
+ */
+function renderMessages() {
+    const chatContainer = document.getElementById('chat-container');
+    if (!chatContainer) return;
+    
+    chatContainer.innerHTML = '';
 
-        const channelSessionKey =
-            userId < selectedActiveChatPartnerId
-                ? `${userId}_${selectedActiveChatPartnerId}`
-                : `${selectedActiveChatPartnerId}_${userId}`;
+    // Filter messages belonging to the active conversation context
+    const activeMessages = messages.filter(m => m.chatId === currentChatId);
 
-        set(
-            ref(rtdb, `typing/${channelSessionKey}/${userId}`),
-            false
-        );
+    activeMessages.forEach(msg => {
+        const isMe = msg.senderId === CURRENT_USER_ID;
+        
+        // Parse and secure reactions array maps
+        let reactionsHtml = '';
+        if (msg.reactions && typeof msg.reactions === 'object') {
+            reactionsHtml = Object.entries(msg.reactions)
+                .map(([emoji, count]) => {
+                    if (count <= 0) return '';
+                    return `
+                        <span class="reaction-badge" onclick="handleReaction('${msg.id}', '${emoji}')">
+                            ${emoji} <span class="reaction-count">${count}</span>
+                        </span>
+                    `;
+                }).join('');
+        }
+
+        // Text mutation display logic: wraps text inside italic tags if edited flag matches
+        const textDisplay = msg.isEdited 
+            ? `<em>${msg.text} <span class="edited-marker">(edited)</span></em>` 
+            : msg.text;
+
+        const messageHtml = `
+            <div class="message-wrapper ${isMe ? 'sent' : 'received'}" id="msg-wrap-${msg.id}">
+                <div class="message-bubble">
+                    <div class="message-text" id="text-${msg.id}">
+                        ${textDisplay}
+                    </div>
+                    <div class="message-meta">
+                        <span class="message-time">${msg.timestamp}</span>
+                    </div>
+                </div>
+                <div class="message-footer">
+                    <div class="reactions-bar">
+                        ${reactionsHtml}
+                        <button class="add-reaction-btn" onclick="showReactionPicker('${msg.id}')">＋</button>
+                    </div>
+                    ${isMe ? `
+                        <div class="message-actions">
+                            <button class="action-btn edit-btn" onclick="initiateEdit('${msg.id}')">Edit</button>
+                            <button class="action-btn delete-btn" onclick="deleteMessage('${msg.id}')">Delete</button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+    });
+    
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+/**
+ * Creates and appends a new message to the active chat stream
+ * @param {string} textRaw 
+ */
+function sendNewMessage(textRaw) {
+    if (!textRaw || textRaw.trim() === "") return;
+    
+    const newMessage = {
+        id: "msg-" + Date.now(),
+        chatId: currentChatId,
+        text: textRaw.trim(),
+        timestamp: formatTimestamp(),
+        senderId: CURRENT_USER_ID,
+        isEdited: false,
+        reactions: {}
+    };
+    
+    messages.push(newMessage);
+    renderMessages();
+}
+
+/**
+ * Modifies an existing message content inline and forces an explicit layout refresh
+ * @param {string} msgId 
+ */
+function initiateEdit(msgId) {
+    const msg = messages.find(m => m.id === msgId);
+    if (!msg) return;
+
+    const newText = prompt("Edit your message:", msg.text);
+    if (newText !== null && newText.trim() !== "") {
+        msg.text = newText.trim();
+        msg.isEdited = true;
+        renderMessages();
+    }
+}
+
+/**
+ * Deletes a targeted message string out of local runtime arrays
+ * @param {string} msgId 
+ */
+function deleteMessage(msgId) {
+    const confirmed = confirm("Are you sure you want to delete this message?");
+    if (confirmed) {
+        messages = messages.filter(m => m.id !== msgId);
+        renderMessages();
+    }
+}
+
+/**
+ * Increments or removes explicit emoji values assigned to a message instance
+ * @param {string} msgId 
+ * @param {string} emoji 
+ */
+function handleReaction(msgId, emoji) {
+    const msg = messages.find(m => m.id === msgId);
+    if (!msg) return;
+
+    if (!msg.reactions) {
+        msg.reactions = {};
     }
 
-    document.getElementById('chatDock').style.display = 'none';
-    cleanupTransientListeners();
-    selectedActiveChatPartnerId = null;
-};
+    if (msg.reactions[emoji]) {
+        msg.reactions[emoji] += 1;
+    } else {
+        msg.reactions[emoji] = 1;
+    }
+    
+    renderMessages();
+}
 
+/**
+ * Renders a browser selection interface input for emoji reactions
+ * @param {string} msgId 
+ */
+function showReactionPicker(msgId) {
+    const validEmojis = ["👍", "❤️", "😂", "😮", "🙏"];
+    const choice = prompt(`Type an emoji to react:\n${validEmojis.join(" ")}`);
+    if (choice && validEmojis.includes(choice.trim())) {
+        handleReaction(msgId, choice.trim());
+    }
+}
+
+/**
+ * Global Simulation Engine Interface (For testing interactions safely)
+ */
+function simulateIncomingMessage(sender, textContent) {
+    const simulatedMsg = {
+        id: "msg-" + Date.now(),
+        chatId: currentChatId,
+        text: textContent,
+        timestamp: formatTimestamp(),
+        senderId: sender,
+        isEdited: false,
+        reactions: {}
+    };
+    messages.push(simulatedMsg);
+    saveUnreadNotification(currentChatId);
+    renderMessages();
+}
+
+// ==========================================
+// INITIALIZATION EXECUTION ENTRY POINT
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    // Sync storage components
+    applyNotificationUI();
+    
+    // Clear notifications for the actively open window upon initial stack load
+    markChatAsRead(currentChatId);
+    
+    // Perform initial viewport buildout
+    renderMessages();
+});
 
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
