@@ -717,7 +717,6 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     tray.className = 'reaction-picker-tray';
     tray.id = `tray-${msgId}`;
 
-    // Predefined Quick Reactions
     const emojis = ['😂', '😢', '😡', '🖕'];
     emojis.forEach(emoji => {
         const opt = document.createElement('div');
@@ -731,7 +730,6 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
         tray.appendChild(opt);
     });
 
-    // 🔥 Native Inline Messenger-Style Plus Multi-Emoji Trigger
     const plusOpt = document.createElement('div');
     plusOpt.className = 'reaction-option tray-plus-trigger';
     plusOpt.innerText = '➕';
@@ -798,7 +796,7 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     wrapper.appendChild(tray);
 }
 
-// 🔥 New Helper: Spawns an isolated native emoji panel to guarantee no keyboard/character input
+// 🔥 Updated: Spawns the native emoji panel with auto-close click handler
 function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     const activePanel = document.getElementById(`emoji-panel-${msgId}`);
     if (activePanel) {
@@ -810,11 +808,10 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     panel.className = 'native-emoji-matrix-panel';
     panel.id = `emoji-panel-${msgId}`;
 
-    // Curated standard extended matrix list (No input text strings allowed)
     const emojiMatrix = [
         '👍','👎','❤️','🔥','👏','🎉','✨','🙏',
         '😍','🥳','😎','🤔','😭','😱','🤫','🥱',
-        '💯','💩','👀','🗣️','🚀','👑','✔️'
+        '💯','💩','👀','🗣️','🔥','🚀','👑','✔️'
     ];
 
     emojiMatrix.forEach(emoji => {
@@ -831,6 +828,19 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     });
 
     wrapper.appendChild(panel);
+
+    // 🔥 Added: Global window click detection listener to dismiss panel on click-away
+    const closePanelHandler = (event) => {
+        if (!panel.contains(event.target) && !tray.contains(event.target)) {
+            panel.remove();
+            document.removeEventListener('click', closePanelHandler);
+        }
+    };
+    
+    // Defer execution slightly to prevent immediate intercept of the current activation click event
+    setTimeout(() => {
+        document.addEventListener('click', closePanelHandler);
+    }, 0);
 }
 
 function stageMessageForReply(msg) {
@@ -947,7 +957,6 @@ window.closeChatSession = function () {
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
-
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
