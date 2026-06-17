@@ -236,7 +236,7 @@ onSnapshot(userDocRef, (snapshot) => {
 
 /* ==========================================================================
    TYPING INDICATOR HUB LISTENER
-   ========================================================================== */
+   ========================================================================== 
 const typingHooks = {};
 
 function bindTypingIndicator(partnerId, displayName) {
@@ -272,7 +272,60 @@ tag.innerHTML = `
         }
     });
 }
+/* ==========================================================================
+   TYPING INDICATOR HUB LISTENER
+   ========================================================================== */
+const typingHooks = {};
+const typingUIFallbackTimeouts = {}; // Tracks safety fallback timeouts per partner
 
+function bindTypingIndicator(partnerId, displayName) {
+    if (typingHooks[partnerId]) return;
+
+    const channelSessionKey =
+        userId < partnerId
+            ? `${userId}_${partnerId}`
+            : `${partnerId}_${userId}`;
+
+    const typingRef = ref(
+        rtdb,
+        `typing/${channelSessionKey}/${partnerId}`
+    );
+
+    typingHooks[partnerId] = onValue(typingRef, (snapshot) => {
+        const peerNode = document.getElementById(`peer-node-${partnerId}`);
+        if (!peerNode) return;
+
+        const tag = peerNode.querySelector('.peer-name-hover');
+        if (!tag) return;
+
+        // Clear any existing inactivity timeout for this partner
+        if (typingUIFallbackTimeouts[partnerId]) {
+            clearTimeout(typingUIFallbackTimeouts[partnerId]);
+            delete typingUIFallbackTimeouts[partnerId];
+        }
+
+        if (snapshot.val() === true) {
+            tag.innerHTML = `
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            `;
+            tag.dataset.typing = "true";
+
+            // 🔥 Start a 20-second inactivity safety countdown
+            typingUIFallbackTimeouts[partnerId] = setTimeout(() => {
+                tag.textContent = displayName;
+                tag.dataset.typing = "false";
+                delete typingUIFallbackTimeouts[partnerId];
+            }, 20000); // 20000ms = 20 seconds
+
+        } else {
+            // Sender manually stopped typing or timeout fired on their side
+            tag.textContent = displayName;
+            tag.dataset.typing = "false";
+        }
+    });
+}
 
 /* ==========================================================================
    4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB)
