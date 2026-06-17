@@ -456,7 +456,7 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH HEAD PLACEMENT
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - NO TRUNCATION
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
@@ -590,7 +590,7 @@ onValue(presenceRef, (snapshot) => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // --- SELF PROFILE RENDERING SYSTEM (STAYS CLOSE TO HEAD DOWNSTAIRS) ---
+        // --- SELF PROFILE RENDERING SYSTEM (TOP PLACEMENT - NO TRUNCATION) ---
         if (uid === userId) {
             if (peer.statusNote && peer.statusNote.updatedAt) {
                 const ageDelta = NOW - peer.statusNote.updatedAt;
@@ -603,14 +603,13 @@ onValue(presenceRef, (snapshot) => {
                         const bubbleNode = document.createElement('div');
                         bubbleNode.className = 'profile-status-note-bubble';
                         bubbleNode.id = 'profile-status-bubble-node';
-                        bubbleNode.innerText = localProfileNoteCache.substring(0, 10);
+                        bubbleNode.innerText = localProfileNoteCache; // Render without substring boundaries
                         
                         if (peer.statusNote.color) {
                             bubbleNode.style.borderColor = peer.statusNote.color;
                             bubbleNode.style.color = peer.statusNote.color;
                         }
 
-                        // Appends right alongside your wrapper stack directly on the avatar's head bounds
                         avatarNode.parentNode.insertBefore(bubbleNode, avatarNode);
                     }
                 }
@@ -663,7 +662,7 @@ onValue(presenceRef, (snapshot) => {
 
             bindBackgroundNotifListener(peer.uid);
 
-            // Typing listener
+            // Typing indicator
             bindTypingIndicator(
                 peer.uid,
                 singleWordLabel
@@ -685,7 +684,7 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
-        // --- INJECT PEER NOTES UPSTAIRS (CLOSE HEAD PLACEMENT ABOVE THE AVATAR) ---
+        // --- INJECT PEER NOTES UPSTAIRS (TOP PLACEMENT - NO TRUNCATION) ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
         if (oldNote) oldNote.remove();
 
@@ -695,7 +694,7 @@ onValue(presenceRef, (snapshot) => {
             if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
                 const noteNode = document.createElement('div');
                 noteNode.className = 'peer-status-note';
-                noteNode.innerText = peer.statusNote.text.substring(0, 10);
+                noteNode.innerText = peer.statusNote.text; // Render without substring boundaries
                 
                 if (peer.statusNote.color) {
                     noteNode.style.color = peer.statusNote.color;
