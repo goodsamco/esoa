@@ -482,9 +482,9 @@ function bindBackgroundGcListener() {
 
 
 /* ==========================================================================
-   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH REPLY PREVIEWS
+   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
    ========================================================================== */
-let activeReplyPayload = null; // Stores message being targeted for reply
+let activeReplyPayload = null; 
 
 function formatMessageTimestamp(timestamp) {
     if (!timestamp) return '';
@@ -503,12 +503,10 @@ function formatMessageTimestamp(timestamp) {
     }
 }
 
-// Global lookup runner to turn raw UIDs into readable context strings
 function resolveUserRealName(uid, fallbackDataName) {
     if (uid === userId) return "You";
     if (fallbackDataName) return fallbackDataName.split(' ')[0];
     
-    // Look for matching node names inside DOM data engines if active
     const peerNode = document.getElementById(`peer-node-${uid}`);
     if (peerNode && peerNode.querySelector('.peer-name-hover')) {
         return peerNode.querySelector('.peer-name-hover').innerText.split(' ')[0];
@@ -594,18 +592,13 @@ window.sendChatPayload = function () {
         payload.senderAvatar = currentUserAvatarRaw;
     }
 
-    // Attach reply reference if user is responding to a ghost target message
     if (activeReplyPayload) {
         payload.repliedTo = activeReplyPayload;
     }
 
-    let chatRouteRef;
-    if (isGroupChat) {
-        chatRouteRef = ref(rtdb, `group_chat/messages`);
-    } else {
-        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-        chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-    }
+    let chatRouteRef = isGroupChat 
+        ? ref(rtdb, `group_chat/messages`) 
+        : ref(rtdb, `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}`);
 
     const newMsgRef = push(chatRouteRef);
     set(newMsgRef, payload);
@@ -625,7 +618,6 @@ function appendBubbleToScroller(msg, msgId, direction) {
     wrapper.className = `msg-wrapper ${direction}`;
     wrapper.id = `msg-wrap-${msgId}`;
 
-    // Meta Row Header Structure setup
     const metaRow = document.createElement('div');
     metaRow.className = 'msg-meta-row';
 
@@ -655,11 +647,9 @@ function appendBubbleToScroller(msg, msgId, direction) {
         wrapper.appendChild(metaRow);
     }
 
-    // 🔥 GHOST REPLY PREVIEW CONTAINER (Stacks right above the bubble)
     if (msg.repliedTo) {
         const ghostPreview = document.createElement('div');
         ghostPreview.className = 'msg-ghost-reply-preview';
-        
         const senderLabel = resolveUserRealName(msg.repliedTo.sender, msg.repliedTo.senderName);
         ghostPreview.innerHTML = `<strong>${senderLabel}</strong>: ${msg.repliedTo.text}`;
         wrapper.appendChild(ghostPreview);
@@ -721,12 +711,13 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     }
 
     document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
+    document.querySelectorAll('.native-emoji-matrix-panel').forEach(el => el.remove());
 
     const tray = document.createElement('div');
     tray.className = 'reaction-picker-tray';
     tray.id = `tray-${msgId}`;
 
-    // Standard Reactions
+    // Predefined Quick Reactions
     const emojis = ['😂', '😢', '😡', '🖕'];
     emojis.forEach(emoji => {
         const opt = document.createElement('div');
@@ -740,21 +731,16 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
         tray.appendChild(opt);
     });
 
-    // 🔥 1. "➕ Plus" button shifted directly inside reaction selection bar
+    // 🔥 Native Inline Messenger-Style Plus Multi-Emoji Trigger
     const plusOpt = document.createElement('div');
     plusOpt.className = 'reaction-option tray-plus-trigger';
     plusOpt.innerText = '➕';
     plusOpt.onclick = (e) => {
         e.stopPropagation();
-        const customEmoji = prompt("Enter custom reaction symbol:");
-        if (customEmoji && customEmoji.trim() !== "") {
-            submitReaction(msgId, customEmoji.trim().substring(0, 4));
-        }
-        tray.remove();
+        toggleNativeEmojiPanel(msgId, wrapper, tray);
     };
     tray.appendChild(plusOpt);
 
-    // 🔥 2. "Reply" action added inside the picker sheet bar controls
     const replyBtn = document.createElement('button');
     replyBtn.className = 'msg-action-btn reply-btn';
     replyBtn.innerText = '↩️ Reply';
@@ -765,7 +751,6 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     };
     tray.appendChild(replyBtn);
 
-    // Dynamic Edit/Delete conditions for owner
     if (wrapper.classList.contains('outgoing')) {
         const editBtn = document.createElement('button');
         editBtn.className = 'msg-action-btn edit-btn';
@@ -813,6 +798,41 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     wrapper.appendChild(tray);
 }
 
+// 🔥 New Helper: Spawns an isolated native emoji panel to guarantee no keyboard/character input
+function toggleNativeEmojiPanel(msgId, wrapper, tray) {
+    const activePanel = document.getElementById(`emoji-panel-${msgId}`);
+    if (activePanel) {
+        activePanel.remove();
+        return;
+    }
+
+    const panel = document.createElement('div');
+    panel.className = 'native-emoji-matrix-panel';
+    panel.id = `emoji-panel-${msgId}`;
+
+    // Curated standard extended matrix list (No input text strings allowed)
+    const emojiMatrix = [
+        '👍','👎','❤️','🔥','👏','🎉','✨','🙏',
+        '😍','🥳','😎','🤔','😭','😱','🤫','🥱',
+        '💯','💩','👀','🗣️',' domestic','🚀','👑','✔️'
+    ];
+
+    emojiMatrix.forEach(emoji => {
+        const item = document.createElement('button');
+        item.className = 'matrix-emoji-node';
+        item.innerText = emoji;
+        item.onclick = (e) => {
+            e.stopPropagation();
+            submitReaction(msgId, emoji);
+            panel.remove();
+            tray.remove();
+        };
+        panel.appendChild(item);
+    });
+
+    wrapper.appendChild(panel);
+}
+
 function stageMessageForReply(msg) {
     activeReplyPayload = {
         sender: msg.sender,
@@ -820,7 +840,6 @@ function stageMessageForReply(msg) {
         senderName: msg.senderName || null
     };
 
-    // Render an input staging utility banner bar right above input track
     let activeBanner = document.getElementById('chatReplyTrackIndicator');
     if (!activeBanner) {
         activeBanner = document.createElement('div');
@@ -848,10 +867,9 @@ window.clearActiveReplyRow = function() {
 };
 
 function submitReaction(msgId, emoji) {
-    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
-    if (isGroupChat) {
-        path = `group_chat/messages/${msgId}/reactions/${userId}`;
-    }
+    let path = isGroupChat 
+        ? `group_chat/messages/${msgId}/reactions/${userId}`
+        : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
 
     const rxRef = ref(rtdb, path);
     onValue(rxRef, (snapshot) => {
@@ -864,10 +882,9 @@ function submitReaction(msgId, emoji) {
 }
 
 function syncReactionsDisplay(msgId, fallbackName) {
-    let basePath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
-    if (isGroupChat) {
-        basePath = `group_chat/messages/${msgId}`;
-    }
+    let basePath = isGroupChat 
+        ? `group_chat/messages/${msgId}`
+        : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
 
     onValue(ref(rtdb, basePath), (msgSnapshot) => {
         const container = document.getElementById(`rx-container-${msgId}`);
@@ -893,7 +910,6 @@ function syncReactionsDisplay(msgId, fallbackName) {
             if (!summary[emo]) summary[emo] = { count: 0, userVoted: false, voters: [] };
             summary[emo].count++;
             
-            // 🔥 Resolve real string name identities instead of IDs
             const voterRealName = resolveUserRealName(uid, uid === msgData.sender ? fallbackName : null);
             summary[emo].voters.push(voterRealName);
             
@@ -903,8 +919,6 @@ function syncReactionsDisplay(msgId, fallbackName) {
         Object.keys(summary).forEach(emo => {
             const pill = document.createElement('div');
             pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
-            
-            // 🔥 Native hover tooltip displaying exactly who reacted
             pill.title = summary[emo].voters.join(', ');
 
             if (isGroupChat) {
@@ -933,6 +947,7 @@ window.closeChatSession = function () {
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
+
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
