@@ -1392,23 +1392,25 @@ h2 {
 }
 
 /* The status bubble now floats cleanly UNDER the profile avatar node, matching its exact 48px width layout */
+/* The status bubble now sits near the lower layout baseline, perfectly scaled */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 12px; /* Shifts lower to clear the 48px avatar base line beautifully */
+    bottom: 2px; /* Pushed significantly lower toward the absolute viewport baseline */
     right: 25px;
     width: 48px; /* Matches perfectly with the original avatar layout dimensions */
     box-sizing: border-box;
     background: var(--surface);
     color: var(--text-main);
-    font-size: 0.6rem;
+    font-size: 0.48rem; /* Scaled down exactly two steps for an ultra-compact presentation */
+    letter-spacing: 0.5px;
     font-weight: 800;
-    padding: 3px 2px;
-    border-radius: 8px;
+    padding: 2px 1px;
+    border-radius: 6px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     z-index: 2505;
     text-align: center;
     pointer-events: none;
@@ -1445,6 +1447,7 @@ h2 {
     transform: scale(1);
 }
 
+/* Character counter preview element indicator inside your single-themed layout */
 /* Character counter preview element indicator inside your single-themed layout */
 .modal-char-counter {
     font-size: 0.7rem;
