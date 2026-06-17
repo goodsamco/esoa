@@ -482,8 +482,10 @@ function bindBackgroundGcListener() {
 
 
 /* ==========================================================================
-   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC
+   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH REPLY PREVIEWS
    ========================================================================== */
+let activeReplyPayload = null; // Stores message being targeted for reply
+
 function formatMessageTimestamp(timestamp) {
     if (!timestamp) return '';
     const msgDate = new Date(timestamp);
@@ -501,12 +503,26 @@ function formatMessageTimestamp(timestamp) {
     }
 }
 
+// Global lookup runner to turn raw UIDs into readable context strings
+function resolveUserRealName(uid, fallbackDataName) {
+    if (uid === userId) return "You";
+    if (fallbackDataName) return fallbackDataName.split(' ')[0];
+    
+    // Look for matching node names inside DOM data engines if active
+    const peerNode = document.getElementById(`peer-node-${uid}`);
+    if (peerNode && peerNode.querySelector('.peer-name-hover')) {
+        return peerNode.querySelector('.peer-name-hover').innerText.split(' ')[0];
+    }
+    return "User " + uid.substring(0, 5);
+}
+
 function initGroupChatChannel() {
     isGroupChat = true;
     selectedActiveChatPartnerId = "BARANGAY_GC";
     document.getElementById('chatTargetName').innerText = `Group Chat`;
     document.getElementById('chatScroller').innerHTML = '';
     document.getElementById('chatDock').style.display = 'flex';
+    clearActiveReplyRow();
 
     const gcContainer = document.getElementById('gc-hub-node');
     if (gcContainer) gcContainer.classList.remove('has-unread');
@@ -525,6 +541,7 @@ function initGroupChatChannel() {
 function initTransientChatChannel(partnerId, partnerName) {
     isGroupChat = false;
     selectedActiveChatPartnerId = partnerId;
+    clearActiveReplyRow();
     
     const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
     document.getElementById('chatTargetName').innerText = `${cleanName}`;
@@ -542,19 +559,12 @@ function initTransientChatChannel(partnerId, partnerName) {
     const input = document.getElementById('chatMsgInput');
 
     input.oninput = () => {
-        const typingRef = ref(
-            rtdb,
-            `typing/${channelSessionKey}/${userId}`
-        );
-
+        const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
         set(typingRef, true);
-
         clearTimeout(typingTimeout);
-
-        typingTimeout = setTimeout(() => {
-            set(typingRef, false);
-        }, 1500);
+        typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
     };
+    
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
@@ -573,37 +583,39 @@ window.sendChatPayload = function () {
     const text = input.value.trim();
     if (!text || !selectedActiveChatPartnerId) return;
 
+    const payload = {
+        sender: userId,
+        text: text,
+        timestamp: Date.now()
+    };
+
     if (isGroupChat) {
-        const chatRouteRef = ref(rtdb, `group_chat/messages`);
-        const newMsgRef = push(chatRouteRef);
-        set(newMsgRef, {
-            sender: userId,
-            senderName: currentUserName,
-            senderAvatar: currentUserAvatarRaw,
-            text: text,
-            timestamp: Date.now()
-        });
+        payload.senderName = currentUserName;
+        payload.senderAvatar = currentUserAvatarRaw;
+    }
+
+    // Attach reply reference if user is responding to a ghost target message
+    if (activeReplyPayload) {
+        payload.repliedTo = activeReplyPayload;
+    }
+
+    let chatRouteRef;
+    if (isGroupChat) {
+        chatRouteRef = ref(rtdb, `group_chat/messages`);
     } else {
         const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-        const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
-        const newMsgRef = push(chatRouteRef);
-        set(newMsgRef, {
-             sender: userId,
-             text: text,
-             timestamp: Date.now()
-          });
+        chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     }
-    input.value = '';
-    if (!isGroupChat) {
-        const channelSessionKey =
-            userId < selectedActiveChatPartnerId
-                ? `${userId}_${selectedActiveChatPartnerId}`
-                : `${selectedActiveChatPartnerId}_${userId}`;
 
-        set(
-            ref(rtdb, `typing/${channelSessionKey}/${userId}`),
-            false
-        );
+    const newMsgRef = push(chatRouteRef);
+    set(newMsgRef, payload);
+
+    input.value = '';
+    clearActiveReplyRow();
+
+    if (!isGroupChat) {
+        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
     }
 };
 
@@ -613,10 +625,11 @@ function appendBubbleToScroller(msg, msgId, direction) {
     wrapper.className = `msg-wrapper ${direction}`;
     wrapper.id = `msg-wrap-${msgId}`;
 
-    if (isGroupChat) {
-        const metaRow = document.createElement('div');
-        metaRow.className = 'msg-meta-row';
+    // Meta Row Header Structure setup
+    const metaRow = document.createElement('div');
+    metaRow.className = 'msg-meta-row';
 
+    if (isGroupChat) {
         const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
         const avatarNode = document.createElement('img');
         avatarNode.className = 'msg-gc-avatar';
@@ -624,7 +637,7 @@ function appendBubbleToScroller(msg, msgId, direction) {
 
         const authorTag = document.createElement('div');
         authorTag.className = 'msg-author-tag';
-        authorTag.innerText = msg.senderName ? msg.senderName.split(' ')[0] : "Operator";
+        authorTag.innerText = resolveUserRealName(msg.sender, msg.senderName);
 
         const timeTag = document.createElement('div');
         timeTag.className = 'msg-time-tag';
@@ -635,31 +648,33 @@ function appendBubbleToScroller(msg, msgId, direction) {
         metaRow.appendChild(timeTag);
         wrapper.appendChild(metaRow);
     } else if (msg.timestamp) {
-        const metaRow = document.createElement('div');
-        metaRow.className = 'msg-meta-row';
-
         const timeTag = document.createElement('div');
         timeTag.className = 'msg-time-tag';
         timeTag.innerText = formatMessageTimestamp(msg.timestamp);
-
         metaRow.appendChild(timeTag);
         wrapper.appendChild(metaRow);
+    }
+
+    // 🔥 GHOST REPLY PREVIEW CONTAINER (Stacks right above the bubble)
+    if (msg.repliedTo) {
+        const ghostPreview = document.createElement('div');
+        ghostPreview.className = 'msg-ghost-reply-preview';
+        
+        const senderLabel = resolveUserRealName(msg.repliedTo.sender, msg.repliedTo.senderName);
+        ghostPreview.innerHTML = `<strong>${senderLabel}</strong>: ${msg.repliedTo.text}`;
+        wrapper.appendChild(ghostPreview);
     }
 
     const bbl = document.createElement('div');
     bbl.className = `msg-bubble ${direction}`;
     bbl.innerText = msg.text;
 
-    // Apply deleted state if active on load
-    if (msg.isDeleted) {
-        bbl.classList.add('msg-deleted-state');
-    }
+    if (msg.isDeleted) bbl.classList.add('msg-deleted-state');
 
     bbl.onclick = (e) => {
         e.stopPropagation();
-        // Prevent opening menus on soft-deleted bubbles
         if (bbl.classList.contains('msg-deleted-state')) return;
-        toggleReactionPicker(msgId, wrapper, msg.timestamp);
+        toggleReactionPicker(msgId, wrapper, msg);
     };
 
     wrapper.appendChild(bbl);
@@ -685,19 +700,20 @@ function appendBubbleToScroller(msg, msgId, direction) {
         if (updatedMsg.isDeleted) {
             bbl.classList.add('msg-deleted-state');
             bbl.style.fontStyle = 'italic';
+            if (wrapper.querySelector('.msg-ghost-reply-preview')) {
+                wrapper.querySelector('.msg-ghost-reply-preview').remove();
+            }
         } else if (updatedMsg.edited) {
-            bbl.classList.remove('msg-deleted-state');
             bbl.style.fontStyle = 'italic';
         } else {
-            bbl.classList.remove('msg-deleted-state');
             bbl.style.fontStyle = 'normal';
         }
     });
 
-    syncReactionsDisplay(msgId);
+    syncReactionsDisplay(msgId, msg.senderName);
 }
 
-function toggleReactionPicker(msgId, wrapper, msgTimestamp) {
+function toggleReactionPicker(msgId, wrapper, originalMsg) {
     const activeTray = document.getElementById(`tray-${msgId}`);
     if (activeTray) {
         activeTray.remove();
@@ -710,6 +726,7 @@ function toggleReactionPicker(msgId, wrapper, msgTimestamp) {
     tray.className = 'reaction-picker-tray';
     tray.id = `tray-${msgId}`;
 
+    // Standard Reactions
     const emojis = ['😂', '😢', '😡', '🖕'];
     emojis.forEach(emoji => {
         const opt = document.createElement('div');
@@ -723,24 +740,47 @@ function toggleReactionPicker(msgId, wrapper, msgTimestamp) {
         tray.appendChild(opt);
     });
 
+    // 🔥 1. "➕ Plus" button shifted directly inside reaction selection bar
+    const plusOpt = document.createElement('div');
+    plusOpt.className = 'reaction-option tray-plus-trigger';
+    plusOpt.innerText = '➕';
+    plusOpt.onclick = (e) => {
+        e.stopPropagation();
+        const customEmoji = prompt("Enter custom reaction symbol:");
+        if (customEmoji && customEmoji.trim() !== "") {
+            submitReaction(msgId, customEmoji.trim().substring(0, 4));
+        }
+        tray.remove();
+    };
+    tray.appendChild(plusOpt);
+
+    // 🔥 2. "Reply" action added inside the picker sheet bar controls
+    const replyBtn = document.createElement('button');
+    replyBtn.className = 'msg-action-btn reply-btn';
+    replyBtn.innerText = '↩️ Reply';
+    replyBtn.onclick = (e) => {
+        e.stopPropagation();
+        stageMessageForReply(originalMsg);
+        tray.remove();
+    };
+    tray.appendChild(replyBtn);
+
+    // Dynamic Edit/Delete conditions for owner
     if (wrapper.classList.contains('outgoing')) {
         const editBtn = document.createElement('button');
         editBtn.className = 'msg-action-btn edit-btn';
         editBtn.innerText = '✏️ Edit';
-        editBtn.style.marginLeft = '5px';
         editBtn.onclick = (e) => {
             e.stopPropagation();
-            
-            // 5-minute restriction verification logic
-            const minutesElapsed = (Date.now() - msgTimestamp) / 1000 / 60;
+            const minutesElapsed = (Date.now() - originalMsg.timestamp) / 1000 / 60;
             if (minutesElapsed > 5) {
-                alert("Editing timeframe window expired (Max 5 Minutes).");
+                alert("Editing window closed (Max 5 Minutes).");
                 tray.remove();
                 return;
             }
 
             const currentText = wrapper.querySelector('.msg-bubble').innerText;
-            const newText = prompt("Modify your message:", currentText);
+            const newText = prompt("Modify message:", currentText);
             if (newText !== null && newText.trim() !== "") {
                 let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
                 set(ref(rtdb, `${msgPath}/text`), newText.trim());
@@ -752,18 +792,15 @@ function toggleReactionPicker(msgId, wrapper, msgTimestamp) {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'msg-action-btn delete-btn';
         deleteBtn.innerText = '🗑️ Delete';
-        deleteBtn.style.marginLeft = '5px';
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm("Are you sure you want to delete this message?")) {
+            if (confirm("Soft-delete message contents?")) {
                 let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
-                
-                // Set values to a soft-deleted state profile
                 set(ref(rtdb, msgPath), {
-                    sender: wrapper.classList.contains('outgoing') ? userId : selectedActiveChatPartnerId,
+                    sender: userId,
                     text: "Message deleted",
                     isDeleted: true,
-                    timestamp: msgTimestamp || Date.now()
+                    timestamp: originalMsg.timestamp || Date.now()
                 });
             }
             tray.remove();
@@ -775,6 +812,40 @@ function toggleReactionPicker(msgId, wrapper, msgTimestamp) {
 
     wrapper.appendChild(tray);
 }
+
+function stageMessageForReply(msg) {
+    activeReplyPayload = {
+        sender: msg.sender,
+        text: msg.text,
+        senderName: msg.senderName || null
+    };
+
+    // Render an input staging utility banner bar right above input track
+    let activeBanner = document.getElementById('chatReplyTrackIndicator');
+    if (!activeBanner) {
+        activeBanner = document.createElement('div');
+        activeBanner.id = 'chatReplyTrackIndicator';
+        const panelDock = document.getElementById('chatDock');
+        const inputRow = panelDock.querySelector('.chat-input-row');
+        panelDock.insertBefore(activeBanner, inputRow);
+    }
+
+    const clearName = resolveUserRealName(msg.sender, msg.senderName);
+    activeBanner.innerHTML = `
+        <div class="reply-track-contents">
+            <span>Replying to <strong>${clearName}</strong></span>
+            <p>${msg.text}</p>
+        </div>
+        <button onclick="clearActiveReplyRow()">✕</button>
+    `;
+    document.getElementById('chatMsgInput').focus();
+}
+
+window.clearActiveReplyRow = function() {
+    activeReplyPayload = null;
+    const activeBanner = document.getElementById('chatReplyTrackIndicator');
+    if (activeBanner) activeBanner.remove();
+};
 
 function submitReaction(msgId, emoji) {
     let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
@@ -792,13 +863,12 @@ function submitReaction(msgId, emoji) {
     }, { onlyOnce: true });
 }
 
-function syncReactionsDisplay(msgId) {
+function syncReactionsDisplay(msgId, fallbackName) {
     let basePath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
     if (isGroupChat) {
         basePath = `group_chat/messages/${msgId}`;
     }
 
-    // Single source of truth snapshot fetch to read message state + reactions cleanly
     onValue(ref(rtdb, basePath), (msgSnapshot) => {
         const container = document.getElementById(`rx-container-${msgId}`);
         if (!container) return;
@@ -810,8 +880,6 @@ function syncReactionsDisplay(msgId) {
         }
 
         const msgData = msgSnapshot.val();
-        
-        // Hide entire reaction system if message has been flagged as soft-deleted
         if (msgData.isDeleted) {
             container.style.display = 'none';
             return;
@@ -825,21 +893,18 @@ function syncReactionsDisplay(msgId) {
             if (!summary[emo]) summary[emo] = { count: 0, userVoted: false, voters: [] };
             summary[emo].count++;
             
-            // Collect metadata variables for contextual tooltips
-            if (uid === userId) {
-                summary[emo].userVoted = true;
-                summary[emo].voters.push("You");
-            } else {
-                summary[emo].voters.push("User " + uid.substring(0, 5));
-            }
+            // 🔥 Resolve real string name identities instead of IDs
+            const voterRealName = resolveUserRealName(uid, uid === msgData.sender ? fallbackName : null);
+            summary[emo].voters.push(voterRealName);
+            
+            if (uid === userId) summary[emo].userVoted = true;
         });
 
-        // Generate standard pill buttons
         Object.keys(summary).forEach(emo => {
             const pill = document.createElement('div');
             pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
             
-            // Build simple native browser hovering tooltip
+            // 🔥 Native hover tooltip displaying exactly who reacted
             pill.title = summary[emo].voters.join(', ');
 
             if (isGroupChat) {
@@ -854,39 +919,16 @@ function syncReactionsDisplay(msgId) {
             container.appendChild(pill);
         });
 
-        // Plus Sign Node Append Engine Action
-        const plusNode = document.createElement('div');
-        plusNode.className = 'reaction-pill expansion-trigger-node';
-        plusNode.innerHTML = '<span>➕</span>';
-        plusNode.title = "React with any emoji";
-        plusNode.onclick = (e) => {
-            e.stopPropagation();
-            const chosenEmoji = prompt("Enter any custom emoji reaction symbol:");
-            if (chosenEmoji && chosenEmoji.trim() !== "") {
-                // Ensure context input looks like string emojis
-                const cleanEmoji = chosenEmoji.trim().substring(0, 4); 
-                submitReaction(msgId, cleanEmoji);
-            }
-        };
-        container.appendChild(plusNode);
-
         container.style.display = 'flex';
     });
 }
 
 window.closeChatSession = function () {
     if (!isGroupChat && selectedActiveChatPartnerId) {
-        const channelSessionKey =
-            userId < selectedActiveChatPartnerId
-                ? `${userId}_${selectedActiveChatPartnerId}`
-                : `${selectedActiveChatPartnerId}_${userId}`;
-
-        set(
-            ref(rtdb, `typing/${channelSessionKey}/${userId}`),
-            false
-        );
+        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
     }
-
+    clearActiveReplyRow();
     document.getElementById('chatDock').style.display = 'none';
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
