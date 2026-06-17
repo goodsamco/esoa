@@ -1394,7 +1394,7 @@ h2 {
 /* Sits close on top of your own bottom-right profile avatar node and wraps downward */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 74px; /* Stacked higher to make clean room for the plus icon beneath it */
+    bottom: 118px; /* Stacked up cleanly on top of your avatar (45px base + 48px height + plus icon room) */
     right: 25px;
     width: 48px; /* Perfectly inline with profile avatar width boundaries */
     background: var(--surface);
@@ -1411,11 +1411,11 @@ h2 {
     text-align: center;
 }
 
-/* Plus (+) trigger node absolute centered on top of your profile avatar head line */
+/* Plus (+) trigger node placed persistently on top of your profile avatar head line */
 .profile-note-action-trigger {
     position: fixed;
-    bottom: 52px; /* Set directly over the avatar head line */
-    right: 39px;
+    bottom: 96px; /* Positioned directly touching the head of your 48px profile avatar */
+    right: 39px;  /* Centered perfectly over your 48px avatar width line */
     background: var(--primary);
     color: #000000;
     width: 20px;
@@ -1428,17 +1428,15 @@ h2 {
     font-weight: 900;
     cursor: pointer;
     z-index: 2510;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 1; /* Forced fully visible and persistent on load */
+    transform: scale(1);
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Reveal functional modifier trigger cleanly when hovering profile targets */
-.profile-avatar-node:hover + .profile-note-action-trigger,
+/* Subtle feedback accent scale up when interacting directly with the trigger */
 .profile-note-action-trigger:hover {
-    opacity: 1;
-    transform: scale(1);
+    transform: scale(1.15);
 }
 
 /* Character counter preview element indicator inside your single-themed layout */
