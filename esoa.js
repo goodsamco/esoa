@@ -662,7 +662,7 @@ function handleReaction(msgId, emoji) {
  * @param {string} msgId 
  */
 function showReactionPicker(msgId) {
-    const validEmojis = ["👍", "❤️", "😂", "😮", "🙏"];
+    const validEmojis = ["👍", "❤️", "😂", "😮", "🖕"];
     const choice = prompt(`Type an emoji to react:\n${validEmojis.join(" ")}`);
     if (choice && validEmojis.includes(choice.trim())) {
         handleReaction(msgId, choice.trim());
