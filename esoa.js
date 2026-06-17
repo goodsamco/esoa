@@ -759,7 +759,7 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
             e.stopPropagation();
             const minutesElapsed = (Date.now() - originalMsg.timestamp) / 1000 / 60;
             if (minutesElapsed > 5) {
-                alert("Editing window closed (Max 5 Minutes).");
+                alert("You can only edit messages within 5 minutes.");
                 tray.remove();
                 return;
             }
