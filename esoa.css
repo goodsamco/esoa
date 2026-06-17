@@ -1141,3 +1141,117 @@ h2 {
     }
 
 }
+
+
+
+
+/* ==========================================================================
+   12. ADDITIONAL CHAT EXTENSIONS (SECTIONS 5 & 6)
+   ========================================================================== */
+
+/* --- Action Management Buttons (Edit/Delete) --- */
+.message-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0; /* Smooth contextual trigger on wrapper hover */
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Reveal management tier contextually when hovering over message groups */
+.msg-wrapper:hover .message-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.15s ease;
+}
+
+.edit-btn { 
+    color: #409eff; 
+}
+.edit-btn:hover { 
+    text-decoration: underline; 
+    color: #66b1ff;
+}
+
+.delete-btn { 
+    color: #f56c6c; 
+}
+.delete-btn:hover { 
+    text-decoration: underline; 
+    color: #feb2b2;
+}
+
+/* --- Inline Text Formatting Overrides --- */
+.msg-bubble em {
+    font-style: italic;
+    font-weight: inherit;
+}
+
+.edited-marker {
+    font-size: 0.65rem;
+    opacity: 0.5;
+    margin-left: 5px;
+    font-weight: 400;
+}
+
+.msg-wrapper.outgoing .edited-marker {
+    color: #000000;
+    opacity: 0.6;
+}
+
+/* --- Persistent Notification Badge Overrides --- */
+/* Target runtime elements injected for persistent sidebar components */
+.notification-badge {
+    display: none; /* Safely fallback to grid line hidden structures */
+}
+
+/* Dynamically managed toggle class matching script validation hooks */
+.notification-badge.unread-active {
+    display: inline-block !important;
+}
+
+/* --- Unified Message Layout Alignments & Footer Spacing --- */
+.message-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.msg-wrapper.outgoing .message-footer {
+    flex-direction: row-reverse;
+}
+
+.reactions-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.add-reaction-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #666;
+    padding: 0 4px;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.add-reaction-btn:hover {
+    color: var(--primary);
+    transform: scale(1.15);
+}
