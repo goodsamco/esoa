@@ -635,7 +635,6 @@ function appendBubbleToScroller(msg, msgId, direction) {
         metaRow.appendChild(timeTag);
         wrapper.appendChild(metaRow);
     } else if (msg.timestamp) {
-        // DM Time Placement: Placed exactly on top of the message bubble inside a meta row
         const metaRow = document.createElement('div');
         metaRow.className = 'msg-meta-row';
 
@@ -649,10 +648,18 @@ function appendBubbleToScroller(msg, msgId, direction) {
 
     const bbl = document.createElement('div');
     bbl.className = `msg-bubble ${direction}`;
-    bbl.innerText = msg.text;                                    
+    bbl.innerText = msg.text;
+
+    // Apply deleted state if active on load
+    if (msg.isDeleted) {
+        bbl.classList.add('msg-deleted-state');
+    }
+
     bbl.onclick = (e) => {
         e.stopPropagation();
-        toggleReactionPicker(msgId, wrapper);
+        // Prevent opening menus on soft-deleted bubbles
+        if (bbl.classList.contains('msg-deleted-state')) return;
+        toggleReactionPicker(msgId, wrapper, msg.timestamp);
     };
 
     wrapper.appendChild(bbl);
@@ -666,7 +673,6 @@ function appendBubbleToScroller(msg, msgId, direction) {
     view.appendChild(wrapper);
     view.scrollTop = view.scrollHeight;
 
-    // Real-time tracking hook for structural updates (Edits/Deletions)
     let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
     onValue(ref(rtdb, msgPath), (snapshot) => {
         if (!snapshot.exists()) {
@@ -675,9 +681,15 @@ function appendBubbleToScroller(msg, msgId, direction) {
         }
         const updatedMsg = snapshot.val();
         bbl.innerText = updatedMsg.text;
-        if (updatedMsg.edited) {
+        
+        if (updatedMsg.isDeleted) {
+            bbl.classList.add('msg-deleted-state');
+            bbl.style.fontStyle = 'italic';
+        } else if (updatedMsg.edited) {
+            bbl.classList.remove('msg-deleted-state');
             bbl.style.fontStyle = 'italic';
         } else {
+            bbl.classList.remove('msg-deleted-state');
             bbl.style.fontStyle = 'normal';
         }
     });
@@ -685,7 +697,7 @@ function appendBubbleToScroller(msg, msgId, direction) {
     syncReactionsDisplay(msgId);
 }
 
-function toggleReactionPicker(msgId, wrapper) {
+function toggleReactionPicker(msgId, wrapper, msgTimestamp) {
     const activeTray = document.getElementById(`tray-${msgId}`);
     if (activeTray) {
         activeTray.remove();
@@ -718,6 +730,15 @@ function toggleReactionPicker(msgId, wrapper) {
         editBtn.style.marginLeft = '5px';
         editBtn.onclick = (e) => {
             e.stopPropagation();
+            
+            // 5-minute restriction verification logic
+            const minutesElapsed = (Date.now() - msgTimestamp) / 1000 / 60;
+            if (minutesElapsed > 5) {
+                alert("Editing timeframe window expired (Max 5 Minutes).");
+                tray.remove();
+                return;
+            }
+
             const currentText = wrapper.querySelector('.msg-bubble').innerText;
             const newText = prompt("Modify your message:", currentText);
             if (newText !== null && newText.trim() !== "") {
@@ -736,7 +757,14 @@ function toggleReactionPicker(msgId, wrapper) {
             e.stopPropagation();
             if (confirm("Are you sure you want to delete this message?")) {
                 let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
-                remove(ref(rtdb, msgPath));
+                
+                // Set values to a soft-deleted state profile
+                set(ref(rtdb, msgPath), {
+                    sender: wrapper.classList.contains('outgoing') ? userId : selectedActiveChatPartnerId,
+                    text: "Message deleted",
+                    isDeleted: true,
+                    timestamp: msgTimestamp || Date.now()
+                });
             }
             tray.remove();
         };
@@ -765,33 +793,55 @@ function submitReaction(msgId, emoji) {
 }
 
 function syncReactionsDisplay(msgId) {
-    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
+    let basePath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
     if (isGroupChat) {
-        path = `group_chat/messages/${msgId}/reactions`;
+        basePath = `group_chat/messages/${msgId}`;
     }
 
-    onValue(ref(rtdb, path), (snapshot) => {
+    // Single source of truth snapshot fetch to read message state + reactions cleanly
+    onValue(ref(rtdb, basePath), (msgSnapshot) => {
         const container = document.getElementById(`rx-container-${msgId}`);
         if (!container) return;
 
         container.innerHTML = '';
-        if (!snapshot.exists()) {
+        if (!msgSnapshot.exists()) {
             container.style.display = 'none';
             return;
         }
 
-        const reactionData = snapshot.val();
+        const msgData = msgSnapshot.val();
+        
+        // Hide entire reaction system if message has been flagged as soft-deleted
+        if (msgData.isDeleted) {
+            container.style.display = 'none';
+            return;
+        }
+
+        const reactionData = msgData.reactions || {};
         const summary = {};
+        
         Object.keys(reactionData).forEach(uid => {
             const emo = reactionData[uid];
-            if (!summary[emo]) summary[emo] = { count: 0, userVoted: false };
+            if (!summary[emo]) summary[emo] = { count: 0, userVoted: false, voters: [] };
             summary[emo].count++;
-            if (uid === userId) summary[emo].userVoted = true;
+            
+            // Collect metadata variables for contextual tooltips
+            if (uid === userId) {
+                summary[emo].userVoted = true;
+                summary[emo].voters.push("You");
+            } else {
+                summary[emo].voters.push("User " + uid.substring(0, 5));
+            }
         });
 
+        // Generate standard pill buttons
         Object.keys(summary).forEach(emo => {
             const pill = document.createElement('div');
-            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                                                                    
+            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
+            
+            // Build simple native browser hovering tooltip
+            pill.title = summary[emo].voters.join(', ');
+
             if (isGroupChat) {
                 pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
             } else {
@@ -803,6 +853,22 @@ function syncReactionsDisplay(msgId) {
             };
             container.appendChild(pill);
         });
+
+        // Plus Sign Node Append Engine Action
+        const plusNode = document.createElement('div');
+        plusNode.className = 'reaction-pill expansion-trigger-node';
+        plusNode.innerHTML = '<span>➕</span>';
+        plusNode.title = "React with any emoji";
+        plusNode.onclick = (e) => {
+            e.stopPropagation();
+            const chosenEmoji = prompt("Enter any custom emoji reaction symbol:");
+            if (chosenEmoji && chosenEmoji.trim() !== "") {
+                // Ensure context input looks like string emojis
+                const cleanEmoji = chosenEmoji.trim().substring(0, 4); 
+                submitReaction(msgId, cleanEmoji);
+            }
+        };
+        container.appendChild(plusNode);
 
         container.style.display = 'flex';
     });
