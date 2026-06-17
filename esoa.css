@@ -1146,112 +1146,46 @@ h2 {
 
 
 /* ==========================================================================
-   12. ADDITIONAL CHAT EXTENSIONS (SECTIONS 5 & 6)
+   12. REACTION TRAY EXTENSIONS (EDIT & DELETE INLINE CONTROLS)
    ========================================================================== */
 
-/* --- Action Management Buttons (Edit/Delete) --- */
-.message-actions {
-    display: flex;
-    gap: 8px;
-    opacity: 0; /* Smooth contextual trigger on wrapper hover */
-    pointer-events: none;
-    transition: opacity 0.2s ease-in-out;
-}
-
-/* Reveal management tier contextually when hovering over message groups */
-.msg-wrapper:hover .message-actions {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.action-btn {
+/* Custom operational tools added alongside the reaction picker option row */
+.reaction-picker-tray .msg-action-btn {
     background: transparent;
     border: none;
     cursor: pointer;
     font-size: 0.72rem;
     font-weight: 700;
-    padding: 2px 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: color 0.15s ease;
+    padding: 2px 6px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    user-select: none;
 }
 
-.edit-btn { 
-    color: #409eff; 
+.reaction-picker-tray .edit-btn {
+    color: #409eff;
 }
-.edit-btn:hover { 
-    text-decoration: underline; 
+
+.reaction-picker-tray .edit-btn:hover {
+    background-color: rgba(64, 158, 255, 0.15);
     color: #66b1ff;
 }
 
-.delete-btn { 
-    color: #f56c6c; 
+.reaction-picker-tray .delete-btn {
+    color: #f56c6c;
 }
-.delete-btn:hover { 
-    text-decoration: underline; 
+
+.reaction-picker-tray .delete-btn:hover {
+    background-color: rgba(245, 108, 108, 0.15);
     color: #feb2b2;
 }
 
-/* --- Inline Text Formatting Overrides --- */
-.msg-bubble em {
-    font-style: italic;
-    font-weight: inherit;
-}
-
-.edited-marker {
-    font-size: 0.65rem;
-    opacity: 0.5;
-    margin-left: 5px;
-    font-weight: 400;
-}
-
-.msg-wrapper.outgoing .edited-marker {
-    color: #000000;
-    opacity: 0.6;
-}
-
-/* --- Persistent Notification Badge Overrides --- */
-/* Target runtime elements injected for persistent sidebar components */
-.notification-badge {
-    display: none; /* Safely fallback to grid line hidden structures */
-}
-
-/* Dynamically managed toggle class matching script validation hooks */
-.notification-badge.unread-active {
-    display: inline-block !important;
-}
-
-/* --- Unified Message Layout Alignments & Footer Spacing --- */
-.message-footer {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 4px;
-    width: 100%;
-}
-
-.msg-wrapper.outgoing .message-footer {
-    flex-direction: row-reverse;
-}
-
-.reactions-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.add-reaction-btn {
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-size: 0.85rem;
-    color: #666;
-    padding: 0 4px;
-    transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.add-reaction-btn:hover {
-    color: var(--primary);
-    transform: scale(1.15);
+/* Clear vertical divider dividing reactions from action buttons */
+.reaction-picker-tray .msg-action-btn:first-of-type {
+    margin-left: 8px !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    padding-left: 10px;
 }
