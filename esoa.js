@@ -814,7 +814,7 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     const emojiMatrix = [
         '👍','👎','❤️','🔥','👏','🎉','✨','🙏',
         '😍','🥳','😎','🤔','😭','😱','🤫','🥱',
-        '💯','💩','👀','🗣️',' domestic','🚀','👑','✔️'
+        '💯','💩','👀','🗣️','🚀','👑','✔️'
     ];
 
     emojiMatrix.forEach(emoji => {
