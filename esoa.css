@@ -1368,52 +1368,50 @@ h2 {
    ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES
    ========================================================================== */
 
-/* Compact note bubble styled to layout beautifully over peer row elements */
+/* Pushed LOWER to layout cleanly BELOW individual peer avatar bubbles inside the row */
 .peer-status-note {
     position: absolute;
-    top: -12px;
+    bottom: -14px; /* Moved down below the avatar bubble container */
     left: 50%;
     transform: translateX(-50%);
     background: var(--surface);
-    color: var(--text-main);
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 10px;
-    max-width: 75px;
+    font-size: 0.48rem; /* Scaled down exactly two steps for an ultra-compact presentation */
+    letter-spacing: 0.3px;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 5px;
+    max-width: 50px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 3300;
     pointer-events: none;
     text-align: center;
+    text-transform: uppercase;
 }
 
-/* Pushed even lower below the layout bounds with ultra-compact micro text presentation */
+/* Floating status bubble layout perfectly centered ABOVE your bottom-right profile node */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: -2px; /* Placed at the absolute lowest visual anchor edge */
+    bottom: 100px; /* Restored back safely on top of your 48px avatar node */
     right: 25px;
-    width: 48px; 
-    box-sizing: border-box;
     background: var(--surface);
     color: var(--text-main);
-    font-size: 0.42rem; /* Reduced to an ultra-clean micro-font size scaling step */
-    letter-spacing: 0.3px;
-    font-weight: 900;
-    padding: 1px 0px;
-    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 10px;
+    max-width: 90px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     z-index: 2505;
     text-align: center;
     pointer-events: none;
-    text-transform: uppercase;
 }
 
 /* Plus (+) trigger node absolute centered relative to the profile avatar base layout */
