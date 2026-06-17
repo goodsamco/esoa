@@ -401,242 +401,346 @@ onValue(presenceRef, (snapshot) => {
         window.lucide.createIcons();
     }
 });
-/**
- * REVISED UNREDACTED JAVASCRIPT FOR SECTIONS 5 & 6
- * Optimized initialization layer to prevent chat head load blocking.
- */
+/* ==========================================================================
+   5. BACKGROUND CHAT NOTIFICATION HOOKS
+   ========================================================================== */
+function bindBackgroundNotifListener(partnerId) {
+    if (mappedRouteTrackingHooks[partnerId]) return;
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
 
-const CURRENT_USER_ID = "current-user";
-let currentChatId = "chat-group-1";
-
-// In-memory array store with fallback models matching your UI tokens
-let messages = [
-    {
-        id: "msg-101",
-        chatId: "chat-group-1",
-        text: "Hey, are we still meeting today?",
-        timestamp: "10:30 AM",
-        senderId: "user-2",
-        authorName: "John Doe",
-        avatarUrl: "https://via.placeholder.com/20",
-        isEdited: false,
-        reactions: { "👍": 2 }
-    },
-    {
-        id: "msg-102",
-        chatId: "chat-group-1",
-        text: "Yeah, see you at 5!",
-        timestamp: "10:31 AM",
-        senderId: "current-user",
-        authorName: "Dzey Autajay",
-        avatarUrl: "https://via.placeholder.com/20",
-        isEdited: false,
-        reactions: {}
-    }
-];
-
-// ==========================================
-// SECTION 5: PERSISTENT NOTIFICATIONS & TIMESTAMPS
-// ==========================================
-
-function formatTimestamp() {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function saveUnreadNotification(chatId) {
-    const rawData = localStorage.getItem('unreadChats');
-    let unreadChats = [];
-    if (rawData) {
-        try {
-            unreadChats = JSON.parse(rawData);
-            if (!Array.isArray(unreadChats)) unreadChats = [];
-        } catch (e) {
-            unreadChats = [];
-        }
-    }
-    if (!unreadChats.includes(chatId)) {
-        unreadChats.push(chatId);
-        localStorage.setItem('unreadChats', JSON.stringify(unreadChats));
-    }
-    applyNotificationUI();
-}
-
-function markChatAsRead(chatId) {
-    const rawData = localStorage.getItem('unreadChats');
-    let unreadChats = [];
-    if (rawData) {
-        try {
-            unreadChats = JSON.parse(rawData);
-            if (!Array.isArray(unreadChats)) unreadChats = [];
-        } catch (e) {
-            unreadChats = [];
-        }
-    }
-    unreadChats = unreadChats.filter(id => id !== chatId);
-    localStorage.setItem('unreadChats', JSON.stringify(unreadChats));
-    applyNotificationUI();
-}
-
-function applyNotificationUI() {
-    const rawData = localStorage.getItem('unreadChats');
-    let unreadChats = [];
-    if (rawData) {
-        try {
-            unreadChats = JSON.parse(rawData);
-            if (!Array.isArray(unreadChats)) unreadChats = [];
-        } catch (e) {
-            unreadChats = [];
-        }
-    }
+    let initialSyncComplete = false;
+    onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                                    
     
-    // Fallback tracker: checks data-chat-id, data-id, or fallback ID attributes safely
-    const peerWrappers = document.querySelectorAll('.peer-wrapper');
-    peerWrappers.forEach(wrapper => {
-        const id = wrapper.getAttribute('data-chat-id') || wrapper.getAttribute('data-id') || wrapper.id;
-        if (id && unreadChats.includes(id)) {
-            wrapper.classList.add('has-unread');
-        } else {
-            wrapper.classList.remove('has-unread');
+    const hook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
+                const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                if (peerContainer) peerContainer.classList.add('has-unread');
+            }
+        }
+    });
+    mappedRouteTrackingHooks[partnerId] = hook;
+
+    onValue(chatRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                            if (peerContainer) peerContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
         }
     });
 }
 
-// ==========================================
-// SECTION 6: MESSAGE ACTIONS (EDIT, DELETE, REACT)
-// ==========================================
+function bindBackgroundGcListener() {
+    if (backgroundGcTrackingHook) return;
+    const gcRouteRef = ref(rtdb, `group_chat/messages`);
 
-function renderMessages() {
-    const chatScroller = document.querySelector('.chat-scroller-view');
-    if (!chatScroller) return; // Silent return if the message view isn't toggled open yet
-    
-    chatScroller.innerHTML = '';
+    let initialSyncComplete = false;
+    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
 
-    const activeMessages = messages.filter(m => m.chatId === currentChatId);
-
-    activeMessages.forEach(msg => {
-        const isMe = msg.senderId === CURRENT_USER_ID;
-        const directionClass = isMe ? 'outgoing' : 'incoming';
-        
-        let reactionsHtml = '';
-        if (msg.reactions && typeof msg.reactions === 'object') {
-            reactionsHtml = Object.entries(msg.reactions)
-                .map(([emoji, count]) => {
-                    if (count <= 0) return '';
-                    return `
-                        <div class="reaction-pill" onclick="handleReaction('${msg.id}', '${emoji}')">
-                            <span>${emoji}</span>
-                            <span class="reaction-count">${count}</span>
-                        </div>
-                    `;
-                }).join('');
+    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                const gcContainer = document.getElementById('gc-hub-node');
+                if (gcContainer) gcContainer.classList.add('has-unread');
+            }
         }
-
-        const textDisplay = msg.isEdited 
-            ? `<em>${msg.text} <span class="edited-marker">(edited)</span></em>` 
-            : msg.text;
-
-        const messageHtml = `
-            <div class="msg-wrapper ${directionClass}" id="msg-wrap-${msg.id}">
-                <div class="msg-meta-row">
-                    <img class="msg-gc-avatar" src="${msg.avatarUrl}" alt="avatar">
-                    <span class="msg-author-tag">${msg.authorName}</span>
-                    <span class="msg-time-tag">${msg.timestamp}</span>
-                </div>
-
-                <div class="msg-bubble ${directionClass}" id="text-${msg.id}">
-                    ${textDisplay}
-                </div>
-
-                <div class="message-footer">
-                    <div class="msg-reaction-container">
-                        ${reactionsHtml}
-                        <button class="add-reaction-btn" onclick="showReactionPicker('${msg.id}')">＋</button>
-                    </div>
-                    ${isMe ? `
-                        <div class="message-actions">
-                            <button class="action-btn edit-btn" onclick="initiateEdit('${msg.id}')">Edit</button>
-                            <button class="action-btn delete-btn" onclick="deleteMessage('${msg.id}')">Delete</button>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-        chatScroller.insertAdjacentHTML('beforeend', messageHtml);
     });
-    
-    chatScroller.scrollTop = chatScroller.scrollHeight;
+
+    onValue(gcRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const gcContainer = document.getElementById('gc-hub-node');
+                            if (gcContainer) gcContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
+        }
+    });
 }
 
-function sendNewMessage(textRaw) {
-    if (!textRaw || textRaw.trim() === "") return;
+
+/* ==========================================================================
+   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC
+   ========================================================================== */
+function initGroupChatChannel() {
+    isGroupChat = true;
+    selectedActiveChatPartnerId = "BARANGAY_GC";
+    document.getElementById('chatTargetName').innerText = `Group Chat`;
+    document.getElementById('chatScroller').innerHTML = '';
+    document.getElementById('chatDock').style.display = 'flex';
+
+    const gcContainer = document.getElementById('gc-hub-node');
+    if (gcContainer) gcContainer.classList.remove('has-unread');
+
+    cleanupTransientListeners();
+
+    const chatRouteRef = ref(rtdb, `group_chat/messages`);
+    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+        }
+    });
+}
+
+function initTransientChatChannel(partnerId, partnerName) {
+    isGroupChat = false;
+    selectedActiveChatPartnerId = partnerId;
     
-    const newMessage = {
-        id: "msg-" + Date.now(),
-        chatId: currentChatId,
-        text: textRaw.trim(),
-        timestamp: formatTimestamp(),
-        senderId: CURRENT_USER_ID,
-        authorName: "Dzey Autajay",
-        avatarUrl: "https://via.placeholder.com/20",
-        isEdited: false,
-        reactions: {}
+    const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
+    document.getElementById('chatTargetName').innerText = `${cleanName}`;
+    document.getElementById('chatScroller').innerHTML = '';
+    document.getElementById('chatDock').style.display = 'flex';
+
+    const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+    if (peerContainer) {
+        peerContainer.classList.remove('has-unread');
+    }
+
+    cleanupTransientListeners();
+
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const input = document.getElementById('chatMsgInput');
+
+    input.oninput = () => {
+        const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
+        set(typingRef, true);
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            set(typingRef, false);
+        }, 1500);
     };
-    
-    messages.push(newMessage);
-    renderMessages();
+
+    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+        }
+    });
 }
 
-function initiateEdit(msgId) {
-    const msg = messages.find(m => m.id === msgId);
-    if (!msg) return;
-
-    const newText = prompt("Edit your message:", msg.text);
-    if (newText !== null && newText.trim() !== "") {
-        msg.text = newText.trim();
-        msg.isEdited = true;
-        renderMessages();
+function cleanupTransientListeners() {
+    if (transientChatListenerRemoveHook) { 
+        transientChatListenerRemoveHook(); 
+        transientChatListenerRemoveHook = null; 
     }
 }
 
-function deleteMessage(msgId) {
-    const confirmed = confirm("Are you sure you want to delete this message?");
-    if (confirmed) {
-        messages = messages.filter(m => m.id !== msgId);
-        renderMessages();
-    }
-}
+window.sendChatPayload = function () {
+    const input = document.getElementById('chatMsgInput');
+    const text = input.value.trim();
+    if (!text || !selectedActiveChatPartnerId) return;
 
-function handleReaction(msgId, emoji) {
-    const msg = messages.find(m => m.id === msgId);
-    if (!msg) return;
-
-    if (!msg.reactions) msg.reactions = {};
-
-    if (msg.reactions[emoji]) {
-        msg.reactions[emoji] += 1;
+    if (isGroupChat) {
+        const chatRouteRef = ref(rtdb, `group_chat/messages`);
+        const newMsgRef = push(chatRouteRef);
+        set(newMsgRef, {
+            sender: userId,
+            senderName: currentUserName,
+            senderAvatar: currentUserAvatarRaw,
+            text: text,
+            timestamp: Date.now()
+        });
     } else {
-        msg.reactions[emoji] = 1;
+        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+        const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+        const newMsgRef = push(chatRouteRef);
+        set(newMsgRef, {
+             sender: userId,
+             text: text,
+             timestamp: Date.now()
+          });
     }
-    
-    renderMessages();
+    input.value = '';
+    if (!isGroupChat) {
+        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
+    }
+};
+
+function appendBubbleToScroller(msg, msgId, direction) {
+    const view = document.getElementById('chatScroller');                                    
+    if (!view) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg-wrapper ${direction}`;
+    wrapper.id = `msg-wrap-${msgId}`;
+
+    if (isGroupChat) {
+        const metaRow = document.createElement('div');
+        metaRow.className = 'msg-meta-row';
+
+        const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
+        const avatarNode = document.createElement('img');
+        avatarNode.className = 'msg-gc-avatar';
+        avatarNode.src = avatarSrc;
+
+        const authorTag = document.createElement('div');
+        authorTag.className = 'msg-author-tag';
+        authorTag.innerText = msg.senderName ? msg.senderName.split(' ')[0] : "Operator";
+
+        const timeTag = document.createElement('div');
+        timeTag.className = 'msg-time-tag';
+        timeTag.innerText = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+        metaRow.appendChild(avatarNode);
+        metaRow.appendChild(authorTag);
+        metaRow.appendChild(timeTag);
+        wrapper.appendChild(metaRow);
+    } else {
+        // Build timestamp nodes for private 1:1 sessions
+        const metaRow = document.createElement('div');
+        metaRow.className = 'msg-meta-row';
+        const timeTag = document.createElement('div');
+        timeTag.className = 'msg-time-tag';
+        timeTag.innerText = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        metaRow.appendChild(timeTag);
+        wrapper.appendChild(metaRow);
+    }
+
+    const bbl = document.createElement('div');
+    bbl.className = `msg-bubble ${direction}`;
+    bbl.innerText = msg.text;                                    
+    bbl.onclick = (e) => {
+        e.stopPropagation();
+        toggleReactionPicker(msgId, wrapper);
+    };
+
+    wrapper.appendChild(bbl);
+
+    const rxContainer = document.createElement('div');
+    rxContainer.className = 'msg-reaction-container';
+    rxContainer.id = `rx-container-${msgId}`;
+    rxContainer.style.display = 'none';
+    wrapper.appendChild(rxContainer);
+
+    view.appendChild(wrapper);
+    view.scrollTop = view.scrollHeight;
+
+    syncReactionsDisplay(msgId);
 }
 
-function showReactionPicker(msgId) {
-    const validEmojis = ["👍", "❤️", "😂", "😮", "🙏"];
-    const choice = prompt(`Type an emoji to react:\n${validEmojis.join(" ")}`);
-    if (choice && validEmojis.includes(choice.trim())) {
-        handleReaction(msgId, choice.trim());
+function toggleReactionPicker(msgId, wrapper) {
+    const activeTray = document.getElementById(`tray-${msgId}`);
+    if (activeTray) {
+        activeTray.remove();
+        return;
     }
+
+    document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
+
+    const tray = document.createElement('div');
+    tray.className = 'reaction-picker-tray';
+    tray.id = `tray-${msgId}`;
+
+    const emojis = ['😂', '😢', '😡', '🖕'];
+    emojis.forEach(emoji => {
+        const opt = document.createElement('div');
+        opt.className = 'reaction-option';
+        opt.innerText = emoji;
+        opt.onclick = (e) => {
+            e.stopPropagation();
+            submitReaction(msgId, emoji);
+            tray.remove();
+        };
+        tray.appendChild(opt);
+    });
+
+    wrapper.appendChild(tray);
 }
 
-// ==========================================
-// INITIALIZATION
-// ==========================================
-document.addEventListener("DOMContentLoaded", () => {
-    // Initializing tracking states safely without blocking DOM building loops
-    applyNotificationUI();
-    markChatAsRead(currentChatId);
-    renderMessages();
+function submitReaction(msgId, emoji) {
+    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
+    if (isGroupChat) {
+        path = `group_chat/messages/${msgId}/reactions/${userId}`;
+    }
+
+    const rxRef = ref(rtdb, path);
+    onValue(rxRef, (snapshot) => {
+        if (snapshot.exists() && snapshot.val() === emoji) {
+            remove(rxRef);
+        } else {
+            set(rxRef, emoji);
+        }
+    }, { onlyOnce: true });
+}
+
+function syncReactionsDisplay(msgId) {
+    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions`;
+    if (isGroupChat) {
+        path = `group_chat/messages/${msgId}/reactions`;
+    }
+
+    onValue(ref(rtdb, path), (snapshot) => {
+        const container = document.getElementById(`rx-container-${msgId}`);
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (!snapshot.exists()) {
+            container.style.display = 'none';
+            return;
+        }
+
+        const reactionData = snapshot.val();
+        const summary = {};
+        Object.keys(reactionData).forEach(uid => {
+            const emo = reactionData[uid];
+            if (!summary[emo]) summary[emo] = { count: 0, userVoted: false };
+            summary[emo].count++;
+            if (uid === userId) summary[emo].userVoted = true;
+        });
+
+        Object.keys(summary).forEach(emo => {
+            const pill = document.createElement('div');
+            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                            
+            if (isGroupChat) {
+                pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
+            } else {
+                pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
+            }                                            
+            pill.onclick = (e) => {
+                e.stopPropagation();
+                submitReaction(msgId, emo);
+            };
+            container.appendChild(pill);
+        });
+
+        container.style.display = 'flex';
+    });
+}
+
+window.closeChatSession = function () {
+    if (!isGroupChat && selectedActiveChatPartnerId) {
+        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
+    }
+    document.getElementById('chatDock').style.display = 'none';
+    cleanupTransientListeners();
+    selectedActiveChatPartnerId = null;
+};sages();
 });
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
