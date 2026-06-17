@@ -456,7 +456,7 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH COLOR BROADCASTING
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH CORRECTED PLACEMENT
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
@@ -590,7 +590,7 @@ onValue(presenceRef, (snapshot) => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // --- SELF PROFILE RENDERING LOWER SYSTEM TARGETS ---
+        // --- SELF PROFILE RENDERING SYSTEM (STAYS ON TOP DOWNSTAIRS) ---
         if (uid === userId) {
             if (peer.statusNote && peer.statusNote.updatedAt) {
                 const ageDelta = NOW - peer.statusNote.updatedAt;
@@ -605,13 +605,13 @@ onValue(presenceRef, (snapshot) => {
                         bubbleNode.id = 'profile-status-bubble-node';
                         bubbleNode.innerText = localProfileNoteCache.substring(0, 10);
                         
-                        // Paint broadcast color locally for design parity
                         if (peer.statusNote.color) {
                             bubbleNode.style.borderColor = peer.statusNote.color;
                             bubbleNode.style.color = peer.statusNote.color;
                         }
 
-                        avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
+                        // Inserts BEFORE your action triggers to keep it on top of your profile avatar space
+                        avatarNode.parentNode.insertBefore(bubbleNode, avatarNode);
                     }
                 }
             } else {
@@ -685,7 +685,7 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
-        // --- INJECT PEER NOTES UPSTAIRS INSIDE ROW WITH BROADCAST COLOR ---
+        // --- INJECT PEER NOTES UPSTAIRS (LOWER PLACEMENT BELOW THEIR AVATAR ELEMENTS) ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
         if (oldNote) oldNote.remove();
 
@@ -697,7 +697,6 @@ onValue(presenceRef, (snapshot) => {
                 noteNode.className = 'peer-status-note';
                 noteNode.innerText = peer.statusNote.text.substring(0, 10);
                 
-                // Color broadcast handling engine: paints text color or borders using target user preference states
                 if (peer.statusNote.color) {
                     noteNode.style.color = peer.statusNote.color;
                     noteNode.style.borderColor = peer.statusNote.color;
