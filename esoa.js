@@ -478,7 +478,7 @@ function bindBackgroundGcListener() {
             });
         }
     });
-    }
+}
 
 
 /* ==========================================================================
@@ -522,22 +522,22 @@ function initTransientChatChannel(partnerId, partnerName) {
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
-   const input = document.getElementById('chatMsgInput');
+    const input = document.getElementById('chatMsgInput');
 
-input.oninput = () => {
-    const typingRef = ref(
-        rtdb,
-        `typing/${channelSessionKey}/${userId}`
-    );
+    input.oninput = () => {
+        const typingRef = ref(
+            rtdb,
+            `typing/${channelSessionKey}/${userId}`
+        );
 
-    set(typingRef, true);
+        set(typingRef, true);
 
-    clearTimeout(typingTimeout);
+        clearTimeout(typingTimeout);
 
-    typingTimeout = setTimeout(() => {
-        set(typingRef, false);
-    }, 1500);
-};
+        typingTimeout = setTimeout(() => {
+            set(typingRef, false);
+        }, 1500);
+    };
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
@@ -577,17 +577,17 @@ window.sendChatPayload = function () {
           });
     }
     input.value = '';
-   if (!isGroupChat) {
-    const channelSessionKey =
-        userId < selectedActiveChatPartnerId
-            ? `${userId}_${selectedActiveChatPartnerId}`
-            : `${selectedActiveChatPartnerId}_${userId}`;
+    if (!isGroupChat) {
+        const channelSessionKey =
+            userId < selectedActiveChatPartnerId
+                ? `${userId}_${selectedActiveChatPartnerId}`
+                : `${selectedActiveChatPartnerId}_${userId}`;
 
-    set(
-        ref(rtdb, `typing/${channelSessionKey}/${userId}`),
-        false
-    );
-}
+        set(
+            ref(rtdb, `typing/${channelSessionKey}/${userId}`),
+            false
+        );
+    }
 };
 
 function appendBubbleToScroller(msg, msgId, direction) {
@@ -638,6 +638,22 @@ function appendBubbleToScroller(msg, msgId, direction) {
     view.appendChild(wrapper);
     view.scrollTop = view.scrollHeight;
 
+    // Real-time tracking hook for structural updates (Edits/Deletions)
+    let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+    onValue(ref(rtdb, msgPath), (snapshot) => {
+        if (!snapshot.exists()) {
+            wrapper.remove();
+            return;
+        }
+        const updatedMsg = snapshot.val();
+        bbl.innerText = updatedMsg.text;
+        if (updatedMsg.edited) {
+            bbl.style.fontStyle = 'italic';
+        } else {
+            bbl.style.fontStyle = 'normal';
+        }
+    });
+
     syncReactionsDisplay(msgId);
 }
 
@@ -666,6 +682,41 @@ function toggleReactionPicker(msgId, wrapper) {
         };
         tray.appendChild(opt);
     });
+
+    // Append modification tools if the current user is the author
+    if (wrapper.classList.contains('outgoing')) {
+        const editBtn = document.createElement('button');
+        editBtn.className = 'msg-action-btn edit-btn';
+        editBtn.innerText = '✏️ Edit';
+        editBtn.style.marginLeft = '5px';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            const currentText = wrapper.querySelector('.msg-bubble').innerText;
+            const newText = prompt("Modify your message:", currentText);
+            if (newText !== null && newText.trim() !== "") {
+                let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+                set(ref(rtdb, `${msgPath}/text`), newText.trim());
+                set(ref(rtdb, `${msgPath}/edited`), true);
+            }
+            tray.remove();
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'msg-action-btn delete-btn';
+        deleteBtn.innerText = '🗑️ Delete';
+        deleteBtn.style.marginLeft = '5px';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm("Are you sure you want to delete this message?")) {
+                let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+                remove(ref(rtdb, msgPath));
+            }
+            tray.remove();
+        };
+
+        tray.appendChild(editBtn);
+        tray.appendChild(deleteBtn);
+    }
 
     wrapper.appendChild(tray);
 }
@@ -713,12 +764,12 @@ function syncReactionsDisplay(msgId) {
 
         Object.keys(summary).forEach(emo => {
             const pill = document.createElement('div');
-            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                                            
+            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                                                                    
             if (isGroupChat) {
                 pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
             } else {
                 pill.innerHTML = `<span>${emo}</span>`;
-            }                                                            
+            }                                                                                    
             pill.onclick = (e) => {
                 e.stopPropagation();
                 submitReaction(msgId, emo);
@@ -749,8 +800,6 @@ window.closeChatSession = function () {
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
-
-
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
