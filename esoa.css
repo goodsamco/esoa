@@ -1365,25 +1365,24 @@ h2 {
 
 
 /* ==========================================================================
-   ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES
+   ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES (WRAPPING)
    ========================================================================== */
 
-/* Sits extremely close right on top of individual peer avatar bubbles */
+/* Sits close on top of individual peer avatar bubbles and wraps text downward */
 .peer-status-note {
     position: absolute;
-    top: -6px; /* Pulled much closer down to touch the head of the avatar */
+    top: -6px; 
     left: 50%;
     transform: translateX(-50%);
     background: var(--surface);
-    font-size: 0.48rem; /* Ultra-compact micro text footprint */
+    font-size: 0.48rem; 
     letter-spacing: 0.3px;
     font-weight: 800;
     padding: 2px 5px;
     border-radius: 5px;
-    max-width: 50px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    width: 50px; /* Locked width to force downward stacking */
+    white-space: normal;
+    word-break: break-word;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 3300;
@@ -1392,32 +1391,30 @@ h2 {
     text-transform: uppercase;
 }
 
-/* Sits extremely close right on top of your own bottom-right profile avatar node */
+/* Sits close on top of your own bottom-right profile avatar node and wraps downward */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 52px; /* Dropped closer down to sit right above the 48px avatar node */
+    bottom: 52px; 
     right: 25px;
+    width: 48px; /* Perfectly inline with profile avatar width boundaries */
     background: var(--surface);
     color: var(--text-main);
     font-size: 0.65rem;
     font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 10px;
-    max-width: 90px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 4px 2px;
+    border-radius: 8px;
+    white-space: normal;
+    word-break: break-word;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     z-index: 2505;
     text-align: center;
-    pointer-events: none;
 }
 
 /* Plus (+) trigger node absolute centered relative to the profile avatar base layout */
 .profile-note-action-trigger {
     position: fixed;
-    bottom: 52px; /* Placed behind/near the text line so it aligns nicely with your hover states */
+    bottom: 52px; 
     right: 39px;
     background: var(--primary);
     color: #000000;
