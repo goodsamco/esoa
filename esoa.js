@@ -456,7 +456,7 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH STATUS NOTES
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH LOWER STATUS NOTES
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
@@ -485,36 +485,79 @@ hub.appendChild(gcWrapper);
 
 bindBackgroundGcListener();
 
-// --- STATUS NOTES CONFIGURATION VARIABLES ---
+// --- STATUS NOTES CONFIGURATION & 10-CHAR CUSTOM MODAL SYSTEM ---
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 let localProfileNoteCache = "";
 
-// Global note setup listener attached down over the personal profile node element structures
+// Dynamic layout generation for the standalone note status modal window context
 (() => {
     const avatarNode = document.querySelector('.profile-avatar-node');
     if (!avatarNode) return;
 
+    // Append the tiny hover plus action element
     const actionTrigger = document.createElement('div');
     actionTrigger.className = 'profile-note-action-trigger';
     actionTrigger.innerText = '＋';
     avatarNode.parentNode.insertBefore(actionTrigger, avatarNode.nextSibling);
 
+    // Create custom structural modal elements natively inside the document context
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    modalOverlay.id = 'status-note-custom-modal';
+    
+    modalOverlay.innerHTML = `
+        <div class="modal-content">
+            <div class="input-group">
+                <label>UPDATE STATUS NOTE</label>
+                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+            </div>
+            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+        </div>
+    `;
+    document.body.appendChild(modalOverlay);
+
+    const modalInputField = document.getElementById('status-modal-field');
+    const modalCharCounter = document.getElementById('status-modal-counter');
+    const modalSaveBtn = document.getElementById('status-modal-save-btn');
+    const modalCloseBtn = document.getElementById('status-modal-close-btn');
+
+    // Display modal workflow triggers safely
     actionTrigger.addEventListener('click', (e) => {
         e.stopPropagation();
-        const rawInput = prompt("Share a status update (20 characters max):", localProfileNoteCache);
-        if (rawInput === null) return;
+        modalInputField.value = localProfileNoteCache;
+        modalCharCounter.innerText = `${localProfileNoteCache.length} / 10`;
+        modalOverlay.classList.add('active');
+        setTimeout(() => modalInputField.focus(), 50);
+    });
 
-        const cleanInput = rawInput.trim();
-        if (cleanInput.length > 20) {
-            alert("Status updates are strictly capped at 20 characters maximum.");
-            return;
+    // Realtime constraint counter adjustments tracking keystrokes up to 10 max
+    modalInputField.addEventListener('input', () => {
+        if (modalInputField.value.length > 10) {
+            modalInputField.value = modalInputField.value.substring(0, 10);
         }
+        modalCharCounter.innerText = `${modalInputField.value.length} / 10`;
+    });
 
+    // Close functionality tracking
+    const closeModal = () => modalOverlay.classList.remove('active');
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    // Submit transactions to RTDB
+    modalSaveBtn.addEventListener('click', () => {
+        const cleanInput = modalInputField.value.trim().substring(0, 10);
         const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
+        
         set(userNoteRef, {
             text: cleanInput,
             updatedAt: Date.now()
-        }).catch(err => console.error("Could not sync status changes accurately:", err));
+        })
+        .then(() => {
+            closeModal();
+        })
+        .catch(err => console.error("Could not sync status changes accurately:", err));
     });
 })();
 
@@ -523,7 +566,7 @@ onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
     const NOW = Date.now();
 
-    // Clean up personal bottom bubble element tree instances safely before structural pass loops
+    // Clear personal status bubble before processing iterations
     const selfBubble = document.getElementById('profile-status-bubble-node');
     if (selfBubble) selfBubble.remove();
 
@@ -543,7 +586,7 @@ onValue(presenceRef, (snapshot) => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // --- MANAGE CURRENT ACTIVE LOGGED IN USER VIEW SEPARATELY ---
+        // --- SELF PROFILE RENDERING LOWER SYSTEM TARGETS ---
         if (uid === userId) {
             if (peer.statusNote && peer.statusNote.updatedAt) {
                 const ageDelta = NOW - peer.statusNote.updatedAt;
@@ -556,14 +599,15 @@ onValue(presenceRef, (snapshot) => {
                         const bubbleNode = document.createElement('div');
                         bubbleNode.className = 'profile-status-note-bubble';
                         bubbleNode.id = 'profile-status-bubble-node';
-                        bubbleNode.innerText = localProfileNoteCache.substring(0, 20);
+                        // Ensures absolute compliance to 10 max text boundary strings
+                        bubbleNode.innerText = localProfileNoteCache.substring(0, 10);
                         avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
                     }
                 }
             } else {
                 localProfileNoteCache = "";
             }
-            return; // Skip rendering your slot in the standard peer row
+            return; 
         }
 
         const singleWordLabel =
@@ -631,7 +675,7 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
-        // --- INJECT PEER NOTES INSIDE THE ROW MAP SEGMENTS ---
+        // --- INJECT PEER NOTES UPSTAIRS INSIDE ROW (STILL DISPLAYING UP TO 10 COMFORTABLY) ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
         if (oldNote) oldNote.remove();
 
@@ -641,7 +685,7 @@ onValue(presenceRef, (snapshot) => {
             if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
                 const noteNode = document.createElement('div');
                 noteNode.className = 'peer-status-note';
-                noteNode.innerText = peer.statusNote.text.substring(0, 20);
+                noteNode.innerText = peer.statusNote.text.substring(0, 10);
                 peerContainer.appendChild(noteNode);
             }
         }
