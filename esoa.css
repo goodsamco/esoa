@@ -1237,3 +1237,86 @@ h2 {
     background-color: rgba(255, 255, 255, 0.15) !important;
     border-style: solid !important;
 }
+
+
+/* ==========================================================================
+   REPLY LAYOUT ARCHITECTURES (MESSENGER STYLINGS)
+   ========================================================================== */
+
+/* Ghost Preview In Scroller List Layer */
+.msg-ghost-reply-preview {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 2px solid rgba(255, 255, 255, 0.25);
+    padding: 4px 10px;
+    margin-bottom: -2px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    max-width: 85%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-wrapper.outgoing .msg-ghost-reply-preview {
+    align-self: flex-end;
+    border-left: none;
+    border-right: 2px solid var(--primary);
+}
+
+/* Staging Bar Injected Above Input Field Row */
+#chatReplyTrackIndicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(20, 20, 20, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 14px;
+}
+
+.reply-track-contents span {
+    font-size: 0.65rem;
+    color: var(--primary);
+    text-transform: uppercase;
+}
+
+.reply-track-contents p {
+    margin: 2px 0 0 0;
+    font-size: 0.78rem;
+    color: #ccc;
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#chatReplyTrackIndicator button {
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+#chatReplyTrackIndicator button:hover {
+    color: #fff;
+}
+
+/* Operational Tray Action Buttons Layout */
+.reaction-picker-tray .reply-btn {
+    color: #a855f7;
+}
+.reaction-picker-tray .reply-btn:hover {
+    background-color: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+}
+
+/* Divider separator placement rules */
+.reaction-picker-tray .tray-plus-trigger {
+    cursor: pointer;
+    padding-right: 6px;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+.reaction-picker-tray .msg-action-btn:first-of-type {
+    margin-left: 4px !important;
+}
