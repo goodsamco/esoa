@@ -573,7 +573,7 @@ window.sendChatPayload = function () {
         set(newMsgRef, {
              sender: userId,
              text: text,
-             timestamp: Date.now()
+             timestamp: Date.now() // 🔥 Added timestamp to DMs
           });
     }
     input.value = '';
@@ -628,6 +628,19 @@ function appendBubbleToScroller(msg, msgId, direction) {
     };
 
     wrapper.appendChild(bbl);
+
+    // 🔥 Added: Timestamp metadata under the bubble for non-group chats (DMs)
+    if (!isGroupChat && msg.timestamp) {
+        const dmMetaRow = document.createElement('div');
+        dmMetaRow.className = 'msg-meta-row dm-meta';
+        
+        const timeTag = document.createElement('div');
+        timeTag.className = 'msg-time-tag';
+        timeTag.innerText = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        dmMetaRow.appendChild(timeTag);
+        wrapper.appendChild(dmMetaRow);
+    }
 
     const rxContainer = document.createElement('div');
     rxContainer.className = 'msg-reaction-container';
