@@ -1365,41 +1365,42 @@ h2 {
 
 
 /* ==========================================================================
-   ADDITIONAL PROFILE STATUS NOTE FUNCTIONALITY STYLES
+   ADDITIONAL PEER HUB STATUS NOTE STYLES
    ========================================================================== */
 
-/* The floating status bubble layout perfectly centered above the bottom-right avatar node */
-.profile-status-note-bubble {
-    position: fixed;
-    bottom: 100px; /* Positions perfectly above the 48px avatar node + spacing */
-    right: 25px;
+/* Compact note bubble floating cleanly over individual peer nodes */
+.peer-status-note {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
     background: var(--surface);
     color: var(--text-main);
     font-size: 0.65rem;
     font-weight: 700;
-    padding: 4px 10px;
+    padding: 3px 8px;
     border-radius: 10px;
-    max-width: 90px;
+    max-width: 75px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 2505;
-    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    z-index: 3300;
     pointer-events: none;
-    animation: idleFloat 3.5s ease-in-out infinite;
+    text-align: center;
 }
 
-/* Micro plus (+) action modifier node */
-.profile-note-action-trigger {
-    position: fixed;
-    bottom: 75px;
-    right: 39px; /* Centered precisely against the 48px width layout bounds */
+/* Add note micro-trigger dedicated specifically to the current user node ("You") */
+.add-note-trigger {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
     background: var(--primary);
     color: #000000;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1407,16 +1408,14 @@ h2 {
     font-size: 11px;
     font-weight: 900;
     cursor: pointer;
-    z-index: 2510;
+    z-index: 3310;
     opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
-/* Make trigger visible when hovering the avatar or the trigger container itself */
-.profile-avatar-node:hover + .profile-note-action-trigger,
-.profile-note-action-trigger:hover {
+/* Safely reveal the trigger button only when hovering over the active peer slot */
+.peer-wrapper:hover .add-note-trigger {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(-50%) scale(1.1);
 }
