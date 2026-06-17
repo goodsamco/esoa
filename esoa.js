@@ -456,7 +456,7 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH LOWER STATUS NOTES
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH COLOR BROADCASTING
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
@@ -545,13 +545,17 @@ let localProfileNoteCache = "";
     modalCloseBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
-    // Submit transactions to RTDB
+    // Submit transactions to RTDB with layout identity colors broadcasted cleanly
     modalSaveBtn.addEventListener('click', () => {
         const cleanInput = modalInputField.value.trim().substring(0, 10);
         const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
         
+        // Dynamic look-up of local theme color definitions to pack alongside data packets
+        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#00ffcc';
+        
         set(userNoteRef, {
             text: cleanInput,
+            color: activeLayoutColor,
             updatedAt: Date.now()
         })
         .then(() => {
@@ -599,8 +603,14 @@ onValue(presenceRef, (snapshot) => {
                         const bubbleNode = document.createElement('div');
                         bubbleNode.className = 'profile-status-note-bubble';
                         bubbleNode.id = 'profile-status-bubble-node';
-                        // Ensures absolute compliance to 10 max text boundary strings
                         bubbleNode.innerText = localProfileNoteCache.substring(0, 10);
+                        
+                        // Paint broadcast color locally for design parity
+                        if (peer.statusNote.color) {
+                            bubbleNode.style.borderColor = peer.statusNote.color;
+                            bubbleNode.style.color = peer.statusNote.color;
+                        }
+
                         avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
                     }
                 }
@@ -675,7 +685,7 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
-        // --- INJECT PEER NOTES UPSTAIRS INSIDE ROW (STILL DISPLAYING UP TO 10 COMFORTABLY) ---
+        // --- INJECT PEER NOTES UPSTAIRS INSIDE ROW WITH BROADCAST COLOR ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
         if (oldNote) oldNote.remove();
 
@@ -686,6 +696,13 @@ onValue(presenceRef, (snapshot) => {
                 const noteNode = document.createElement('div');
                 noteNode.className = 'peer-status-note';
                 noteNode.innerText = peer.statusNote.text.substring(0, 10);
+                
+                // Color broadcast handling engine: paints text color or borders using target user preference states
+                if (peer.statusNote.color) {
+                    noteNode.style.color = peer.statusNote.color;
+                    noteNode.style.borderColor = peer.statusNote.color;
+                }
+
                 peerContainer.appendChild(noteNode);
             }
         }
