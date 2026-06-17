@@ -456,7 +456,7 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH CORRECTED PLACEMENT
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH HEAD PLACEMENT
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
@@ -590,7 +590,7 @@ onValue(presenceRef, (snapshot) => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // --- SELF PROFILE RENDERING SYSTEM (STAYS ON TOP DOWNSTAIRS) ---
+        // --- SELF PROFILE RENDERING SYSTEM (STAYS CLOSE TO HEAD DOWNSTAIRS) ---
         if (uid === userId) {
             if (peer.statusNote && peer.statusNote.updatedAt) {
                 const ageDelta = NOW - peer.statusNote.updatedAt;
@@ -610,7 +610,7 @@ onValue(presenceRef, (snapshot) => {
                             bubbleNode.style.color = peer.statusNote.color;
                         }
 
-                        // Inserts BEFORE your action triggers to keep it on top of your profile avatar space
+                        // Appends right alongside your wrapper stack directly on the avatar's head bounds
                         avatarNode.parentNode.insertBefore(bubbleNode, avatarNode);
                     }
                 }
@@ -685,7 +685,7 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
-        // --- INJECT PEER NOTES UPSTAIRS (LOWER PLACEMENT BELOW THEIR AVATAR ELEMENTS) ---
+        // --- INJECT PEER NOTES UPSTAIRS (CLOSE HEAD PLACEMENT ABOVE THE AVATAR) ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
         if (oldNote) oldNote.remove();
 
