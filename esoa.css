@@ -1391,27 +1391,28 @@ h2 {
     text-align: center;
 }
 
-/* Floating status bubble layout positioned directly above your bottom profile node */
+/* The status bubble now floats cleanly UNDER the profile avatar node, matching its exact 48px width layout */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 100px;
+    bottom: 12px; /* Shifts lower to clear the 48px avatar base line beautifully */
     right: 25px;
+    width: 48px; /* Matches perfectly with the original avatar layout dimensions */
+    box-sizing: border-box;
     background: var(--surface);
     color: var(--text-main);
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 10px;
-    max-width: 90px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 3px 2px;
+    border-radius: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     z-index: 2505;
     text-align: center;
     pointer-events: none;
-    animation: idleFloat 3.5s ease-in-out infinite;
+    text-transform: uppercase;
 }
 
 /* Plus (+) trigger node absolute centered relative to the profile avatar base layout */
@@ -1442,4 +1443,14 @@ h2 {
 .profile-note-action-trigger:hover {
     opacity: 1;
     transform: scale(1);
+}
+
+/* Character counter preview element indicator inside your single-themed layout */
+.modal-char-counter {
+    font-size: 0.7rem;
+    color: var(--primary);
+    text-align: right;
+    margin-top: 6px;
+    font-weight: 700;
+    opacity: 0.8;
 }
