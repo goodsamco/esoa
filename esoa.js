@@ -402,14 +402,14 @@ onValue(presenceRef, (snapshot) => {
     }
 });
 /**
- * CORRECTED UNREDACTED JAVASCRIPT FOR SECTIONS 5 & 6
- * Perfectly aligned with your CSS class naming conventions.
+ * REVISED UNREDACTED JAVASCRIPT FOR SECTIONS 5 & 6
+ * Optimized initialization layer to prevent chat head load blocking.
  */
 
 const CURRENT_USER_ID = "current-user";
 let currentChatId = "chat-group-1";
 
-// Array database using your precise structural layout fields
+// In-memory array store with fallback models matching your UI tokens
 let messages = [
     {
         id: "msg-101",
@@ -489,11 +489,11 @@ function applyNotificationUI() {
         }
     }
     
-    // Updates the peer container wrapper if it has unread counts
+    // Fallback tracker: checks data-chat-id, data-id, or fallback ID attributes safely
     const peerWrappers = document.querySelectorAll('.peer-wrapper');
     peerWrappers.forEach(wrapper => {
-        const id = wrapper.getAttribute('data-chat-id');
-        if (unreadChats.includes(id)) {
+        const id = wrapper.getAttribute('data-chat-id') || wrapper.getAttribute('data-id') || wrapper.id;
+        if (id && unreadChats.includes(id)) {
             wrapper.classList.add('has-unread');
         } else {
             wrapper.classList.remove('has-unread');
@@ -507,7 +507,7 @@ function applyNotificationUI() {
 
 function renderMessages() {
     const chatScroller = document.querySelector('.chat-scroller-view');
-    if (!chatScroller) return;
+    if (!chatScroller) return; // Silent return if the message view isn't toggled open yet
     
     chatScroller.innerHTML = '';
 
@@ -517,7 +517,6 @@ function renderMessages() {
         const isMe = msg.senderId === CURRENT_USER_ID;
         const directionClass = isMe ? 'outgoing' : 'incoming';
         
-        // Render existing reaction indicators dynamically using your schema layout
         let reactionsHtml = '';
         if (msg.reactions && typeof msg.reactions === 'object') {
             reactionsHtml = Object.entries(msg.reactions)
@@ -532,7 +531,6 @@ function renderMessages() {
                 }).join('');
         }
 
-        // Apply italic wrapper rule directly around runtime string modifications if edited
         const textDisplay = msg.isEdited 
             ? `<em>${msg.text} <span class="edited-marker">(edited)</span></em>` 
             : msg.text;
@@ -635,11 +633,11 @@ function showReactionPicker(msgId) {
 // INITIALIZATION
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
+    // Initializing tracking states safely without blocking DOM building loops
     applyNotificationUI();
     markChatAsRead(currentChatId);
     renderMessages();
 });
-
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
