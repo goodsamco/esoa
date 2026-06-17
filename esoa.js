@@ -402,16 +402,14 @@ onValue(presenceRef, (snapshot) => {
     }
 });
 /**
- * COMPLETE AND UNREDACTED JAVASCRIPT FOR SECTIONS 5 & 6
- * Includes: Persistent Storage Notifications, Timestamps, 
- * Message Creation, Editing, Deletion, and Reactions.
+ * CORRECTED UNREDACTED JAVASCRIPT FOR SECTIONS 5 & 6
+ * Perfectly aligned with your CSS class naming conventions.
  */
 
-// Global State
 const CURRENT_USER_ID = "current-user";
 let currentChatId = "chat-group-1";
 
-// Fully functional in-memory message database
+// Array database using your precise structural layout fields
 let messages = [
     {
         id: "msg-101",
@@ -419,6 +417,8 @@ let messages = [
         text: "Hey, are we still meeting today?",
         timestamp: "10:30 AM",
         senderId: "user-2",
+        authorName: "John Doe",
+        avatarUrl: "https://via.placeholder.com/20",
         isEdited: false,
         reactions: { "👍": 2 }
     },
@@ -428,6 +428,8 @@ let messages = [
         text: "Yeah, see you at 5!",
         timestamp: "10:31 AM",
         senderId: "current-user",
+        authorName: "Dzey Autajay",
+        avatarUrl: "https://via.placeholder.com/20",
         isEdited: false,
         reactions: {}
     }
@@ -437,22 +439,13 @@ let messages = [
 // SECTION 5: PERSISTENT NOTIFICATIONS & TIMESTAMPS
 // ==========================================
 
-/**
- * Generates a clean, standardized timestamp string
- * @returns {string} e.g., "01:24 PM"
- */
 function formatTimestamp() {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-/**
- * Saves an unread chat ID to localStorage to survive page reloads
- * @param {string} chatId 
- */
 function saveUnreadNotification(chatId) {
     const rawData = localStorage.getItem('unreadChats');
     let unreadChats = [];
-    
     if (rawData) {
         try {
             unreadChats = JSON.parse(rawData);
@@ -461,7 +454,6 @@ function saveUnreadNotification(chatId) {
             unreadChats = [];
         }
     }
-    
     if (!unreadChats.includes(chatId)) {
         unreadChats.push(chatId);
         localStorage.setItem('unreadChats', JSON.stringify(unreadChats));
@@ -469,14 +461,9 @@ function saveUnreadNotification(chatId) {
     applyNotificationUI();
 }
 
-/**
- * Removes an unread chat ID from localStorage when read
- * @param {string} chatId 
- */
 function markChatAsRead(chatId) {
     const rawData = localStorage.getItem('unreadChats');
     let unreadChats = [];
-    
     if (rawData) {
         try {
             unreadChats = JSON.parse(rawData);
@@ -485,19 +472,14 @@ function markChatAsRead(chatId) {
             unreadChats = [];
         }
     }
-    
     unreadChats = unreadChats.filter(id => id !== chatId);
     localStorage.setItem('unreadChats', JSON.stringify(unreadChats));
     applyNotificationUI();
 }
 
-/**
- * Synchronizes DOM notification badges directly with localStorage data
- */
 function applyNotificationUI() {
     const rawData = localStorage.getItem('unreadChats');
     let unreadChats = [];
-    
     if (rawData) {
         try {
             unreadChats = JSON.parse(rawData);
@@ -507,13 +489,14 @@ function applyNotificationUI() {
         }
     }
     
-    const badges = document.querySelectorAll('.notification-badge');
-    badges.forEach(badge => {
-        const id = badge.getAttribute('data-chat-id');
+    // Updates the peer container wrapper if it has unread counts
+    const peerWrappers = document.querySelectorAll('.peer-wrapper');
+    peerWrappers.forEach(wrapper => {
+        const id = wrapper.getAttribute('data-chat-id');
         if (unreadChats.includes(id)) {
-            badge.classList.add('unread-active');
+            wrapper.classList.add('has-unread');
         } else {
-            badge.classList.remove('unread-active');
+            wrapper.classList.remove('has-unread');
         }
     });
 }
@@ -522,52 +505,52 @@ function applyNotificationUI() {
 // SECTION 6: MESSAGE ACTIONS (EDIT, DELETE, REACT)
 // ==========================================
 
-/**
- * Completely renders the chat container viewport based on the messages state array
- */
 function renderMessages() {
-    const chatContainer = document.getElementById('chat-container');
-    if (!chatContainer) return;
+    const chatScroller = document.querySelector('.chat-scroller-view');
+    if (!chatScroller) return;
     
-    chatContainer.innerHTML = '';
+    chatScroller.innerHTML = '';
 
-    // Filter messages belonging to the active conversation context
     const activeMessages = messages.filter(m => m.chatId === currentChatId);
 
     activeMessages.forEach(msg => {
         const isMe = msg.senderId === CURRENT_USER_ID;
+        const directionClass = isMe ? 'outgoing' : 'incoming';
         
-        // Parse and secure reactions array maps
+        // Render existing reaction indicators dynamically using your schema layout
         let reactionsHtml = '';
         if (msg.reactions && typeof msg.reactions === 'object') {
             reactionsHtml = Object.entries(msg.reactions)
                 .map(([emoji, count]) => {
                     if (count <= 0) return '';
                     return `
-                        <span class="reaction-badge" onclick="handleReaction('${msg.id}', '${emoji}')">
-                            ${emoji} <span class="reaction-count">${count}</span>
-                        </span>
+                        <div class="reaction-pill" onclick="handleReaction('${msg.id}', '${emoji}')">
+                            <span>${emoji}</span>
+                            <span class="reaction-count">${count}</span>
+                        </div>
                     `;
                 }).join('');
         }
 
-        // Text mutation display logic: wraps text inside italic tags if edited flag matches
+        // Apply italic wrapper rule directly around runtime string modifications if edited
         const textDisplay = msg.isEdited 
             ? `<em>${msg.text} <span class="edited-marker">(edited)</span></em>` 
             : msg.text;
 
         const messageHtml = `
-            <div class="message-wrapper ${isMe ? 'sent' : 'received'}" id="msg-wrap-${msg.id}">
-                <div class="message-bubble">
-                    <div class="message-text" id="text-${msg.id}">
-                        ${textDisplay}
-                    </div>
-                    <div class="message-meta">
-                        <span class="message-time">${msg.timestamp}</span>
-                    </div>
+            <div class="msg-wrapper ${directionClass}" id="msg-wrap-${msg.id}">
+                <div class="msg-meta-row">
+                    <img class="msg-gc-avatar" src="${msg.avatarUrl}" alt="avatar">
+                    <span class="msg-author-tag">${msg.authorName}</span>
+                    <span class="msg-time-tag">${msg.timestamp}</span>
                 </div>
+
+                <div class="msg-bubble ${directionClass}" id="text-${msg.id}">
+                    ${textDisplay}
+                </div>
+
                 <div class="message-footer">
-                    <div class="reactions-bar">
+                    <div class="msg-reaction-container">
                         ${reactionsHtml}
                         <button class="add-reaction-btn" onclick="showReactionPicker('${msg.id}')">＋</button>
                     </div>
@@ -580,16 +563,12 @@ function renderMessages() {
                 </div>
             </div>
         `;
-        chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        chatScroller.insertAdjacentHTML('beforeend', messageHtml);
     });
     
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    chatScroller.scrollTop = chatScroller.scrollHeight;
 }
 
-/**
- * Creates and appends a new message to the active chat stream
- * @param {string} textRaw 
- */
 function sendNewMessage(textRaw) {
     if (!textRaw || textRaw.trim() === "") return;
     
@@ -599,6 +578,8 @@ function sendNewMessage(textRaw) {
         text: textRaw.trim(),
         timestamp: formatTimestamp(),
         senderId: CURRENT_USER_ID,
+        authorName: "Dzey Autajay",
+        avatarUrl: "https://via.placeholder.com/20",
         isEdited: false,
         reactions: {}
     };
@@ -607,10 +588,6 @@ function sendNewMessage(textRaw) {
     renderMessages();
 }
 
-/**
- * Modifies an existing message content inline and forces an explicit layout refresh
- * @param {string} msgId 
- */
 function initiateEdit(msgId) {
     const msg = messages.find(m => m.id === msgId);
     if (!msg) return;
@@ -623,10 +600,6 @@ function initiateEdit(msgId) {
     }
 }
 
-/**
- * Deletes a targeted message string out of local runtime arrays
- * @param {string} msgId 
- */
 function deleteMessage(msgId) {
     const confirmed = confirm("Are you sure you want to delete this message?");
     if (confirmed) {
@@ -635,18 +608,11 @@ function deleteMessage(msgId) {
     }
 }
 
-/**
- * Increments or removes explicit emoji values assigned to a message instance
- * @param {string} msgId 
- * @param {string} emoji 
- */
 function handleReaction(msgId, emoji) {
     const msg = messages.find(m => m.id === msgId);
     if (!msg) return;
 
-    if (!msg.reactions) {
-        msg.reactions = {};
-    }
+    if (!msg.reactions) msg.reactions = {};
 
     if (msg.reactions[emoji]) {
         msg.reactions[emoji] += 1;
@@ -657,47 +623,20 @@ function handleReaction(msgId, emoji) {
     renderMessages();
 }
 
-/**
- * Renders a browser selection interface input for emoji reactions
- * @param {string} msgId 
- */
 function showReactionPicker(msgId) {
-    const validEmojis = ["👍", "❤️", "😂", "😮", "🖕"];
+    const validEmojis = ["👍", "❤️", "😂", "😮", "🙏"];
     const choice = prompt(`Type an emoji to react:\n${validEmojis.join(" ")}`);
     if (choice && validEmojis.includes(choice.trim())) {
         handleReaction(msgId, choice.trim());
     }
 }
 
-/**
- * Global Simulation Engine Interface (For testing interactions safely)
- */
-function simulateIncomingMessage(sender, textContent) {
-    const simulatedMsg = {
-        id: "msg-" + Date.now(),
-        chatId: currentChatId,
-        text: textContent,
-        timestamp: formatTimestamp(),
-        senderId: sender,
-        isEdited: false,
-        reactions: {}
-    };
-    messages.push(simulatedMsg);
-    saveUnreadNotification(currentChatId);
-    renderMessages();
-}
-
 // ==========================================
-// INITIALIZATION EXECUTION ENTRY POINT
+// INITIALIZATION
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    // Sync storage components
     applyNotificationUI();
-    
-    // Clear notifications for the actively open window upon initial stack load
     markChatAsRead(currentChatId);
-    
-    // Perform initial viewport buildout
     renderMessages();
 });
 
