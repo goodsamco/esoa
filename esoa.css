@@ -1189,3 +1189,16 @@ h2 {
     border-left: 1px solid rgba(255, 255, 255, 0.12);
     padding-left: 10px;
 }
+
+/* --- DM Metadata Layout Adjustments --- */
+.msg-wrapper.outgoing .dm-meta {
+    justify-content: flex-end;
+    margin-top: 4px;
+    margin-right: 4px;
+}
+
+.msg-wrapper.incoming .dm-meta {
+    justify-content: flex-start;
+    margin-top: 4px;
+    margin-left: 4px;
+}
