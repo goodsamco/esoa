@@ -1368,14 +1368,14 @@ h2 {
    ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES
    ========================================================================== */
 
-/* Pushed LOWER to layout cleanly BELOW individual peer avatar bubbles inside the row */
+/* Sits extremely close right on top of individual peer avatar bubbles */
 .peer-status-note {
     position: absolute;
-    bottom: -14px; /* Moved down below the avatar bubble container */
+    top: -6px; /* Pulled much closer down to touch the head of the avatar */
     left: 50%;
     transform: translateX(-50%);
     background: var(--surface);
-    font-size: 0.48rem; /* Scaled down exactly two steps for an ultra-compact presentation */
+    font-size: 0.48rem; /* Ultra-compact micro text footprint */
     letter-spacing: 0.3px;
     font-weight: 800;
     padding: 2px 5px;
@@ -1392,10 +1392,10 @@ h2 {
     text-transform: uppercase;
 }
 
-/* Floating status bubble layout perfectly centered ABOVE your bottom-right profile node */
+/* Sits extremely close right on top of your own bottom-right profile avatar node */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 100px; /* Restored back safely on top of your 48px avatar node */
+    bottom: 52px; /* Dropped closer down to sit right above the 48px avatar node */
     right: 25px;
     background: var(--surface);
     color: var(--text-main);
@@ -1417,7 +1417,7 @@ h2 {
 /* Plus (+) trigger node absolute centered relative to the profile avatar base layout */
 .profile-note-action-trigger {
     position: fixed;
-    bottom: 75px;
+    bottom: 52px; /* Placed behind/near the text line so it aligns nicely with your hover states */
     right: 39px;
     background: var(--primary);
     color: #000000;
