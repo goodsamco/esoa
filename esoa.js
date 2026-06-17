@@ -484,6 +484,23 @@ function bindBackgroundGcListener() {
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC
    ========================================================================== */
+function formatMessageTimestamp(timestamp) {
+    if (!timestamp) return '';
+    const msgDate = new Date(timestamp);
+    const today = new Date();
+
+    const isToday = msgDate.getDate() === today.getDate() &&
+                    msgDate.getMonth() === today.getMonth() &&
+                    msgDate.getFullYear() === today.getFullYear();
+
+    if (isToday) {
+        return msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return msgDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + 
+               msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+}
+
 function initGroupChatChannel() {
     isGroupChat = true;
     selectedActiveChatPartnerId = "BARANGAY_GC";
@@ -573,7 +590,7 @@ window.sendChatPayload = function () {
         set(newMsgRef, {
              sender: userId,
              text: text,
-             timestamp: Date.now() // 🔥 Added timestamp to DMs
+             timestamp: Date.now()
           });
     }
     input.value = '';
@@ -611,10 +628,21 @@ function appendBubbleToScroller(msg, msgId, direction) {
 
         const timeTag = document.createElement('div');
         timeTag.className = 'msg-time-tag';
-        timeTag.innerText = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        timeTag.innerText = formatMessageTimestamp(msg.timestamp);
 
         metaRow.appendChild(avatarNode);
         metaRow.appendChild(authorTag);
+        metaRow.appendChild(timeTag);
+        wrapper.appendChild(metaRow);
+    } else if (msg.timestamp) {
+        // DM Time Placement: Placed exactly on top of the message bubble inside a meta row
+        const metaRow = document.createElement('div');
+        metaRow.className = 'msg-meta-row';
+
+        const timeTag = document.createElement('div');
+        timeTag.className = 'msg-time-tag';
+        timeTag.innerText = formatMessageTimestamp(msg.timestamp);
+
         metaRow.appendChild(timeTag);
         wrapper.appendChild(metaRow);
     }
@@ -628,19 +656,6 @@ function appendBubbleToScroller(msg, msgId, direction) {
     };
 
     wrapper.appendChild(bbl);
-
-    // 🔥 Added: Timestamp metadata under the bubble for non-group chats (DMs)
-    if (!isGroupChat && msg.timestamp) {
-        const dmMetaRow = document.createElement('div');
-        dmMetaRow.className = 'msg-meta-row dm-meta';
-        
-        const timeTag = document.createElement('div');
-        timeTag.className = 'msg-time-tag';
-        timeTag.innerText = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        dmMetaRow.appendChild(timeTag);
-        wrapper.appendChild(dmMetaRow);
-    }
 
     const rxContainer = document.createElement('div');
     rxContainer.className = 'msg-reaction-container';
@@ -696,7 +711,6 @@ function toggleReactionPicker(msgId, wrapper) {
         tray.appendChild(opt);
     });
 
-    // Append modification tools if the current user is the author
     if (wrapper.classList.contains('outgoing')) {
         const editBtn = document.createElement('button');
         editBtn.className = 'msg-action-btn edit-btn';
@@ -795,9 +809,7 @@ function syncReactionsDisplay(msgId) {
 }
 
 window.closeChatSession = function () {
-
     if (!isGroupChat && selectedActiveChatPartnerId) {
-
         const channelSessionKey =
             userId < selectedActiveChatPartnerId
                 ? `${userId}_${selectedActiveChatPartnerId}`
