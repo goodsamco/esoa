@@ -779,7 +779,7 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
         deleteBtn.innerText = '🗑️ Delete';
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm("Soft-delete message contents?")) {
+            if (confirm("Delete message contents?")) {
                 let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
                 set(ref(rtdb, msgPath), {
                     sender: userId,
