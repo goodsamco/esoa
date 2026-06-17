@@ -456,7 +456,7 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - NO TRUNCATION
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - PERSISTENT
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
@@ -485,16 +485,16 @@ hub.appendChild(gcWrapper);
 
 bindBackgroundGcListener();
 
-// --- STATUS NOTES CONFIGURATION & 10-CHAR CUSTOM MODAL SYSTEM ---
+// --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 let localProfileNoteCache = "";
 
-// Dynamic layout generation for the standalone note status modal window context
+// Dynamic layout generation for the status note modal window context
 (() => {
     const avatarNode = document.querySelector('.profile-avatar-node');
     if (!avatarNode) return;
 
-    // Append the tiny hover plus action element on top of your profile avatar
+    // Append the tiny plus action element on top of your profile avatar
     const actionTrigger = document.createElement('div');
     actionTrigger.className = 'profile-note-action-trigger';
     actionTrigger.innerText = '＋';
@@ -545,23 +545,28 @@ let localProfileNoteCache = "";
     modalCloseBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
-    // Submit transactions directly to RTDB under the current user node layout to prevent data loss
+    // Submit transactions directly to RTDB under the current user node layout to guarantee persistence
     modalSaveBtn.addEventListener('click', () => {
         const cleanInput = modalInputField.value.trim().substring(0, 10);
         const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
         
         // Dynamic look-up of local theme color definitions to pack alongside data packets
-        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#00ffcc';
+        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
         
-        set(userNoteRef, {
-            text: cleanInput,
-            color: activeLayoutColor,
-            updatedAt: Date.now()
-        })
-        .then(() => {
-            closeModal();
-        })
-        .catch(err => console.error("Could not sync status changes accurately:", err));
+        if (cleanInput === "") {
+            // If user cleared the input, remove it from DB cleanly
+            set(userNoteRef, null).then(() => closeModal());
+        } else {
+            set(userNoteRef, {
+                text: cleanInput,
+                color: activeLayoutColor,
+                updatedAt: Date.now()
+            })
+            .then(() => {
+                closeModal();
+            })
+            .catch(err => console.error("Could not sync status changes accurately:", err));
+        }
     });
 })();
 
@@ -570,7 +575,7 @@ onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
     const NOW = Date.now();
 
-    // Clear personal status bubble before processing iterations
+    // Clear personal status bubble before processing iterations to prevent duplicates
     const selfBubble = document.getElementById('profile-status-bubble-node');
     if (selfBubble) selfBubble.remove();
 
@@ -590,13 +595,23 @@ onValue(presenceRef, (snapshot) => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // --- SELF PROFILE RENDERING SYSTEM (TOP PLACEMENT - SAVED TO PERSIST) ---
+        // --- SELF PROFILE RENDERING SYSTEM (PERSISTENT & 12HR RETENTION) ---
         if (uid === userId) {
             if (peer.statusNote && peer.statusNote.updatedAt) {
                 const ageDelta = NOW - peer.statusNote.updatedAt;
+                
+                // If past 12 hours, treat it as expired and clear local cache
+                if (ageDelta >= TWELVE_HOURS_MS) {
+                    localProfileNoteCache = "";
+                    // Optional: Clean up expired note from database automatically
+                    const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
+                    set(userNoteRef, null);
+                    return;
+                }
+
                 localProfileNoteCache = peer.statusNote.text || "";
 
-                if (ageDelta < TWELVE_HOURS_MS && localProfileNoteCache.trim() !== "") {
+                if (localProfileNoteCache.trim() !== "") {
                     const avatarNode = document.querySelector('.profile-avatar-node');
                     const triggerNode = document.querySelector('.profile-note-action-trigger');
                     if (avatarNode && triggerNode) {
@@ -610,7 +625,7 @@ onValue(presenceRef, (snapshot) => {
                             bubbleNode.style.color = peer.statusNote.color;
                         }
 
-                        // Appends on top of the trigger node, perfectly stacking above your profile image view
+                        // Appends on top of the trigger node, stacking directly above your profile view
                         avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
                     }
                 }
@@ -685,7 +700,7 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
-        // --- INJECT PEER NOTES UPSTAIRS (TOP PLACEMENT - NO TRUNCATION) ---
+        // --- INJECT PEER NOTES UPSTAIRS (TOP PLACEMENT - 12HR LIMIT) ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
         if (oldNote) oldNote.remove();
 
