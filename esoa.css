@@ -1394,7 +1394,7 @@ h2 {
 /* Sits close on top of your own bottom-right profile avatar node and wraps downward */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 52px; 
+    bottom: 74px; /* Stacked higher to make clean room for the plus icon beneath it */
     right: 25px;
     width: 48px; /* Perfectly inline with profile avatar width boundaries */
     background: var(--surface);
@@ -1411,10 +1411,10 @@ h2 {
     text-align: center;
 }
 
-/* Plus (+) trigger node absolute centered relative to the profile avatar base layout */
+/* Plus (+) trigger node absolute centered on top of your profile avatar head line */
 .profile-note-action-trigger {
     position: fixed;
-    bottom: 52px; 
+    bottom: 52px; /* Set directly over the avatar head line */
     right: 39px;
     background: var(--primary);
     color: #000000;
