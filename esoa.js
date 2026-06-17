@@ -478,7 +478,7 @@ function bindBackgroundGcListener() {
             });
         }
     });
-}
+    }
 
 
 /* ==========================================================================
@@ -522,17 +522,22 @@ function initTransientChatChannel(partnerId, partnerName) {
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
-    const input = document.getElementById('chatMsgInput');
+   const input = document.getElementById('chatMsgInput');
 
-    input.oninput = () => {
-        const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
-        set(typingRef, true);
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            set(typingRef, false);
-        }, 1500);
-    };
+input.oninput = () => {
+    const typingRef = ref(
+        rtdb,
+        `typing/${channelSessionKey}/${userId}`
+    );
 
+    set(typingRef, true);
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+        set(typingRef, false);
+    }, 1500);
+};
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
@@ -543,10 +548,7 @@ function initTransientChatChannel(partnerId, partnerName) {
 }
 
 function cleanupTransientListeners() {
-    if (transientChatListenerRemoveHook) { 
-        transientChatListenerRemoveHook(); 
-        transientChatListenerRemoveHook = null; 
-    }
+    if (transientChatListenerRemoveHook) { transientChatListenerRemoveHook(); transientChatListenerRemoveHook = null; }
 }
 
 window.sendChatPayload = function () {
@@ -575,16 +577,21 @@ window.sendChatPayload = function () {
           });
     }
     input.value = '';
-    if (!isGroupChat) {
-        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
-    }
+   if (!isGroupChat) {
+    const channelSessionKey =
+        userId < selectedActiveChatPartnerId
+            ? `${userId}_${selectedActiveChatPartnerId}`
+            : `${selectedActiveChatPartnerId}_${userId}`;
+
+    set(
+        ref(rtdb, `typing/${channelSessionKey}/${userId}`),
+        false
+    );
+}
 };
 
 function appendBubbleToScroller(msg, msgId, direction) {
     const view = document.getElementById('chatScroller');                                    
-    if (!view) return;
-
     const wrapper = document.createElement('div');
     wrapper.className = `msg-wrapper ${direction}`;
     wrapper.id = `msg-wrap-${msgId}`;
@@ -608,15 +615,6 @@ function appendBubbleToScroller(msg, msgId, direction) {
 
         metaRow.appendChild(avatarNode);
         metaRow.appendChild(authorTag);
-        metaRow.appendChild(timeTag);
-        wrapper.appendChild(metaRow);
-    } else {
-        // Build timestamp nodes for private 1:1 sessions
-        const metaRow = document.createElement('div');
-        metaRow.className = 'msg-meta-row';
-        const timeTag = document.createElement('div');
-        timeTag.className = 'msg-time-tag';
-        timeTag.innerText = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         metaRow.appendChild(timeTag);
         wrapper.appendChild(metaRow);
     }
@@ -715,12 +713,12 @@ function syncReactionsDisplay(msgId) {
 
         Object.keys(summary).forEach(emo => {
             const pill = document.createElement('div');
-            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                            
+            pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;                                                            
             if (isGroupChat) {
                 pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
             } else {
-                pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
-            }                                            
+                pill.innerHTML = `<span>${emo}</span>`;
+            }                                                            
             pill.onclick = (e) => {
                 e.stopPropagation();
                 submitReaction(msgId, emo);
@@ -733,15 +731,26 @@ function syncReactionsDisplay(msgId) {
 }
 
 window.closeChatSession = function () {
+
     if (!isGroupChat && selectedActiveChatPartnerId) {
-        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
+
+        const channelSessionKey =
+            userId < selectedActiveChatPartnerId
+                ? `${userId}_${selectedActiveChatPartnerId}`
+                : `${selectedActiveChatPartnerId}_${userId}`;
+
+        set(
+            ref(rtdb, `typing/${channelSessionKey}/${userId}`),
+            false
+        );
     }
+
     document.getElementById('chatDock').style.display = 'none';
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
-};sages();
-});
+};
+
+
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
