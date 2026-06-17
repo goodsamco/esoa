@@ -494,11 +494,11 @@ let localProfileNoteCache = "";
     const avatarNode = document.querySelector('.profile-avatar-node');
     if (!avatarNode) return;
 
-    // Append the tiny hover plus action element
+    // Append the tiny hover plus action element on top of your profile avatar
     const actionTrigger = document.createElement('div');
     actionTrigger.className = 'profile-note-action-trigger';
     actionTrigger.innerText = '＋';
-    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode.nextSibling);
+    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode);
 
     // Create custom structural modal elements natively inside the document context
     const modalOverlay = document.createElement('div');
@@ -545,7 +545,7 @@ let localProfileNoteCache = "";
     modalCloseBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
-    // Submit transactions to RTDB with layout identity colors broadcasted cleanly
+    // Submit transactions directly to RTDB under the current user node layout to prevent data loss
     modalSaveBtn.addEventListener('click', () => {
         const cleanInput = modalInputField.value.trim().substring(0, 10);
         const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
@@ -590,7 +590,7 @@ onValue(presenceRef, (snapshot) => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // --- SELF PROFILE RENDERING SYSTEM (TOP PLACEMENT - NO TRUNCATION) ---
+        // --- SELF PROFILE RENDERING SYSTEM (TOP PLACEMENT - SAVED TO PERSIST) ---
         if (uid === userId) {
             if (peer.statusNote && peer.statusNote.updatedAt) {
                 const ageDelta = NOW - peer.statusNote.updatedAt;
@@ -603,14 +603,15 @@ onValue(presenceRef, (snapshot) => {
                         const bubbleNode = document.createElement('div');
                         bubbleNode.className = 'profile-status-note-bubble';
                         bubbleNode.id = 'profile-status-bubble-node';
-                        bubbleNode.innerText = localProfileNoteCache; // Render without substring boundaries
+                        bubbleNode.innerText = localProfileNoteCache; 
                         
                         if (peer.statusNote.color) {
                             bubbleNode.style.borderColor = peer.statusNote.color;
                             bubbleNode.style.color = peer.statusNote.color;
                         }
 
-                        avatarNode.parentNode.insertBefore(bubbleNode, avatarNode);
+                        // Appends on top of the trigger node, perfectly stacking above your profile image view
+                        avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
                     }
                 }
             } else {
@@ -694,7 +695,7 @@ onValue(presenceRef, (snapshot) => {
             if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
                 const noteNode = document.createElement('div');
                 noteNode.className = 'peer-status-note';
-                noteNode.innerText = peer.statusNote.text; // Render without substring boundaries
+                noteNode.innerText = peer.statusNote.text; 
                 
                 if (peer.statusNote.color) {
                     noteNode.style.color = peer.statusNote.color;
