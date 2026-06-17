@@ -1320,3 +1320,45 @@ h2 {
 .reaction-picker-tray .msg-action-btn:first-of-type {
     margin-left: 4px !important;
 }
+
+/* --- Floating Native Emoji Matrix Grid --- */
+.native-emoji-matrix-panel {
+    position: absolute;
+    bottom: 42px;
+    left: 10px;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    z-index: 1010;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    animation: fadeInTray 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.matrix-emoji-node {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.1s ease, transform 0.1s ease;
+}
+
+.matrix-emoji-node:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: scale(1.15);
+}
+
+.matrix-emoji-node:active {
+    transform: scale(0.95);
+}
+
+/* Ensure outgoing message wrappers place the panel appropriately */
+.msg-wrapper.outgoing .native-emoji-matrix-panel {
+    left: auto;
+    right: 10px;
+}
