@@ -456,75 +456,185 @@ onValue(presenceRef, (snapshot) => {
 });
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (WITH INTEGRATED STATUS NOTES)
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) WITH STATUS NOTES
    ========================================================================== */
-
-// 1. Core initialization constants
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-
-// Shared prompt modifier system to submit and sync your current active presence message
-window.promptStatusNoteUpdate = function(currentNoteText) {
-    const rawInput = prompt("Share a status update (20 chars max):", currentNoteText);
-    if (rawInput === null) return;
-
-    const cleanInput = rawInput.trim();
-    if (cleanInput.length > 20) {
-        alert("Your status note exceeds the strict 20 character limit.");
-        return;
-    }
-
-    // Direct synchronization into your Realtime Database presence baseline structure
-    const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
-    set(userNoteRef, {
-        text: cleanInput,
-        updatedAt: Date.now()
-    }).catch(err => console.error("Status note database sync failure:", err));
-};
-
-// [ORIGINAL LOGIC] Setting up Hub base nodes and baseline components
 const hub = document.getElementById('peerActiveHub');
-// ... (Your original initial group chat / GC staging code remains here completely unedited) ...
+hub.innerHTML = '';
 
-// Updated Realtime Presence Synchronization loop callback handler
-onValue(ref(rtdb, 'presence'), (snapshot) => {
+const gcWrapper = document.createElement('div');
+gcWrapper.className = 'peer-wrapper';
+gcWrapper.id = 'gc-hub-node';
+
+const gcBubble = document.createElement('div');
+gcBubble.className = 'group-chat-bubble';
+gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
+gcBubble.onclick = () => initGroupChatChannel();
+
+const gcDotNode = document.createElement('div');
+gcDotNode.className = 'peer-notif-dot';
+gcDotNode.id = 'gc-notif-dot';
+
+const gcNameTag = document.createElement('div');
+gcNameTag.className = 'peer-name-hover';
+gcNameTag.innerText = "GC";
+
+gcWrapper.appendChild(gcBubble);
+gcWrapper.appendChild(gcDotNode);
+gcWrapper.appendChild(gcNameTag);
+hub.appendChild(gcWrapper);
+
+bindBackgroundGcListener();
+
+// --- STATUS NOTES CONFIGURATION VARIABLES ---
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+let localProfileNoteCache = "";
+
+// Global note setup listener attached down over the personal profile node element structures
+(() => {
+    const avatarNode = document.querySelector('.profile-avatar-node');
+    if (!avatarNode) return;
+
+    const actionTrigger = document.createElement('div');
+    actionTrigger.className = 'profile-note-action-trigger';
+    actionTrigger.innerText = '＋';
+    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode.nextSibling);
+
+    actionTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rawInput = prompt("Share a status update (20 characters max):", localProfileNoteCache);
+        if (rawInput === null) return;
+
+        const cleanInput = rawInput.trim();
+        if (cleanInput.length > 20) {
+            alert("Status updates are strictly capped at 20 characters maximum.");
+            return;
+        }
+
+        const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
+        set(userNoteRef, {
+            text: cleanInput,
+            updatedAt: Date.now()
+        }).catch(err => console.error("Could not sync status changes accurately:", err));
+    });
+})();
+
+const presenceRef = ref(rtdb, 'presence');
+onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
     const NOW = Date.now();
 
-    // [ORIGINAL LOGIC] Handle baseline checks, layout cleanup, or structural sorting arrays
-    // ...
+    // Clean up personal bottom bubble element tree instances safely before structural pass loops
+    const selfBubble = document.getElementById('profile-status-bubble-node');
+    if (selfBubble) selfBubble.remove();
 
+    // Mark absent users offline
+    const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
+    existingNodes.forEach(node => {
+        const nodeUid = node.id.replace('peer-node-', '');
+
+        if (!users[nodeUid] || nodeUid === userId) {
+            node.classList.add('is-offline');
+            node.style.order = "1";
+        }
+    });
+
+    // Realtime peer synchronization
     Object.keys(users).forEach(uid => {
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
-        // [ORIGINAL LOGIC] Keep your exact established variable configurations and element tracking checks
-        const singleWordLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
-        let peerContainer = document.getElementById(`peer-node-${peer.uid}`);
+        // --- MANAGE CURRENT ACTIVE LOGGED IN USER VIEW SEPARATELY ---
+        if (uid === userId) {
+            if (peer.statusNote && peer.statusNote.updatedAt) {
+                const ageDelta = NOW - peer.statusNote.updatedAt;
+                localProfileNoteCache = peer.statusNote.text || "";
+
+                if (ageDelta < TWELVE_HOURS_MS && localProfileNoteCache.trim() !== "") {
+                    const avatarNode = document.querySelector('.profile-avatar-node');
+                    const triggerNode = document.querySelector('.profile-note-action-trigger');
+                    if (avatarNode && triggerNode) {
+                        const bubbleNode = document.createElement('div');
+                        bubbleNode.className = 'profile-status-note-bubble';
+                        bubbleNode.id = 'profile-status-bubble-node';
+                        bubbleNode.innerText = localProfileNoteCache.substring(0, 20);
+                        avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
+                    }
+                }
+            } else {
+                localProfileNoteCache = "";
+            }
+            return; // Skip rendering your slot in the standard peer row
+        }
+
+        const singleWordLabel =
+            peer.name
+                ? peer.name.split(' ')[0]
+                : "Operator";
+
+        const cleanAvatarSrc =
+            premium3dAssets[peer.avatar] ||
+            peer.avatar ||
+            premium3dAssets['avatar-m1'];
+
+        let peerContainer =
+            document.getElementById(`peer-node-${peer.uid}`);
 
         if (!peerContainer) {
-            // [ORIGINAL LOGIC] Keep your exact matching avatar, dot overlay, name tag element build structures
             peerContainer = document.createElement('div');
             peerContainer.className = 'peer-wrapper';
             peerContainer.id = `peer-node-${peer.uid}`;
-            
-            // ... (Your existing structural code filling inner nodes like imgNode / click hooks) ...
-            
+
+            const imgNode = document.createElement('img');
+            imgNode.className = 'peer-avatar-bubble';
+            imgNode.src = cleanAvatarSrc;
+            imgNode.onclick = () =>
+                initTransientChatChannel(
+                    peer.uid,
+                    singleWordLabel
+                );
+
+            const dotNode = document.createElement('div');
+            dotNode.className = 'peer-notif-dot';
+
+            const nameTag = document.createElement('div');
+            nameTag.className = 'peer-name-hover';
+            nameTag.innerText = singleWordLabel;
+            nameTag.dataset.typing = "false";
+
+            peerContainer.appendChild(imgNode);
+            peerContainer.appendChild(dotNode);
+            peerContainer.appendChild(nameTag);
+
             hub.appendChild(peerContainer);
+
+            bindBackgroundNotifListener(peer.uid);
+
+            // Typing listener
+            bindTypingIndicator(
+                peer.uid,
+                singleWordLabel
+            );
+
         } else {
-            // [ORIGINAL LOGIC] Keep your exact asset recovery paths updated cleanly here
+            const img =
+                peerContainer.querySelector('.peer-avatar-bubble');
+
+            if (img) {
+                img.src = cleanAvatarSrc;
+            }
+
+            const tag =
+                peerContainer.querySelector('.peer-name-hover');
+
+            if (tag && tag.dataset.typing !== "true") {
+                tag.innerText = singleWordLabel;
+            }
         }
 
-        // ==================================================================
-        // ADDITIONAL FUNCTIONALITY: STATUS NOTES PROCESSING
-        // ==================================================================
-        
-        // Wipe historical instances of status elements to maintain layout stability during refreshes
+        // --- INJECT PEER NOTES INSIDE THE ROW MAP SEGMENTS ---
         const oldNote = peerContainer.querySelector('.peer-status-note');
-        const oldTrigger = peerContainer.querySelector('.add-note-trigger');
         if (oldNote) oldNote.remove();
-        if (oldTrigger) oldTrigger.remove();
 
-        // Validate timestamp boundaries to confirm status note is under 12 hours old
         if (peer.statusNote && peer.statusNote.updatedAt) {
             const timeElapsed = NOW - peer.statusNote.updatedAt;
 
@@ -536,22 +646,13 @@ onValue(ref(rtdb, 'presence'), (snapshot) => {
             }
         }
 
-        // Attach interactive update action mechanics if the rendered loop cycle node matches your identity
-        if (peer.uid === userId) {
-            const triggerNode = document.createElement('div');
-            triggerNode.className = 'add-note-trigger';
-            triggerNode.innerText = '＋';
-            triggerNode.onclick = (e) => {
-                e.stopPropagation(); // Block unintended downstream thread processing chains
-                window.promptStatusNoteUpdate(peer.statusNote?.text || "");
-            };
-            peerContainer.appendChild(triggerNode);
-        }
-        // ==================================================================
-
-        // [ORIGINAL LOGIC] Re-apply normal tracking modifiers like layout style orders, classes, etc.
         peerContainer.classList.remove('is-offline');
+        peerContainer.style.order = "0";
     });
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 });
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS
