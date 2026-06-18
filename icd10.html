@@ -1,16 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICD10 & Reference Registry</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <link rel="stylesheet" href="esoa.css">
-
     <style>
         :root {
             --primary: hsl(111, 100%, 60%);
@@ -30,32 +26,26 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             margin-top: 20px;
         }
-
         .category-header h2 {
             margin: 0;
             font-size: 1.2rem;
         }
-
         .category-header .chevron-icon {
             color: var(--primary);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .section-group-wrapper {
             display: grid;
             grid-template-rows: 1fr;
             transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
-
         .section-group-wrapper.collapsed {
             grid-template-rows: 0fr;
         }
-
-        .section-group-wrapper.collapsed .category-header .chevron-icon {
+        .section-group-wrapper.collapsed .chevron-icon {
             transform: rotate(-90deg);
         }
-
         .section-group-inner {
             min-height: 0;
             display: flex;
@@ -72,16 +62,13 @@
             padding: 14px;
             margin-bottom: 20px;
         }
-
         .searching-active .search-priority-view {
             display: flex;
         }
-
         .searching-active .category-header,
         .searching-active .section-group-wrapper {
             display: none !important;
         }
-
         .search-priority-view h3 {
             margin: 0 0 12px 0;
             font-size: 0.9rem;
@@ -108,7 +95,6 @@
             transition: opacity 0.2s;
             width: fit-content;
         }
-
         .expand-list-action-trigger:hover {
             opacity: 0.8;
         }
@@ -135,12 +121,10 @@
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
         }
-
         .search-inner-wrapper {
             flex-grow: 1;
             position: relative;
         }
-
         .search-inner-wrapper input {
             width: 100%;
             padding: 10px 14px;
@@ -154,11 +138,9 @@
             outline: none;
             transition: border-color 0.2s;
         }
-
         .search-inner-wrapper input:focus {
             border-color: var(--primary) !important;
         }
-
         .action-control-btn {
             width: 44px;
             height: 44px;
@@ -172,7 +154,6 @@
             justify-content: center;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .action-control-btn:hover, .action-control-btn.active-mode {
             background: var(--primary) !important;
             border-color: var(--primary) !important;
@@ -186,7 +167,6 @@
             width: 100%;
             margin-top: 5px;
         }
-
         .custom-select-wrapper select {
             width: 100%;
             background: #000 !important;
@@ -200,9 +180,8 @@
             appearance: none;
             -webkit-appearance: none;
             cursor: pointer;
-            text-align: left; /* Explicit text alignment */
+            text-align: left;
         }
-
         .custom-select-wrapper::after {
             content: '▼';
             font-size: 0.65rem;
@@ -216,10 +195,9 @@
 
         /* Scaled Modal Typography and Left-Aligned Layout Structure */
         .modal-content .input-group {
-            text-align: left; /* Force alignment of inputs and labels to the left */
+            text-align: left;
             width: 100%;
         }
-
         .modal-content .input-group label {
             font-size: 0.72rem !important;
             letter-spacing: 0.5px;
@@ -227,7 +205,6 @@
             text-align: left;
             margin-bottom: 4px;
         }
-
         .modal-content .input-group input,
         .modal-content .input-group textarea {
             font-size: 0.8rem !important;
@@ -254,8 +231,8 @@
         .item-row {
             display: flex;
             margin: 8px 0;
+            align-items: center;
         }
-        
         .item-row.hidden-overflow-item {
             display: none;
         }
@@ -278,12 +255,11 @@
             font-size: 0.95rem;
             flex-shrink: 0;
         }
-
         .item-row .item-desc-text {
             font-size: 0.78rem !important;
             color: #aaaaaa;
             font-weight: 400;
-            word-break: break-word; /* Supports text wrapper rules safely */
+            word-break: break-word;
         }
 
         /* Context Actions layout injection for inline row modifications */
@@ -294,7 +270,6 @@
             z-index: 10;
             margin-left: auto;
         }
-
         .context-action-node {
             width: 28px;
             height: 28px;
@@ -308,13 +283,11 @@
             cursor: pointer;
             transition: all 0.15s ease;
         }
-
         .context-action-node.edit-trigger:hover {
             background: var(--success);
             color: #000;
             border-color: var(--success);
         }
-
         .context-action-node.delete-trigger:hover {
             background: #ff4444;
             color: #fff;
@@ -326,12 +299,12 @@
             cursor: grab !important;
             border: 1px dashed var(--primary) !important;
             background: rgba(255, 255, 255, 0.02);
+            padding: 4px 8px;
+            border-radius: 8px;
         }
-
         .edit-mode-active .item-row .row-context-actions {
             display: flex; 
         }
-
         .item-row.dragging {
             opacity: 0.35;
             background: var(--glass);
@@ -348,14 +321,11 @@
     </div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Reset" onclick="if(typeof resetFocus === 'function') resetFocus()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
-        
         <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        
         <!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
         <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
-        
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
@@ -411,6 +381,7 @@
         </button>
     </div>
 
+    <!-- ADD/EDIT RECORD MODAL -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
@@ -427,20 +398,20 @@
                 </div>
             </div>
             
-            <div class="input-group">
+            <div class="input-group" style="margin-top:12px;">
                  <label id="primaryFieldLabel">Diagnosis Code</label>
                  <input id="newRecordKey" type="text">
              </div>
-            <div class="input-group">
+            <div class="input-group" style="margin-top:12px;">
                  <label id="secondaryFieldLabel">Description Value</label>
-                 <!-- Converted input element to a text area box for heavy descriptions -->
                  <textarea id="newRecordValue"></textarea>
              </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center;">SAVE REGISTRY DATA</div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center; margin-top:15px; cursor:pointer;">SAVE REGISTRY DATA</div>
             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
 
+    <!-- DISCOUNT CALCULATOR MODAL -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -448,12 +419,12 @@
                  <label>HOSPITAL CHARGES</label>
                  <input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
-            <div class="input-group">
+            <div class="input-group" style="margin-top:12px;">
                  <label>CASE RATE (PHIC)</label>
                  <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
-            <div class="modal-result" style="border-color: var(--primary);"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000; text-align: center;">COPY CALCULATION</div>
+            <div class="modal-result" style="border-color: var(--primary); margin-top:15px;"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000; text-align: center; cursor:pointer;">COPY CALCULATION</div>
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
@@ -531,7 +502,7 @@
                 { code: "9404", desc: "MAGEPT" }
             ]
         };
-        
+                
         try {
             rtdb = getDatabase();
             db = getFirestore();
@@ -554,24 +525,23 @@
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
             const chevron = headerElement.querySelector('.chevron-icon');
-            
+                        
             if (wrapper.classList.contains('collapsed')) {
                 wrapper.classList.remove('collapsed');
-                chevron.style.transform = "rotate(0deg)";
+                if (chevron) chevron.style.transform = "rotate(0deg)";
             } else {
                 wrapper.classList.add('collapsed');
-                chevron.style.transform = "rotate(-90deg)";
+                if (chevron) chevron.style.transform = "rotate(-90deg)";
             }
         };
 
-        // Fixed View/Hide Toggle Functionality
         window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
             const container = document.getElementById(targetGroupId);
             if (!container) return;
-            
+                        
             const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
             const rows = container.querySelectorAll('.item-row');
-            
+                        
             if (!isExpanded) {
                 rows.forEach(r => r.classList.remove('hidden-overflow-item'));
                 buttonElement.setAttribute('data-expanded', 'true');
@@ -589,7 +559,7 @@
         async function initializeRegistryData() {
             pullParsedAccentColor();
             const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-            
+                        
             for (const type of ['icd', 'member', 'zipcode']) {
                 const targetContainer = document.getElementById(sectionMap[type]);
                 if (!targetContainer) continue;
@@ -629,11 +599,11 @@
         function appendRowToDOM(container, type, key, val, isOverflowItem) {
             const rowDiv = document.createElement('div');
             rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
-            rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
+            rowDiv.setAttribute('data-ref-type', type);
             rowDiv.setAttribute('data-code', key);
             rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
             rowDiv.onclick = function() { handleSelectiveCopy(this); };
-            
+                        
             rowDiv.innerHTML = `
                 <span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
                 <div class="row-context-actions" onclick="event.stopPropagation()">
@@ -641,7 +611,7 @@
                     <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
                 </div>
             `;
-            
+                        
             const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
             if (actionTriggerLink) {
                 container.insertBefore(rowDiv, actionTriggerLink);
@@ -651,7 +621,6 @@
             bindDragDropSequence(rowDiv);
         }
 
-        // Prioritized Realtime Top-View Search Logic with Dynamic Node Cloning
         window.filterRegistryRealtime = function() {
             const query = document.getElementById('registrySearch').value.toLowerCase().trim();
             const container = document.getElementById('mainContainer');
@@ -680,15 +649,15 @@
                     searchTargetGroup.appendChild(clonedRow);
                 }
             });
+            if (window.lucide) window.lucide.createIcons();
         };
 
-        // Fine-Tune Reset Utility: Performs light re-hiding over matching data targets
         function fineTuneResetElements() {
             const groups = ['icd-section-group', 'member-section-group', 'zip-section-group'];
             groups.forEach(id => {
                 const target = document.getElementById(id);
                 if (!target) return;
-                
+                                
                 const rows = target.querySelectorAll('.item-row');
                 rows.forEach((row, idx) => {
                     if (idx >= 5) {
@@ -716,10 +685,9 @@
                 const textNode = element.querySelector('.item-desc-text');
                 const originalText = textNode.textContent;
                 textNode.textContent = "COPIED VALUE!";
-                
+                                
                 setTimeout(() => { 
                     textNode.textContent = originalText;
-                    resetViewRegistry();
                 }, 1000);
             });
         };
@@ -740,38 +708,36 @@
 
         window.openInlineEdit = function(rowElement) {
             activeEditRow = rowElement;
-            const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
-                         (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
-            
+            const type = rowElement.getAttribute('data-ref-type');
+                        
             document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
             document.getElementById('modalTypeSelectorGroup').style.display = 'none';
             document.getElementById('modalTypeSelector').value = type;
-            
+                        
             synchronizeModalInputs();
-            
+                        
             const codeVal = rowElement.getAttribute('data-code');
             document.getElementById('newRecordKey').value = codeVal;
             document.getElementById('newRecordKey').disabled = true; 
-            
-            const dataVal = rowElement.getAttribute('data-val');
-            document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
-            
+                         
+            const descNode = rowElement.querySelector('.item-desc-text');
+            document.getElementById('newRecordValue').value = descNode ? descNode.textContent : '';
+                        
             toggleModal('addRecordModal', true);
         };
 
         window.deleteInlineRow = async function(rowElement) {
             if(confirm("Are you certain you want to destroy this reference record?")) {
-                const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
-                             (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+                const type = rowElement.getAttribute('data-ref-type');
                 const key = rowElement.getAttribute('data-code');
                 const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
                 try {
                     if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
                 } catch(e) { console.warn("Database drop failed."); }
-                
+                                
                 rowElement.remove();
-                resetViewRegistry();
+                fineTuneResetElements();
             }
         };
 
@@ -780,122 +746,116 @@
             const key = document.getElementById('newRecordKey').value.trim();
             const val = document.getElementById('newRecordValue').value.trim();
 
-            if (!key || !val) return alert("Please specify all required data attributes.");
+            if (!key || !val) {
+                alert("Please populate all fields perfectly.");
+                return;
+            }
 
-            const referencePayload = { code: key, description: val, syncedAt: Date.now() };
             const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+            const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+            const container = document.getElementById(sectionMap[type]);
 
             try {
-                if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
-            } catch (err) { console.warn("Storage runtime error."); }
+                if (rtdb) {
+                    await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), { code: key, description: val });
+                }
+            } catch(e) { console.warn("Database sync dropped, updating template layout structure."); }
 
             if (activeEditRow) {
+                activeEditRow.setAttribute('data-code', key);
                 activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+                activeEditRow.querySelector('.item-code-prefix').textContent = key;
                 activeEditRow.querySelector('.item-desc-text').textContent = val;
             } else {
-                const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-                const targetNode = document.getElementById(sectionMap[type]);
-                if (targetNode) {
-                    const currentCount = targetNode.querySelectorAll('.item-row').length;
-                    appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
-                }
+                appendRowToDOM(container, type, key, val, false);
             }
 
             toggleModal('addRecordModal', false);
-            resetViewRegistry();
+            fineTuneResetElements();
+            activeEditRow = null;
         };
 
         window.toggleMovableLayout = function() {
             layoutMovableActive = !layoutMovableActive;
             const container = document.getElementById('mainContainer');
-            const triggerBtn = document.getElementById('sortToggleTrigger');
-            const wrappers = document.querySelectorAll('.section-group-wrapper');
+            const trigger = document.getElementById('sortToggleTrigger');
 
             if (layoutMovableActive) {
-                document.getElementById('registrySearch').value = "";
-                container.classList.remove('searching-active');
                 container.classList.add('edit-mode-active');
-                triggerBtn.classList.add('active-mode');
-                wrappers.forEach(w => w.classList.remove('collapsed'));
+                if (trigger) trigger.classList.add('active-mode');
             } else {
                 container.classList.remove('edit-mode-active');
-                triggerBtn.classList.remove('active-mode');
+                if (trigger) trigger.classList.remove('active-mode');
                 fineTuneResetElements();
             }
         };
 
-        function bindDragDropSequence(element) {
-            element.setAttribute('draggable', 'true');
-            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
-            element.addEventListener('dragend', () => element.classList.remove('dragging'));
+        window.toggleModal = function(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.style.display = show ? 'flex' : 'none';
+            
+            if (show && modalId === 'addRecordModal' && !activeEditRow) {
+                document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
+                document.getElementById('modalTypeSelectorGroup').style.display = 'block';
+                document.getElementById('newRecordKey').disabled = false;
+                document.getElementById('newRecordKey').value = '';
+                document.getElementById('newRecordValue').value = '';
+                synchronizeModalInputs();
+            }
+        };
+
+        window.closeOutside = function(event, modalId) {
+            if (event.target.id === modalId) {
+                toggleModal(modalId, false);
+            }
+        };
+
+        function bindDragDropSequence(rowElement) {
+            rowElement.draggable = true;
+            rowElement.addEventListener('dragstart', () => {
+                if (!layoutMovableActive) return;
+                rowElement.classList.add('dragging');
+            });
+            rowElement.addEventListener('dragend', () => {
+                rowElement.classList.remove('dragging');
+            });
         }
 
-        document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
-            zone.addEventListener('dragover', e => {
+        document.querySelectorAll('.section-group-inner').forEach(innerGroup => {
+            innerGroup.addEventListener('dragover', e => {
                 if (!layoutMovableActive) return;
                 e.preventDefault();
-                const activeDragging = document.querySelector('.dragging');
-                if (activeDragging) {
-                    const boundingElement = getDragLocationSpace(zone, e.clientY);
-                    if (boundingElement == null) {
-                        const expandActionLink = zone.querySelector('.expand-list-action-trigger');
-                        if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
-                        else zone.appendChild(activeDragging);
+                const draggingItem = document.querySelector('.dragging');
+                if (!draggingItem) return;
+                const afterElement = getDragAfterElement(innerGroup, e.clientY);
+                if (afterElement == null) {
+                    const expandTrigger = innerGroup.querySelector('.expand-list-action-trigger');
+                    if (expandTrigger) {
+                        innerGroup.insertBefore(draggingItem, expandTrigger);
                     } else {
-                        zone.insertBefore(activeDragging, boundingElement);
+                        innerGroup.appendChild(draggingItem);
                     }
+                } else {
+                    innerGroup.insertBefore(draggingItem, afterElement);
                 }
             });
         });
 
-        function getDragLocationSpace(container, yPoint) {
-            const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
-            return elements.reduce((closest, child) => {
-                const boundary = child.getBoundingClientRect();
-                const separation = yPoint - boundary.top - boundary.height / 2;
-                if (separation < 0 && separation > closest.offset) {
-                    return { offset: separation, element: child };
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
                 } else {
                     return closest;
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        window.toggleModal = function(id, isActive) {
-            const overlay = document.getElementById(id);
-            if (overlay) {
-                if (isActive) {
-                    overlay.style.display = 'flex';
-                    setTimeout(() => overlay.classList.add('active'), 10);
-                } else {
-                    overlay.classList.remove('active');
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
-                        document.getElementById('modalTypeSelectorGroup').style.display = 'block';
-                        document.getElementById('newRecordKey').disabled = false;
-                        document.getElementById('newRecordKey').value = "";
-                        document.getElementById('newRecordValue').value = "";
-                        activeEditRow = null;
-                    }, 220);
-                }
-            }
-        };
-
-        window.closeOutside = function(e, id) {
-            if (e.target === document.getElementById(id)) toggleModal(id, false);
-        };
-
-        window.resetViewRegistry = function() {
-            document.getElementById('registrySearch').value = "";
-            filterRegistryRealtime();
-            if (layoutMovableActive) toggleMovableLayout();
-            fineTuneResetElements();
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeRegistryData();
-        });
+        document.addEventListener('DOMContentLoaded', initializeRegistryData);
     </script>
 </body>
 </html>
