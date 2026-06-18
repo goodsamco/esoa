@@ -426,12 +426,17 @@
         </div>
     </div>
 
-    <script type="module" src="/esoa.js"></script>
+    <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        try {
+    initializeRegistryData();
+} catch (error) {
+    console.warn("Registry initialization skipped or failed on this page:", error);
+}
         let layoutMovableActive = false;
         let rtdb, db;
         let activeEditRow = null;
