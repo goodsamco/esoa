@@ -9,174 +9,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <link rel="stylesheet" href="esoa.css">
-
-    <style>
-        /* ==========================================================================
-           REGISTRY ITEM DISPLAY & SEARCH RESULTS STYLES
-           ========================================================================== */
-        .category-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 20px;
-        }
-        .category-header h2 { margin: 0; font-size: 1.2rem; }
-        .category-header .chevron-icon {
-            color: var(--primary, hsl(111, 100%, 60%));
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .section-group-wrapper {
-            display: grid;
-            grid-template-rows: 1fr;
-            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-        .section-group-wrapper.collapsed { grid-template-rows: 0fr; }
-        .section-group-wrapper.collapsed .chevron-icon { transform: rotate(-90deg); }
-        .section-group-inner { min-height: 0; display: flex; flex-direction: column; }
-
-        .search-priority-view {
-            display: none;
-            flex-direction: column;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 14px;
-            margin-bottom: 20px;
-        }
-        .searching-active .search-priority-view { display: flex; }
-        .searching-active .category-header,
-        .searching-active .section-group-wrapper { display: none !important; }
-        .search-priority-view h3 {
-            margin: 0 0 12px 0;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            color: var(--primary, #00e676);
-            text-transform: uppercase;
-        }
-
-        .expand-list-action-trigger {
-            background: transparent;
-            border: none;
-            color: var(--primary, #00e676);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-align: left;
-            padding: 6px 4px;
-            margin-top: 4px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            width: fit-content;
-        }
-
-        /* ==========================================================================
-           INNER ITEM ROW, CONTROLS & ADMINISTRATIVE INTERFACES
-           ========================================================================== */
-        .item-row { display: flex; margin: 8px 0; align-items: center; justify-content: space-between; }
-        .item-row.hidden-overflow-item { display: none; }
-        .edit-mode-active .item-row.hidden-overflow-item { display: flex !important; }
-        .edit-mode-active .expand-list-action-trigger { display: none !important; }
-
-        .item-row .item-code-prefix {
-            font-family: 'Roboto Mono', monospace;
-            color: var(--primary, #00e676) !important;
-            font-weight: 700;
-            margin-right: 10px;
-            font-size: 0.95rem;
-        }
-        .item-row .item-desc-text { font-size: 0.78rem !important; color: #aaaaaa; font-weight: 400; }
-
-        .row-context-actions { display: none; gap: 6px; align-items: center; z-index: 10; }
-        .context-action-node {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0,0,0,0.4);
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        .context-action-node.edit-trigger:hover { background: #00e676; color: #000; }
-        .context-action-node.delete-trigger:hover { background: #ff4444; color: #fff; }
-
-        .edit-mode-active .item-row {
-            cursor: grab !important;
-            border: 1px dashed var(--primary, #00e676) !important;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 4px 8px;
-            border-radius: 8px;
-        }
-        .edit-mode-active .item-row .row-context-actions { display: flex; }
-        .item-row.dragging { opacity: 0.35; background: rgba(255, 255, 255, 0.08); transform: scale(0.98); }
-
-        .bottom-floating-control-strip {
-            position: fixed;
-            bottom: 110px; 
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            height: 70px;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 35px;
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            box-sizing: border-box;
-            gap: 10px;
-            z-index: 3100;
-        }
-        .search-inner-wrapper { flex-grow: 1; position: relative; }
-        .search-inner-wrapper input {
-            width: 100%;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #ffffff;
-            border-radius: 20px;
-            outline: none;
-        }
-        .search-inner-wrapper input:focus { border-color: var(--primary, #00e676) !important; }
-        .action-control-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 50%;
-            color: var(--primary, #00e676) !important;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .action-control-btn:hover, .action-control-btn.active-mode {
-            background: var(--primary, #00e676) !important;
-            color: #000 !important;
-        }
-
-        .custom-select-wrapper { position: relative; width: 100%; margin-top: 5px; }
-        .custom-select-wrapper select {
-            width: 100%; background: #000; color: white; padding: 12px;
-            border: 1px solid rgba(83, 83, 83, 0.3); border-radius: 16px; outline: none;
-            appearance: none; -webkit-appearance: none; cursor: pointer;
-        }
-        .custom-select-wrapper::after {
-            content: '▼'; font-size: 0.65rem; color: var(--primary, #00e676);
-            position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none;
-        }
-    </style>
+    <link rel="stylesheet" href="registry.css">
 </head>
 <body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
@@ -187,15 +20,15 @@
     </div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="handleGlobalReset()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        <button class="top-btn" title="Reset" id="globalResetTrigger"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" id="srModalTrigger"><i data-lucide="user-check"></i></button>
         
-        <button class="top-btn" id="nav-esoa" title="eSOA" onclick="switchActiveView('esoa')"><i data-lucide="receipt"></i></button>
-        <button class="top-btn active" id="nav-icd10" title="ICD10 Codes" onclick="switchActiveView('icd10')"><i data-lucide="stethoscope"></i></button>
-        <button class="top-btn" id="nav-cf4" title="CF4 Form" onclick="switchActiveView('cf4')"><i data-lucide="credit-card"></i></button>
+        <button class="top-btn" id="nav-esoa" title="eSOA"><i data-lucide="receipt"></i></button>
+        <button class="top-btn active" id="nav-icd10" title="ICD10 Codes"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" id="nav-cf4" title="CF4 Form"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar">
     <span id="userDisplayName" class="name-string">Name</span>
 
     <div class="container" id="mainContainer">
@@ -206,7 +39,7 @@
             <div id="searchResultTargetGroup"></div>
         </div>
 
-        <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
+        <div class="category-header" id="icdHeader">
             <h2>ICD-10 Diagnostic Codes</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
@@ -214,7 +47,7 @@
             <div class="section-group-inner" id="icd-section-group"></div>
         </div>
 
-        <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
+        <div class="category-header" id="zipHeader">
             <h2>ZIPCODE</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
@@ -222,7 +55,7 @@
             <div class="section-group-inner" id="zip-section-group"></div>
         </div>
 
-        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+        <div class="category-header" id="memberHeader">
             <h2>MEMBER CATEGORY</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
@@ -233,25 +66,24 @@
 
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
+            <input type="text" id="registrySearch" placeholder="Search references, locations...">
         </div>
-        <button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
+        <button class="action-control-btn" id="addRecordModalTrigger" title="Add Record">
             <i data-lucide="plus"></i>
         </button>
-        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards">
             <i data-lucide="move"></i>
         </button>
     </div>
 
-    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-overlay" id="addRecordModal">
+        <div class="modal-content">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
-            <input type="hidden" id="editRowTargetId" value="">
             
             <div class="input-group" id="modalTypeSelectorGroup">
                 <label>REFERENCE TYPE</label>
                 <div class="custom-select-wrapper">
-                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+                    <select id="modalTypeSelector">
                         <option value="icd">ICD-10 Diagnostic Definition</option>
                         <option value="member">Membership Category</option>
                         <option value="zipcode">Zip Code Mapping</option>
@@ -267,340 +99,24 @@
                  <label id="secondaryFieldLabel">Description Value</label>
                  <input id="newRecordValue" type="text">
              </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary, #00e676); color: #000;">SAVE REGISTRY DATA</div>
-            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+            <div class="modal-copy-zone" id="modalSaveBtn">SAVE REGISTRY DATA</div>
+            <button class="modal-close-btn" id="modalDismissBtn">Dismiss</button>
         </div>
     </div>
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
-            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+            <button class="chat-close-trigger"><i data-lucide="x"></i></button>
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
-            <button onclick="sendChatPayload()">Send</button>
+            <input type="text" id="chatMsgInput" placeholder="Aa">
+            <button id="sendChatBtn">Send</button>
         </div>
     </div>
 
     <script type="module" src="esoa.js"></script>
-    <script type="module">
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        let layoutMovableActive = false;
-        let rtdb;
-        let activeEditRow = null;
-
-        const baseDataset = {
-            icd: [
-                { code: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
-                { code: "M06.99", desc: "ARTHRITIS" },
-                { code: "I10.1", desc: "HYPERTENSION STAGE II" },
-                { code: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
-                { code: "K29.9", desc: "GASTRITIS" },
-                { code: "G44.2", desc: "TENSION HEADACHE" },
-                { code: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" }
-            ],
-            member: [
-                { code: "POS INCAPABLE", desc: "INDIGENT" },
-                { code: "NTHS", desc: "INDIGENT" },
-                { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" }
-            ],
-            zipcode: [
-                { code: "9417", desc: "ARAKAN" },
-                { code: "9415", desc: "ALEOSAN" },
-                { code: "9400", desc: "PIGKAWAYAN" }
-            ]
-        };
-        
-        try { rtdb = getDatabase(); } catch(e) { console.warn("Database initialization deferred."); }
-
-        window.toggleCategoryAccordion = function(wrapperId, headerElement) {
-            if (layoutMovableActive) return; 
-            const wrapper = document.getElementById(wrapperId);
-            const chevron = headerElement.querySelector('.chevron-icon');
-            if (wrapper.classList.contains('collapsed')) {
-                wrapper.classList.remove('collapsed');
-                if(chevron) chevron.style.transform = "rotate(0deg)";
-            } else {
-                wrapper.classList.add('collapsed');
-                if(chevron) chevron.style.transform = "rotate(-90deg)";
-            }
-        };
-
-        window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
-            const container = document.getElementById(targetGroupId);
-            if (!container) return;
-            const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
-            const rows = container.querySelectorAll('.item-row');
-            
-            if (!isExpanded) {
-                rows.forEach(r => r.classList.remove('hidden-overflow-item'));
-                buttonElement.setAttribute('data-expanded', 'true');
-                buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
-            } else {
-                rows.forEach((r, idx) => { if (idx >= 5) r.classList.add('hidden-overflow-item'); });
-                buttonElement.setAttribute('data-expanded', 'false');
-                buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-            }
-            if (window.lucide) window.lucide.createIcons();
-        };
-
-        async function initializeRegistryData() {
-            const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-            for (const type of ['icd', 'member', 'zipcode']) {
-                const targetContainer = document.getElementById(sectionMap[type]);
-                if (!targetContainer) continue;
-                targetContainer.innerHTML = '';
-
-                let activeList = [];
-                try {
-                    if (rtdb) {
-                        const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
-                        if (snapshot.exists()) {
-                            const dataObj = snapshot.val();
-                            activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
-                        }
-                    }
-                } catch (e) {}
-
-                if (activeList.length === 0) activeList = baseDataset[type];
-
-                activeList.forEach((item, index) => {
-                    appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
-                });
-
-                if (activeList.length > 5) {
-                    const expandBtn = document.createElement('button');
-                    expandBtn.className = 'expand-list-action-trigger';
-                    expandBtn.setAttribute('data-expanded', 'false');
-                    expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                    expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
-                    targetContainer.appendChild(expandBtn);
-                }
-            }
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        function appendRowToDOM(container, type, key, val, isOverflowItem) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
-            rowDiv.setAttribute('data-ref-type', type);
-            rowDiv.setAttribute('data-code', key);
-            rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
-            rowDiv.onclick = function() { handleSelectiveCopy(this); };
-            
-            rowDiv.innerHTML = `
-                <span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-                </div>
-            `;
-            
-            const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
-            if (actionTriggerLink) container.insertBefore(rowDiv, actionTriggerLink);
-            else container.appendChild(rowDiv);
-            bindDragDropSequence(rowDiv);
-        }
-
-        window.filterRegistryRealtime = function() {
-            const query = document.getElementById('registrySearch').value.toLowerCase().trim();
-            const container = document.getElementById('mainContainer');
-            const searchTargetGroup = document.getElementById('searchResultTargetGroup');
-
-            searchTargetGroup.innerHTML = '';
-            if (query === "") {
-                container.classList.remove('searching-active');
-                fineTuneResetElements();
-                return;
-            }
-
-            container.classList.add('searching-active');
-            container.querySelectorAll('.section-group-inner .item-row').forEach(row => {
-                const code = row.getAttribute('data-code').toLowerCase();
-                const textVal = row.getAttribute('data-val').toLowerCase();
-                if (code.includes(query) || textVal.includes(query)) {
-                    const clonedRow = row.cloneNode(true);
-                    clonedRow.classList.remove('hidden-overflow-item');
-                    clonedRow.style.display = 'flex';
-                    clonedRow.onclick = function() { handleSelectiveCopy(this); };
-                    searchTargetGroup.appendChild(clonedRow);
-                }
-            });
-        };
-
-        function fineTuneResetElements() {
-            ['icd-section-group', 'member-section-group', 'zip-section-group'].forEach(id => {
-                const target = document.getElementById(id);
-                if (!target) return;
-                const rows = target.querySelectorAll('.item-row');
-                rows.forEach((row, idx) => {
-                    if (idx >= 5) row.classList.add('hidden-overflow-item');
-                    else row.classList.remove('hidden-overflow-item');
-                    row.style.display = 'flex';
-                });
-                const triggerBtn = target.querySelector('.expand-list-action-trigger');
-                if (triggerBtn) {
-                    triggerBtn.setAttribute('data-expanded', 'false');
-                    triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                }
-            });
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        window.handleSelectiveCopy = function(element) {
-            if (layoutMovableActive) return;
-            const dataVal = element.getAttribute('data-val');
-            navigator.clipboard.writeText(dataVal).then(() => {
-                const textNode = element.querySelector('.item-desc-text');
-                const originalText = textNode.textContent;
-                textNode.textContent = "COPIED VALUE!";
-                setTimeout(() => { textNode.textContent = originalText; resetViewRegistry(); }, 1000);
-            });
-        };
-
-        window.synchronizeModalInputs = function() {
-            const currentType = document.getElementById('modalTypeSelector').value;
-            const primaryLabel = document.getElementById('primaryFieldLabel');
-            const secondaryLabel = document.getElementById('secondaryFieldLabel');
-            if (currentType === 'icd') {
-                primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
-            } else if (currentType === 'member') {
-                primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
-            } else if (currentType === 'zipcode') {
-                primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
-            }
-        };
-
-        window.openInlineEdit = function(rowElement) {
-            activeEditRow = rowElement;
-            const type = rowElement.getAttribute('data-ref-type');
-            document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
-            document.getElementById('modalTypeSelectorGroup').style.display = 'none';
-            document.getElementById('modalTypeSelector').value = type;
-            synchronizeModalInputs();
-            
-            const codeVal = rowElement.getAttribute('data-code');
-            document.getElementById('newRecordKey').value = codeVal;
-            document.getElementById('newRecordKey').disabled = true; 
-            
-            const dataVal = rowElement.getAttribute('data-val');
-            document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
-            toggleModal('addRecordModal', true);
-        };
-
-        window.deleteInlineRow = async function(rowElement) {
-            if(confirm("Are you certain you want to destroy this reference record?")) {
-                const type = rowElement.getAttribute('data-ref-type');
-                const key = rowElement.getAttribute('data-code');
-                try {
-                    if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${key.replace(/[.#$\[\]]/g, "_")}`), null);
-                } catch(e) {}
-                rowElement.remove();
-                resetViewRegistry();
-            }
-        };
-
-        window.pushRecordToDatabase = async function() {
-            const type = document.getElementById('modalTypeSelector').value;
-            const key = document.getElementById('newRecordKey').value.trim();
-            const val = document.getElementById('newRecordValue').value.trim();
-            if (!key || !val) return alert("Please specify all parameters.");
-
-            try {
-                if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${key.replace(/[.#$\[\]]/g, "_")}`), { code: key, description: val });
-            } catch (err) {}
-
-            if (activeEditRow) {
-                activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
-                activeEditRow.querySelector('.item-desc-text').textContent = val;
-            } else {
-                const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-                const targetNode = document.getElementById(sectionMap[type]);
-                if (targetNode) appendRowToDOM(targetNode, type, key, val, targetNode.querySelectorAll('.item-row').length >= 5);
-            }
-            toggleModal('addRecordModal', false);
-            resetViewRegistry();
-        };
-
-        window.toggleMovableLayout = function() {
-            layoutMovableActive = !layoutMovableActive;
-            const container = document.getElementById('mainContainer');
-            const triggerBtn = document.getElementById('sortToggleTrigger');
-            if (layoutMovableActive) {
-                document.getElementById('registrySearch').value = "";
-                container.classList.remove('searching-active');
-                container.classList.add('edit-mode-active');
-                triggerBtn.classList.add('active-mode');
-                document.querySelectorAll('.section-group-wrapper').forEach(w => w.classList.remove('collapsed'));
-            } else {
-                container.classList.remove('edit-mode-active');
-                triggerBtn.classList.remove('active-mode');
-                fineTuneResetElements();
-            }
-        };
-
-        function bindDragDropSequence(element) {
-            element.setAttribute('draggable', 'true');
-            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
-            element.addEventListener('dragend', () => element.classList.remove('dragging'));
-        }
-
-        document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
-            zone.addEventListener('dragover', e => {
-                if (!layoutMovableActive) return;
-                e.preventDefault();
-                const activeDragging = document.querySelector('.dragging');
-                if (activeDragging) {
-                    const elements = [...zone.querySelectorAll('.item-row:not(.dragging)')];
-                    const boundingElement = elements.reduce((closest, child) => {
-                        const boundary = child.getBoundingClientRect();
-                        const separation = e.clientY - boundary.top - boundary.height / 2;
-                        return (separation < 0 && separation > closest.offset) ? { offset: separation, element: child } : closest;
-                    }, { offset: Number.NEGATIVE_INFINITY }).element;
-
-                    if (boundingElement == null) {
-                        const expandLink = zone.querySelector('.expand-list-action-trigger');
-                        if (expandLink) zone.insertBefore(activeDragging, expandLink);
-                        else zone.appendChild(activeDragging);
-                    } else {
-                        zone.insertBefore(activeDragging, boundingElement);
-                    }
-                }
-            });
-        });
-
-        window.toggleModal = function(id, isActive) {
-            const overlay = document.getElementById(id);
-            if (!overlay) return;
-            if (isActive) {
-                overlay.style.display = 'flex';
-                setTimeout(() => overlay.classList.add('active'), 10);
-            } else {
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
-                    document.getElementById('modalTypeSelectorGroup').style.display = 'block';
-                    document.getElementById('newRecordKey').disabled = false;
-                    document.getElementById('newRecordKey').value = "";
-                    document.getElementById('newRecordValue').value = "";
-                    activeEditRow = null;
-                }, 220);
-            }
-        };
-
-        window.closeOutside = function(e, id) { if (e.target === document.getElementById(id)) toggleModal(id, false); };
-        window.resetViewRegistry = function() {
-            document.getElementById('registrySearch').value = "";
-            filterRegistryRealtime();
-            if (layoutMovableActive) toggleMovableLayout();
-            fineTuneResetElements();
-        };
-
-        document.addEventListener('DOMContentLoaded', () => { initializeRegistryData(); });
-    </script>
+    <script type="module" src="registry.js"></script>
 </body>
 </html>
