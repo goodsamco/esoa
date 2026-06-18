@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="esoa.css">
     <link rel="stylesheet" href="registry.css">
 </head>
-<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
+<body>
 
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
@@ -28,8 +28,10 @@
         <button class="top-btn" id="nav-cf4" title="CF4 Form"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar">
-    <span id="userDisplayName" class="name-string">Name</span>
+    <div style="display: flex; align-items: center; gap: 10px; margin: 20px;">
+        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" style="width: 45px; height: 45px; border-radius: 50%;">
+        <span id="userDisplayName" class="name-string">Name</span>
+    </div>
 
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
@@ -104,19 +106,18 @@
         </div>
     </div>
 
-    <div class="chat-docking-panel" id="chatDock">
+    <div class="chat-docking-panel" id="chatDock" style="display: none;">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
-            <button class="chat-close-trigger"><i data-lucide="x"></i></button>
+            <button class="chat-close-trigger" onclick="document.getElementById('chatDock').style.display='none'"><i data-lucide="x"></i></button>
         </div>
         <div class="chat-scroller-view" id="chatScroller"></div>
         <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa">
-            <button id="sendChatBtn">Send</button>
+            <button id="sendChatBtn" onclick="if(typeof sendChatPayload === 'function') sendChatPayload()">Send</button>
         </div>
     </div>
 
-    <script type="module" src="esoa.js"></script>
     <script type="module" src="registry.js"></script>
 </body>
 </html>
