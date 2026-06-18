@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -539,7 +540,6 @@ transform: scale(0.98);
 <script type="module" src="esoa.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import {
     getFirestore,
     doc,
@@ -547,31 +547,12 @@ import {
     deleteDoc,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
 
 let layoutMovableActive = false;
 let rtdb, db;
 let activeEditRow = null;
-
-  const userId = localStorage.getItem("userId");
-const userDocRef = doc(db, "accounts", userId);
-
-onSnapshot(userDocRef, (snapshot) => {
-    if (!snapshot.exists()) return;
-
-    const data = snapshot.data();
-
-    set(ref(rtdb, 'presence/' + userId), {
-        uid: userId,
-        name: data.customName || "Operator",
-        avatar: data.avatarUrl || "avatar-m1",
-        timestamp: Date.now(),
-        statusNote: {
-            text: data.statusNoteText || "",
-            color: data.statusNoteColor || "#e5e5e5",
-            updatedAt: data.statusNoteUpdatedAt || 0
-        }
-    });
-});
 
 
 const baseDataset = {
@@ -637,6 +618,27 @@ zipcode: [
 { code: "9404", desc: "MAGEPT" }
 ]
 };
+
+    const userId = localStorage.getItem("userId");
+const userDocRef = doc(db, "accounts", userId);
+
+onSnapshot(userDocRef, (snapshot) => {
+    if (!snapshot.exists()) return;
+
+    const data = snapshot.data();
+
+    set(ref(rtdb, 'presence/' + userId), {
+        uid: userId,
+        name: data.customName || "Operator",
+        avatar: data.avatarUrl || "avatar-m1",
+        timestamp: Date.now(),
+        statusNote: {
+            text: data.statusNoteText || "",
+            color: data.statusNoteColor || "#e5e5e5",
+            updatedAt: data.statusNoteUpdatedAt || 0
+        }
+    });
+});
 
 /* ==========================================================================
 FIREBASE LOCAL CONTEXT RESOLUTION
