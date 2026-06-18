@@ -290,7 +290,7 @@ body.copy-flash {
 */
 .peer-notif-dot {
     position: absolute;
-    top: 4px;
+    bottom: 4px; /* Moved down to the bottom quadrant */
     right: 8px;
 
     width: 12px;
