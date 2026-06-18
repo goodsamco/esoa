@@ -1,9 +1,15 @@
 /* ==========================================================================
    1. FIREBASE CORE SYSTEM INITIALIZATION
-   ========================================================================== */
+   ========================================================================== 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getDatabase, ref, onValue, set, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+*/
+// 1. ADD 'update' RIGHT HERE IN YOUR IMPORTS ──────────────┐
+//                                                           ▼
+import { getDatabase, ref, onValue, set, push, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -217,13 +223,27 @@ onSnapshot(userDocRef, (snapshot) => {
         }
 
 if (!document.hidden) {
-    // Change 'set' to 'update' so it merges instead of overwriting
-    update(ref(rtdb, 'presence/' + userId), {
+    const presenceData = {
         uid: userId,
         name: currentUserName,
         avatar: currentUserAvatarRaw,
         timestamp: Date.now()
-    });
+    };
+
+    // If a note is already in your local cache variable, make sure we include it 
+    // so it doesn't get dropped during the handshake
+    if (localProfileNoteCache && localProfileNoteCache.trim() !== "") {
+        presenceData.statusNote = {
+            text: localProfileNoteCache,
+            color: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5',
+            updatedAt: Date.now() // Optional: ommit if you don't want to reset the 12hr clock on reload
+        };
+    }
+
+    // Now this will execute perfectly without throwing an error!
+    update(ref(rtdb, 'presence/' + userId), presenceData)
+        .catch(err => console.error("Presence sync failed:", err));
+
     updateDoc(userDocRef, { isOnline: true });
 }
         
