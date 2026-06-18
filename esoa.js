@@ -216,15 +216,16 @@ onSnapshot(userDocRef, (snapshot) => {
             document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
         }
 
-        if (!document.hidden) {
-            set(ref(rtdb, 'presence/' + userId), {
-                uid: userId,
-                name: currentUserName,
-                avatar: currentUserAvatarRaw,
-                timestamp: Date.now()
-            });
-            updateDoc(userDocRef, { isOnline: true });
-        }
+if (!document.hidden) {
+    // Change 'set' to 'update' so it merges instead of overwriting
+    update(ref(rtdb, 'presence/' + userId), {
+        uid: userId,
+        name: currentUserName,
+        avatar: currentUserAvatarRaw,
+        timestamp: Date.now()
+    });
+    updateDoc(userDocRef, { isOnline: true });
+}
         
         // Start monitoring interaction profiles once valid session snapshots are bound
         startInactivityWatcher();
