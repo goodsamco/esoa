@@ -112,7 +112,7 @@
             opacity: 0.8;
         }
 
-        /* FIXED: Floating Control Dock perfectly stacked and centered above the profile layout */
+        /* FIXED: Floating Control Dock perfectly stacked and centered across all viewports */
         .bottom-floating-control-strip {
             position: fixed;
             bottom: 110px; 
@@ -185,6 +185,7 @@
         .custom-select-wrapper {
             position: relative;
             width: 100%;
+            margin-top: 5px;
         }
 
         .custom-select-wrapper select {
@@ -312,7 +313,7 @@
             transform: scale(0.98);
         }
 
-        /* FIXED: Status Note Elements Layout and Visibility Fallbacks */
+        /* FIXED: Status Note Badge Visual Layout Fallbacks */
         .status-note-bubble-badge {
             position: absolute;
             bottom: -6px;
@@ -895,7 +896,7 @@
         };
 
         /* =========================================================================
-           RE-ARCHITECTED CHAT OPENING & LIVE NOTE PRESENCE CORRELATION
+           FIRESTORE ACCOUNT HANDLER & LIVE NOTE PRESENCE CORRELATION ENGINE
            ========================================================================= */
         function setupPresenceSyncPipeline() {
             if (!auth || !rtdb || !db) return;
@@ -904,7 +905,7 @@
                 if (user) {
                     currentUser = user;
                     
-                    // 1. Permanent Firestore Document Listener -> Mirrors State directly to RTDB Presence Node
+                    // 1. Permanent Firestore Listener -> Syncs data changes local & handles presence node emission
                     onSnapshot(doc(db, "accounts", user.uid), (snapshot) => {
                         if (snapshot.exists()) {
                             const data = snapshot.data();
@@ -912,7 +913,7 @@
                             if (data.name) document.getElementById('userDisplayName').textContent = data.name;
                             if (data.avatar) document.getElementById('userDisplayAvatar').src = data.avatar;
 
-                            // Re-calculate local user's status bubble lifespan values
+                            // Calculate local status note text lifespan
                             const personalContainer = document.getElementById('personalNoteBubbleContainer');
                             if (personalContainer) {
                                 personalContainer.innerHTML = '';
@@ -931,7 +932,7 @@
                                 }
                             }
 
-                            // Sync local presence changes downstream over to RTDB instance
+                            // Update user status over inside the real-time presence database paths
                             set(ref(rtdb, 'presence/' + user.uid), {
                                 uid: user.uid,
                                 name: data.name || "Operator",
@@ -946,7 +947,7 @@
                         }
                     });
 
-                    // 2. Global Realtime Presence Loop - Compiles peer indicators & attaches openChat action listeners
+                    // 2. Peer Loop Tracker - Real-time active hub population and interactive routing logic
                     onValue(ref(rtdb, 'presence'), (snapshot) => {
                         const peerHub = document.getElementById('peerActiveHub');
                         if (!peerHub) return;
@@ -981,7 +982,7 @@
                                 img.alt = peer.name;
                                 wrapper.appendChild(img);
 
-                                // 12-Hour Expiration Engine Boundary Assertion
+                                // 12-Hour Freshness Boundary Assertion Loop
                                 if (peer.statusNote) {
                                     const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
                                     const delta = Date.now() - (peer.statusNote.updatedAt || 0);
