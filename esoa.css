@@ -290,8 +290,8 @@ body.copy-flash {
 */
 .peer-notif-dot {
     position: absolute;
-    bottom: 2px; /* Adjusted tightly for bottom quadrant positioning */
-    right: 2px;  /* Pushed further right so it stays visible on the avatar rim */
+    bottom: 34px; /* Raised upward to avoid the lower overflow boundary mask */
+    right: 6px;   /* Pulled slightly inward to guarantee visibility over the avatar profile line */
 
     width: 12px;
     height: 12px;
@@ -306,7 +306,6 @@ body.copy-flash {
     box-shadow: 0 0 8px var(--primary);
     z-index: 5000;
 }
-
 /* ==========================================================================
    USER NAME
    ========================================================================== */
