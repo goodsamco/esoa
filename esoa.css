@@ -290,8 +290,8 @@ body.copy-flash {
 */
 .peer-notif-dot {
     position: absolute;
-    bottom: 4px; /* Moved down to the bottom quadrant */
-    right: 8px;
+    bottom: 2px; /* Adjusted tightly for bottom quadrant positioning */
+    right: 2px;  /* Pushed further right so it stays visible on the avatar rim */
 
     width: 12px;
     height: 12px;
@@ -304,7 +304,7 @@ body.copy-flash {
     display: none;
 
     box-shadow: 0 0 8px var(--primary);
-    z-index: 5000; /* Layered explicitly high to stay visible over avatars and notes */
+    z-index: 5000;
 }
 
 /* ==========================================================================
