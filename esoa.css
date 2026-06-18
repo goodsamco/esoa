@@ -264,7 +264,7 @@ body.copy-flash {
 
 /* ==========================================================================
    NOTIFICATION DOT
-   ========================================================================== */
+   ==========================================================================
 
 .peer-notif-dot {
     position: absolute;
@@ -286,6 +286,25 @@ body.copy-flash {
 
 .peer-wrapper.has-unread .peer-notif-dot {
     display: block;
+}
+*/
+.peer-notif-dot {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+
+    width: 12px;
+    height: 12px;
+
+    background: var(--primary);
+    border: 2px solid var(--surface);
+
+    border-radius: 50%;
+
+    display: none;
+
+    box-shadow: 0 0 8px var(--primary);
+    z-index: 5000; /* Layered explicitly high to stay visible over avatars and notes */
 }
 
 /* ==========================================================================
