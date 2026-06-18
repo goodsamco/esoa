@@ -940,6 +940,281 @@ if (!rtdb || !db) {
         document.addEventListener('DOMContentLoaded', () => {
             initializeRegistryData();
         });
+
+/* ==========================================================================
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - FIRESTORE INTEGRATED
+   ========================================================================== */
+const hub = document.getElementById('peerActiveHub');
+hub.innerHTML = '';
+
+const gcWrapper = document.createElement('div');
+gcWrapper.className = 'peer-wrapper';
+gcWrapper.id = 'gc-hub-node';
+
+const gcBubble = document.createElement('div');
+gcBubble.className = 'group-chat-bubble';
+gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
+gcBubble.onclick = () => initGroupChatChannel();
+
+const gcDotNode = document.createElement('div');
+gcDotNode.className = 'peer-notif-dot';
+gcDotNode.id = 'gc-notif-dot';
+
+const gcNameTag = document.createElement('div');
+gcNameTag.className = 'peer-name-hover';
+gcNameTag.innerText = "GC";
+
+gcWrapper.appendChild(gcBubble);
+gcWrapper.appendChild(gcDotNode);
+gcWrapper.appendChild(gcNameTag);
+hub.appendChild(gcWrapper);
+
+bindBackgroundGcListener();
+
+// --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
+(() => {
+    const avatarNode = document.querySelector('.profile-avatar-node');
+    if (!avatarNode) return;
+
+    const actionTrigger = document.createElement('div');
+    actionTrigger.className = 'profile-note-action-trigger';
+    actionTrigger.innerText = '＋';
+    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode);
+
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    modalOverlay.id = 'status-note-custom-modal';
+    
+    modalOverlay.innerHTML = `
+        <div class="modal-content">
+            <div class="input-group">
+                <label>UPDATE STATUS NOTE</label>
+                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+            </div>
+            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+        </div>
+    `;
+    document.body.appendChild(modalOverlay);
+
+    const modalInputField = document.getElementById('status-modal-field');
+    const modalCharCounter = document.getElementById('status-modal-counter');
+    const modalSaveBtn = document.getElementById('status-modal-save-btn');
+    const modalCloseBtn = document.getElementById('status-modal-close-btn');
+
+    actionTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modalInputField.value = localProfileNoteCache;
+        modalCharCounter.innerText = `${localProfileNoteCache.length} / 10`;
+        modalOverlay.classList.add('active');
+        setTimeout(() => modalInputField.focus(), 50);
+    });
+
+    modalInputField.addEventListener('input', () => {
+        if (modalInputField.value.length > 10) {
+            modalInputField.value = modalInputField.value.substring(0, 10);
+        }
+        modalCharCounter.innerText = `${modalInputField.value.length} / 10`;
+    });
+
+    const closeModal = () => modalOverlay.classList.remove('active');
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    modalSaveBtn.addEventListener('click', () => {
+        const cleanInput = modalInputField.value.trim().substring(0, 10);
+        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
+        
+        if (cleanInput === "") {
+            updateDoc(userDocRef, {
+                statusNoteText: "",
+                statusNoteColor: "",
+                statusNoteUpdatedAt: null
+            }).then(() => closeModal());
+        } else {
+            updateDoc(userDocRef, {
+                statusNoteText: cleanInput,
+                statusNoteColor: activeLayoutColor,
+                statusNoteUpdatedAt: Date.now()
+            })
+            .then(() => {
+                closeModal();
+            })
+            .catch(err => console.error("Could not sync status changes to Firestore:", err));
+        }
+    });
+})();
+
+const presenceRef = ref(rtdb, 'presence');
+onValue(presenceRef, (snapshot) => {
+    const users = snapshot.val() || {};
+    const NOW = Date.now();
+
+    const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
+    existingNodes.forEach(node => {
+        const nodeUid = node.id.replace('peer-node-', '');
+
+        if (!users[nodeUid] || nodeUid === userId) {
+            node.classList.add('is-offline');
+            node.style.order = "1";
+        }
+    });
+
+    Object.keys(users).forEach(uid => {
+        if (uid === userId) return;
+
+        const peer = users[uid];
+        if (!peer || !peer.uid) return;
+
+        const singleWordLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
+        const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
+
+        let peerContainer = document.getElementById(`peer-node-${peer.uid}`);
+
+        if (!peerContainer) {
+            peerContainer = document.createElement('div');
+            peerContainer.className = 'peer-wrapper';
+            peerContainer.id = `peer-node-${peer.uid}`;
+
+            const imgNode = document.createElement('img');
+            imgNode.className = 'peer-avatar-bubble';
+            imgNode.src = cleanAvatarSrc;
+            imgNode.onclick = () => initTransientChatChannel(peer.uid, singleWordLabel);
+
+            const dotNode = document.createElement('div');
+            dotNode.className = 'peer-notif-dot';
+
+            const nameTag = document.createElement('div');
+            nameTag.className = 'peer-name-hover';
+            nameTag.innerText = singleWordLabel;
+            nameTag.dataset.typing = "false";
+
+            peerContainer.appendChild(imgNode);
+            peerContainer.appendChild(dotNode);
+            peerContainer.appendChild(nameTag);
+            hub.appendChild(peerContainer);
+
+            bindBackgroundNotifListener(peer.uid);
+            bindTypingIndicator(peer.uid, singleWordLabel);
+        } else {
+            const img = peerContainer.querySelector('.peer-avatar-bubble');
+            if (img) img.src = cleanAvatarSrc;
+
+            const tag = peerContainer.querySelector('.peer-name-hover');
+            if (tag && tag.dataset.typing !== "true") {
+                tag.innerText = singleWordLabel;
+            }
+        }
+
+        const oldNote = peerContainer.querySelector('.peer-status-note');
+        if (oldNote) oldNote.remove();
+
+        if (peer.statusNote && peer.statusNote.updatedAt) {
+            const timeElapsed = NOW - peer.statusNote.updatedAt;
+
+            if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
+                const noteNode = document.createElement('div');
+                noteNode.className = 'peer-status-note';
+                noteNode.innerText = peer.statusNote.text; 
+                
+                if (peer.statusNote.color) {
+                    noteNode.style.color = peer.statusNote.color;
+                    noteNode.style.borderColor = peer.statusNote.color;
+                }
+                peerContainer.appendChild(noteNode);
+            }
+        }
+
+        peerContainer.classList.remove('is-offline');
+        peerContainer.style.order = "0";
+    });
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+});
+
+        /* ==========================================================================
+   5. BACKGROUND CHAT NOTIFICATION HOOKS
+   ========================================================================== */
+function bindBackgroundNotifListener(partnerId) {
+    if (mappedRouteTrackingHooks[partnerId]) return;
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+
+    let initialSyncComplete = false;
+    onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                                    
+    
+    const hook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
+                const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                if (peerContainer) peerContainer.classList.add('has-unread');
+            }
+        }
+    });
+    mappedRouteTrackingHooks[partnerId] = hook;
+
+    onValue(chatRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const peerContainer = document.getElementById(`peer-node-${partnerId}`);
+                            if (peerContainer) peerContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+function bindBackgroundGcListener() {
+    if (backgroundGcTrackingHook) return;
+    const gcRouteRef = ref(rtdb, `group_chat/messages`);
+
+    let initialSyncComplete = false;
+    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                const gcContainer = document.getElementById('gc-hub-node');
+                if (gcContainer) gcContainer.classList.add('has-unread');
+            }
+        }
+    });
+
+    onValue(gcRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            const gcContainer = document.getElementById('gc-hub-node');
+                            if (gcContainer) gcContainer.classList.add('has-unread');
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+        
     </script>
 </body>
 </html>
