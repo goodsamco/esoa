@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Base Stylesheets -->
     <link rel="stylesheet" href="esoa.css">
     <link rel="stylesheet" href="icd10.css">
 </head>
@@ -23,6 +24,7 @@
         <button class="top-btn" title="Reset" onclick="handleGlobalReset()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
         
+        <!-- View Toggle Controls -->
         <button class="top-btn active" id="nav-esoa" title="eSOA" onclick="switchActiveView('esoa')"><i data-lucide="receipt"></i></button>
         <button class="top-btn" id="nav-icd10" title="ICD10 Codes" onclick="switchActiveView('icd10')"><i data-lucide="stethoscope"></i></button>
         <button class="top-btn" id="nav-cf4" title="CF4 Form" onclick="switchActiveView('cf4')"><i data-lucide="credit-card"></i></button>
@@ -31,6 +33,7 @@
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     <span id="userDisplayName" class="name-string">Name</span>
 
+    <!-- Chat Docking Panel -->
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
@@ -43,7 +46,8 @@
         </div>
     </div>
 
-    <div class="container view-section" id="mainContainer">
+    <!-- ==================== VIEW 1: MAIN ESOA CONTAINER ==================== -->
+    <div class="container view-section view-active" id="mainContainer">
         <div id="highlighter"></div>
         
         <h2>DISCOUNT</h2>
@@ -91,7 +95,8 @@
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
 
-    <div class="container view-section" id="icdRegistryContainer" style="display: none;">
+    <!-- ==================== VIEW 2: ICD10 REGISTRY CONTAINER ==================== -->
+    <div class="container view-section" id="icdRegistryContainer">
         <div class="search-priority-view" id="prioritySearchView">
             <h3>Top Search Matches</h3>
             <div id="searchResultTargetGroup"></div>
@@ -122,11 +127,12 @@
         </div>
     </div>
 
-    <div class="bottom-zone view-interactive-strip" id="copyZone" onclick="copyFocusedItem()"> 
+    <!-- Persistent Bottom Action Interfaces Toggle UI Based -->
+    <div class="bottom-zone view-interactive-strip strip-active" id="copyZone" onclick="copyFocusedItem()"> 
         <button class="btn-main-copy" id="magnetBtn">COPY</button>
     </div>
 
-    <div class="bottom-floating-control-strip view-interactive-strip" id="icdControlStrip" style="display: none;">
+    <div class="bottom-floating-control-strip view-interactive-strip" id="icdControlStrip">
         <div class="search-inner-wrapper">
             <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
         </div>
@@ -138,6 +144,7 @@
         </button>
     </div>
 
+    <!-- Modals Interface Overlay Matrix -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -194,36 +201,40 @@
         </div>
     </div>
 
+    <!-- Module Initialization and Core Controllers Linking -->
     <script type="module" src="esoa.js"></script>
     <script type="module" src="icd10.js"></script>
 
     <script>
         function switchActiveView(viewName) {
-            // Toggle view visibility
-            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.view-interactive-strip').forEach(el => el.style.display = 'none');
+            // Remove active states from all views, control bars, and action buttons cleanly
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
+            document.querySelectorAll('.view-interactive-strip').forEach(el => el.classList.remove('strip-active'));
             document.querySelectorAll('.top-nav .top-btn').forEach(btn => btn.classList.remove('active'));
 
             if (viewName === 'esoa') {
-                document.getElementById('mainContainer').style.display = 'flex';
-                document.getElementById('copyZone').style.display = 'block';
+                document.getElementById('mainContainer').classList.add('view-active');
+                document.getElementById('copyZone').classList.add('strip-active');
                 document.getElementById('nav-esoa').classList.add('active');
+                
+                if (typeof resetFocus === 'function') resetFocus();
             } else if (viewName === 'icd10') {
-                document.getElementById('icdRegistryContainer').style.display = 'flex';
-                document.getElementById('icdControlStrip').style.display = 'flex';
+                document.getElementById('icdRegistryContainer').classList.add('view-active');
+                document.getElementById('icdControlStrip').classList.add('strip-active');
                 document.getElementById('nav-icd10').classList.add('active');
-                if(typeof window.resetViewRegistry === 'function') window.resetViewRegistry();
+                
+                if (typeof window.resetViewRegistry === 'function') window.resetViewRegistry();
             } else if (viewName === 'cf4') {
                 document.getElementById('nav-cf4').classList.add('active');
-                // Optional entry point placeholder for direct integration of CF4 form layout
             }
         }
 
         function handleGlobalReset() {
-            if (document.getElementById('mainContainer').style.display !== 'none') {
-                if(typeof resetFocus === 'function') resetFocus();
+            const isMainActive = document.getElementById('mainContainer').classList.contains('view-active');
+            if (isMainActive) {
+                if (typeof resetFocus === 'function') resetFocus();
             } else {
-                if(typeof window.resetViewRegistry === 'function') window.resetViewRegistry();
+                if (typeof window.resetViewRegistry === 'function') window.resetViewRegistry();
             }
         }
     </script>
