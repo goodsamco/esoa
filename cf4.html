@@ -7,7 +7,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <link rel="stylesheet" href="esoa.css">
 
     <style>
@@ -172,7 +171,8 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .action-control-btn:hover, .action-control-btn.active-mode {
+        .action-control-btn:hover, 
+        .action-control-btn.active-mode {
             background: var(--primary) !important;
             border-color: var(--primary) !important;
             color: #000 !important;
@@ -253,8 +253,8 @@
             display: flex;
             margin: 8px 0;
             padding: 4px 0;
-        }
-        
+        } 
+
         .item-row.hidden-overflow-item {
             display: none;
         }
@@ -350,28 +350,21 @@
 
     <div class="top-nav">
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
-        
-        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        
-        <button class="top-btn" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
-        
-        <!-- Active CF4 Reference Guide Page Selection styling rules matching -->
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button> 
+        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button> 
+        <button class="top-btn" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button> 
         <button class="top-btn active" title="CF4 Form" onclick="window.location.href='cf4.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="credit-card"></i></button>
     </div>
 
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     <span id="userDisplayName" class="name-string">Name</span>
 
-
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
-        </div>
-        
-        <div class="chat-scroller-view" id="chatScroller"></div>
-        
+        </div> 
+        <div class="chat-scroller-view" id="chatScroller"></div> 
         <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
@@ -381,13 +374,11 @@
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
-        <!-- Realtime Prioritized Search View Target Element -->
         <div class="search-priority-view" id="prioritySearchView">
             <h3>Top Guide Matches</h3>
             <div id="searchResultTargetGroup"></div>
         </div>
 
-        <!-- CF4 Guide Accordion Layout Frame -->
         <div class="category-header" onclick="toggleCategoryAccordion('cf4-wrapper', this)">
             <h2>CF4 Guide</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -409,20 +400,16 @@
         </button>
     </div>
 
-    <!-- Add/Edit Record Modal Element Setup -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="modalDisplayTitle">ADD NEW GUIDE Entry</h3>
-            
+            <h3 id="modalDisplayTitle">ADD NEW GUIDE Entry</h3> 
             <div class="input-group" id="modalTypeSelectorGroup">
                 <label>REGISTRY DOMAIN</label>
                 <div class="custom-select-wrapper">
                     <select id="modalTypeSelector">
-                        <option value="cf4_guides">CF4 Form Reference Manual</option>
-                    </select>
+                        <option value="cf4_guides">CF4 Form Reference Manual</option>                    </select>
                 </div>
-            </div>
-            
+            </div> 
             <div class="input-group">
                  <label id="primaryFieldLabel">Title Header</label>
                  <input id="newRecordKey" type="text">
@@ -456,12 +443,18 @@
     <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let layoutMovableActive = false;
         let rtdb;
+        let db;
         let activeEditRow = null;
+        let userDocRef;
+        let localProfileNoteCache = "";
+        
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+        const userId = localStorage.getItem("userId");
 
         // CF4 Standardized Medical fallback dataset structure mapping
         const baseDataset = {
@@ -474,13 +467,173 @@
                 { title: "HISTORY P.I.", desc: "PATIENT EXPERIENCED PROGRESSIVE SYMPTOMS 3 DAYS PRIOR TO ADMISSION" },
                 { title: "PHYSICAL EXAM", desc: "CLEAR SENSORIUM, SYMMETRICAL CHEST EXPANSION, NO INTERCOSTAL RETRACTIONS" }
             ]
+        }; 
+        const premium3dAssets = {
+            'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+            'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
         };
-        
+
         try {
-            rtdb = getDatabase();
+            const firebaseConfig = {
+                apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+                authDomain: "svls-289ee.firebaseapp.com",
+                databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+                projectId: "svls-289ee",
+                storageBucket: "svls-289ee.firebasestorage.app",
+                messagingSenderId: "500705386198",
+                appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+                measurementId: "G-5TNBMQ2HN5"
+            };
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            rtdb = getDatabase(app);
         } catch(e) {
             console.warn("RTDB environment connection local fallback initiated.");
         }
+
+        if (userId && db) {
+            userDocRef = doc(db, "accounts", userId);
+            onSnapshot(userDocRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    const currentUserName = data.customName || "Operator";
+                    const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+                    document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+                    document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+
+                    if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
+                    if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
+
+                    const selfBubble = document.getElementById('profile-status-bubble-node');
+                    if (selfBubble) selfBubble.remove();
+
+                    if (data.statusNoteText && data.statusNoteUpdatedAt) {
+                        const delta = Date.now() - data.statusNoteUpdatedAt;
+                        if (delta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
+                            localProfileNoteCache = data.statusNoteText;
+                            const avatar = document.getElementById('userDisplayAvatar');
+                            const trigger = document.querySelector('.profile-note-action-trigger');
+                            if (avatar && trigger) {
+                                const bubble = document.createElement('div');
+                                bubble.className = 'profile-status-note-bubble';
+                                bubble.id = 'profile-status-bubble-node';
+                                bubble.innerText = localProfileNoteCache;
+                                if (data.statusNoteColor) {
+                                    bubble.style.borderColor = data.statusNoteColor;
+                                    bubble.style.color = data.statusNoteColor;
+                                }
+                                avatar.parentNode.insertBefore(bubble, trigger);
+                            }
+                        } else { localProfileNoteCache = ""; }
+                    } else { localProfileNoteCache = ""; }
+
+                    set(ref(rtdb, 'presence/' + userId), {
+                        uid: userId, 
+                        name: currentUserName, 
+                        avatar: currentUserAvatarRaw, 
+                        timestamp: Date.now(),
+                        statusNote: { 
+                            text: data.statusNoteText || "", 
+                            color: data.statusNoteColor || "#e5e5e5", 
+                            updatedAt: data.statusNoteUpdatedAt || 0 
+                        }
+                    });
+                }
+            });
+        }
+
+        if (rtdb) {
+            const hub = document.getElementById('peerActiveHub');
+            onValue(ref(rtdb, 'presence'), (snapshot) => {
+                const users = snapshot.val() || {};
+                const NOW = Date.now();
+                if (hub) {
+                    hub.innerHTML = '';
+                    Object.keys(users).forEach(uid => {
+                        if (uid === userId) return;
+                        const peer = users[uid];
+                        const cleanLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
+                        const src = premium3dAssets[peer.avatar] || peer.avatar;
+
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'peer-wrapper';
+                        wrapper.id = `peer-node-${uid}`;
+                        wrapper.innerHTML = `<img class="peer-avatar-bubble" src="${src}"><div class="peer-name-hover">${cleanLabel}</div>`; 
+                        
+                        if (peer.statusNote && peer.statusNote.updatedAt && (NOW - peer.statusNote.updatedAt < TWELVE_HOURS_MS)) {
+                            if (peer.statusNote.text.trim() !== "") {
+                                const note = document.createElement('div');
+                                note.className = 'peer-status-note';
+                                note.innerText = peer.statusNote.text;
+                                if (peer.statusNote.color) {
+                                    note.style.color = peer.statusNote.color;
+                                    note.style.borderColor = peer.statusNote.color;
+                                }
+                                wrapper.appendChild(note);
+                            }
+                        }
+                        hub.appendChild(wrapper);
+                    });
+                }
+                if (window.lucide) window.lucide.createIcons();
+            });
+        }
+
+        // Inject Status Modal Setup Controller
+        (() => {
+            const avatarNode = document.getElementById('userDisplayAvatar');
+            if (!avatarNode) return;
+
+            const trigger = document.createElement('div');
+            trigger.className = 'profile-note-action-trigger';
+            trigger.innerText = '＋';
+            avatarNode.parentNode.insertBefore(trigger, avatarNode);
+
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.id = 'status-note-custom-modal';
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="input-group">
+                        <label>UPDATE STATUS NOTE</label>
+                        <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                        <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+                    </div>
+                    <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+                    <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const fld = document.getElementById('status-modal-field');
+            const cnt = document.getElementById('status-modal-counter');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fld.value = localProfileNoteCache;
+                cnt.innerText = `${localProfileNoteCache.length} / 10`;
+                window.toggleModal('status-note-custom-modal', true);
+            });
+
+            fld.addEventListener('input', () => {
+                if (fld.value.length > 10) fld.value = fld.value.substring(0, 10);
+                cnt.innerText = `${fld.value.length} / 10`;
+            });
+
+            document.getElementById('status-modal-close-btn').addEventListener('click', () => window.toggleModal('status-note-custom-modal', false));
+
+            document.getElementById('status-modal-save-btn').addEventListener('click', () => {
+                const text = fld.value.trim().substring(0, 10);
+                const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
+                if (userDocRef) {
+                    updateDoc(userDocRef, { 
+                        statusNoteText: text || "", 
+                        statusNoteColor: text ? color : "", 
+                        statusNoteUpdatedAt: text ? Date.now() : null 
+                    }).then(() => window.toggleModal('status-note-custom-modal', false));
+                }
+            });
+        })();
 
         function pullParsedAccentColor() {
             let customAccent =
@@ -496,7 +649,7 @@
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
-            const chevron = headerElement.querySelector('.chevron-icon');
+            const chevron = headerElement.querySelector('.chevron-icon'); 
             
             if (wrapper.classList.contains('collapsed')) {
                 wrapper.classList.remove('collapsed');
@@ -509,10 +662,10 @@
 
         window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
             const container = document.getElementById(targetGroupId);
-            if (!container) return;
+            if (!container) return; 
             
             const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
-            const rows = container.querySelectorAll('.item-row');
+            const rows = container.querySelectorAll('.item-row'); 
             
             if (!isExpanded) {
                 rows.forEach(r => r.classList.remove('hidden-overflow-item'));
@@ -569,7 +722,7 @@
             rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
             rowDiv.setAttribute('data-title', key);
             rowDiv.setAttribute('data-val', val);
-            rowDiv.onclick = function() { handleSelectiveCopy(this); };
+            rowDiv.onclick = function() { handleSelectiveCopy(this); }; 
             
             rowDiv.innerHTML = `
                 <span class="text-content"><span class="item-title-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
@@ -577,7 +730,7 @@
                     <button class="context-action-node edit-trigger" title="Edit Entry" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
                     <button class="context-action-node delete-trigger" title="Delete Entry" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
                 </div>
-            `;
+            `; 
             
             const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
             if (actionTriggerLink) {
@@ -598,8 +751,7 @@
             if (query === "") {
                 container.classList.remove('searching-active');
                 fineTuneResetElements();
-                return;
-            }
+                return;            }
 
             container.classList.add('searching-active');
             const originalRows = container.querySelectorAll('.section-group-inner .item-row');
@@ -620,7 +772,7 @@
 
         function fineTuneResetElements() {
             const target = document.getElementById('cf4-section-group');
-            if (!target) return;
+            if (!target) return; 
             
             const rows = target.querySelectorAll('.item-row');
             rows.forEach((row, idx) => {
@@ -647,7 +799,7 @@
             navigator.clipboard.writeText(dataVal).then(() => {
                 const textNode = element.querySelector('.item-desc-text');
                 const originalText = textNode.textContent;
-                textNode.textContent = "COPIED VALUE!";
+                textNode.textContent = "COPIED VALUE!"; 
                 
                 setTimeout(() => { 
                     textNode.textContent = originalText;
@@ -657,17 +809,17 @@
         };
 
         window.openInlineEdit = function(rowElement) {
-            activeEditRow = rowElement;
+            activeEditRow = rowElement; 
             
             document.getElementById('modalDisplayTitle').textContent = "EDIT GUIDE ENTRY";
-            document.getElementById('modalTypeSelectorGroup').style.display = 'none';
+            document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
             
             const titleVal = rowElement.getAttribute('data-title');
             document.getElementById('newRecordKey').value = titleVal;
             document.getElementById('newRecordKey').disabled = true; 
             
             const descVal = rowElement.getAttribute('data-val');
-            document.getElementById('newRecordValue').value = descVal;
+            document.getElementById('newRecordValue').value = descVal; 
             
             toggleModal('addRecordModal', true);
         };
@@ -679,7 +831,7 @@
 
                 try {
                     if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`), null);
-                } catch(e) { console.warn("Database communication deletion dropped."); }
+                } catch(e) { console.warn("Database communication deletion dropped."); } 
                 
                 rowElement.remove();
                 resetViewRegistry();
@@ -764,8 +916,7 @@
                 if (separation < 0 && separation > closest.offset) {
                     return { offset: separation, element: child };
                 } else {
-                    return closest;
-                }
+                    return closest;                }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
@@ -785,8 +936,7 @@
                         document.getElementById('newRecordKey').value = "";
                         document.getElementById('newRecordValue').value = "";
                         activeEditRow = null;
-                    }, 220);
-                }
+                    }, 220);                }
             }
         };
 
