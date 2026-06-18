@@ -1,1171 +1,1066 @@
 <!DOCTYPE html>
-<!-- saved from url=(0043)https://goodsamco.github.io/esoa/icd10.html -->
-<html lang="en" style="--primary: hsl(34, 100%, 60%);"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICD10 &amp; Reference Registry</title>
-    
-    <link href="./ICD10 &amp; Reference Registry_files/css2" rel="stylesheet">
-    <script src="./ICD10 &amp; Reference Registry_files/lucide@latest"></script>
-    
-    <link rel="stylesheet" href="./ICD10 &amp; Reference Registry_files/esoa.css">
-
-   <style>
-        :root {
-            --primary: hsl(111, 100%, 60%);
-            --glass: rgba(255, 255, 255, 0.08);
-            --text-main: #ffffff;
-            --success: #00e676;
-        }
-
-        /* Category Header Chevron indicator styles */
-        .category-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            padding: 6px 0; /* Trimmed down from 10px to reduce row padding */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 14px; /* Reduced from 20px to bring accordions closer together */
-        }
-
-        .category-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .category-header .chevron-icon {
-            color: var(--primary);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .section-group-wrapper {
-            display: grid;
-            grid-template-rows: 1fr;
-            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-
-        .section-group-wrapper.collapsed {
-            grid-template-rows: 0fr;
-        }
-
-        .section-group-wrapper.collapsed .category-header .chevron-icon {
-            transform: rotate(-90deg);
-        }
-
-        .section-group-inner {
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Top Search Results Block */
-        .search-priority-view {
-            display: none;
-            flex-direction: column;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 14px;
-            margin-bottom: 20px;
-        }
-
-        .searching-active .search-priority-view {
-            display: flex;
-        }
-
-        .searching-active .category-header,
-        .searching-active .section-group-wrapper {
-            display: none !important;
-        }
-
-        .search-priority-view h3 {
-            margin: 0 0 12px 0;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            color: var(--primary);
-            text-transform: uppercase;
-        }
-
-        /* Inline structural action link positioned after the fifth block element */
-        .expand-list-action-trigger {
-            background: transparent;
-            border: none;
-            color: var(--primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-align: left;
-            padding: 6px 4px;
-            margin-top: 4px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: opacity 0.2s;
-            width: fit-content;
-        }
-
-        .expand-list-action-trigger:hover {
-            opacity: 0.8;
-        }
-
-        /* Floating Control Dock perfectly stacked above the profile layout */
-        .bottom-floating-control-strip {
-            position: fixed;
-            bottom: 110px; 
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            height: 70px;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass);
-            border-radius: 35px;
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            box-sizing: border-box;
-            gap: 10px;
-            z-index: 3100;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-        }
-
-        .search-inner-wrapper {
-            flex-grow: 1;
-            position: relative;
-        }
-
-        .search-inner-wrapper input {
-            width: 100%;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass);
-            color: var(--text-main);
-            border-radius: 20px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .search-inner-wrapper input:focus {
-            border-color: var(--primary) !important;
-        }
-
-        .action-control-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--glass);
-            border-radius: 50%;
-            color: var(--primary) !important;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .action-control-btn:hover, .action-control-btn.active-mode {
-            background: var(--primary) !important;
-            border-color: var(--primary) !important;
-            color: #000 !important;
-            transform: translateY(-2px);
-        }
-
-        /* Custom Dropdown Field Mechanics Setup */
-        .custom-select-wrapper {
-            position: relative;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .custom-select-wrapper select {
-            width: 100%;
-            background: #000 !important;
-            color: white !important;
-            padding: 12px;
-            border: 1px solid rgba(83, 83, 83, 0.3);
-            border-radius: 16px;
-            font-size: 0.8rem !important;
-            font-weight: 600;
-            outline: none;
-            appearance: none;
-            -webkit-appearance: none;
-            cursor: pointer;
-            text-align: left; /* Explicit text alignment */
-        }
-
-        .custom-select-wrapper::after {
-            content: '▼';
-            font-size: 0.65rem;
-            color: var(--primary);
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-
-        /* Scaled Modal Typography and Left-Aligned Layout Structure */
-        .modal-content .input-group {
-            text-align: left; /* Force alignment of inputs and labels to the left */
-            width: 100%;
-            margin-bottom: 12px; /* Controls and tightens space between input rows */
-        }
-
-        .modal-content .input-group label {
-            font-size: 0.72rem !important;
-            letter-spacing: 0.5px;
-            display: block;
-            text-align: left;
-            margin-bottom: 4px;
-        }
-
-        .modal-content .input-group input,
-        .modal-content .input-group textarea {
-            font-size: 0.8rem !important;
-            padding: 12px !important;
-            background: rgba(0, 0, 0, 0.4) !important;
-            border: 1px solid rgba(83, 83, 83, 0.3) !important;
-            color: #fff !important;
-            text-align: left;
-            width: 100%;
-            box-sizing: border-box;
-            border-radius: 16px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-        }
-
-        /* Scalable Multiline Textarea Component */
-        .modal-content .input-group textarea {
-            resize: vertical;
-            min-height: 80px;
-            line-height: 1.4;
-        }
-
-        /* Direct adaptive typography setups with explicit structural rules */
-        .item-row {
-            display: flex;
-            margin: 4px 0; /* Compressed from 8px to reduce excessive general item list row gaps */
-        }
-        
-        .item-row.hidden-overflow-item {
-            display: none;
-        }
-
-        /* Force block element overrides during active sorting states */
-        .edit-mode-active .item-row.hidden-overflow-item {
-            display: flex !important;
-        }
-
-        /* Automatically mask expand buttons when layout overrides are active */
-        .edit-mode-active .expand-list-action-trigger {
-            display: none !important;
-        }
-
-        .item-row .item-code-prefix {
-            font-family: 'Roboto Mono', monospace;
-            color: var(--primary) !important;
-            font-weight: 700;
-            margin-right: 10px;
-            font-size: 0.95rem;
-            flex-shrink: 0;
-        }
-
-        .item-row .item-desc-text {
-            font-size: 0.78rem !important;
-            color: #aaaaaa;
-            font-weight: 400;
-            word-break: break-word; /* Supports text wrapper rules safely */
-        }
-
-        /* Context Actions layout injection for inline row modifications */
-        .row-context-actions {
-            display: none;
-            gap: 6px;
-            align-items: center;
-            z-index: 10;
-            margin-left: auto;
-        }
-
-        .context-action-node {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 1px solid var(--glass);
-            background: rgba(0,0,0,0.4);
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .context-action-node.edit-trigger:hover {
-            background: var(--success);
-            color: #000;
-            border-color: var(--success);
-        }
-
-        .context-action-node.delete-trigger:hover {
-            background: #ff4444;
-            color: #fff;
-            border-color: #ff4444;
-        }
-
-        /* Movable Layout Reordering & Administrative active states */
-        .edit-mode-active .item-row {
-            cursor: grab !important;
-            border: 1px dashed var(--primary) !important;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .edit-mode-active .item-row .row-context-actions {
-            display: flex; 
-        }
-
-        .item-row.dragging {
-            opacity: 0.35;
-            background: var(--glass);
-            transform: scale(0.98);
-        }
-    </style>
-</head>
-<body onmouseleave="if(typeof resetMagnet === &#39;function&#39;) resetMagnet()" style="font-family: &quot;JetBrains Mono&quot;, monospace; background-image: none; background-color: rgb(19, 11, 65);">
-
-    <div class="peer-wrapper-row">
-        <button class="scroll-nav-btn prev" title="Scroll Left"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-left" aria-hidden="true" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"></path></svg></button>
-        <div class="peer-active-hub" id="peerActiveHub"><div class="peer-wrapper" id="gc-hub-node"><div class="group-chat-bubble"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" style="width:18px;height:18px;" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg></div><div class="peer-notif-dot" id="gc-notif-dot"></div><div class="peer-name-hover">GC</div></div><div class="peer-wrapper" id="peer-node-XqLqJdO63wFMp1TAsHyJ" style="order: 0;"><img class="peer-avatar-bubble" src="./ICD10 &amp; Reference Registry_files/eejjaayy.jpg"><div class="peer-notif-dot"></div><div class="peer-name-hover" data-typing="false">EJ</div><div class="peer-status-note" style="color: rgb(51, 255, 54); border-color: rgb(51, 255, 54);">HGHHG</div></div></div>
-        <button class="scroll-nav-btn next" title="Scroll Right"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"></path></svg></button>
-    </div>
-
-    <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-cw" aria-hidden="true" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal(&#39;srModal&#39;, true)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user-check" aria-hidden="true" class="lucide lucide-user-check"><path d="m16 11 2 2 4-4"></path><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></button>
-        
-        <button class="top-btn" title="eSOA" onclick="window.location.href=&#39;esoa.html&#39;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="receipt" aria-hidden="true" class="lucide lucide-receipt"><path d="M12 17V7"></path><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"></path><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"></path></svg></button>
-        
-        <!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href=&#39;icd10.html&#39;" style="background-color: rgba(255, 255, 255, 0.15);"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="stethoscope" aria-hidden="true" class="lucide lucide-stethoscope"><path d="M11 2v2"></path><path d="M5 2v2"></path><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"></path><path d="M8 15a6 6 0 0 0 12 0v-3"></path><circle cx="20" cy="10" r="2"></circle></svg></button>
-        
-        <button class="top-btn" title="CF4 Form" onclick="window.location.href=&#39;cf4.html&#39;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="credit-card" aria-hidden="true" class="lucide lucide-credit-card"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg></button>
-    </div>
-
-  <div class="profile-note-action-trigger">＋</div><img id="userDisplayAvatar" class="profile-avatar-node" src="./ICD10 &amp; Reference Registry_files/Pooping.png" alt="User Avatar" onclick="window.location.href=&#39;customization.html&#39;">
-    <span id="userDisplayName" class="name-string">CARL</span>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICD10 & Reference Registry</title>
 
 
-    <div class="chat-docking-panel" id="chatDock">
-        <div class="chat-header-bar">
-            <span id="chatTargetName">Active Session Chat</span>
-            <button class="chat-close-trigger" onclick="closeChatSession()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
-        </div>
-        
-        <div class="chat-scroller-view" id="chatScroller"></div>
-        
-        <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === &#39;Enter&#39;) sendChatPayload()">
-            <button onclick="sendChatPayload()">Send</button>
-        </div>
-    </div>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 
-    <div class="container" id="mainContainer">
-        <div id="highlighter"></div>
 
-        <!-- Realtime Prioritized Search View Target Element -->
-        <div class="search-priority-view" id="prioritySearchView">
-            <h3>Top Search Matches</h3>
-            <div id="searchResultTargetGroup"></div>
-        </div>
+<link rel="stylesheet" href="esoa.css">
 
-        <!-- ICD-10 Accordion -->
-        <div class="category-header" onclick="toggleCategoryAccordion(&#39;icd-wrapper&#39;, this)">
-            <h2>ICD-10 Diagnostic Codes</h2>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" class="lucide lucide-chevron-down chevron-icon"><path d="m6 9 6 6 6-6"></path></svg>
-        </div>
-        <div class="section-group-wrapper" id="icd-wrapper">
-            <div class="section-group-inner" id="icd-section-group"><div class="item-row " data-ref-type="icd" data-code="B34.9" data-val="VIRAL INFECTION" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">B34.9</span><span class="item-desc-text">VIRAL INFECTION</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="icd" data-code="BO1.9" data-val="VARICELLA" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">BO1.9</span><span class="item-desc-text">VARICELLA</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="icd" data-code="E11.9" data-val="DIABETES MELLITUS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">E11.9</span><span class="item-desc-text">DIABETES MELLITUS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="icd" data-code="G44.2" data-val="TENSION HEADACHE" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">G44.2</span><span class="item-desc-text">TENSION HEADACHE</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="icd" data-code="H60.3" data-val="EXTERNAL INFECTIVE OTITIS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">H60.3</span><span class="item-desc-text">EXTERNAL INFECTIVE OTITIS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="H81.1" data-val="BENIGN PAROXYSMAL VERTIGO" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">H81.1</span><span class="item-desc-text">BENIGN PAROXYSMAL VERTIGO</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="I10.1" data-val="HYPERTENSION STAGE II" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">I10.1</span><span class="item-desc-text">HYPERTENSION STAGE II</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="I10.9" data-val="ESSENTIAL HYPERTENSION" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">I10.9</span><span class="item-desc-text">ESSENTIAL HYPERTENSION</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="J06.9" data-val="UPPER RESPIRATORY TRACT INFECTION" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">J06.9</span><span class="item-desc-text">UPPER RESPIRATORY TRACT INFECTION</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="J11.1" data-val="INFLUENZA" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">J11.1</span><span class="item-desc-text">INFLUENZA</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="K27.9" data-val="PEPTIC ULCER" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">K27.9</span><span class="item-desc-text">PEPTIC ULCER</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="K29.1" data-val="ACUTE GASTRITIS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">K29.1</span><span class="item-desc-text">ACUTE GASTRITIS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="K29.9" data-val="GASTRITIS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">K29.9</span><span class="item-desc-text">GASTRITIS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="M06.99" data-val="ARTHRITIS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">M06.99</span><span class="item-desc-text">ARTHRITIS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="icd" data-code="R51" data-val="HEADACHE" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">R51</span><span class="item-desc-text">HEADACHE</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><button class="expand-list-action-trigger" data-expanded="false">Show all (15) <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"></path></svg></button></div>
-        </div>
 
-        <!-- ZIPCODE Accordion -->
-        <div class="category-header" onclick="toggleCategoryAccordion(&#39;zip-wrapper&#39;, this)">
-            <h2>ZIPCODE</h2>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" class="lucide lucide-chevron-down chevron-icon"><path d="m6 9 6 6 6-6"></path></svg>
-        </div>
-        <div class="section-group-wrapper" id="zip-wrapper">
-            <div class="section-group-inner" id="zip-section-group"><div class="item-row " data-ref-type="misc" data-code="9400" data-val="9400 - KIDAPAWAN" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9400</span><span class="item-desc-text">KIDAPAWAN</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="9401" data-val="9401 - MAKILALA" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9401</span><span class="item-desc-text">MAKILALA</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="9402" data-val="9402 - MLANG" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9402</span><span class="item-desc-text">MLANG</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="9404" data-val="9404 - MAGEPT" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9404</span><span class="item-desc-text">MAGEPT</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="9405" data-val="9405 - PRES ROXAS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9405</span><span class="item-desc-text">PRES ROXAS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9406" data-val="9406 - MATALAM" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9406</span><span class="item-desc-text">MATALAM</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9407" data-val="9407 - KABACAN" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9407</span><span class="item-desc-text">KABACAN</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9408" data-val="9408 - CARMEN" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9408</span><span class="item-desc-text">CARMEN</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9410" data-val="9410 - MIDSAYAP" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9410</span><span class="item-desc-text">MIDSAYAP</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9411" data-val="9411 - LIBUNGAN" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9411</span><span class="item-desc-text">LIBUNGAN</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9414" data-val="9414 - ANTIPAS" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9414</span><span class="item-desc-text">ANTIPAS</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9415" data-val="9415 - ALEOSAN" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9415</span><span class="item-desc-text">ALEOSAN</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="9417" data-val="9417 - ARAKAN" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">9417</span><span class="item-desc-text">ARAKAN</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><button class="expand-list-action-trigger" data-expanded="false">Show all (13) <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"></path></svg></button></div>
-        </div>
-
-        <!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
-        <div class="category-header" onclick="toggleCategoryAccordion(&#39;member-wrapper&#39;, this)">
-            <h2>MEMBER CATEGORY</h2>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" class="lucide lucide-chevron-down chevron-icon"><path d="m6 9 6 6 6-6"></path></svg>
-        </div>
-        <div class="section-group-wrapper" id="member-wrapper">
-            <div class="section-group-inner" id="member-section-group"><div class="item-row " data-ref-type="misc" data-code="DIRECT" data-val="DIRECT - CONTRIBUTOR - INDIVIDUAL PAYING" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">DIRECT</span><span class="item-desc-text">CONTRIBUTOR - INDIVIDUAL PAYING</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="INDIRECT" data-val="INDIRECT - CONTRIBUTOR - INDIGENT" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">INDIRECT</span><span class="item-desc-text">CONTRIBUTOR - INDIGENT</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="INFORMAL SECTOR" data-val="INFORMAL SECTOR - INDIVIDUAL PAYING" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">INFORMAL SECTOR</span><span class="item-desc-text">INDIVIDUAL PAYING</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="LISTAHAN" data-val="LISTAHAN - INDIGENT" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">LISTAHAN</span><span class="item-desc-text">INDIGENT</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row " data-ref-type="misc" data-code="NTHS" data-val="NTHS - INDIGENT" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">NTHS</span><span class="item-desc-text">INDIGENT</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="POS INCAPABLE" data-val="POS INCAPABLE - INDIGENT" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">POS INCAPABLE</span><span class="item-desc-text">INDIGENT</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="SELF EARNING" data-val="SELF EARNING - INDIVIDUAL PAYING" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">SELF EARNING</span><span class="item-desc-text">INDIVIDUAL PAYING</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><div class="item-row hidden-overflow-item" data-ref-type="misc" data-code="SPONSORED LGU" data-val="SPONSORED LGU - EMPLOYED GOVERNMENT" draggable="true">
-                <span class="text-content"><span class="item-code-prefix">SPONSORED LGU</span><span class="item-desc-text">EMPLOYED GOVERNMENT</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="edit-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-edit-2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest(&#39;.item-row&#39;))"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-trash-2"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                </div>
-            </div><button class="expand-list-action-trigger" data-expanded="false">Show all (8) <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"></path></svg></button></div>
-        </div>
-    </div>
-
-    <div class="bottom-floating-control-strip">
-        <div class="search-inner-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
-        </div>
-        <button class="action-control-btn" title="Add Record" onclick="toggleModal(&#39;addRecordModal&#39;, true)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus" aria-hidden="true" class="lucide lucide-plus"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-        </button>
-        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="move" aria-hidden="true" class="lucide lucide-move"><path d="M12 2v20"></path><path d="m15 19-3 3-3-3"></path><path d="m19 9 3 3-3 3"></path><path d="M2 12h20"></path><path d="m5 9-3 3 3 3"></path><path d="m9 5 3-3 3 3"></path></svg>
-        </button>
-    </div>
-
-    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, &#39;addRecordModal&#39;)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
-            <input type="hidden" id="editRowTargetId" value="">
-            
-            <div class="input-group" id="modalTypeSelectorGroup">
-                <label>REFERENCE TYPE</label>
-                <div class="custom-select-wrapper">
-                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
-                        <option value="icd">ICD-10 Diagnostic Definition</option>
-                        <option value="member">Membership Category</option>
-                        <option value="zipcode">Zip Code Mapping</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="input-group">
-                 <label id="primaryFieldLabel">Diagnosis Code</label>
-                 <input id="newRecordKey" type="text">
-             </div>
-            <div class="input-group">
-                 <label id="secondaryFieldLabel">Description Value</label>
-                 <!-- Converted input element to a text area box for heavy descriptions -->
-                 <textarea id="newRecordValue"></textarea>
-             </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center;">SAVE REGISTRY DATA</div>
-            <button class="modal-close-btn" onclick="toggleModal(&#39;addRecordModal&#39;, false)">Dismiss</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, &#39;srModal&#39;)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>DISCOUNT CALCULATOR</h3>
-            <div class="input-group">
-                 <label>HOSPITAL CHARGES</label>
-                 <input id="hospCharges" type="number" oninput="if(typeof calcSr === &#39;function&#39;) calcSr()">
-             </div>
-            <div class="input-group">
-                 <label>CASE RATE (PHIC)</label>
-                 <input id="caseRate" type="number" oninput="if(typeof calcSr === &#39;function&#39;) calcSr()">
-             </div>
-            <div class="modal-result" style="border-color: var(--primary);"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === &#39;function&#39;) copyModalValue()" style="background: var(--primary); color: #000; text-align: center;">COPY CALCULATION</div>
-            <button class="modal-close-btn" onclick="toggleModal(&#39;srModal&#39;, false)">Dismiss</button>
-        </div>
-    </div>
-
-    <script type="module" src="./ICD10 &amp; Reference Registry_files/esoa.js.download"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        let layoutMovableActive = false;
-        let rtdb, db;
-        let activeEditRow = null;
-
-        const baseDataset = {
-            icd: [
-                { code: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
-                { code: "M06.99", desc: "ARTHRITIS" },
-                { code: "I10.1", desc: "HYPERTENSION STAGE II" },
-                { code: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
-                { code: "K29.9", desc: "GASTRITIS" },
-                { code: "G44.2", desc: "TENSION HEADACHE" },
-                { code: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
-                { code: "K29.1", desc: "ACUTE GASTRITIS" },
-                { code: "K27.9", desc: "PEPTIC ULCER" },
-                { code: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
-                { code: "J11.1", desc: "INFLUENZA" },
-                { code: "E11.9", desc: "DIABETES MELLITUS" },
-                { code: "B34.9", desc: "VIRAL INFECTION" },
-                { code: "BO1.9", desc: "VARICELLA" },
-                { code: "S01.9", desc: "OPEN WOUND of HEAD" },
-                { code: "L03.9", desc: "CELLULITIS" },
-                { code: "L03.2", desc: "CELLULITIS OF FACE" },
-                { code: "J20.9", desc: "ACUTE BRONCHITIS" },
-                { code: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
-                { code: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
-                { code: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
-                { code: "O21.9", desc: "VOMITING OF PREGNANCY" },
-                { code: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
-                { code: "J45.0", desc: "ALLERGIC BRONCHITIS" },
-                { code: "H66.9", desc: "OTITIS MEDIA" },
-                { code: "J03.9", desc: "ACUTE TONSILLITIS" },
-                { code: "K30", desc: "DYSPEPSIA" },
-                { code: "M00.99", desc: "PYOGENIC ARTHRITIS" },
-                { code: "A97.1", desc: "DENGUE WITH WARNING SIGNS" },
-                { code: "K11.2", desc: "SIALOADENITIS" },
-                { code: "M19.99", desc: "ARTHROSIS" },
-                { code: "G43.9", desc: "MIGRAINE" },
-                { code: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
-            ],
-            member: [
-                { code: "POS INCAPABLE", desc: "INDIGENT" },
-                { code: "NTHS", desc: "INDIGENT" },
-                { code: "LISTAHAN", desc: "INDIGENT" },
-                { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" },
-                { code: "INDIRECT", desc: "CONTRIBUTOR - INDIGENT" },
-                { code: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
-                { code: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
-                { code: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
-            ],
-            zipcode: [
-                { code: "9417", desc: "ARAKAN" },
-                { code: "9415", desc: "ALEOSAN" },
-                { code: "9400", desc: "PIGKAWAYAN" },
-                { code: "9410", desc: "MIDSAYAP" },
-                { code: "9405", desc: "PRES ROXAS" },
-                { code: "9400", desc: "KIDAPAWAN" },
-                { code: "9414", desc: "ANTIPAS" },
-                { code: "9406", desc: "MATALAM" },
-                { code: "9401", desc: "MAKILALA" },
-                { code: "9402", desc: "M'LANG" },
-                { code: "9407", desc: "KABACAN" },
-                { code: "9408", desc: "CARMEN" },
-                { code: "9411", desc: "LIBUNGAN" },
-                { code: "9404", desc: "MAGEPT" }
-            ]
-        };
-        
-/* ==========================================================================
-   FIREBASE LOCAL CONTEXT RESOLUTION
-   ========================================================================== */
-try {
-    // Safely attempt connection to active window pipeline instances
-    rtdb = getDatabase();
-    db = getFirestore();
-} catch(e) {
-    console.warn("Firebase execution parameters derived locally.");
+<style>
+:root {
+--primary: hsl(111, 100%, 60%);
+--glass: rgba(255, 255, 255, 0.08);
+--text-main: #ffffff;
+--success: #00e676;
 }
+
+
+/* Category Header Chevron indicator styles */
+.category-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+cursor: pointer;
+user-select: none;
+padding: 6px 0; /* Trimmed down from 10px to reduce row padding */
+border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+margin-top: 14px; /* Reduced from 20px to bring accordions closer together */
+}
+
+
+.category-header h2 {
+margin: 0;
+font-size: 1.2rem;
+}
+
+
+.category-header .chevron-icon {
+color: var(--primary);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+.section-group-wrapper {
+display: grid;
+grid-template-rows: 1fr;
+transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+overflow: hidden;
+}
+
+
+.section-group-wrapper.collapsed {
+grid-template-rows: 0fr;
+}
+
+
+.section-group-wrapper.collapsed .category-header .chevron-icon {
+transform: rotate(-90deg);
+}
+
+
+.section-group-inner {
+min-height: 0;
+display: flex;
+flex-direction: column;
+}
+
+
+/* Top Search Results Block */
+.search-priority-view {
+display: none;
+flex-direction: column;
+background: rgba(255, 255, 255, 0.02);
+border: 1px dashed rgba(255, 255, 255, 0.1);
+border-radius: 16px;
+padding: 14px;
+margin-bottom: 20px;
+}
+
+
+.searching-active .search-priority-view {
+display: flex;
+}
+
+
+.searching-active .category-header,
+.searching-active .section-group-wrapper {
+display: none !important;
+}
+
+
+.search-priority-view h3 {
+margin: 0 0 12px 0;
+font-size: 0.9rem;
+letter-spacing: 1px;
+color: var(--primary);
+text-transform: uppercase;
+}
+
+
+/* Inline structural action link positioned after the fifth block element */
+.expand-list-action-trigger {
+background: transparent;
+border: none;
+color: var(--primary);
+font-family: 'Inter', sans-serif;
+font-size: 0.78rem;
+font-weight: 600;
+text-align: left;
+padding: 6px 4px;
+margin-top: 4px;
+cursor: pointer;
+display: inline-flex;
+align-items: center;
+gap: 4px;
+transition: opacity 0.2s;
+width: fit-content;
+}
+
+
+.expand-list-action-trigger:hover {
+opacity: 0.8;
+}
+
+
+/* Floating Control Dock perfectly stacked above the profile layout */
+.bottom-floating-control-strip {
+position: fixed;
+bottom: 110px;
+left: 50%;
+transform: translateX(-50%);
+width: 100%;
+max-width: 400px;
+height: 70px;
+background: rgba(0, 0, 0, 0.65);
+backdrop-filter: blur(24px);
+-webkit-backdrop-filter: blur(24px);
+border: 1px solid var(--glass);
+border-radius: 35px;
+display: flex;
+align-items: center;
+padding: 0 16px;
+box-sizing: border-box;
+gap: 10px;
+z-index: 3100;
+box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+}
+
+
+.search-inner-wrapper {
+flex-grow: 1;
+position: relative;
+}
+
+
+.search-inner-wrapper input {
+width: 100%;
+padding: 10px 14px;
+background: rgba(0, 0, 0, 0.4);
+border: 1px solid var(--glass);
+color: var(--text-main);
+border-radius: 20px;
+font-family: 'Inter', sans-serif;
+font-size: 0.85rem;
+box-sizing: border-box;
+outline: none;
+transition: border-color 0.2s;
+}
+
+
+.search-inner-wrapper input:focus {
+border-color: var(--primary) !important;
+}
+
+
+.action-control-btn {
+width: 44px;
+height: 44px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid var(--glass);
+border-radius: 50%;
+color: var(--primary) !important;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+.action-control-btn:hover, .action-control-btn.active-mode {
+background: var(--primary) !important;
+border-color: var(--primary) !important;
+color: #000 !important;
+transform: translateY(-2px);
+}
+
+
+/* Custom Dropdown Field Mechanics Setup */
+.custom-select-wrapper {
+position: relative;
+width: 100%;
+margin-top: 5px;
+}
+
+
+.custom-select-wrapper select {
+width: 100%;
+background: #000 !important;
+color: white !important;
+padding: 12px;
+border: 1px solid rgba(83, 83, 83, 0.3);
+border-radius: 16px;
+font-size: 0.8rem !important;
+font-weight: 600;
+outline: none;
+appearance: none;
+-webkit-appearance: none;
+cursor: pointer;
+text-align: left; /* Explicit text alignment */
+}
+
+
+.custom-select-wrapper::after {
+content: '▼';
+font-size: 0.65rem;
+color: var(--primary);
+position: absolute;
+right: 16px;
+top: 50%;
+transform: translateY(-50%);
+pointer-events: none;
+}
+
+
+/* Scaled Modal Typography and Left-Aligned Layout Structure */
+.modal-content .input-group {
+text-align: left; /* Force alignment of inputs and labels to the left */
+width: 100%;
+margin-bottom: 12px; /* Controls and tightens space between input rows */
+}
+
+
+.modal-content .input-group label {
+font-size: 0.72rem !important;
+letter-spacing: 0.5px;
+display: block;
+text-align: left;
+margin-bottom: 4px;
+}
+
+
+.modal-content .input-group input,
+.modal-content .input-group textarea {
+font-size: 0.8rem !important;
+padding: 12px !important;
+background: rgba(0, 0, 0, 0.4) !important;
+border: 1px solid rgba(83, 83, 83, 0.3) !important;
+color: #fff !important;
+text-align: left;
+width: 100%;
+box-sizing: border-box;
+border-radius: 16px;
+font-family: 'Inter', sans-serif;
+outline: none;
+}
+
+
+/* Scalable Multiline Textarea Component */
+.modal-content .input-group textarea {
+resize: vertical;
+min-height: 80px;
+line-height: 1.4;
+}
+
+
+/* Direct adaptive typography setups with explicit structural rules */
+.item-row {
+display: flex;
+margin: 4px 0; /* Compressed from 8px to reduce excessive general item list row gaps */
+}
+
+
+.item-row.hidden-overflow-item {
+display: none;
+}
+
+
+/* Force block element overrides during active sorting states */
+.edit-mode-active .item-row.hidden-overflow-item {
+display: flex !important;
+}
+
+
+/* Automatically mask expand buttons when layout overrides are active */
+.edit-mode-active .expand-list-action-trigger {
+display: none !important;
+}
+
+
+.item-row .item-code-prefix {
+font-family: 'Roboto Mono', monospace;
+color: var(--primary) !important;
+font-weight: 700;
+margin-right: 10px;
+font-size: 0.95rem;
+flex-shrink: 0;
+}
+
+
+.item-row .item-desc-text {
+font-size: 0.78rem !important;
+color: #aaaaaa;
+font-weight: 400;
+word-break: break-word; /* Supports text wrapper rules safely */
+}
+
+
+/* Context Actions layout injection for inline row modifications */
+.row-context-actions {
+display: none;
+gap: 6px;
+align-items: center;
+z-index: 10;
+margin-left: auto;
+}
+
+
+.context-action-node {
+width: 28px;
+height: 28px;
+border-radius: 50%;
+border: 1px solid var(--glass);
+background: rgba(0,0,0,0.4);
+color: var(--text-main);
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.15s ease;
+}
+
+
+.context-action-node.edit-trigger:hover {
+background: var(--success);
+color: #000;
+border-color: var(--success);
+}
+
+
+.context-action-node.delete-trigger:hover {
+background: #ff4444;
+color: #fff;
+border-color: #ff4444;
+}
+
+
+/* Movable Layout Reordering & Administrative active states */
+.edit-mode-active .item-row {
+cursor: grab !important;
+border: 1px dashed var(--primary) !important;
+background: rgba(255, 255, 255, 0.02);
+}
+
+
+.edit-mode-active .item-row .row-context-actions {
+display: flex;
+}
+
+
+.item-row.dragging {
+opacity: 0.35;
+background: var(--glass);
+transform: scale(0.98);
+}
+</style>
+</head>
+<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
+
+
+<div class="peer-wrapper-row">
+<button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+<div class="peer-active-hub" id="peerActiveHub"></div>
+<button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
+</div>
+
+
+<div class="top-nav">
+<button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>
+<button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+
+
+<button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
+
+
+<!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
+<button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
+
+
+<button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+</div>
+
+
+<img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+<span id="userDisplayName" class="name-string">Name</span>
+
+
+
+
+<div class="chat-docking-panel" id="chatDock">
+<div class="chat-header-bar">
+<span id="chatTargetName">Active Session Chat</span>
+<button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+</div>
+
+
+<div class="chat-scroller-view" id="chatScroller"></div>
+
+
+<div class="chat-input-row">
+<input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+<button onclick="sendChatPayload()">Send</button>
+</div>
+</div>
+
+
+<div class="container" id="mainContainer">
+<div id="highlighter"></div>
+
+
+<!-- Realtime Prioritized Search View Target Element -->
+<div class="search-priority-view" id="prioritySearchView">
+<h3>Top Search Matches</h3>
+<div id="searchResultTargetGroup"></div>
+</div>
+
+
+<!-- ICD-10 Accordion -->
+<div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
+<h2>ICD-10 Diagnostic Codes</h2>
+<i data-lucide="chevron-down" class="chevron-icon"></i>
+</div>
+<div class="section-group-wrapper" id="icd-wrapper">
+<div class="section-group-inner" id="icd-section-group"></div>
+</div>
+
+
+<!-- ZIPCODE Accordion -->
+<div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
+<h2>ZIPCODE</h2>
+<i data-lucide="chevron-down" class="chevron-icon"></i>
+</div>
+<div class="section-group-wrapper" id="zip-wrapper">
+<div class="section-group-inner" id="zip-section-group"></div>
+</div>
+
+
+<!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
+<div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+<h2>MEMBER CATEGORY</h2>
+<i data-lucide="chevron-down" class="chevron-icon"></i>
+</div>
+<div class="section-group-wrapper" id="member-wrapper">
+<div class="section-group-inner" id="member-section-group"></div>
+</div>
+</div>
+
+
+<div class="bottom-floating-control-strip">
+<div class="search-inner-wrapper">
+<input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
+</div>
+<button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
+<i data-lucide="plus"></i>
+</button>
+<button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+<i data-lucide="move"></i>
+</button>
+</div>
+
+
+<div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
+<div class="modal-content" onclick="event.stopPropagation()">
+<h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
+<input type="hidden" id="editRowTargetId" value="">
+
+
+<div class="input-group" id="modalTypeSelectorGroup">
+<label>REFERENCE TYPE</label>
+<div class="custom-select-wrapper">
+<select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+<option value="icd">ICD-10 Diagnostic Definition</option>
+<option value="member">Membership Category</option>
+<option value="zipcode">Zip Code Mapping</option>
+</select>
+</div>
+</div>
+
+
+<div class="input-group">
+<label id="primaryFieldLabel">Diagnosis Code</label>
+<input id="newRecordKey" type="text">
+</div>
+<div class="input-group">
+<label id="secondaryFieldLabel">Description Value</label>
+<!-- Converted input element to a text area box for heavy descriptions -->
+<textarea id="newRecordValue"></textarea>
+</div>
+<div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center;">SAVE REGISTRY DATA</div>
+<button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+</div>
+</div>
+
+
+<div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+<div class="modal-content" onclick="event.stopPropagation()">
+<h3>DISCOUNT CALCULATOR</h3>
+<div class="input-group">
+<label>HOSPITAL CHARGES</label>
+<input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+</div>
+<div class="input-group">
+<label>CASE RATE (PHIC)</label>
+<input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+</div>
+<div class="modal-result" style="border-color: var(--primary);"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
+<div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000; text-align: center;">COPY CALCULATION</div>
+<button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+</div>
+</div>
+
+
+<script type="module" src="esoa.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+
+let layoutMovableActive = false;
+let rtdb, db;
+let activeEditRow = null;
+
+
+const baseDataset = {
+icd: [
+{ code: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
+{ code: "M06.99", desc: "ARTHRITIS" },
+{ code: "I10.1", desc: "HYPERTENSION STAGE II" },
+{ code: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
+{ code: "K29.9", desc: "GASTRITIS" },
+{ code: "G44.2", desc: "TENSION HEADACHE" },
+{ code: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
+{ code: "K29.1", desc: "ACUTE GASTRITIS" },
+{ code: "K27.9", desc: "PEPTIC ULCER" },
+{ code: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
+{ code: "J11.1", desc: "INFLUENZA" },
+{ code: "E11.9", desc: "DIABETES MELLITUS" },
+{ code: "B34.9", desc: "VIRAL INFECTION" },
+{ code: "BO1.9", desc: "VARICELLA" },
+{ code: "S01.9", desc: "OPEN WOUND of HEAD" },
+{ code: "L03.9", desc: "CELLULITIS" },
+{ code: "L03.2", desc: "CELLULITIS OF FACE" },
+{ code: "J20.9", desc: "ACUTE BRONCHITIS" },
+{ code: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
+{ code: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
+{ code: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
+{ code: "O21.9", desc: "VOMITING OF PREGNANCY" },
+{ code: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
+{ code: "J45.0", desc: "ALLERGIC BRONCHITIS" },
+{ code: "H66.9", desc: "OTITIS MEDIA" },
+{ code: "J03.9", desc: "ACUTE TONSILLITIS" },
+{ code: "K30", desc: "DYSPEPSIA" },
+{ code: "M00.99", desc: "PYOGENIC ARTHRITIS" },
+{ code: "A97.1", desc: "DENGUE WITH WARNING SIGNS" },
+{ code: "K11.2", desc: "SIALOADENITIS" },
+{ code: "M19.99", desc: "ARTHROSIS" },
+{ code: "G43.9", desc: "MIGRAINE" },
+{ code: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+],
+member: [
+{ code: "POS INCAPABLE", desc: "INDIGENT" },
+{ code: "NTHS", desc: "INDIGENT" },
+{ code: "LISTAHAN", desc: "INDIGENT" },
+{ code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" },
+{ code: "INDIRECT", desc: "CONTRIBUTOR - INDIGENT" },
+{ code: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
+{ code: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
+{ code: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
+],
+zipcode: [
+{ code: "9417", desc: "ARAKAN" },
+{ code: "9415", desc: "ALEOSAN" },
+{ code: "9400", desc: "PIGKAWAYAN" },
+{ code: "9410", desc: "MIDSAYAP" },
+{ code: "9405", desc: "PRES ROXAS" },
+{ code: "9400", desc: "KIDAPAWAN" },
+{ code: "9414", desc: "ANTIPAS" },
+{ code: "9406", desc: "MATALAM" },
+{ code: "9401", desc: "MAKILALA" },
+{ code: "9402", desc: "M'LANG" },
+{ code: "9407", desc: "KABACAN" },
+{ code: "9408", desc: "CARMEN" },
+{ code: "9411", desc: "LIBUNGAN" },
+{ code: "9404", desc: "MAGEPT" }
+]
+};
+
+
+/* ==========================================================================
+FIREBASE LOCAL CONTEXT RESOLUTION
+========================================================================== */
+try {
+// Safely attempt connection to active window pipeline instances
+rtdb = getDatabase();
+db = getFirestore();
+} catch(e) {
+console.warn("Firebase execution parameters derived locally.");
+}
+
 
 // Fallback lookup strategy if primary context references fail to bind cleanly
 if (!rtdb || !db) {
-    try {
-        // Fallback fallback verification to handle explicit app targets
-        const currentFirebaseConfig = {
-            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
-            authDomain: "svls-289ee.firebaseapp.com",
-            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
-            projectId: "svls-289ee",
-            storageBucket: "svls-289ee.firebasestorage.app",
-            messagingSenderId: "500705386198",
-            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
-            measurementId: "G-5TNBMQ2HN5"
-        };
-        // Explicit namespace isolation to keep main.js snap listeners clear
-        const localAppContext = initializeApp(currentFirebaseConfig, "subScriptApp");
-        if (!db) db = getFirestore(localAppContext);
-        if (!rtdb) rtdb = getDatabase(localAppContext);
-    } catch(err) {
-        console.error("Critical: Reference database linking faulted.", err);
-    }
+try {
+// Fallback fallback verification to handle explicit app targets
+const currentFirebaseConfig = {
+apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+authDomain: "svls-289ee.firebaseapp.com",
+databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+projectId: "svls-289ee",
+storageBucket: "svls-289ee.firebasestorage.app",
+messagingSenderId: "500705386198",
+appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+measurementId: "G-5TNBMQ2HN5"
+};
+// Explicit namespace isolation to keep main.js snap listeners clear
+const localAppContext = initializeApp(currentFirebaseConfig, "subScriptApp");
+if (!db) db = getFirestore(localAppContext);
+if (!rtdb) rtdb = getDatabase(localAppContext);
+} catch(err) {
+console.error("Critical: Reference database linking faulted.", err);
+}
 }
 
-        function pullParsedAccentColor() {
-            let customAccent =
-                localStorage.getItem('btnValue') ||
-                localStorage.getItem('accentColor') ||
-                localStorage.getItem('customAccent');
 
-            if (customAccent) {
-                document.documentElement.style.setProperty('--primary', customAccent);
-            }
-        }
-
-        window.toggleCategoryAccordion = function(wrapperId, headerElement) {
-            if (layoutMovableActive) return; 
-            const wrapper = document.getElementById(wrapperId);
-            const chevron = headerElement.querySelector('.chevron-icon');
-            
-            if (wrapper.classList.contains('collapsed')) {
-                wrapper.classList.remove('collapsed');
-                chevron.style.transform = "rotate(0deg)";
-            } else {
-                wrapper.classList.add('collapsed');
-                chevron.style.transform = "rotate(-90deg)";
-            }
-        };
-
-        // Fixed View/Hide Toggle Functionality
-        window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
-            const container = document.getElementById(targetGroupId);
-            if (!container) return;
-            
-            const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
-            const rows = container.querySelectorAll('.item-row');
-            
-            if (!isExpanded) {
-                rows.forEach(r => r.classList.remove('hidden-overflow-item'));
-                buttonElement.setAttribute('data-expanded', 'true');
-                buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
-            } else {
-                rows.forEach((r, idx) => {
-                    if (idx >= 5) r.classList.add('hidden-overflow-item');
-                });
-                buttonElement.setAttribute('data-expanded', 'false');
-                buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-            }
-            if (window.lucide) window.lucide.createIcons();
-        };
-
-        async function initializeRegistryData() {
-            pullParsedAccentColor();
-            const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-            
-            for (const type of ['icd', 'member', 'zipcode']) {
-                const targetContainer = document.getElementById(sectionMap[type]);
-                if (!targetContainer) continue;
-                targetContainer.innerHTML = '';
-
-                let activeList = [];
-                try {
-                    if (rtdb) {
-                        const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
-                        if (snapshot.exists()) {
-                            const dataObj = snapshot.val();
-                            activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
-                        }
-                    }
-                } catch (e) { console.warn("RTDB fault fallback."); }
-
-                if (activeList.length === 0) {
-                    activeList = baseDataset[type];
-                }
-
-                activeList.forEach((item, index) => {
-                    appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
-                });
-
-                if (activeList.length > 5) {
-                    const expandBtn = document.createElement('button');
-                    expandBtn.className = 'expand-list-action-trigger';
-                    expandBtn.setAttribute('data-expanded', 'false');
-                    expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                    expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
-                    targetContainer.appendChild(expandBtn);
-                }
-            }
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        function appendRowToDOM(container, type, key, val, isOverflowItem) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
-            rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
-            rowDiv.setAttribute('data-code', key);
-            rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
-            rowDiv.onclick = function() { handleSelectiveCopy(this); };
-            
-            rowDiv.innerHTML = `
-                <span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                    <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-                </div>
-            `;
-            
-            const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
-            if (actionTriggerLink) {
-                container.insertBefore(rowDiv, actionTriggerLink);
-            } else {
-                container.appendChild(rowDiv);
-            }
-            bindDragDropSequence(rowDiv);
-        }
-
-        // Prioritized Realtime Top-View Search Logic with Dynamic Node Cloning
-        window.filterRegistryRealtime = function() {
-            const query = document.getElementById('registrySearch').value.toLowerCase().trim();
-            const container = document.getElementById('mainContainer');
-            const searchTargetGroup = document.getElementById('searchResultTargetGroup');
-
-            searchTargetGroup.innerHTML = '';
-
-            if (query === "") {
-                container.classList.remove('searching-active');
-                fineTuneResetElements();
-                return;
-            }
-
-            container.classList.add('searching-active');
-            const originalRows = container.querySelectorAll('.section-group-inner .item-row');
-
-            originalRows.forEach(row => {
-                const code = row.getAttribute('data-code').toLowerCase();
-                const textVal = row.getAttribute('data-val').toLowerCase();
-
-                if (code.includes(query) || textVal.includes(query)) {
-                    const clonedRow = row.cloneNode(true);
-                    clonedRow.classList.remove('hidden-overflow-item');
-                    clonedRow.style.display = 'flex';
-                    clonedRow.onclick = function() { handleSelectiveCopy(this); };
-                    searchTargetGroup.appendChild(clonedRow);
-                }
-            });
-        };
-
-        // Fine-Tune Reset Utility: Performs light re-hiding over matching data targets
-        function fineTuneResetElements() {
-            const groups = ['icd-section-group', 'member-section-group', 'zip-section-group'];
-            groups.forEach(id => {
-                const target = document.getElementById(id);
-                if (!target) return;
-                
-                const rows = target.querySelectorAll('.item-row');
-                rows.forEach((row, idx) => {
-                    if (idx >= 5) {
-                        row.classList.add('hidden-overflow-item');
-                    } else {
-                        row.classList.remove('hidden-overflow-item');
-                    }
-                    row.style.display = 'flex';
-                });
-
-                const triggerBtn = target.querySelector('.expand-list-action-trigger');
-                if (triggerBtn) {
-                    triggerBtn.setAttribute('data-expanded', 'false');
-                    triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                }
-            });
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        window.handleSelectiveCopy = function(element) {
-            if (layoutMovableActive) return;
-            const dataVal = element.getAttribute('data-val');
-
-            navigator.clipboard.writeText(dataVal).then(() => {
-                const textNode = element.querySelector('.item-desc-text');
-                const originalText = textNode.textContent;
-                textNode.textContent = "COPIED VALUE!";
-                
-                setTimeout(() => { 
-                    textNode.textContent = originalText;
-                    resetViewRegistry();
-                }, 1000);
-            });
-        };
-
-        window.synchronizeModalInputs = function() {
-            const currentType = document.getElementById('modalTypeSelector').value;
-            const primaryLabel = document.getElementById('primaryFieldLabel');
-            const secondaryLabel = document.getElementById('secondaryFieldLabel');
-
-            if (currentType === 'icd') {
-                primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
-            } else if (currentType === 'member') {
-                primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
-            } else if (currentType === 'zipcode') {
-                primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
-            }
-        };
-
-        window.openInlineEdit = function(rowElement) {
-            activeEditRow = rowElement;
-            const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
-                         (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
-            
-            document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
-            document.getElementById('modalTypeSelectorGroup').style.display = 'none';
-            document.getElementById('modalTypeSelector').value = type;
-            
-            synchronizeModalInputs();
-            
-            const codeVal = rowElement.getAttribute('data-code');
-            document.getElementById('newRecordKey').value = codeVal;
-            document.getElementById('newRecordKey').disabled = true; 
-            
-            const dataVal = rowElement.getAttribute('data-val');
-            document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
-            
-            toggleModal('addRecordModal', true);
-        };
-
-        window.deleteInlineRow = async function(rowElement) {
-            if(confirm("Are you certain you want to destroy this reference record?")) {
-                const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
-                             (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
-                const key = rowElement.getAttribute('data-code');
-                const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
-
-                try {
-                    if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
-                } catch(e) { console.warn("Database drop failed."); }
-                
-                rowElement.remove();
-                resetViewRegistry();
-            }
-        };
-
-        window.pushRecordToDatabase = async function() {
-            const type = document.getElementById('modalTypeSelector').value;
-            const key = document.getElementById('newRecordKey').value.trim();
-            const val = document.getElementById('newRecordValue').value.trim();
-
-            if (!key || !val) return alert("Please specify all required data attributes.");
-
-            const referencePayload = { code: key, description: val, syncedAt: Date.now() };
-            const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
-
-            try {
-                if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
-            } catch (err) { console.warn("Storage runtime error."); }
-
-            if (activeEditRow) {
-                activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
-                activeEditRow.querySelector('.item-desc-text').textContent = val;
-            } else {
-                const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-                const targetNode = document.getElementById(sectionMap[type]);
-                if (targetNode) {
-                    const currentCount = targetNode.querySelectorAll('.item-row').length;
-                    appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
-                }
-            }
-
-            toggleModal('addRecordModal', false);
-            resetViewRegistry();
-        };
-
-        window.toggleMovableLayout = function() {
-            layoutMovableActive = !layoutMovableActive;
-            const container = document.getElementById('mainContainer');
-            const triggerBtn = document.getElementById('sortToggleTrigger');
-            const wrappers = document.querySelectorAll('.section-group-wrapper');
-
-            if (layoutMovableActive) {
-                document.getElementById('registrySearch').value = "";
-                container.classList.remove('searching-active');
-                container.classList.add('edit-mode-active');
-                triggerBtn.classList.add('active-mode');
-                wrappers.forEach(w => w.classList.remove('collapsed'));
-            } else {
-                container.classList.remove('edit-mode-active');
-                triggerBtn.classList.remove('active-mode');
-                fineTuneResetElements();
-            }
-        };
-
-        function bindDragDropSequence(element) {
-            element.setAttribute('draggable', 'true');
-            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
-            element.addEventListener('dragend', () => element.classList.remove('dragging'));
-        }
-
-        document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
-            zone.addEventListener('dragover', e => {
-                if (!layoutMovableActive) return;
-                e.preventDefault();
-                const activeDragging = document.querySelector('.dragging');
-                if (activeDragging) {
-                    const boundingElement = getDragLocationSpace(zone, e.clientY);
-                    if (boundingElement == null) {
-                        const expandActionLink = zone.querySelector('.expand-list-action-trigger');
-                        if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
-                        else zone.appendChild(activeDragging);
-                    } else {
-                        zone.insertBefore(activeDragging, boundingElement);
-                    }
-                }
-            });
-        });
-
-        function getDragLocationSpace(container, yPoint) {
-            const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
-            return elements.reduce((closest, child) => {
-                const boundary = child.getBoundingClientRect();
-                const separation = yPoint - boundary.top - boundary.height / 2;
-                if (separation < 0 && separation > closest.offset) {
-                    return { offset: separation, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        window.toggleModal = function(id, isActive) {
-            const overlay = document.getElementById(id);
-            if (overlay) {
-                if (isActive) {
-                    overlay.style.display = 'flex';
-                    setTimeout(() => overlay.classList.add('active'), 10);
-                } else {
-                    overlay.classList.remove('active');
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
-                        document.getElementById('modalTypeSelectorGroup').style.display = 'block';
-                        document.getElementById('newRecordKey').disabled = false;
-                        document.getElementById('newRecordKey').value = "";
-                        document.getElementById('newRecordValue').value = "";
-                        activeEditRow = null;
-                    }, 220);
-                }
-            }
-        };
-
-        window.closeOutside = function(e, id) {
-            if (e.target === document.getElementById(id)) toggleModal(id, false);
-        };
-
-        window.resetViewRegistry = function() {
-            document.getElementById('registrySearch').value = "";
-            filterRegistryRealtime();
-            if (layoutMovableActive) toggleMovableLayout();
-            fineTuneResetElements();
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeRegistryData();
-        });
-
-    </script>
+function pullParsedAccentColor() {
+let customAccent =
+localStorage.getItem('btnValue') ||
+localStorage.getItem('accentColor') ||
+localStorage.getItem('customAccent');
 
 
-<div class="modal-overlay" id="status-note-custom-modal">
-        <div class="modal-content">
-            <div class="input-group">
-                <label>UPDATE STATUS NOTE</label>
-                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
-                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
-            </div>
-            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
-            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
-        </div>
-    </div></body></html>
+if (customAccent) {
+document.documentElement.style.setProperty('--primary', customAccent);
+}
+}
+
+
+window.toggleCategoryAccordion = function(wrapperId, headerElement) {
+if (layoutMovableActive) return;
+const wrapper = document.getElementById(wrapperId);
+const chevron = headerElement.querySelector('.chevron-icon');
+
+
+if (wrapper.classList.contains('collapsed')) {
+wrapper.classList.remove('collapsed');
+chevron.style.transform = "rotate(0deg)";
+} else {
+wrapper.classList.add('collapsed');
+chevron.style.transform = "rotate(-90deg)";
+}
+};
+
+
+// Fixed View/Hide Toggle Functionality
+window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
+const container = document.getElementById(targetGroupId);
+if (!container) return;
+
+
+const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
+const rows = container.querySelectorAll('.item-row');
+
+
+if (!isExpanded) {
+rows.forEach(r => r.classList.remove('hidden-overflow-item'));
+buttonElement.setAttribute('data-expanded', 'true');
+buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
+} else {
+rows.forEach((r, idx) => {
+if (idx >= 5) r.classList.add('hidden-overflow-item');
+});
+buttonElement.setAttribute('data-expanded', 'false');
+buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+}
+if (window.lucide) window.lucide.createIcons();
+};
+
+
+async function initializeRegistryData() {
+pullParsedAccentColor();
+const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+
+
+for (const type of ['icd', 'member', 'zipcode']) {
+const targetContainer = document.getElementById(sectionMap[type]);
+if (!targetContainer) continue;
+targetContainer.innerHTML = '';
+
+
+let activeList = [];
+try {
+if (rtdb) {
+const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
+if (snapshot.exists()) {
+const dataObj = snapshot.val();
+activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
+}
+}
+} catch (e) { console.warn("RTDB fault fallback."); }
+
+
+if (activeList.length === 0) {
+activeList = baseDataset[type];
+}
+
+
+activeList.forEach((item, index) => {
+appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
+});
+
+
+if (activeList.length > 5) {
+const expandBtn = document.createElement('button');
+expandBtn.className = 'expand-list-action-trigger';
+expandBtn.setAttribute('data-expanded', 'false');
+expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
+targetContainer.appendChild(expandBtn);
+}
+}
+if (window.lucide) window.lucide.createIcons();
+}
+
+
+function appendRowToDOM(container, type, key, val, isOverflowItem) {
+const rowDiv = document.createElement('div');
+rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
+rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
+rowDiv.setAttribute('data-code', key);
+rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+rowDiv.onclick = function() { handleSelectiveCopy(this); };
+
+
+rowDiv.innerHTML = `
+<span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
+<div class="row-context-actions" onclick="event.stopPropagation()">
+<button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+<button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+</div>
+`;
+
+
+const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+if (actionTriggerLink) {
+container.insertBefore(rowDiv, actionTriggerLink);
+} else {
+container.appendChild(rowDiv);
+}
+bindDragDropSequence(rowDiv);
+}
+
+
+// Prioritized Realtime Top-View Search Logic with Dynamic Node Cloning
+window.filterRegistryRealtime = function() {
+const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+const container = document.getElementById('mainContainer');
+const searchTargetGroup = document.getElementById('searchResultTargetGroup');
+
+
+searchTargetGroup.innerHTML = '';
+
+
+if (query === "") {
+container.classList.remove('searching-active');
+fineTuneResetElements();
+return;
+}
+
+
+container.classList.add('searching-active');
+const originalRows = container.querySelectorAll('.section-group-inner .item-row');
+
+
+originalRows.forEach(row => {
+const code = row.getAttribute('data-code').toLowerCase();
+const textVal = row.getAttribute('data-val').toLowerCase();
+
+
+if (code.includes(query) || textVal.includes(query)) {
+const clonedRow = row.cloneNode(true);
+clonedRow.classList.remove('hidden-overflow-item');
+clonedRow.style.display = 'flex';
+clonedRow.onclick = function() { handleSelectiveCopy(this); };
+searchTargetGroup.appendChild(clonedRow);
+}
+});
+};
+
+
+// Fine-Tune Reset Utility: Performs light re-hiding over matching data targets
+function fineTuneResetElements() {
+const groups = ['icd-section-group', 'member-section-group', 'zip-section-group'];
+groups.forEach(id => {
+const target = document.getElementById(id);
+if (!target) return;
+
+
+const rows = target.querySelectorAll('.item-row');
+rows.forEach((row, idx) => {
+if (idx >= 5) {
+row.classList.add('hidden-overflow-item');
+} else {
+row.classList.remove('hidden-overflow-item');
+}
+row.style.display = 'flex';
+});
+
+
+const triggerBtn = target.querySelector('.expand-list-action-trigger');
+if (triggerBtn) {
+triggerBtn.setAttribute('data-expanded', 'false');
+triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+}
+});
+if (window.lucide) window.lucide.createIcons();
+}
+
+
+window.handleSelectiveCopy = function(element) {
+if (layoutMovableActive) return;
+const dataVal = element.getAttribute('data-val');
+
+
+navigator.clipboard.writeText(dataVal).then(() => {
+const textNode = element.querySelector('.item-desc-text');
+const originalText = textNode.textContent;
+textNode.textContent = "COPIED VALUE!";
+
+
+setTimeout(() => {
+textNode.textContent = originalText;
+resetViewRegistry();
+}, 1000);
+});
+};
+
+
+window.synchronizeModalInputs = function() {
+const currentType = document.getElementById('modalTypeSelector').value;
+const primaryLabel = document.getElementById('primaryFieldLabel');
+const secondaryLabel = document.getElementById('secondaryFieldLabel');
+
+
+if (currentType === 'icd') {
+primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
+} else if (currentType === 'member') {
+primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
+} else if (currentType === 'zipcode') {
+primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
+}
+};
+
+
+window.openInlineEdit = function(rowElement) {
+activeEditRow = rowElement;
+const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' :
+(rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+
+
+document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
+document.getElementById('modalTypeSelectorGroup').style.display = 'none';
+document.getElementById('modalTypeSelector').value = type;
+
+
+synchronizeModalInputs();
+
+
+const codeVal = rowElement.getAttribute('data-code');
+document.getElementById('newRecordKey').value = codeVal;
+document.getElementById('newRecordKey').disabled = true;
+
+
+const dataVal = rowElement.getAttribute('data-val');
+document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
+
+
+toggleModal('addRecordModal', true);
+};
+
+
+window.deleteInlineRow = async function(rowElement) {
+if(confirm("Are you certain you want to destroy this reference record?")) {
+const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' :
+(rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+const key = rowElement.getAttribute('data-code');
+const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+
+try {
+if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
+} catch(e) { console.warn("Database drop failed."); }
+
+
+rowElement.remove();
+resetViewRegistry();
+}
+};
+
+
+window.pushRecordToDatabase = async function() {
+const type = document.getElementById('modalTypeSelector').value;
+const key = document.getElementById('newRecordKey').value.trim();
+const val = document.getElementById('newRecordValue').value.trim();
+
+
+if (!key || !val) return alert("Please specify all required data attributes.");
+
+
+const referencePayload = { code: key, description: val, syncedAt: Date.now() };
+const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+
+try {
+if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
+} catch (err) { console.warn("Storage runtime error."); }
+
+
+if (activeEditRow) {
+activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+activeEditRow.querySelector('.item-desc-text').textContent = val;
+} else {
+const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+const targetNode = document.getElementById(sectionMap[type]);
+if (targetNode) {
+const currentCount = targetNode.querySelectorAll('.item-row').length;
+appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
+}
+}
+
+
+toggleModal('addRecordModal', false);
+resetViewRegistry();
+};
+
+
+window.toggleMovableLayout = function() {
+layoutMovableActive = !layoutMovableActive;
+const container = document.getElementById('mainContainer');
+const triggerBtn = document.getElementById('sortToggleTrigger');
+const wrappers = document.querySelectorAll('.section-group-wrapper');
+
+
+if (layoutMovableActive) {
+document.getElementById('registrySearch').value = "";
+container.classList.remove('searching-active');
+container.classList.add('edit-mode-active');
+triggerBtn.classList.add('active-mode');
+wrappers.forEach(w => w.classList.remove('collapsed'));
+} else {
+container.classList.remove('edit-mode-active');
+triggerBtn.classList.remove('active-mode');
+fineTuneResetElements();
+}
+};
+
+
+function bindDragDropSequence(element) {
+element.setAttribute('draggable', 'true');
+element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+element.addEventListener('dragend', () => element.classList.remove('dragging'));
+}
+
+
+document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
+zone.addEventListener('dragover', e => {
+if (!layoutMovableActive) return;
+e.preventDefault();
+const activeDragging = document.querySelector('.dragging');
+if (activeDragging) {
+const boundingElement = getDragLocationSpace(zone, e.clientY);
+if (boundingElement == null) {
+const expandActionLink = zone.querySelector('.expand-list-action-trigger');
+if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
+else zone.appendChild(activeDragging);
+} else {
+zone.insertBefore(activeDragging, boundingElement);
+}
+}
+});
+});
+
+
+function getDragLocationSpace(container, yPoint) {
+const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+return elements.reduce((closest, child) => {
+const boundary = child.getBoundingClientRect();
+const separation = yPoint - boundary.top - boundary.height / 2;
+if (separation < 0 && separation > closest.offset) {
+return { offset: separation, element: child };
+} else {
+return closest;
+}
+}, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+
+window.toggleModal = function(id, isActive) {
+const overlay = document.getElementById(id);
+if (overlay) {
+if (isActive) {
+overlay.style.display = 'flex';
+setTimeout(() => overlay.classList.add('active'), 10);
+} else {
+overlay.classList.remove('active');
+setTimeout(() => {
+overlay.style.display = 'none';
+document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
+document.getElementById('modalTypeSelectorGroup').style.display = 'block';
+document.getElementById('newRecordKey').disabled = false;
+document.getElementById('newRecordKey').value = "";
+document.getElementById('newRecordValue').value = "";
+activeEditRow = null;
+}, 220);
+}
+}
+};
+
+
+window.closeOutside = function(e, id) {
+if (e.target === document.getElementById(id)) toggleModal(id, false);
+};
+
+
+window.resetViewRegistry = function() {
+document.getElementById('registrySearch').value = "";
+filterRegistryRealtime();
+if (layoutMovableActive) toggleMovableLayout();
+fineTuneResetElements();
+};
+
+
+document.addEventListener('DOMContentLoaded', () => {
+initializeRegistryData();
+});
+
+
+</script>
+</body>
+</html>
