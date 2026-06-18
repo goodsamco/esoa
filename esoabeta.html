@@ -9,43 +9,41 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <link rel="stylesheet" href="esoa.css">
+    <link rel="stylesheet" href="icd10.css">
 </head>
-<body onmouseleave="resetMagnet()">
+<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
-        <div class="peer-wrapper-row">
+    <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
-        <div class="peer-active-hub" id="peerActiveHub">
-            </div>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
-
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Reset" onclick="handleGlobalReset()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        
+        <button class="top-btn active" id="nav-esoa" title="eSOA" onclick="switchActiveView('esoa')"><i data-lucide="receipt"></i></button>
+        <button class="top-btn" id="nav-icd10" title="ICD10 Codes" onclick="switchActiveView('icd10')"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" id="nav-cf4" title="CF4 Form" onclick="switchActiveView('cf4')"><i data-lucide="credit-card"></i></button>
     </div>
 
-
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    <span id="userDisplayName" class="name-string">EJ</span>
-
+    <span id="userDisplayName" class="name-string">Name</span>
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
         </div>
-        
         <div class="chat-scroller-view" id="chatScroller"></div>
-        
         <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
     </div>
 
-
-    <div class="container" id="mainContainer">
+    <div class="container view-section" id="mainContainer">
         <div id="highlighter"></div>
         
         <h2>DISCOUNT</h2>
@@ -61,6 +59,7 @@
         <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span></div>
         <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY: URINE-URINALYSIS</span></div>
         <div class="item-row" data-val="HEMATOLOGY: CBC"><span class="text-content">HEMATOLOGY: CBC</span></div>
+        <div class="item-row" data-val="CHEMISTRY: ALT"><span class="text-content">CHEMISTRY: ALT</span></div>
         <div class="add-btn-circle" onclick="openList('lab')"><i data-lucide="plus"></i></div>
         
         <h2>Medical Supplies</h2>
@@ -70,6 +69,7 @@
         <div class="item-row" data-val="MACROSET"><span class="text-content">MACROSET</span></div>
         <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10 CC)</span></div>
         <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL PAPER TAPE 2X10 YARD</span></div>
+        <div class="item-row" data-val="COTTON BALLS, 3'S/PACK"><span class="text-content">COTTON BALLS, 3'S/PACK</span></div>
         <div class="add-btn-circle" onclick="openList('supply')"><i data-lucide="plus"></i></div>
         
         <h2>Others</h2>
@@ -91,27 +91,68 @@
         <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
 
+    <div class="container view-section" id="icdRegistryContainer" style="display: none;">
+        <div class="search-priority-view" id="prioritySearchView">
+            <h3>Top Search Matches</h3>
+            <div id="searchResultTargetGroup"></div>
+        </div>
 
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
+        <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
+            <h2>ICD-10 Diagnostic Codes</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="icd-wrapper">
+            <div class="section-group-inner" id="icd-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
+            <h2>ZIPCODE</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="zip-wrapper">
+            <div class="section-group-inner" id="zip-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+            <h2>MEMBER CATEGORY</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="member-wrapper">
+            <div class="section-group-inner" id="member-section-group"></div>
+        </div>
+    </div>
+
+    <div class="bottom-zone view-interactive-strip" id="copyZone" onclick="copyFocusedItem()"> 
         <button class="btn-main-copy" id="magnetBtn">COPY</button>
     </div>
 
+    <div class="bottom-floating-control-strip view-interactive-strip" id="icdControlStrip" style="display: none;">
+        <div class="search-inner-wrapper">
+            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
+        </div>
+        <button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
+            <i data-lucide="plus"></i>
+        </button>
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+            <i data-lucide="move"></i>
+        </button>
+    </div>
 
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
             <div class="input-group"> 
                 <label>HOSPITAL CHARGES</label> 
-                <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> 
+                <input id="hospCharges" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()"> 
             </div>
             <div class="input-group"> 
                 <label>CASE RATE (PHIC)</label> 
-                <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> 
+                <input id="caseRate" type="number" placeholder="0.00" oninput="if(typeof calcSr === 'function') calcSr()"> 
             </div>
-            <div class="modal-result">
-                <div id="finalDiscount">0.00</div>
+            <div class="modal-result" style="border-color: var(--primary);">
+                <div id="finalDiscount" style="color: var(--primary);">0.00</div>
             </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> 
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()">COPY RESULT</div> 
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
@@ -124,13 +165,67 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
+            <input type="hidden" id="editRowTargetId" value="">
+            
+            <div class="input-group" id="modalTypeSelectorGroup">
+                <label>REFERENCE TYPE</label>
+                <div class="custom-select-wrapper">
+                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+                        <option value="icd">ICD-10 Diagnostic Definition</option>
+                        <option value="member">Membership Category</option>
+                        <option value="zipcode">Zip Code Mapping</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                 <label id="primaryFieldLabel">Diagnosis Code</label>
+                 <input id="newRecordKey" type="text">
+             </div>
+            <div class="input-group">
+                 <label id="secondaryFieldLabel">Description Value</label>
+                 <input id="newRecordValue" type="text">
+             </div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000;">SAVE REGISTRY DATA</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+        </div>
+    </div>
 
     <script type="module" src="esoa.js"></script>
+    <script type="module" src="icd10.js"></script>
 
     <script>
-        // Placeholders mapping layout functions to globally split JS file instances
-        // Fully initialized once external global bundles finish parsing
+        function switchActiveView(viewName) {
+            // Toggle view visibility
+            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.view-interactive-strip').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.top-nav .top-btn').forEach(btn => btn.classList.remove('active'));
+
+            if (viewName === 'esoa') {
+                document.getElementById('mainContainer').style.display = 'flex';
+                document.getElementById('copyZone').style.display = 'block';
+                document.getElementById('nav-esoa').classList.add('active');
+            } else if (viewName === 'icd10') {
+                document.getElementById('icdRegistryContainer').style.display = 'flex';
+                document.getElementById('icdControlStrip').style.display = 'flex';
+                document.getElementById('nav-icd10').classList.add('active');
+                if(typeof window.resetViewRegistry === 'function') window.resetViewRegistry();
+            } else if (viewName === 'cf4') {
+                document.getElementById('nav-cf4').classList.add('active');
+                // Optional entry point placeholder for direct integration of CF4 form layout
+            }
+        }
+
+        function handleGlobalReset() {
+            if (document.getElementById('mainContainer').style.display !== 'none') {
+                if(typeof resetFocus === 'function') resetFocus();
+            } else {
+                if(typeof window.resetViewRegistry === 'function') window.resetViewRegistry();
+            }
+        }
     </script>
 </body>
-    </html>
-            
+</html>
