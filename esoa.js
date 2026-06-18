@@ -341,8 +341,8 @@ function bindTypingIndicator(partnerId, displayName) {
 }
 
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB)
-   ========================================================================== 
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - FIRESTORE INTEGRATED
+   ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
 
@@ -370,9 +370,97 @@ hub.appendChild(gcWrapper);
 
 bindBackgroundGcListener();
 
+// --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+let localProfileNoteCache = "";
+
+// Dynamic layout generation for the status note modal window context
+(() => {
+    const avatarNode = document.querySelector('.profile-avatar-node');
+    if (!avatarNode) return;
+
+    // Append the tiny plus action element on top of your profile avatar
+    const actionTrigger = document.createElement('div');
+    actionTrigger.className = 'profile-note-action-trigger';
+    actionTrigger.innerText = '＋';
+    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode);
+
+    // Create custom structural modal elements natively inside the document context
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    modalOverlay.id = 'status-note-custom-modal';
+    
+    modalOverlay.innerHTML = `
+        <div class="modal-content">
+            <div class="input-group">
+                <label>UPDATE STATUS NOTE</label>
+                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+            </div>
+            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+        </div>
+    `;
+    document.body.appendChild(modalOverlay);
+
+    const modalInputField = document.getElementById('status-modal-field');
+    const modalCharCounter = document.getElementById('status-modal-counter');
+    const modalSaveBtn = document.getElementById('status-modal-save-btn');
+    const modalCloseBtn = document.getElementById('status-modal-close-btn');
+
+    // Display modal workflow triggers safely
+    actionTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modalInputField.value = localProfileNoteCache;
+        modalCharCounter.innerText = `${localProfileNoteCache.length} / 10`;
+        modalOverlay.classList.add('active');
+        setTimeout(() => modalInputField.focus(), 50);
+    });
+
+    // Realtime constraint counter adjustments tracking keystrokes up to 10 max
+    modalInputField.addEventListener('input', () => {
+        if (modalInputField.value.length > 10) {
+            modalInputField.value = modalInputField.value.substring(0, 10);
+        }
+        modalCharCounter.innerText = `${modalInputField.value.length} / 10`;
+    });
+
+    // Close functionality tracking
+    const closeModal = () => modalOverlay.classList.remove('active');
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    // Submit transactions directly to FIRESTORE to protect status data across reloads
+    modalSaveBtn.addEventListener('click', () => {
+        const cleanInput = modalInputField.value.trim().substring(0, 10);
+        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
+        
+        if (cleanInput === "") {
+            // Clear status completely from Firestore document
+            updateDoc(userDocRef, {
+                statusNoteText: "",
+                statusNoteColor: "",
+                statusNoteUpdatedAt: null
+            }).then(() => closeModal());
+        } else {
+            // Commit payload directly to Firestore user document
+            updateDoc(userDocRef, {
+                statusNoteText: cleanInput,
+                statusNoteColor: activeLayoutColor,
+                statusNoteUpdatedAt: Date.now()
+            })
+            .then(() => {
+                closeModal();
+            })
+            .catch(err => console.error("Could not sync status changes to Firestore:", err));
+        }
+    });
+})();
+
 const presenceRef = ref(rtdb, 'presence');
 onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
+    const NOW = Date.now();
 
     // Mark absent users offline
     const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
@@ -387,6 +475,9 @@ onValue(presenceRef, (snapshot) => {
 
     // Realtime peer synchronization
     Object.keys(users).forEach(uid => {
+        // --- MULTI-DEVICE / SELF FILTER ---
+        // Your personal status note bubble is rendered instantly inside Section 3 (Firestore onSnapshot) 
+        // to prevent async loops. We skip self-rendering here completely.
         if (uid === userId) return;
 
         const peer = users[uid];
@@ -406,7 +497,6 @@ onValue(presenceRef, (snapshot) => {
             document.getElementById(`peer-node-${peer.uid}`);
 
         if (!peerContainer) {
-
             peerContainer = document.createElement('div');
             peerContainer.className = 'peer-wrapper';
             peerContainer.id = `peer-node-${peer.uid}`;
@@ -436,14 +526,13 @@ onValue(presenceRef, (snapshot) => {
 
             bindBackgroundNotifListener(peer.uid);
 
-            // Typing listener
+            // Typing indicator
             bindTypingIndicator(
                 peer.uid,
                 singleWordLabel
             );
 
         } else {
-
             const img =
                 peerContainer.querySelector('.peer-avatar-bubble');
 
@@ -459,6 +548,27 @@ onValue(presenceRef, (snapshot) => {
             }
         }
 
+        // --- INJECT PEER NOTES UPSTAIRS (TOP PLACEMENT - 12HR LIMIT) ---
+        const oldNote = peerContainer.querySelector('.peer-status-note');
+        if (oldNote) oldNote.remove();
+
+        if (peer.statusNote && peer.statusNote.updatedAt) {
+            const timeElapsed = NOW - peer.statusNote.updatedAt;
+
+            if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
+                const noteNode = document.createElement('div');
+                noteNode.className = 'peer-status-note';
+                noteNode.innerText = peer.statusNote.text; 
+                
+                if (peer.statusNote.color) {
+                    noteNode.style.color = peer.statusNote.color;
+                    noteNode.style.borderColor = peer.statusNote.color;
+                }
+
+                peerContainer.appendChild(noteNode);
+            }
+        }
+
         peerContainer.classList.remove('is-offline');
         peerContainer.style.order = "0";
     });
@@ -470,7 +580,7 @@ onValue(presenceRef, (snapshot) => {
 
 /* ==========================================================================
    4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - PERSISTENT
-   ========================================================================== */
+   ========================================================================== 
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
 
