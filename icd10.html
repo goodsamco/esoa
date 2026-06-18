@@ -549,12 +549,39 @@
             ]
         };
         
-        try {
-            rtdb = getDatabase();
-            db = getFirestore();
-        } catch(e) {
-            console.warn("Firebase execution parameters derived locally.");
-        }
+/* ==========================================================================
+   FIREBASE LOCAL CONTEXT RESOLUTION
+   ========================================================================== */
+try {
+    // Safely attempt connection to active window pipeline instances
+    rtdb = getDatabase();
+    db = getFirestore();
+} catch(e) {
+    console.warn("Firebase execution parameters derived locally.");
+}
+
+// Fallback lookup strategy if primary context references fail to bind cleanly
+if (!rtdb || !db) {
+    try {
+        // Fallback fallback verification to handle explicit app targets
+        const currentFirebaseConfig = {
+            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+            authDomain: "svls-289ee.firebaseapp.com",
+            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+            projectId: "svls-289ee",
+            storageBucket: "svls-289ee.firebasestorage.app",
+            messagingSenderId: "500705386198",
+            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+            measurementId: "G-5TNBMQ2HN5"
+        };
+        // Explicit namespace isolation to keep main.js snap listeners clear
+        const localAppContext = initializeApp(currentFirebaseConfig, "subScriptApp");
+        if (!db) db = getFirestore(localAppContext);
+        if (!rtdb) rtdb = getDatabase(localAppContext);
+    } catch(err) {
+        console.error("Critical: Reference database linking faulted.", err);
+    }
+}
 
         function pullParsedAccentColor() {
             let customAccent =
