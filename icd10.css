@@ -273,3 +273,30 @@
 .edit-mode-active #icdRegistryContainer .item-row .row-context-actions {
     display: flex; 
 }
+
+/* ==================== SINGLE PAGE STATE VIEWS ==================== */
+
+/* Hide views cleanly when inactive without layout corruption */
+.view-section, 
+.view-interactive-strip {
+    display: none !important;
+}
+
+/* Enforce structure when the eSOA container or ICD container is active */
+#mainContainer.view-active {
+    display: flex !important;
+}
+
+#icdRegistryContainer.view-active {
+    display: flex !important;
+    flex-direction: column;
+}
+
+/* Enforce structure for action interfaces when active */
+#copyZone.strip-active {
+    display: block !important;
+}
+
+#icdControlStrip.strip-active {
+    display: flex !important;
+}
