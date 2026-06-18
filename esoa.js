@@ -77,6 +77,8 @@ function hexToRgb(hex) {
 const userDocRef = doc(db, "accounts", userId);
 let inactivityTimeout = null;
 const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 Hours in milliseconds
+let localProfileNoteCache = "";
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
 function forceLogoutUser() {
     console.log("Session expired due to inactivity.");
@@ -194,12 +196,13 @@ onSnapshot(userDocRef, (snapshot) => {
 
             updateDoc(userDocRef, { isOnline: true });
         }
-        
-        startInactivityWatcher();
     } else {
         forceLogoutUser();
     }
 });
+
+// Start checking interaction updates natively
+startInactivityWatcher();
 
 
 /* ==========================================================================
@@ -286,8 +289,6 @@ hub.appendChild(gcWrapper);
 bindBackgroundGcListener();
 
 // --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-
 (() => {
     const avatarNode = document.querySelector('.profile-avatar-node');
     if (!avatarNode) return;
