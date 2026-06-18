@@ -3,439 +3,508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICD10 & Reference Registry</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <title>eSOA Reference Registry</title>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="esoa.css">
     <style>
         :root {
-            --primary: hsl(111, 100%, 60%);
-            --glass: rgba(255, 255, 255, 0.08);
-            --text-main: #ffffff;
-            --success: #00e676;
+            --primary: #ff7300;
+            --primary-rgb: 255, 115, 0;
+            --surface: #121214;
+            --background: #09090b;
+            --border: #27272a;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --glass: rgba(255, 115, 0, 0.15);
         }
-
-        /* Category Header Chevron indicator styles */
-        .category-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 20px;
-        }
-        .category-header h2 {
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            font-size: 1.2rem;
+            padding: 24px;
+            transition: background 0.3s ease;
         }
-        .category-header .chevron-icon {
-            color: var(--primary);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .section-group-wrapper {
-            display: grid;
-            grid-template-rows: 1fr;
-            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-        .section-group-wrapper.collapsed {
-            grid-template-rows: 0fr;
-        }
-        .section-group-wrapper.collapsed .chevron-icon {
-            transform: rotate(-90deg);
-        }
-        .section-group-inner {
-            min-height: 0;
+        .app-layout {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
+            gap: 24px;
         }
-
-        /* Top Search Results Block */
-        .search-priority-view {
-            display: none;
-            flex-direction: column;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 14px;
-            margin-bottom: 20px;
-        }
-        .searching-active .search-priority-view {
+        header {
             display: flex;
-        }
-        .searching-active .category-header,
-        .searching-active .section-group-wrapper {
-            display: none !important;
-        }
-        .search-priority-view h3 {
-            margin: 0 0 12px 0;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            color: var(--primary);
-            text-transform: uppercase;
-        }
-
-        /* Inline structural action link positioned after the fifth block element */
-        .expand-list-action-trigger {
-            background: transparent;
-            border: none;
-            color: var(--primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-align: left;
-            padding: 6px 4px;
-            margin-top: 4px;
-            cursor: pointer;
-            display: inline-flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 4px;
-            transition: opacity 0.2s;
-            width: fit-content;
+            padding: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
         }
-        .expand-list-action-trigger:hover {
-            opacity: 0.8;
-        }
-
-        /* Floating Control Dock perfectly stacked above the profile layout */
-        .bottom-floating-control-strip {
-            position: fixed;
-            bottom: 110px; 
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            height: 70px;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass);
-            border-radius: 35px;
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            box-sizing: border-box;
-            gap: 10px;
-            z-index: 3100;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-        }
-        .search-inner-wrapper {
-            flex-grow: 1;
+        .profile-customization-context {
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: rgba(39,39,42,0.3);
+            padding: 12px 24px;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
         }
-        .search-inner-wrapper input {
+        .profile-avatar-container {
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+        .profile-avatar-node {
             width: 100%;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass);
-            color: var(--text-main);
-            border-radius: 20px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .search-inner-wrapper input:focus {
-            border-color: var(--primary) !important;
-        }
-        .action-control-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--glass);
+            height: 100%;
             border-radius: 50%;
-            color: var(--primary) !important;
-            cursor: pointer;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+        .profile-note-action-trigger {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--primary);
+            color: #fff;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .action-control-btn:hover, .action-control-btn.active-mode {
-            background: var(--primary) !important;
-            border-color: var(--primary) !important;
-            color: #000 !important;
-            transform: translateY(-2px);
-        }
-
-        /* Custom Dropdown Field Mechanics Setup */
-        .custom-select-wrapper {
-            position: relative;
-            width: 100%;
-            margin-top: 5px;
-        }
-        .custom-select-wrapper select {
-            width: 100%;
-            background: #000 !important;
-            color: white !important;
-            padding: 12px;
-            border: 1px solid rgba(83, 83, 83, 0.3);
-            border-radius: 16px;
-            font-size: 0.8rem !important;
-            font-weight: 600;
-            outline: none;
-            appearance: none;
-            -webkit-appearance: none;
+            font-size: 12px;
             cursor: pointer;
-            text-align: left;
-        }
-        .custom-select-wrapper::after {
-            content: '▼';
-            font-size: 0.65rem;
-            color: var(--primary);
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-
-        /* Scaled Modal Typography and Left-Aligned Layout Structure */
-        .modal-content .input-group {
-            text-align: left;
-            width: 100%;
-        }
-        .modal-content .input-group label {
-            font-size: 0.72rem !important;
-            letter-spacing: 0.5px;
-            display: block;
-            text-align: left;
-            margin-bottom: 4px;
-        }
-        .modal-content .input-group input,
-        .modal-content .input-group textarea {
-            font-size: 0.8rem !important;
-            padding: 12px !important;
-            background: rgba(0, 0, 0, 0.4) !important;
-            border: 1px solid rgba(83, 83, 83, 0.3) !important;
-            color: #fff !important;
-            text-align: left;
-            width: 100%;
-            box-sizing: border-box;
-            border-radius: 16px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-        }
-
-        /* Scalable Multiline Textarea Component */
-        .modal-content .input-group textarea {
-            resize: vertical;
-            min-height: 80px;
-            line-height: 1.4;
-        }
-
-        /* Direct adaptive typography setups with explicit structural rules */
-        .item-row {
-            display: flex;
-            margin: 8px 0;
-            align-items: center;
-        }
-        .item-row.hidden-overflow-item {
-            display: none;
-        }
-
-        /* Force block element overrides during active sorting states */
-        .edit-mode-active .item-row.hidden-overflow-item {
-            display: flex !important;
-        }
-
-        /* Automatically mask expand buttons when layout overrides are active */
-        .edit-mode-active .expand-list-action-trigger {
-            display: none !important;
-        }
-
-        .item-row .item-code-prefix {
-            font-family: 'Roboto Mono', monospace;
-            color: var(--primary) !important;
-            font-weight: 700;
-            margin-right: 10px;
-            font-size: 0.95rem;
-            flex-shrink: 0;
-        }
-        .item-row .item-desc-text {
-            font-size: 0.78rem !important;
-            color: #aaaaaa;
-            font-weight: 400;
-            word-break: break-word;
-        }
-
-        /* Context Actions layout injection for inline row modifications */
-        .row-context-actions {
-            display: none;
-            gap: 6px;
-            align-items: center;
             z-index: 10;
-            margin-left: auto;
+            font-weight: bold;
         }
-        .context-action-node {
+        .profile-status-note-bubble {
+            background: var(--surface);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            animation: bubblePop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bubblePop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .peer-hub-container {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .peer-active-hub-viewport {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 4px;
+            flex-grow: 1;
+        }
+        .peer-active-hub-viewport::-webkit-scrollbar { display: none; }
+        .peer-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 68px;
+            cursor: pointer;
+        }
+        .peer-avatar-bubble, .group-chat-bubble {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #3f3f46;
+            background: #27272a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .peer-wrapper:hover .peer-avatar-bubble { border-color: var(--primary); }
+        .peer-name-hover { font-size: 11px; color: var(--text-muted); text-align: center; }
+        .peer-status-note {
+            font-size: 9px;
+            border: 1px solid var(--text-muted);
+            padding: 1px 4px;
+            border-radius: 4px;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .peer-notif-dot {
+            position: absolute;
+            top: 2px;
+            right: 12px;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid var(--surface);
+            display: none;
+        }
+        .peer-wrapper.has-unread .peer-notif-dot { display: block; }
+        .peer-wrapper.is-offline { opacity: 0.4; }
+        .scroll-nav-btn {
+            background: #27272a;
+            border: none;
+            color: white;
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            border: 1px solid var(--glass);
-            background: rgba(0,0,0,0.4);
-            color: var(--text-main);
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s ease;
         }
-        .context-action-node.edit-trigger:hover {
-            background: var(--success);
-            color: #000;
-            border-color: var(--success);
+        .search-wrapper {
+            position: relative;
+            width: 100%;
         }
-        .context-action-node.delete-trigger:hover {
-            background: #ff4444;
-            color: #fff;
-            border-color: #ff4444;
-        }
-
-        /* Movable Layout Reordering & Administrative active states */
-        .edit-mode-active .item-row {
-            cursor: grab !important;
-            border: 1px dashed var(--primary) !important;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 4px 8px;
+        .search-bar {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 8px;
+            color: white;
+            box-sizing: border-box;
+            font-size: 15px;
         }
-        .edit-mode-active .item-row .row-context-actions {
-            display: flex; 
+        .search-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
         }
-        .item-row.dragging {
-            opacity: 0.35;
-            background: var(--glass);
-            transform: scale(0.98);
+        .registry-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
         }
+        .searching-active .registry-container { display: none; }
+        .search-results-container { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .searching-active .search-results-container { display: block; }
+        .section-group-wrapper {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-group-header {
+            padding: 16px;
+            background: rgba(39,39,42,0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-group-inner { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .collapsed .section-group-inner { display: none; }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #18181b;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .item-row:hover { border-color: var(--primary); background: rgba(255,115,0,0.04); }
+        .text-content { display: flex; gap: 12px; font-size: 14px; align-items: center; }
+        .item-code-prefix { color: var(--primary); font-weight: 700; min-width: 75px; }
+        .item-desc-text { color: var(--text); }
+        .hidden-overflow-item { display: none !important; }
+        .row-context-actions { display: flex; gap: 6px; }
+        .context-action-node {
+            background: #27272a;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .context-action-node:hover { color: #fff; background: #3f3f46; }
+        .delete-trigger:hover { background: #ef4444; }
+        .expand-list-action-trigger {
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .expand-list-action-trigger:hover { border-color: var(--primary); color: var(--primary); }
+        .control-panel-strip { display: flex; justify-content: flex-end; gap: 12px; }
+        .action-btn-node {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .action-btn-node:hover, .action-btn-node.active-mode { border-color: var(--primary); background: var(--glass); }
+        .modal-overlay {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+        }
+        .modal-overlay.active { opacity: 1; }
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .input-group input, .input-group select {
+            padding: 10px;
+            background: #18181b;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: white;
+        }
+        .modal-copy-zone {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+        .chat-dock-panel {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 360px;
+            height: 480px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+            overflow: hidden;
+        }
+        .chat-header-row { padding: 14px 16px; background: rgba(39,39,42,0.6); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .chat-scroller-view { flex-grow: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .chat-input-row { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: #18181b; }
+        .chat-input-row input { flex-grow: 1; background: var(--surface); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: white; }
+        .chat-input-row button { background: var(--primary); border: none; color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; }
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 80%; gap: 2px; }
+        .msg-wrapper.outgoing { align-self: flex-end; align-items: flex-end; }
+        .msg-wrapper.incoming { align-self: flex-start; align-items: flex-start; }
+        .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; word-break: break-word; }
+        .msg-bubble.outgoing { background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .msg-bubble.incoming { background: #27272a; color: white; border-bottom-left-radius: 2px; }
+        #magnetBtn {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 14px 36px;
+            border-radius: 30px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 24px rgba(255,115,0,0.3);
+            border: none;
+            cursor: pointer;
+            z-index: 980;
+            transition: transform 0.1s ease, background 0.2s;
+        }
+        #highlighter {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            background: rgba(255,115,0,0.06);
+            border-left: 3px solid var(--primary);
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: top 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s ease;
+            z-index: 0;
+        }
+        .section-group-inner { position: relative; }
     </style>
 </head>
-<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
+<body>
 
-    <div class="peer-wrapper-row">
-        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
-        <div class="peer-active-hub" id="peerActiveHub"></div>
-        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
-    </div>
-
-    <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="if(typeof resetFocus === 'function') resetFocus()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
-        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        <!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
-        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
-    </div>
-
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    <span id="userDisplayName" class="name-string">EJ</span>
-
-    <div class="container" id="mainContainer">
-        <div id="highlighter"></div>
-
-        <!-- Realtime Prioritized Search View Target Element -->
-        <div class="search-priority-view" id="prioritySearchView">
-            <h3>Top Search Matches</h3>
-            <div id="searchResultTargetGroup"></div>
-        </div>
-
-        <!-- ICD-10 Accordion -->
-        <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
-            <h2>ICD-10 Diagnostic Codes</h2>
-            <i data-lucide="chevron-down" class="chevron-icon"></i>
-        </div>
-        <div class="section-group-wrapper" id="icd-wrapper">
-            <div class="section-group-inner" id="icd-section-group"></div>
-        </div>
-
-        <!-- ZIPCODE Accordion -->
-        <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
-            <h2>ZIPCODE</h2>
-            <i data-lucide="chevron-down" class="chevron-icon"></i>
-        </div>
-        <div class="section-group-wrapper" id="zip-wrapper">
-            <div class="section-group-inner" id="zip-section-group"></div>
-        </div>
-
-        <!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
-        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
-            <h2>MEMBER CATEGORY</h2>
-            <i data-lucide="chevron-down" class="chevron-icon"></i>
-        </div>
-        <div class="section-group-wrapper" id="member-wrapper">
-            <div class="section-group-inner" id="member-section-group"></div>
-        </div>
-    </div>
-
-    <div class="bottom-floating-control-strip">
-        <div class="search-inner-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
-        </div>
-        <button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
-            <i data-lucide="plus"></i>
-        </button>
-        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
-            <i data-lucide="move"></i>
-        </button>
-    </div>
-
-    <!-- ADD/EDIT RECORD MODAL -->
-    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
-            <input type="hidden" id="editRowTargetId" value="">
-            
-            <div class="input-group" id="modalTypeSelectorGroup">
-                <label>REFERENCE TYPE</label>
-                <div class="custom-select-wrapper">
-                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
-                        <option value="icd">ICD-10 Diagnostic Definition</option>
-                        <option value="member">Membership Category</option>
-                        <option value="zipcode">Zip Code Mapping</option>
-                    </select>
-                </div>
+    <div class="app-layout" id="mainContainer">
+        <header>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <h1 style="margin:0; font-size:22px; letter-spacing:-0.5px;">eSOA Reference Registry</h1>
+                <p style="margin:0; font-size:13px; color:var(--text-muted);">Real-time Clinical Codes and Parameters Engine</p>
             </div>
             
-            <div class="input-group" style="margin-top:12px;">
-                 <label id="primaryFieldLabel">Diagnosis Code</label>
-                 <input id="newRecordKey" type="text">
-             </div>
-            <div class="input-group" style="margin-top:12px;">
-                 <label id="secondaryFieldLabel">Description Value</label>
-                 <textarea id="newRecordValue"></textarea>
-             </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center; margin-top:15px; cursor:pointer;">SAVE REGISTRY DATA</div>
-            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+            <div class="profile-customization-context">
+                <div class="profile-avatar-container">
+                    <img id="userDisplayAvatar" class="profile-avatar-node" src="" alt="Avatar">
+                </div>
+                <span id="userDisplayName" style="font-size:13px; font-weight:600; color:var(--text-muted);">Operator</span>
+            </div>
+        </header>
+
+        <div class="peer-hub-container">
+            <button class="scroll-nav-btn prev"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></button>
+            <div class="peer-active-hub-viewport" id="peerActiveHub"></div>
+            <button class="scroll-nav-btn next"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button>
+        </div>
+
+        <div class="control-panel-strip">
+            <button class="action-btn-node" id="sortToggleTrigger" onclick="toggleMovableLayout()">
+                <i data-lucide="move" style="width:16px;height:16px;"></i> Reorder Layout
+            </button>
+            <button class="action-btn-node" onclick="toggleModal('addRecordModal', true)">
+                <i data-lucide="plus" style="width:16px;height:16px;"></i> Add Entry
+            </button>
+        </div>
+
+        <div class="search-wrapper">
+            <i data-lucide="search" style="width:18px;height:18px;"></i>
+            <input type="text" id="registrySearch" class="search-bar" placeholder="Filter references globally across registers by code or expression descriptor..." oninput="filterRegistryRealtime()">
+        </div>
+
+        <div class="search-results-container">
+            <h3 style="margin-top:0; color:var(--primary); font-size:12px; text-transform:uppercase; letter-spacing:1px;">Matching Search Targets</h3>
+            <div id="searchResultTargetGroup" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <div class="registry-container">
+            <div class="section-group-wrapper" id="icdWrapper">
+                <div class="section-group-header" onclick="toggleCategoryAccordion('icdWrapper', this)">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="activity" style="color:var(--primary); width:18px; height:18px;"></i>
+                        <span style="font-weight:600; font-size:14px;">ICD-10 Diagnostic Classifications</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="chevron-icon" style="width:16px;height:16px; transition:transform 0.2s;"></i>
+                </div>
+                <div class="section-group-inner" id="icd-section-group"></div>
+            </div>
+
+            <div class="section-group-wrapper" id="memberWrapper">
+                <div class="section-group-header" onclick="toggleCategoryAccordion('memberWrapper', this)">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="credit-card" style="color:var(--primary); width:18px; height:18px;"></i>
+                        <span style="font-weight:600; font-size:14px;">Membership Structure Modifiers</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="chevron-icon" style="width:16px;height:16px; transition:transform 0.2s;"></i>
+                </div>
+                <div class="section-group-inner" id="member-section-group"></div>
+            </div>
+
+            <div class="section-group-wrapper" id="zipWrapper">
+                <div class="section-group-header" onclick="toggleCategoryAccordion('zipWrapper', this)">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="map-pin" style="color:var(--primary); width:18px; height:18px;"></i>
+                        <span style="font-weight:600; font-size:14px;">Geographical Operational Zipcodes</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="chevron-icon" style="width:16px;height:16px; transition:transform 0.2s;"></i>
+                </div>
+                <div class="section-group-inner" id="zip-section-group"></div>
+            </div>
         </div>
     </div>
 
-    <!-- DISCOUNT CALCULATOR MODAL -->
-    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>DISCOUNT CALCULATOR</h3>
+    <button id="magnetBtn" onclick="copyFocusedItem()">COPY</button>
+
+    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
+        <div class="modal-content">
+            <h3 id="modalDisplayTitle" style="margin-top:0; letter-spacing:-0.5px;">ADD NEW REFERENCE</h3>
+            
+            <div class="input-group" id="modalTypeSelectorGroup">
+                <label>Target Category Register</label>
+                <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+                    <option value="icd">ICD-10 Diagnosis</option>
+                    <option value="member">Membership Category</option>
+                    <option value="zipcode">Operational Zipcode</option>
+                </select>
+            </div>
+
             <div class="input-group">
-                 <label>HOSPITAL CHARGES</label>
-                 <input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
-             </div>
-            <div class="input-group" style="margin-top:12px;">
-                 <label>CASE RATE (PHIC)</label>
-                 <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
-             </div>
-            <div class="modal-result" style="border-color: var(--primary); margin-top:15px;"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000; text-align: center; cursor:pointer;">COPY CALCULATION</div>
-            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+                <label id="primaryFieldLabel">Diagnosis Code</label>
+                <input type="text" id="newRecordKey" placeholder="e.g., A00.0" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label id="secondaryFieldLabel">Diagnosis Description</label>
+                <input type="text" id="newRecordValue" placeholder="e.g., Cholera due to Vibrio cholerae" autocomplete="off">
+            </div>
+
+            <div class="modal-copy-zone" onclick="pushRecordToDatabase()">COMMIT CHANGES</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">CANCEL</button>
         </div>
     </div>
-<script type="module" src="esoa.js"></script>
+
+    <div class="chat-dock-panel" id="chatDock">
+        <div class="chat-header-row">
+            <span id="chatTargetName" style="font-weight:700; font-size:14px; letter-spacing:-0.2px;">Transient Chat Channel</span>
+            <button class="context-action-node" onclick="closeChatSession()"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+        </div>
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Write message..." autocomplete="off" onkeypress="if(event.key==='Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
+    </div>
+
+    <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let layoutMovableActive = false;
-        let rtdb, db;
+        let rtdb;
         let activeEditRow = null;
 
         const baseDataset = {
@@ -504,26 +573,15 @@
                 
         try {
             rtdb = getDatabase();
-            db = getFirestore();
         } catch(e) {
-            console.warn("Firebase execution parameters derived locally.");
-        }
-
-        function pullParsedAccentColor() {
-            let customAccent =
-                localStorage.getItem('btnValue') ||
-                localStorage.getItem('accentColor') ||
-                localStorage.getItem('customAccent');
-
-            if (customAccent) {
-                document.documentElement.style.setProperty('--primary', customAccent);
-            }
+            console.warn("RTDB fallback initialization context.");
         }
 
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
             const chevron = headerElement.querySelector('.chevron-icon');
+            if (!wrapper) return;
                         
             if (wrapper.classList.contains('collapsed')) {
                 wrapper.classList.remove('collapsed');
@@ -556,7 +614,6 @@
         };
 
         async function initializeRegistryData() {
-            pullParsedAccentColor();
             const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
                         
             for (const type of ['icd', 'member', 'zipcode']) {
@@ -625,16 +682,17 @@
             const container = document.getElementById('mainContainer');
             const searchTargetGroup = document.getElementById('searchResultTargetGroup');
 
+            if (!searchTargetGroup) return;
             searchTargetGroup.innerHTML = '';
 
             if (query === "") {
-                container.classList.remove('searching-active');
+                if (container) container.classList.remove('searching-active');
                 fineTuneResetElements();
                 return;
             }
 
-            container.classList.add('searching-active');
-            const originalRows = container.querySelectorAll('.section-group-inner .item-row');
+            if (container) container.classList.add('searching-active');
+            const originalRows = document.querySelectorAll('.section-group-inner .item-row');
 
             originalRows.forEach(row => {
                 const code = row.getAttribute('data-code').toLowerCase();
@@ -684,7 +742,7 @@
                 const textNode = element.querySelector('.item-desc-text');
                 if (!textNode) return;
                 const originalText = textNode.textContent;
-                textNode.textContent = "COPIED VALUE!";
+                textNode.textContent = "COPIED EXPLICIT VALUE!";
                                 
                 setTimeout(() => { 
                     textNode.textContent = originalText;
@@ -714,8 +772,7 @@
 
         window.openInlineEdit = function(rowElement) {
             activeEditRow = rowElement;
-            const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
-                          (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+            const type = rowElement.getAttribute('data-ref-type');
                         
             document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
             document.getElementById('modalTypeSelectorGroup').style.display = 'none';
@@ -735,8 +792,7 @@
 
         window.deleteInlineRow = async function(rowElement) {
             if(confirm("Are you certain you want to destroy this reference record?")) {
-                const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
-                              (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+                const type = rowElement.getAttribute('data-ref-type');
                 const key = rowElement.getAttribute('data-code');
                 const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
@@ -791,12 +847,14 @@
 
             if (layoutMovableActive) {
                 document.getElementById('registrySearch').value = "";
-                container.classList.remove('searching-active');
-                container.classList.add('edit-mode-active');
+                if (container) {
+                    container.classList.remove('searching-active');
+                    container.classList.add('edit-mode-active');
+                }
                 if (triggerBtn) triggerBtn.classList.add('active-mode');
                 wrappers.forEach(w => w.classList.remove('collapsed'));
             } else {
-                container.classList.remove('edit-mode-active');
+                if (container) container.classList.remove('edit-mode-active');
                 if (triggerBtn) triggerBtn.classList.remove('active-mode');
                 fineTuneResetElements();
             }
