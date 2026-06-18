@@ -12,7 +12,51 @@
     <link rel="stylesheet" href="esoa.css">
 
 </head>
-<body>
+<body onmouseleave="resetMagnet()">
+
+        <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub">
+            </div>
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
+    </div>
+
+
+   <!-- <div class="top-nav">
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+    </div>
+    -->
+<div class="top-nav">
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        
+        <!-- Active eSOA Page Button with subtle lighter background -->
+        <button class="top-btn active" title="eSOA" onclick="window.location.href='esoa.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="receipt"></i></button>
+        
+        <!-- ICD10 and CF4 Buttons -->
+        <button class="top-btn" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+    </div>
+
+
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
+
+
+    <div class="chat-docking-panel" id="chatDock">
+        <div class="chat-header-bar">
+            <span id="chatTargetName">Active Session Chat</span>
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+        </div>
+        
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
+    </div>
      <script type="module" src="esoa.js"></script>
 </body>
 </html>
