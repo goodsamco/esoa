@@ -1490,17 +1490,10 @@ window.addEventListener('click', () => {
 
 
 /* FOR ICD10 */
-/**
- * firebase-registry-catalog.js
- * Reference Data Registry Module
- */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+/* ==========================================================================
+   10. FOR ICD10 (REGISTRY DESIGN CATALOG & OPERATIONS)
+   ========================================================================== */
 let layoutMovableActive = false;
-let rtdb, db;
 let activeEditRow = null;
 
 const baseDataset = {
@@ -1550,6 +1543,7 @@ const baseDataset = {
         { code: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
     ],
     zipcode: [
+        { code: "9402", desc: "M'LANG" },
         { code: "9417", desc: "ARAKAN" },
         { code: "9415", desc: "ALEOSAN" },
         { code: "9400", desc: "PIGKAWAYAN" },
@@ -1559,20 +1553,12 @@ const baseDataset = {
         { code: "9414", desc: "ANTIPAS" },
         { code: "9406", desc: "MATALAM" },
         { code: "9401", desc: "MAKILALA" },
-        { code: "9402", desc: "M'LANG" },
         { code: "9407", desc: "KABACAN" },
         { code: "9408", desc: "CARMEN" },
         { code: "9411", desc: "LIBUNGAN" },
         { code: "9404", desc: "MAGEPT" }
     ]
 };
-
-try {
-    rtdb = getDatabase();
-    db = getFirestore();
-} catch(e) {
-    console.warn("Firebase execution parameters derived locally.");
-}
 
 function pullParsedAccentColor() {
     let customAccent =
@@ -1632,6 +1618,8 @@ async function initializeRegistryData() {
         let activeList = [];
         try {
             if (rtdb) {
+                // Using modern RTDB get workflow safely matching modular configurations
+                const { get, child } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js");
                 const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
                 if (snapshot.exists()) {
                     const dataObj = snapshot.val();
@@ -1788,7 +1776,7 @@ window.openInlineEdit = function(rowElement) {
     const dataVal = rowElement.getAttribute('data-val');
     document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
     
-    toggleModal('addRecordModal', true);
+    window.toggleModal('addRecordModal', true);
 };
 
 window.deleteInlineRow = async function(rowElement) {
@@ -1833,7 +1821,7 @@ window.pushRecordToDatabase = async function() {
         }
     }
 
-    toggleModal('addRecordModal', false);
+    window.toggleModal('addRecordModal', false);
     resetViewRegistry();
 };
 
@@ -1892,31 +1880,6 @@ function getDragLocationSpace(container, yPoint) {
         }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
-
-window.toggleModal = function(id, isActive) {
-    const overlay = document.getElementById(id);
-    if (overlay) {
-        if (isActive) {
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-        } else {
-            overlay.classList.remove('active');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
-                document.getElementById('modalTypeSelectorGroup').style.display = 'block';
-                document.getElementById('newRecordKey').disabled = false;
-                document.getElementById('newRecordKey').value = "";
-                document.getElementById('newRecordValue').value = "";
-                activeEditRow = null;
-            }, 220);
-        }
-    }
-};
-
-window.closeOutside = function(e, id) {
-    if (e.target === document.getElementById(id)) toggleModal(id, false);
-};
 
 window.resetViewRegistry = function() {
     document.getElementById('registrySearch').value = "";
