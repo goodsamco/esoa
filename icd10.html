@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICD10 & Reference Registry</title>
     
+    <!-- Fonts & Icon Libraries -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="esoa.css">
@@ -248,7 +249,7 @@
             line-height: 1.4;
         }
 
-        /* Direct left-aligned adaptive typography layouts */
+        /* Preserved left-aligned list element structures */
         .item-row {
             display: flex;
             align-items: flex-start;
@@ -358,12 +359,14 @@
 </head>
 <body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
+    <!-- Peer Active Row Display -->
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
         <div class="peer-active-hub" id="peerActiveHub"></div>
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
+    <!-- Navigation Header -->
     <div class="top-nav">
         <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
         <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button> 
@@ -372,9 +375,11 @@
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
+    <!-- User Node Context elements -->
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     <span id="userDisplayName" class="name-string">Name</span>
 
+    <!-- Chat Interface Dock -->
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
@@ -387,14 +392,17 @@
         </div>
     </div>
 
+    <!-- Main Content Container Frame -->
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
+        <!-- Realtime Prioritized Search View Target Element -->
         <div class="search-priority-view" id="prioritySearchView">
             <h3>Top Code Matches</h3>
             <div id="searchResultTargetGroup"></div>
         </div>
 
+        <!-- ICD10 Guide Accordion Layout Frame -->
         <div class="category-header" onclick="toggleCategoryAccordion('icd10-wrapper', this)">
             <h2>ICD10 References</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -404,6 +412,7 @@
         </div>
     </div>
 
+    <!-- Bottom Action Docking bar strip -->
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
             <input type="text" id="registrySearch" placeholder="Search codes, classifications, notes..." oninput="filterRegistryRealtime()">
@@ -416,6 +425,7 @@
         </button>
     </div>
 
+    <!-- Add/Edit Record Modal Element Setup -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3> 
@@ -440,6 +450,7 @@
         </div>
     </div>
 
+    <!-- Discount Calculator Modal Element Frame Layout -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -457,6 +468,7 @@
         </div>
     </div>
 
+    <!-- Scripts Module Logic Section -->
     <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -473,7 +485,7 @@
         const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
         const userId = localStorage.getItem("userId");
 
-        // ICD10 Fallback dataset structure mapping
+        // Comprehensive Standardized Medical ICD10 Reference Dataset Mapping
         const baseDataset = {
             icd10_codes: [
                 { title: "I10", desc: "ESSENTIAL (PRIMARY) HYPERTENSION" },
@@ -482,7 +494,14 @@
                 { title: "A09", desc: "INFECTIOUS GASTROENTERITIS AND COLITIS, UNSPECIFIED" },
                 { title: "J20.9", desc: "ACUTE BRONCHITIS, UNSPECIFIED" },
                 { title: "M54.5", desc: "LOW BACK PAIN" },
-                { title: "N39.0", desc: "URINARY TRACT INFECTION, SITE NOT SPECIFIED" }
+                { title: "N39.0", desc: "URINARY TRACT INFECTION, SITE NOT SPECIFIED" },
+                { title: "J18.9", desc: "PNEUMONIA, UNSPECIFIED ORGANISM" },
+                { title: "I25.10", desc: "ATHEROSCLEROTIC HEART DISEASE OF NATIVE CORONARY ARTERY" },
+                { title: "K21.9", desc: "GASTRO-ESOPHAGEAL REFLUX DISEASE WITHOUT ESOPHAGITIS" },
+                { title: "G44.209", desc: "TENSION TYPE HEADACHE, UNSPECIFIED, NOT INTRACTABLE" },
+                { title: "R05", desc: "COUGH" },
+                { title: "B34.9", desc: "VIRAL INFECTION, UNSPECIFIED" },
+                { title: "Z00.00", desc: "ENCOUNTER FOR GENERAL ADULT MEDICAL EXAMINATION WITHOUT ABNORMAL FINDINGS" }
             ]
         }; 
         const premium3dAssets = {
