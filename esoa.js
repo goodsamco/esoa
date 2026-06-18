@@ -20,7 +20,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
-
 /* ==========================================================================
    2. GLOBAL SESSION STATE ACCESSORS
    ========================================================================== */
@@ -37,7 +36,6 @@ let transientChatListenerRemoveHook = null;
 const mappedRouteTrackingHooks = {};
 let backgroundGcTrackingHook = null;
 
-// Premium Assets Lookup Matrix
 const premium3dAssets = {
     'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
     'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
@@ -70,15 +68,15 @@ function hexToRgb(hex) {
     return "255,115,0";
 }
 
-
 /* ==========================================================================
    3. FIRESTORE CUSTOM PROFILE REAL-TIME TRACKING & INACTIVITY WATCHER
    ========================================================================== */
 const userDocRef = doc(db, "accounts", userId);
 let inactivityTimeout = null;
-const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 Hours in milliseconds
+const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; 
 let localProfileNoteCache = "";
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+let typingTimeout = null;
 
 function forceLogoutUser() {
     console.log("Session expired due to inactivity.");
@@ -101,7 +99,6 @@ function startInactivityWatcher() {
     resetInactivityTimer();
 }
 
-// Global real-time state engine listener hook
 onSnapshot(userDocRef, (snapshot) => {
     if (snapshot.exists()) {
         const data = snapshot.data();
@@ -115,10 +112,12 @@ onSnapshot(userDocRef, (snapshot) => {
         currentUserName = data.customName || "Operator";
         currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
         
-        document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+        const nameNode = document.getElementById('userDisplayName');
+        if (nameNode) nameNode.innerText = currentUserName.split(' ')[0];
 
+        const avatarNode = document.getElementById('userDisplayAvatar');
         const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
-        document.getElementById('userDisplayAvatar').src = matchedAvatar;
+        if (avatarNode) avatarNode.src = matchedAvatar;
 
         if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
 
@@ -133,18 +132,20 @@ onSnapshot(userDocRef, (snapshot) => {
         }
 
         const magnetBtn = document.getElementById('magnetBtn');
-        if (data.btnMode === "image") {
-            const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
-            magnetBtn.style.backgroundImage = `url('${btnImg}')`;
-            magnetBtn.style.backgroundColor = "transparent";
-        } else if (data.btnValue) {
-            magnetBtn.style.backgroundImage = "none";
-            document.documentElement.style.setProperty('--primary', data.btnValue);
-            const parsedRgb = hexToRgb(data.btnValue);
-            document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
+        if (magnetBtn) {
+            if (data.btnMode === "image") {
+                const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
+                magnetBtn.style.backgroundImage = `url('${btnImg}')`;
+                magnetBtn.style.backgroundColor = "transparent";
+            } else if (data.btnValue) {
+                magnetBtn.style.backgroundImage = "none";
+                document.documentElement.style.setProperty('--primary', data.btnValue);
+                const parsedRgb = hexToRgb(data.btnValue);
+                document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
+            }
         }
 
-        // ─── SELF PROFILE STATUS NOTE RENDERING (FIRESTORE ENGINE) ───
+        // ─── LOCAL PROFILE STATUS NOTE RENDERING (BOTTOM PLACEMENT FIX) ───
         const selfBubble = document.getElementById('profile-status-bubble-node');
         if (selfBubble) selfBubble.remove();
 
@@ -154,10 +155,8 @@ onSnapshot(userDocRef, (snapshot) => {
             if (ageDelta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
                 localProfileNoteCache = data.statusNoteText;
 
-                const avatarNode = document.querySelector('.profile-avatar-node');
-                const triggerNode = document.querySelector('.profile-note-action-trigger');
-                
-                if (avatarNode && triggerNode) {
+                const targetParent = document.querySelector('.profile-customization-context') || document.querySelector('.profile-avatar-container');
+                if (targetParent) {
                     const bubbleNode = document.createElement('div');
                     bubbleNode.className = 'profile-status-note-bubble';
                     bubbleNode.id = 'profile-status-bubble-node';
@@ -167,8 +166,7 @@ onSnapshot(userDocRef, (snapshot) => {
                         bubbleNode.style.borderColor = data.statusNoteColor;
                         bubbleNode.style.color = data.statusNoteColor;
                     }
-
-                    avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
+                    targetParent.appendChild(bubbleNode);
                 }
             } else {
                 localProfileNoteCache = "";
@@ -177,7 +175,6 @@ onSnapshot(userDocRef, (snapshot) => {
             localProfileNoteCache = "";
         }
 
-        // ─── PRESENCE HANDSHAKE TO REALTIME DATABASE ───
         if (!document.hidden) {
             const presenceData = {
                 uid: userId,
@@ -201,9 +198,7 @@ onSnapshot(userDocRef, (snapshot) => {
     }
 });
 
-// Start checking interaction updates natively
 startInactivityWatcher();
-
 
 /* ==========================================================================
    TYPING INDICATOR HUB LISTENER
@@ -214,15 +209,8 @@ const typingUIFallbackTimeouts = {};
 function bindTypingIndicator(partnerId, displayName) {
     if (typingHooks[partnerId]) return;
 
-    const channelSessionKey =
-        userId < partnerId
-            ? `${userId}_${partnerId}`
-            : `${partnerId}_${userId}`;
-
-    const typingRef = ref(
-        rtdb,
-        `typing/${channelSessionKey}/${partnerId}`
-    );
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const typingRef = ref(rtdb, `typing/${channelSessionKey}/${partnerId}`);
 
     typingHooks[partnerId] = onValue(typingRef, (snapshot) => {
         const peerNode = document.getElementById(`peer-node-${partnerId}`);
@@ -249,7 +237,6 @@ function bindTypingIndicator(partnerId, displayName) {
                 tag.dataset.typing = "false";
                 delete typingUIFallbackTimeouts[partnerId];
             }, 20000); 
-
         } else {
             tag.textContent = displayName;
             tag.dataset.typing = "false";
@@ -257,40 +244,41 @@ function bindTypingIndicator(partnerId, displayName) {
     });
 }
 
-
 /* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - FIRESTORE INTEGRATED
+   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB)
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
-hub.innerHTML = '';
+if (hub) {
+    hub.innerHTML = '';
 
-const gcWrapper = document.createElement('div');
-gcWrapper.className = 'peer-wrapper';
-gcWrapper.id = 'gc-hub-node';
+    const gcWrapper = document.createElement('div');
+    gcWrapper.className = 'peer-wrapper';
+    gcWrapper.id = 'gc-hub-node';
 
-const gcBubble = document.createElement('div');
-gcBubble.className = 'group-chat-bubble';
-gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
-gcBubble.onclick = () => initGroupChatChannel();
+    const gcBubble = document.createElement('div');
+    gcBubble.className = 'group-chat-bubble';
+    gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
+    gcBubble.onclick = () => initGroupChatChannel();
 
-const gcDotNode = document.createElement('div');
-gcDotNode.className = 'peer-notif-dot';
-gcDotNode.id = 'gc-notif-dot';
+    const gcDotNode = document.createElement('div');
+    gcDotNode.className = 'peer-notif-dot';
+    gcDotNode.id = 'gc-notif-dot';
 
-const gcNameTag = document.createElement('div');
-gcNameTag.className = 'peer-name-hover';
-gcNameTag.innerText = "GC";
+    const gcNameTag = document.createElement('div');
+    gcNameTag.className = 'peer-name-hover';
+    gcNameTag.innerText = "GC";
 
-gcWrapper.appendChild(gcBubble);
-gcWrapper.appendChild(gcDotNode);
-gcWrapper.appendChild(gcNameTag);
-hub.appendChild(gcWrapper);
+    gcWrapper.appendChild(gcBubble);
+    gcWrapper.appendChild(gcDotNode);
+    gcWrapper.appendChild(gcNameTag);
+    hub.appendChild(gcWrapper);
 
-bindBackgroundGcListener();
+    setTimeout(() => { bindBackgroundGcListener(); }, 500);
+}
 
 // --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
 (() => {
-    const avatarNode = document.querySelector('.profile-avatar-node');
+    const avatarNode = document.querySelector('.profile-avatar-node') || document.getElementById('userDisplayAvatar');
     if (!avatarNode) return;
 
     const actionTrigger = document.createElement('div');
@@ -355,9 +343,7 @@ bindBackgroundGcListener();
                 statusNoteColor: activeLayoutColor,
                 statusNoteUpdatedAt: Date.now()
             })
-            .then(() => {
-                closeModal();
-            })
+            .then(() => closeModal())
             .catch(err => console.error("Could not sync status changes to Firestore:", err));
         }
     });
@@ -365,13 +351,13 @@ bindBackgroundGcListener();
 
 const presenceRef = ref(rtdb, 'presence');
 onValue(presenceRef, (snapshot) => {
+    if (!hub) return;
     const users = snapshot.val() || {};
     const NOW = Date.now();
 
     const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
     existingNodes.forEach(node => {
         const nodeUid = node.id.replace('peer-node-', '');
-
         if (!users[nodeUid] || nodeUid === userId) {
             node.classList.add('is-offline');
             node.style.order = "1";
@@ -447,284 +433,9 @@ onValue(presenceRef, (snapshot) => {
         peerContainer.style.order = "0";
     });
 
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
+    if (window.lucide) window.lucide.createIcons();
 });
-/* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - PERSISTENT
-   ========================================================================== 
-const hub = document.getElementById('peerActiveHub');
-hub.innerHTML = '';
 
-const gcWrapper = document.createElement('div');
-gcWrapper.className = 'peer-wrapper';
-gcWrapper.id = 'gc-hub-node';
-
-const gcBubble = document.createElement('div');
-gcBubble.className = 'group-chat-bubble';
-gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
-gcBubble.onclick = () => initGroupChatChannel();
-
-const gcDotNode = document.createElement('div');
-gcDotNode.className = 'peer-notif-dot';
-gcDotNode.id = 'gc-notif-dot';
-
-const gcNameTag = document.createElement('div');
-gcNameTag.className = 'peer-name-hover';
-gcNameTag.innerText = "GC";
-
-gcWrapper.appendChild(gcBubble);
-gcWrapper.appendChild(gcDotNode);
-gcWrapper.appendChild(gcNameTag);
-hub.appendChild(gcWrapper);
-
-bindBackgroundGcListener();
-
-// --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-let localProfileNoteCache = "";
-
-// Dynamic layout generation for the status note modal window context
-(() => {
-    const avatarNode = document.querySelector('.profile-avatar-node');
-    if (!avatarNode) return;
-
-    // Append the tiny plus action element on top of your profile avatar
-    const actionTrigger = document.createElement('div');
-    actionTrigger.className = 'profile-note-action-trigger';
-    actionTrigger.innerText = '＋';
-    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode);
-
-    // Create custom structural modal elements natively inside the document context
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'modal-overlay';
-    modalOverlay.id = 'status-note-custom-modal';
-    
-    modalOverlay.innerHTML = `
-        <div class="modal-content">
-            <div class="input-group">
-                <label>UPDATE STATUS NOTE</label>
-                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
-                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
-            </div>
-            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
-            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
-        </div>
-    `;
-    document.body.appendChild(modalOverlay);
-
-    const modalInputField = document.getElementById('status-modal-field');
-    const modalCharCounter = document.getElementById('status-modal-counter');
-    const modalSaveBtn = document.getElementById('status-modal-save-btn');
-    const modalCloseBtn = document.getElementById('status-modal-close-btn');
-
-    // Display modal workflow triggers safely
-    actionTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        modalInputField.value = localProfileNoteCache;
-        modalCharCounter.innerText = `${localProfileNoteCache.length} / 10`;
-        modalOverlay.classList.add('active');
-        setTimeout(() => modalInputField.focus(), 50);
-    });
-
-    // Realtime constraint counter adjustments tracking keystrokes up to 10 max
-    modalInputField.addEventListener('input', () => {
-        if (modalInputField.value.length > 10) {
-            modalInputField.value = modalInputField.value.substring(0, 10);
-        }
-        modalCharCounter.innerText = `${modalInputField.value.length} / 10`;
-    });
-
-    // Close functionality tracking
-    const closeModal = () => modalOverlay.classList.remove('active');
-    modalCloseBtn.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-
-    // Submit transactions directly to RTDB under the current user node layout to guarantee persistence
-    modalSaveBtn.addEventListener('click', () => {
-        const cleanInput = modalInputField.value.trim().substring(0, 10);
-        const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
-        
-        // Dynamic look-up of local theme color definitions to pack alongside data packets
-        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
-        
-        if (cleanInput === "") {
-            // If user cleared the input, remove it from DB cleanly
-            set(userNoteRef, null).then(() => closeModal());
-        } else {
-            set(userNoteRef, {
-                text: cleanInput,
-                color: activeLayoutColor,
-                updatedAt: Date.now()
-            })
-            .then(() => {
-                closeModal();
-            })
-            .catch(err => console.error("Could not sync status changes accurately:", err));
-        }
-    });
-})();
-
-const presenceRef = ref(rtdb, 'presence');
-onValue(presenceRef, (snapshot) => {
-    const users = snapshot.val() || {};
-    const NOW = Date.now();
-
-    // Clear personal status bubble before processing iterations to prevent duplicates
-    const selfBubble = document.getElementById('profile-status-bubble-node');
-    if (selfBubble) selfBubble.remove();
-
-    // Mark absent users offline
-    const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
-    existingNodes.forEach(node => {
-        const nodeUid = node.id.replace('peer-node-', '');
-
-        if (!users[nodeUid] || nodeUid === userId) {
-            node.classList.add('is-offline');
-            node.style.order = "1";
-        }
-    });
-
-    // Realtime peer synchronization
-    Object.keys(users).forEach(uid => {
-        const peer = users[uid];
-        if (!peer || !peer.uid) return;
-
-        // --- SELF PROFILE RENDERING SYSTEM (PERSISTENT & 12HR RETENTION) ---
-        if (uid === userId) {
-            if (peer.statusNote && peer.statusNote.updatedAt) {
-                const ageDelta = NOW - peer.statusNote.updatedAt;
-                
-                // If past 12 hours, treat it as expired and clear local cache
-                if (ageDelta >= TWELVE_HOURS_MS) {
-                    localProfileNoteCache = "";
-                    // Optional: Clean up expired note from database automatically
-                    const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
-                    set(userNoteRef, null);
-                    return;
-                }
-
-                localProfileNoteCache = peer.statusNote.text || "";
-
-                if (localProfileNoteCache.trim() !== "") {
-                    const avatarNode = document.querySelector('.profile-avatar-node');
-                    const triggerNode = document.querySelector('.profile-note-action-trigger');
-                    if (avatarNode && triggerNode) {
-                        const bubbleNode = document.createElement('div');
-                        bubbleNode.className = 'profile-status-note-bubble';
-                        bubbleNode.id = 'profile-status-bubble-node';
-                        bubbleNode.innerText = localProfileNoteCache; 
-                        
-                        if (peer.statusNote.color) {
-                            bubbleNode.style.borderColor = peer.statusNote.color;
-                            bubbleNode.style.color = peer.statusNote.color;
-                        }
-
-                        // Appends on top of the trigger node, stacking directly above your profile view
-                        avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
-                    }
-                }
-            } else {
-                localProfileNoteCache = "";
-            }
-            return; 
-        }
-
-        const singleWordLabel =
-            peer.name
-                ? peer.name.split(' ')[0]
-                : "Operator";
-
-        const cleanAvatarSrc =
-            premium3dAssets[peer.avatar] ||
-            peer.avatar ||
-            premium3dAssets['avatar-m1'];
-
-        let peerContainer =
-            document.getElementById(`peer-node-${peer.uid}`);
-
-        if (!peerContainer) {
-            peerContainer = document.createElement('div');
-            peerContainer.className = 'peer-wrapper';
-            peerContainer.id = `peer-node-${peer.uid}`;
-
-            const imgNode = document.createElement('img');
-            imgNode.className = 'peer-avatar-bubble';
-            imgNode.src = cleanAvatarSrc;
-            imgNode.onclick = () =>
-                initTransientChatChannel(
-                    peer.uid,
-                    singleWordLabel
-                );
-
-            const dotNode = document.createElement('div');
-            dotNode.className = 'peer-notif-dot';
-
-            const nameTag = document.createElement('div');
-            nameTag.className = 'peer-name-hover';
-            nameTag.innerText = singleWordLabel;
-            nameTag.dataset.typing = "false";
-
-            peerContainer.appendChild(imgNode);
-            peerContainer.appendChild(dotNode);
-            peerContainer.appendChild(nameTag);
-
-            hub.appendChild(peerContainer);
-
-            bindBackgroundNotifListener(peer.uid);
-
-            // Typing indicator
-            bindTypingIndicator(
-                peer.uid,
-                singleWordLabel
-            );
-
-        } else {
-            const img =
-                peerContainer.querySelector('.peer-avatar-bubble');
-
-            if (img) {
-                img.src = cleanAvatarSrc;
-            }
-
-            const tag =
-                peerContainer.querySelector('.peer-name-hover');
-
-            if (tag && tag.dataset.typing !== "true") {
-                tag.innerText = singleWordLabel;
-            }
-        }
-
-        // --- INJECT PEER NOTES UPSTAIRS (TOP PLACEMENT - 12HR LIMIT) ---
-        const oldNote = peerContainer.querySelector('.peer-status-note');
-        if (oldNote) oldNote.remove();
-
-        if (peer.statusNote && peer.statusNote.updatedAt) {
-            const timeElapsed = NOW - peer.statusNote.updatedAt;
-
-            if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
-                const noteNode = document.createElement('div');
-                noteNode.className = 'peer-status-note';
-                noteNode.innerText = peer.statusNote.text; 
-                
-                if (peer.statusNote.color) {
-                    noteNode.style.color = peer.statusNote.color;
-                    noteNode.style.borderColor = peer.statusNote.color;
-                }
-
-                peerContainer.appendChild(noteNode);
-            }
-        }
-
-        peerContainer.classList.remove('is-offline');
-        peerContainer.style.order = "0";
-    });
-
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
-});
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS
    ========================================================================== */
@@ -804,17 +515,13 @@ function bindBackgroundGcListener() {
     });
 }
 
-
 /* ==========================================================================
-   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
+   6. REALTIME CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
    ========================================================================== */
-let activeReplyPayload = null; 
-
 function formatMessageTimestamp(timestamp) {
     if (!timestamp) return '';
     const msgDate = new Date(timestamp);
     const today = new Date();
-
     const isToday = msgDate.getDate() === today.getDate() &&
                     msgDate.getMonth() === today.getMonth() &&
                     msgDate.getFullYear() === today.getFullYear();
@@ -830,7 +537,6 @@ function formatMessageTimestamp(timestamp) {
 function resolveUserRealName(uid, fallbackDataName) {
     if (uid === userId) return "You";
     if (fallbackDataName) return fallbackDataName.split(' ')[0];
-    
     const peerNode = document.getElementById(`peer-node-${uid}`);
     if (peerNode && peerNode.querySelector('.peer-name-hover')) {
         return peerNode.querySelector('.peer-name-hover').innerText.split(' ')[0];
@@ -838,12 +544,17 @@ function resolveUserRealName(uid, fallbackDataName) {
     return "User " + uid.substring(0, 5);
 }
 
-function initGroupChatChannel() {
+window.initGroupChatChannel = function() {
     isGroupChat = true;
     selectedActiveChatPartnerId = "BARANGAY_GC";
-    document.getElementById('chatTargetName').innerText = `Group Chat`;
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
+    const titleNode = document.getElementById('chatTargetName');
+    if (titleNode) titleNode.innerText = `Group Chat`;
+    
+    const scroller = document.getElementById('chatScroller');
+    if (scroller) scroller.innerHTML = '';
+    
+    const dock = document.getElementById('chatDock');
+    if (dock) dock.style.display = 'flex';
     clearActiveReplyRow();
 
     const gcContainer = document.getElementById('gc-hub-node');
@@ -858,34 +569,39 @@ function initGroupChatChannel() {
             appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
         }
     });
-}
+};
 
-function initTransientChatChannel(partnerId, partnerName) {
+window.initTransientChatChannel = function(partnerId, partnerName) {
     isGroupChat = false;
     selectedActiveChatPartnerId = partnerId;
     clearActiveReplyRow();
     
     const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
-    document.getElementById('chatTargetName').innerText = `${cleanName}`;
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
+    const titleNode = document.getElementById('chatTargetName');
+    if (titleNode) titleNode.innerText = `${cleanName}`;
+    
+    const scroller = document.getElementById('chatScroller');
+    if (scroller) scroller.innerHTML = '';
+    
+    const dock = document.getElementById('chatDock');
+    if (dock) dock.style.display = 'flex';
 
     const peerContainer = document.getElementById(`peer-node-${partnerId}`);
-    if (peerContainer) {
-        peerContainer.classList.remove('has-unread');
-    }
+    if (peerContainer) peerContainer.classList.remove('has-unread');
 
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
     const input = document.getElementById('chatMsgInput');
 
-    input.oninput = () => {
-        const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
-        set(typingRef, true);
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
-    };
+    if (input) {
+        input.oninput = () => {
+            const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
+            set(typingRef, true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
+        };
+    }
     
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
@@ -894,15 +610,18 @@ function initTransientChatChannel(partnerId, partnerName) {
             appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
         }
     });
-}
+};
 
 function cleanupTransientListeners() {
-    if (transientChatListenerRemoveHook) { transientChatListenerRemoveHook(); transientChatListenerRemoveHook = null; }
+    if (transientChatListenerRemoveHook) { 
+        transientChatListenerRemoveHook(); 
+        transientChatListenerRemoveHook = null; 
+    }
 }
 
 window.sendChatPayload = function () {
     const input = document.getElementById('chatMsgInput');
-    const text = input.value.trim();
+    const text = input ? input.value.trim() : "";
     if (!text || !selectedActiveChatPartnerId) return;
 
     const payload = {
@@ -927,7 +646,7 @@ window.sendChatPayload = function () {
     const newMsgRef = push(chatRouteRef);
     set(newMsgRef, payload);
 
-    input.value = '';
+    if (input) input.value = '';
     clearActiveReplyRow();
 
     if (!isGroupChat) {
@@ -938,6 +657,8 @@ window.sendChatPayload = function () {
 
 function appendBubbleToScroller(msg, msgId, direction) {
     const view = document.getElementById('chatScroller');                                    
+    if (!view) return;
+    
     const wrapper = document.createElement('div');
     wrapper.className = `msg-wrapper ${direction}`;
     wrapper.id = `msg-wrap-${msgId}`;
@@ -1014,9 +735,8 @@ function appendBubbleToScroller(msg, msgId, direction) {
         if (updatedMsg.isDeleted) {
             bbl.classList.add('msg-deleted-state');
             bbl.style.fontStyle = 'italic';
-            if (wrapper.querySelector('.msg-ghost-reply-preview')) {
-                wrapper.querySelector('.msg-ghost-reply-preview').remove();
-            }
+            const prev = wrapper.querySelector('.msg-ghost-reply-preview');
+            if (prev) prev.remove();
         } else if (updatedMsg.edited) {
             bbl.style.fontStyle = 'italic';
         } else {
@@ -1120,7 +840,6 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     wrapper.appendChild(tray);
 }
 
-// 🔥 Updated: Spawns the native emoji panel with auto-close click handler
 function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     const activePanel = document.getElementById(`emoji-panel-${msgId}`);
     if (activePanel) {
@@ -1153,7 +872,6 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
 
     wrapper.appendChild(panel);
 
-    // 🔥 Added: Global window click detection listener to dismiss panel on click-away
     const closePanelHandler = (event) => {
         if (!panel.contains(event.target) && !tray.contains(event.target)) {
             panel.remove();
@@ -1161,7 +879,6 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
         }
     };
     
-    // Defer execution slightly to prevent immediate intercept of the current activation click event
     setTimeout(() => {
         document.addEventListener('click', closePanelHandler);
     }, 0);
@@ -1179,19 +896,22 @@ function stageMessageForReply(msg) {
         activeBanner = document.createElement('div');
         activeBanner.id = 'chatReplyTrackIndicator';
         const panelDock = document.getElementById('chatDock');
-        const inputRow = panelDock.querySelector('.chat-input-row');
-        panelDock.insertBefore(activeBanner, inputRow);
+        const inputRow = panelDock ? panelDock.querySelector('.chat-input-row') : null;
+        if (panelDock && inputRow) panelDock.insertBefore(activeBanner, inputRow);
     }
 
     const clearName = resolveUserRealName(msg.sender, msg.senderName);
-    activeBanner.innerHTML = `
-        <div class="reply-track-contents">
-            <span>Replying to <strong>${clearName}</strong></span>
-            <p>${msg.text}</p>
-        </div>
-        <button onclick="clearActiveReplyRow()">✕</button>
-    `;
-    document.getElementById('chatMsgInput').focus();
+    if (activeBanner) {
+        activeBanner.innerHTML = `
+            <div class="reply-track-contents">
+                <span>Replying to <strong>${clearName}</strong></span>
+                <p>${msg.text}</p>
+            </div>
+            <button onclick="clearActiveReplyRow()">✕</button>
+        `;
+    }
+    const input = document.getElementById('chatMsgInput');
+    if (input) input.focus();
 }
 
 window.clearActiveReplyRow = function() {
@@ -1246,7 +966,6 @@ function syncReactionsDisplay(msgId, fallbackName) {
             
             const voterRealName = resolveUserRealName(uid, uid === msgData.sender ? fallbackName : null);
             summary[emo].voters.push(voterRealName);
-            
             if (uid === userId) summary[emo].userVoted = true;
         });
 
@@ -1277,10 +996,12 @@ window.closeChatSession = function () {
         set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
     }
     clearActiveReplyRow();
-    document.getElementById('chatDock').style.display = 'none';
+    const dock = document.getElementById('chatDock');
+    if (dock) dock.style.display = 'none';
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
+
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
@@ -1297,14 +1018,12 @@ const extraItems = {
     others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] 
 };
 
-// Initialization Execution Lifecycles
 window.addEventListener('DOMContentLoaded', () => {
     allRows = document.querySelectorAll('.item-row');
     highlighter = document.getElementById('highlighter');
     container = document.getElementById('mainContainer');
     magnetBtn = document.getElementById('magnetBtn');
 
-    // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
     const hubContainer = document.getElementById('peerActiveHub');
     const prevBtn = document.querySelector('.scroll-nav-btn.prev');
     const nextBtn = document.querySelector('.scroll-nav-btn.next');
@@ -1320,11 +1039,12 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // PRESERVED: 100% of your original structural timing and copy lifecycles
-    setTimeout(() => updateFocus(0), 100);
-    allRows.forEach((row, idx) => { 
-        row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); 
-    });
+    if (allRows.length > 0) {
+        setTimeout(() => updateFocus(0), 100);
+        allRows.forEach((row, idx) => { 
+            row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); 
+        });
+    }
 
     if (window.lucide) window.lucide.createIcons();
     startIdle();
@@ -1332,10 +1052,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.toggleModal = function (id, show) {
     const modal = document.getElementById(id);
+    if (!modal) return;
     if (show) {
-        document.getElementById('hospCharges').value = '';
-        document.getElementById('caseRate').value = '';
-        document.getElementById('finalDiscount').innerText = '0.00';
+        const hCharges = document.getElementById('hospCharges');
+        const cRate = document.getElementById('caseRate');
+        const fDisc = document.getElementById('finalDiscount');
+        if (hCharges) hCharges.value = '';
+        if (cRate) cRate.value = '';
+        if (fDisc) fDisc.innerText = '0.00';
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('active'), 10);
     } else {
@@ -1351,18 +1075,23 @@ window.closeOutside = function (e, id) {
 window.calcSr = function () {
     const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
     const rate = parseFloat(document.getElementById('caseRate').value) || 0;
-    document.getElementById('finalDiscount').innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
+    const fDisc = document.getElementById('finalDiscount');
+    if (fDisc) fDisc.innerText = (charges - ((charges * 0.20) + rate)).toFixed(2);
 };
 
 window.copyModalValue = function () {
-    const val = document.getElementById('finalDiscount').innerText;
+    const fDisc = document.getElementById('finalDiscount');
+    const val = fDisc ? fDisc.innerText : '0.00';
     navigator.clipboard.writeText(val).then(() => { flashMagnet(); window.toggleModal('srModal', false); });
 };
 
 window.openList = function (cat) {
     const listCont = document.getElementById('listContainer');
+    if (!listCont) return;
     listCont.innerHTML = '';
-    document.getElementById('listTitle').innerText = cat.toUpperCase();
+    const lTitle = document.getElementById('listTitle');
+    if (lTitle) lTitle.innerText = cat.toUpperCase();
+    
     extraItems[cat].forEach(text => {
         const div = document.createElement('div');
         div.className = 'list-item';
@@ -1377,6 +1106,7 @@ window.openList = function (cat) {
    8. HIGHLIGHTER, MAGNETIC ENGINE & INTERACTION ANIMATIONS
    ========================================================================== */
 function flashMagnet() {
+    if (!magnetBtn) return;
     magnetBtn.innerText = "COPIED!";
     magnetBtn.classList.add('success-state');
     document.body.classList.add('copy-flash');
@@ -1406,6 +1136,7 @@ window.resetMagnet = function () {
 };
 
 function updateFocus(index) {
+    if (allRows.length === 0) return;
     currentFocusedIndex = index;
     const targetRow = allRows[index];
     if (!targetRow || !highlighter || !container) return;
@@ -1423,22 +1154,26 @@ function executeCopy(row, text, index) {
         document.querySelectorAll('.text-content').forEach(el => el.classList.remove('text-active'));
         clearTimeout(textTimeout);
         const textElement = row.querySelector('.text-content');
-        textElement.classList.add('text-active');
+        if (textElement) textElement.classList.add('text-active');
         flashMagnet();
         let nextIdx = (index + 1) % allRows.length;
         const rowText = row.innerText.toUpperCase();
         if (rowText.includes("IV CATHETER G. 20")) {
-            nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET"));
+            const match = Array.from(allRows).findIndex(r => r.innerText.includes("MACROSET"));
+            if (match !== -1) nextIdx = match;
         } else if (rowText.includes("IV CATHETER G. 24")) {
-            nextIdx = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET"));
+            const match = Array.from(allRows).findIndex(r => r.innerText.includes("MICROSET"));
+            if (match !== -1) nextIdx = match;
         }
         setTimeout(() => updateFocus(nextIdx), 450);
-        textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
+        if (textElement) textTimeout = setTimeout(() => textElement.classList.remove('text-active'), 8000);
     });
 }
 
 window.copyFocusedItem = function () { 
-    executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); 
+    if (allRows[currentFocusedIndex]) {
+        executeCopy(allRows[currentFocusedIndex], allRows[currentFocusedIndex].getAttribute('data-val'), currentFocusedIndex); 
+    }
 };
 
 window.nextFocus = function () { 
@@ -1448,7 +1183,6 @@ window.nextFocus = function () {
 window.resetFocus = function () { 
     updateFocus(0); 
 };
-
 
 /* ==========================================================================
    9. UNIFIED TRACKING VISIBILITY & LIFECYCLE HANDLERS
