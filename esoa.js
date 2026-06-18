@@ -1459,7 +1459,7 @@ function stopIdle() { if (magnetBtn) magnetBtn.classList.remove('idle'); }
 function resetIdle() { stopIdle(); clearTimeout(idleTimer); idleTimer = setTimeout(startIdle, 2000); }
 
 ['mousemove', 'click', 'scroll'].forEach(e => document.addEventListener(e, resetIdle));
-/*
+
 document.addEventListener('visibilitychange', () => {
     if (!userId) return;
     if (document.hidden) {
@@ -1474,28 +1474,6 @@ document.addEventListener('visibilitychange', () => {
         });
         updateDoc(doc(db, "accounts", userId), { isOnline: true });
     }
-});
-*/
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) return;
-
-    set(ref(rtdb, 'presence/' + userId), {
-        uid: userId,
-        name: currentUserName,
-        avatar: currentUserAvatarRaw,
-        timestamp: Date.now(),
-        statusNote: {
-            text: localProfileNoteCache || "",
-            color: getComputedStyle(document.documentElement)
-                .getPropertyValue('--primary')
-                .trim() || "#e5e5e5",
-            updatedAt: Date.now()
-        }
-    });
-
-    updateDoc(doc(db, "accounts", userId), {
-        isOnline: true
-    });
 });
 
 window.addEventListener('beforeunload', () => {
