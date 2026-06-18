@@ -1374,41 +1374,46 @@ h2 {
     top: -6px; 
     left: 50%;
     transform: translateX(-50%);
-    background: var(--surface);
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); /* Translucent background */
+    backdrop-filter: blur(12px) saturate(180%); /* Glassmorphism blur engine */
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
     font-size: 0.48rem; 
     letter-spacing: 0.3px;
     font-weight: 800;
-    padding: 2px 5px;
-    border-radius: 5px;
+    padding: 3px 6px;
+    border-radius: 8px; /* Smoother rounded radius */
     width: 50px; /* Locked width to force downward stacking */
     white-space: normal;
     word-break: break-word;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 0.5px solid rgba(255, 255, 255, 0.08); /* Thinner hairline border */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 3300;
     pointer-events: none;
     text-align: center;
-    text-transform: uppercase;
+    text-transform: none; /* Allows any typed casing (mix, lower, upper) */
 }
 
 /* Sits close on top of your own bottom-right profile avatar node and wraps downward */
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 118px; /* Stacked up cleanly on top of your avatar (45px base + 48px height + plus icon room) */
+    bottom: 118px; /* Stacked up cleanly on top of your avatar */
     right: 25px;
     width: 48px; /* Perfectly inline with profile avatar width boundaries */
-    background: var(--surface);
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); /* Translucent background */
+    backdrop-filter: blur(12px) saturate(180%); /* Glassmorphism blur engine */
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
     color: var(--text-main);
     font-size: 0.65rem;
     font-weight: 700;
-    padding: 4px 2px;
-    border-radius: 8px;
+    padding: 4px 4px;
+    border-radius: 10px; /* Smoother rounded radius */
     white-space: normal;
     word-break: break-word;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 0.5px solid rgba(255, 255, 255, 0.08); /* Thinner hairline border */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     z-index: 2505;
     text-align: center;
+    text-transform: none; /* Allows any typed casing (mix, lower, upper) */
 }
 
 /* Plus (+) trigger node placed persistently on top of your profile avatar head line */
