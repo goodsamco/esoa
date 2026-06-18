@@ -1283,7 +1283,7 @@ window.closeChatSession = function () {
 };
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
-   ========================================================================== 
+   ========================================================================== */
 let textTimeout; 
 let currentFocusedIndex = 0;
 let allRows = []; 
@@ -1329,7 +1329,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) window.lucide.createIcons();
     startIdle();
 });
-
+/*
 window.toggleModal = function (id, show) {
     const modal = document.getElementById(id);
     if (show) {
@@ -1372,12 +1372,7 @@ window.openList = function (cat) {
     });
     window.toggleModal('listModal', true);
 };
-
-/* ==========================================================================
-   7. CORE UTILITY METRICS & UNIFIED INTERACTION LAYOUT
-   ========================================================================== */
-
-// ... keep existing arrays and setup lifecycles unchanged ...
+*/
 
 // SHARED INTELLECTUAL UNIFIED MODAL MECHANICS
 window.toggleModal = function (id, show) {
