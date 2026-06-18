@@ -222,29 +222,27 @@ onSnapshot(userDocRef, (snapshot) => {
             document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
         }
 
+// ─── PRESENCE HANDSHAKE TO REALTIME DATABASE ───
 if (!document.hidden) {
-    // Target fields directly inside the user's presence node 
-    // This leaves 'presence/userId/statusNote' completely untouched regardless of page reloads!
-    const presenceUpdates = {
-        [`presence/${userId}/uid`]: userId,
-        [`presence/${userId}/name`]: currentUserName,
-        [`presence/${userId}/avatar`]: currentUserAvatarRaw,
-        [`presence/${userId}/timestamp`]: Date.now()
+    // Collect the status note info straight from your updated Firestore snapshot data
+    const presenceData = {
+        uid: userId,
+        name: currentUserName,
+        avatar: currentUserAvatarRaw,
+        timestamp: Date.now(),
+        statusNote: {
+            text: data.statusNoteText || "",
+            color: data.statusNoteColor || "#e5e5e5",
+            updatedAt: data.statusNoteUpdatedAt || 0
+        }
     };
 
-    // Use a multi-path root update to cleanly write properties without touching the sibling 'statusNote' node
-    update(ref(rtdb), presenceUpdates)
+    // Push the state to RTDB so peers can instantly mirror your note text/color changes
+    set(ref(rtdb, 'presence/' + userId), presenceData)
         .catch(err => console.error("Presence sync failed:", err));
 
     updateDoc(userDocRef, { isOnline: true });
 }
-        
-        // Start monitoring interaction profiles once valid session snapshots are bound
-        startInactivityWatcher();
-    } else {
-        forceLogoutUser();
-    }
-});
 
 
 /* ==========================================================================
