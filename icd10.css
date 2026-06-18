@@ -1,0 +1,275 @@
+:root {
+    --primary: hsl(111, 100%, 60%);
+    --glass: rgba(255, 255, 255, 0.08);
+    --text-main: #ffffff;
+    --success: #00e676;
+}
+
+/* Category Header Layout Mechanics */
+.category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 20px;
+}
+
+.category-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.category-header .chevron-icon {
+    color: var(--primary);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-group-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.section-group-wrapper.collapsed {
+    grid-template-rows: 0fr;
+}
+
+.section-group-wrapper.collapsed .category-header .chevron-icon {
+    transform: rotate(-90deg);
+}
+
+.section-group-inner {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Priority Search Execution Panel */
+.search-priority-view {
+    display: none;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.searching-active #prioritySearchView {
+    display: flex;
+}
+
+.searching-active .category-header,
+.searching-active .section-group-wrapper {
+    display: none !important;
+}
+
+.search-priority-view h3 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    color: var(--primary);
+    text-transform: uppercase;
+}
+
+/* Expand Action Links Styles */
+.expand-list-action-trigger {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+    padding: 6px 4px;
+    margin-top: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.2s;
+    width: fit-content;
+}
+
+.expand-list-action-trigger:hover {
+    opacity: 0.8;
+}
+
+/* Floating Control Strip Container Positioning */
+.bottom-floating-control-strip {
+    position: fixed;
+    bottom: 110px; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 400px;
+    height: 70px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass);
+    border-radius: 35px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    box-sizing: border-box;
+    gap: 10px;
+    z-index: 3100;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+}
+
+.search-inner-wrapper {
+    flex-grow: 1;
+    position: relative;
+}
+
+.search-inner-wrapper input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass);
+    color: var(--text-main);
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-inner-wrapper input:focus {
+    border-color: var(--primary) !important;
+}
+
+.action-control-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass);
+    border-radius: 50%;
+    color: var(--primary) !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-control-btn:hover, .action-control-btn.active-mode {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #000 !important;
+    transform: translateY(-2px);
+}
+
+/* Custom Dropdown Fields Selector Rules */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.custom-select-wrapper select {
+    width: 100%;
+    background: #000 !important;
+    color: white !important;
+    padding: 12px;
+    border: 1px solid rgba(83, 83, 83, 0.3);
+    border-radius: 16px;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.custom-select-wrapper::after {
+    content: '▼';
+    font-size: 0.65rem;
+    color: var(--primary);
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Adaptive Rows Text Configuration */
+.item-row.hidden-overflow-item {
+    display: none;
+}
+
+.edit-mode-active .item-row.hidden-overflow-item {
+    display: flex !important;
+}
+
+.edit-mode-active .expand-list-action-trigger {
+    display: none !important;
+}
+
+.item-row .item-code-prefix {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--primary) !important;
+    font-weight: 700;
+    margin-right: 10px;
+    font-size: 0.95rem;
+}
+
+.item-row .item-desc-text {
+    font-size: 0.78rem !important;
+    color: #aaaaaa;
+    font-weight: 400;
+}
+
+/* Management Inline row action node rules */
+.row-context-actions {
+    display: none;
+    gap: 6px;
+    align-items: center;
+    z-index: 10;
+    margin-left: auto;
+}
+
+.context-action-node {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--glass);
+    background: rgba(0,0,0,0.4);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.context-action-node.edit-trigger:hover {
+    background: var(--success);
+    color: #000;
+    border-color: var(--success);
+}
+
+.context-action-node.delete-trigger:hover {
+    background: #ff4444;
+    color: #fff;
+    border-color: #ff4444;
+}
+
+/* Movable States */
+.edit-mode-active #icdRegistryContainer .item-row {
+    cursor: grab !important;
+    border: 1px dashed var(--primary) !important;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.edit-mode-active #icdRegistryContainer .item-row .row-context-actions {
+    display: flex; 
+}
