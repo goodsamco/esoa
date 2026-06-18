@@ -5,441 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICD10 & Reference Registry</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="esoa.css">
 
     <style>
-        /* ==========================================================================
-           1. DESIGN TOKENS & SYSTEM VARIABLES
-           ========================================================================== */
         :root {
-            --bg: #111111;
-            --surface: #1b1b1b;
             --primary: hsl(111, 100%, 60%);
-            --success: #00e676;
-            --text-main: #ffffff;
             --glass: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --success: #00e676;
             --modal-bg: rgba(17, 17, 17, 0.98);
         }
 
-        /* ==========================================================================
-           2. BASE SYSTEM RESET & SCROLLBAR CONFIGURATION
-           ========================================================================== */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 260px 10px 25vh 10px; 
-            display: flex;
-            justify-content: center;
-            overflow-x: hidden;
-            transition: background-color 0.3s ease;
-        }
-
-        body.copy-flash {
-            background-color: var(--primary);
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
-        }
-
-        /* ==========================================================================
-           3. PEER PRESENCE DISPLAY & HUB (VISUALLY MATCHES .container)
-           ========================================================================== */
-        .peer-wrapper-row {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            height: 130px;
-            display: flex;
-            align-items: center;
-            border-radius: 24px;
-            border: 1px solid rgba(58, 58, 58, 0.1);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-sizing: border-box;
-            z-index: 3100;
-            overflow: visible;
-        }
-
-        .peer-active-hub {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            overflow-x: auto;
-            overflow-y: hidden;
-            white-space: nowrap;
-            scroll-behavior: smooth;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            border-radius: 24px;
-            padding: 0;
-            margin: 0;
-        }
-
-        .peer-wrapper:first-child { margin-left: 12px; }
-        .peer-active-hub::-webkit-scrollbar { display: none; }
-
-        /* Navigation Control Triggers */
-        .scroll-nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 115, 0, 0.08);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(78, 78, 78, 0.15);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 3200;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.25s ease;
-        }
-
-        .scroll-nav-btn.prev { left: -18px; }
-        .scroll-nav-btn.next { right: -18px; }
-
-        .peer-wrapper-row:hover .scroll-nav-btn {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .scroll-nav-btn:hover {
-            background: rgba(255, 230, 209, 0.18);
-            border-color: rgba(66, 66, 66, 0.35);
-            transform: translateY(-50%) scale(1.08);
-        }
-
-        .scroll-nav-btn svg { width: 18px; height: 18px; stroke-width: 2.5; }
-
-        /* Peer Node Layout Components */
-        .peer-wrapper {
-            position: relative;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            width: 78px;
-            height: 115px;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .peer-wrapper.is-offline {
-            filter: grayscale(100%);
-            transform: scale(0.82);
-        }
-
-        .peer-avatar-bubble, .group-chat-bubble {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .peer-avatar-bubble {
-            border: 2px solid #666;
-            cursor: pointer;
-            transition: all .2s ease;
-        }
-
-        .peer-avatar-bubble:hover {
-            border-color: var(--primary);
-            transform: scale(1.06);
-        }
-
-        .group-chat-bubble {
-            background: var(--primary);
-            color: #000000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid var(--primary);
-            transition: all .2s ease;
-        }
-
-        .group-chat-bubble:hover {
-            transform: scale(1.06);
-            background: #ffffff;
-            border-color: #ffffff;
-        }
-
-        .peer-notif-dot {
-            position: absolute;
-            top: 6px;
-            right: 2px;
-            width: 14px;
-            height: 14px;
-            background: var(--primary);
-            border: 2px solid var(--surface);
-            border-radius: 50%;
-            display: none;
-            z-index: 99999;
-            box-shadow: 0 0 8px var(--primary);
-            pointer-events: none;
-        }
-
-        .peer-wrapper.has-unread .peer-notif-dot { display: block !important; }
-
-        .peer-name-hover {
-            margin-top: 6px;
-            width: 100%;
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: white;
-            text-align: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .peer-status-note {
-            position: absolute;
-            top: -12px;
-            background: var(--modal-bg);
-            padding: 2px 6px;
-            font-size: 9px;
-            font-weight: 900;
-            border-radius: 6px;
-            border: 0.5px solid var(--glass);
-            max-width: 68px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-            z-index: 3150;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            text-transform: none;
-        }
-
-        /* ==========================================================================
-           4. NAVIGATION CONTROL BARS
-           ========================================================================== */
-        .top-nav {
-            position: fixed;
-            top: 165px; 
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            z-index: 3000;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 6px 18px; 
-            border-radius: 32px; 
-            border: 1px solid var(--glass);
-        }
-
-        .top-btn {
-            width: 38px;
-            height: 38px;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(83, 83, 83, 0.2);
-            border-radius: 50%; 
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .top-btn:hover, .top-nav .top-btn.active {
-            background: var(--primary);
-            color: #000;
-            transform: translateY(-2px);
-        }
-
-        /* ==========================================================================
-           5. PERSONAL PROFILE FLOATING TARGETS & BUBBLES
-           ========================================================================== */
-        .profile-avatar-node {
-            position: fixed;
-            bottom: 45px;
-            right: 25px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--primary);
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            z-index: 2500; 
-        }
-
-        .profile-avatar-node:hover { transform: scale(1.05); }
-
-        .name-string {
-            position: fixed;
-            bottom: 22px;
-            right: 25px;
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: var(--text-main);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            width: 48px; 
-            text-align: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            z-index: 2500;
-            pointer-events: none;
-        }
-
-        .profile-status-note-bubble {
-            position: fixed;
-            bottom: 102px; 
-            right: 25px;   
-            background: var(--modal-bg);
-            color: var(--text-main);
-            font-size: 11px;
-            font-weight: 800;
-            padding: 6px 10px;
-            border-radius: 14px; 
-            white-space: normal;
-            word-break: break-word;
-            border: 0.5px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            z-index: 2505;
-            text-align: center;
-            text-transform: none; 
-            max-width: 120px;
-        }
-
-        .profile-note-action-trigger {
-            position: fixed;
-            bottom: 96px; 
-            right: 39px;  
-            background: var(--primary);
-            color: #000000;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 900;
-            cursor: pointer;
-            z-index: 2510;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            transition: transform 0.2s ease;
-        }
-        .profile-note-action-trigger:hover { transform: scale(1.15); }
-
-        /* ==========================================================================
-           6. REAL-TIME SESSION CHAT PANEL DOCK
-           ========================================================================== */
-        .chat-docking-panel {
-            position: fixed;
-            bottom: 26vh;
-            right: 20px;
-            width: 340px;
-            height: 440px;
-            display: none;
-            flex-direction: column;
-            z-index: 3500;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-        }
-
-        .chat-header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .chat-header-bar span {
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .chat-close-trigger {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(116, 116, 116, 0.05);
-            border: 1px solid rgba(78, 78, 78, 0.15);
-            color: var(--primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chat-close-trigger:hover { background: var(--primary); color: #000; }
-
-        .chat-scroller-view {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .msg-wrapper { display: flex; flex-direction: column; max-width: 85%; }
-        .msg-wrapper.incoming { align-self: flex-start; }
-        .msg-wrapper.outgoing { align-self: flex-end; align-items: flex-end; }
-
-        .msg-meta-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.65rem; color: #aaa; }
-        .msg-wrapper.outgoing .msg-meta-row { flex-direction: row-reverse; }
-
-        .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; word-wrap: break-word; }
-        .msg-bubble.incoming { background: rgba(255, 255, 255, 0.06); color: white; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .msg-bubble.outgoing { background: var(--primary); color: #000000; font-weight: 600; }
-
-        .chat-input-row { padding: 10px; display: flex; gap: 8px; background: rgba(255, 255, 255, 0.03); }
-        .chat-input-row input { flex: 1; background: #000000; border: 1px solid rgba(83, 83, 83, 0.2); border-radius: 8px; color: white; padding: 8px; outline: none; }
-        .chat-input-row button { background: var(--primary); color: #000000; border: none; border-radius: 8px; padding: 0 14px; font-weight: 800; cursor: pointer; }
-
-        /* ==========================================================================
-           7. ICD ORIGINAL LAYOUT ADDITIONAL SPECIFIC STYLES
-           ========================================================================== */
+        /* Category Layout Headers */
         .category-header {
             display: flex;
             align-items: center;
@@ -451,7 +31,7 @@
             margin-top: 20px;
         }
 
-        .category-header h2 { margin: 0; font-size: 1.2rem; }
+        .category-header h2 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 1.15rem; font-weight: 600; }
         .category-header .chevron-icon { color: var(--primary); transition: transform 0.3s ease; }
 
         .section-group-wrapper {
@@ -465,6 +45,7 @@
         .section-group-wrapper.collapsed .chevron-icon { transform: rotate(-90deg); }
         .section-group-inner { min-height: 0; display: flex; flex-direction: column; }
 
+        /* Search Filter Overlays */
         .search-priority-view {
             display: none;
             flex-direction: column;
@@ -477,7 +58,6 @@
 
         .searching-active .search-priority-view { display: flex; }
         .searching-active .category-header, .searching-active .section-group-wrapper { display: none !important; }
-
         .search-priority-view h3 { margin: 0 0 12px 0; font-size: 0.9rem; letter-spacing: 1px; color: var(--primary); text-transform: uppercase; }
 
         .expand-list-action-trigger {
@@ -497,6 +77,7 @@
             width: fit-content;
         }
 
+        /* Bottom Control Panel Layout Matrix */
         .bottom-floating-control-strip {
             position: fixed;
             bottom: 110px; 
@@ -553,6 +134,7 @@
             transform: translateY(-2px);
         }
 
+        /* Custom Dropdowns */
         .custom-select-wrapper { position: relative; width: 100%; margin-top: 5px; }
         .custom-select-wrapper select {
             width: 100%;
@@ -571,7 +153,7 @@
             content: '▼'; font-size: 0.65rem; color: var(--primary); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none;
         }
 
-        .item-row { display: flex; margin: 8px 0; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 8px; }
+        /* Lists Row System Items Configuration */
         .item-row.hidden-overflow-item { display: none; }
         .edit-mode-active .item-row.hidden-overflow-item { display: flex !important; }
         .edit-mode-active .expand-list-action-trigger { display: none !important; }
@@ -590,48 +172,31 @@
         .edit-mode-active .item-row .row-context-actions { display: flex; }
         .item-row.dragging { opacity: 0.35; background: var(--glass); transform: scale(0.98); }
 
-        /* Modals & Dialog Configuration Frameworks */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 99999;
-        }
-        .modal-overlay.active { opacity: 1; }
-        .modal-content { background: var(--modal-bg); border: 1px solid var(--glass); padding: 30px; border-radius: 28px; width: 320px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 16px; }
-        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        /* Dialog Matrix Styles Overlays */
+        .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
         .input-group label { font-size: 0.72rem !important; font-weight: 900; letter-spacing: 0.5px; color: var(--primary); text-transform: uppercase; }
         .input-group input { background: rgba(0, 0, 0, 0.4) !important; border: 1px solid rgba(83, 83, 83, 0.3) !important; padding: 12px; border-radius: 12px; color: #ffffff !important; outline: none; font-size: 0.8rem !important; font-weight: 700; }
         .modal-char-counter { text-align: right; font-size: 10px; font-weight: 800; color: #666; }
-        .modal-copy-zone { background: var(--primary); color: #000000; text-align: center; padding: 12px; font-weight: 900; font-size: 12px; border-radius: 12px; cursor: pointer; }
-        .modal-close-btn { background: transparent; border: none; color: #666; font-size: 11px; font-weight: 800; cursor: pointer; margin-top: 4px; }
-        .modal-close-btn:hover { color: #fff; }
-        .modal-result { border: 1px solid var(--primary); padding: 14px; text-align: center; border-radius: 12px; font-size: 1.4rem; font-weight: 800; }
     </style>
 </head>
 <body>
 
     <div class="peer-wrapper-row">
-        <button class="scroll-nav-btn prev" id="slidePrevBtn"><i data-lucide="chevron-left"></i></button>
+        <button class="scroll-nav-btn prev" id="slidePrevBtn" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
         <div class="peer-active-hub" id="peerActiveHub"></div>
-        <button class="scroll-nav-btn next" id="slideNextBtn"><i data-lucide="chevron-right"></i></button>
+        <button class="scroll-nav-btn next" id="slideNextBtn" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Reset Layout UI View" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount Calculator Matrix" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
-        <button class="top-btn" title="eSOA Dashboard Hub" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        <button class="top-btn active" title="ICD10 & Reference Registry" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" title="Reset View" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        <button class="top-btn" title="eSOA Dashboard" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <div class="chat-docking-panel" id="chatDockingPanel">
-        <div class="chat-header-bar">
-            <span id="chatChannelTitleLabel">Channel Session</span>
-            <button class="chat-close-trigger" id="chatCloseTriggerBtn"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
-        </div>
-        <div class="chat-scroller-view" id="chatMessagesScrollerContainer"></div>
-        <div class="chat-input-row">
-            <input type="text" id="chatMessageInputField" placeholder="Write operational message..." autocomplete="off">
-            <button id="chatMessageSubmitBtn">SEND</button>
-        </div>
-    </div>
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
 
     <div class="container" id="mainContainer">
         <div class="search-priority-view" id="prioritySearchView">
@@ -676,6 +241,23 @@
         </button>
     </div>
 
+    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group">
+                 <label>HOSPITAL CHARGES</label>
+                 <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()">
+             </div>
+            <div class="input-group">
+                 <label>CASE RATE (PHIC)</label>
+                 <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()">
+             </div>
+            <div class="modal-result"><div id="finalDiscount">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div>
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
@@ -704,30 +286,10 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>DISCOUNT CALCULATOR</h3>
-            <div class="input-group">
-                 <label>HOSPITAL CHARGES</label>
-                 <input id="hospCharges" type="number" oninput="calcSr()">
-             </div>
-            <div class="input-group">
-                 <label>CASE RATE (PHIC)</label>
-                 <input id="caseRate" type="number" oninput="calcSr()">
-             </div>
-            <div class="modal-result"><div id="finalDiscount">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY CALCULATION</div>
-            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
-        </div>
-    </div>
-
-    <img src="" class="profile-avatar-node" id="userDisplayAvatar" alt="Operator Head">
-    <div class="name-string" id="userDisplayName">...</div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, onValue, set, push, onChildAdded, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, push, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -761,45 +323,28 @@
                 { code: "I10.1", desc: "HYPERTENSION STAGE II" },
                 { code: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
                 { code: "K29.9", desc: "GASTRITIS" },
-                { code: "G44.2", desc: "TENSION HEADACHE" },
-                { code: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
-                { code: "K29.1", desc: "ACUTE GASTRITIS" },
-                { code: "K27.9", desc: "PEPTIC ULCER" },
-                { code: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
-                { code: "J11.1", desc: "INFLUENZA" },
-                { code: "E11.9", desc: "DIABETES MELLITUS" }
+                { code: "G44.2", desc: "TENSION HEADACHE" }
             ],
             member: [
                 { code: "POS INCAPABLE", desc: "INDIGENT" },
                 { code: "NTHS", desc: "INDIGENT" },
-                { code: "LISTAHAN", desc: "INDIGENT" },
                 { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" }
             ],
             zipcode: [
                 { code: "9417", desc: "ARAKAN" },
                 { code: "9415", desc: "ALEOSAN" },
-                { code: "9400", desc: "PIGKAWAYAN" },
                 { code: "9410", desc: "MIDSAYAP" },
                 { code: "9402", desc: "M'LANG" }
             ]
         };
 
         const premium3dAssets = {
-            'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
-            'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
-            'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
-            'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
-            'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
-            'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
-            'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
-            'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
-            'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg'
+            'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+            'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
         };
 
-        // Realtime Firestore Active Monitor Realization
+        // Realtime Profile Listener Matrix Setup
         const userDocRef = doc(db, "accounts", userId);
-
         onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
@@ -811,7 +356,7 @@
                 if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
                 if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
 
-                // Self Visual Profile Note Renderer Engine
+                // Self Status Note Bubble Renderer
                 const selfBubble = document.getElementById('profile-status-bubble-node');
                 if (selfBubble) selfBubble.remove();
 
@@ -835,7 +380,7 @@
                     } else { localProfileNoteCache = ""; }
                 } else { localProfileNoteCache = ""; }
 
-                // Presence Registry Upstream Sync
+                // Synchronize Presence Node Entry
                 set(ref(rtdb, 'presence/' + userId), {
                     uid: userId, name: currentUserName, avatar: currentUserAvatarRaw, timestamp: Date.now(),
                     statusNote: { text: data.statusNoteText || "", color: data.statusNoteColor || "#e5e5e5", updatedAt: data.statusNoteUpdatedAt || 0 }
@@ -843,7 +388,7 @@
             }
         });
 
-        // Dynamic Presence Watch Row Realizations
+        // Peer Row Data Event Watch Pipeline
         const hub = document.getElementById('peerActiveHub');
         onValue(ref(rtdb, 'presence'), (snapshot) => {
             const users = snapshot.val() || {};
@@ -878,7 +423,7 @@
             if (window.lucide) window.lucide.createIcons();
         });
 
-        // Profile Status Creation Modal Generation Block
+        // Setup Floating Add Target Control Node Component on Load
         (() => {
             const avatarNode = document.getElementById('userDisplayAvatar');
             if (!avatarNode) return;
@@ -929,7 +474,7 @@
             });
         })();
 
-        // Registry Data Injections & Mechanics Architecture Rules
+        // Core Layout Mechanics Functions
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
@@ -971,7 +516,7 @@
                         const dataObj = snap.val();
                         activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
                     }
-                } catch (e) { console.warn("Fallback to offline definitions matrix context."); }
+                } catch (e) { console.warn("Fallback to local schema matrices."); }
 
                 if (activeList.length === 0) activeList = baseDataset[type];
 
@@ -1207,7 +752,6 @@
             fineTuneResetElements();
         };
 
-        // Senior Citizen Discount Calculator System Elements 
         window.calcSr = function() {
             const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
             const caseRate = parseFloat(document.getElementById('caseRate').value) || 0;
@@ -1220,11 +764,10 @@
             navigator.clipboard.writeText(val).then(() => {
                 const btn = document.getElementById('modalCopyBtn');
                 btn.textContent = "COPIED VALUE!";
-                setTimeout(() => { btn.textContent = "COPY CALCULATION"; }, 1000);
+                setTimeout(() => { btn.textContent = "COPY RESULT"; }, 1000);
             });
         };
 
-        // Scroller row trigger handlers
         document.getElementById('slidePrevBtn').onclick = () => hub.scrollBy({ left: -160, behavior: 'smooth' });
         document.getElementById('slideNextBtn').onclick = () => hub.scrollBy({ left: 160, behavior: 'smooth' });
 
