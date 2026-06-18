@@ -3,509 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA Reference Registry</title>
+    <title>ICD10 & Reference Registry</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
+        /* ==========================================================================
+           1. DESIGN TOKENS & SYSTEM VARIABLES
+           ========================================================================== */
         :root {
-            --primary: #ff7300;
-            --primary-rgb: 255, 115, 0;
-            --surface: #121214;
-            --background: #09090b;
-            --border: #27272a;
-            --text: #f4f4f5;
-            --text-muted: #a1a1aa;
-            --glass: rgba(255, 115, 0, 0.15);
+            --bg: #111111;
+            --surface: #1b1b1b;
+            --primary: hsl(111, 100%, 60%);
+            --success: #00e676;
+            --text-main: #ffffff;
+            --glass: rgba(255, 255, 255, 0.08);
+            --modal-bg: rgba(17, 17, 17, 0.98);
         }
+
+        /* ==========================================================================
+           2. BASE SYSTEM RESET & SCROLLBAR CONFIGURATION
+           ========================================================================== */
         body {
-            background-color: var(--background);
-            color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
             margin: 0;
-            padding: 24px;
-            transition: background 0.3s ease;
-        }
-        .app-layout {
-            max-width: 1200px;
-            margin: 0 auto;
+            padding: 260px 10px 25vh 10px; 
             display: flex;
-            flex-direction: column;
-            gap: 24px;
+            justify-content: center;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease;
         }
-        header {
+
+        body.copy-flash {
+            background-color: var(--primary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+
+        /* ==========================================================================
+           3. PEER PRESENCE DISPLAY & HUB (VISUALLY MATCHES .container)
+           ========================================================================== */
+        .peer-wrapper-row {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: 130px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 16px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 24px;
+            border: 1px solid rgba(58, 58, 58, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-sizing: border-box;
+            z-index: 3100;
+            overflow: visible;
         }
-        .profile-customization-context {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            background: rgba(39,39,42,0.3);
-            padding: 12px 24px;
-            border-radius: 16px;
-            border: 1px dashed var(--border);
-        }
-        .profile-avatar-container {
-            position: relative;
-            width: 64px;
-            height: 64px;
-        }
-        .profile-avatar-node {
+
+        .peer-active-hub {
             width: 100%;
             height: 100%;
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border-radius: 24px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .peer-wrapper:first-child { margin-left: 12px; }
+        .peer-active-hub::-webkit-scrollbar { display: none; }
+
+        /* Navigation Control Triggers */
+        .scroll-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 115, 0, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(78, 78, 78, 0.15);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        .scroll-nav-btn.prev { left: -18px; }
+        .scroll-nav-btn.next { right: -18px; }
+
+        .peer-wrapper-row:hover .scroll-nav-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scroll-nav-btn:hover {
+            background: rgba(255, 230, 209, 0.18);
+            border-color: rgba(66, 66, 66, 0.35);
+            transform: translateY(-50%) scale(1.08);
+        }
+
+        .scroll-nav-btn svg { width: 18px; height: 18px; stroke-width: 2.5; }
+
+        /* Peer Node Layout Components */
+        .peer-wrapper {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 78px;
+            height: 115px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .peer-wrapper.is-offline {
+            filter: grayscale(100%);
+            transform: scale(0.82);
+        }
+
+        .peer-avatar-bubble, .group-chat-bubble {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .peer-avatar-bubble {
+            border: 2px solid #666;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .peer-avatar-bubble:hover {
+            border-color: var(--primary);
+            transform: scale(1.06);
+        }
+
+        .group-chat-bubble {
+            background: var(--primary);
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--primary);
+            transition: all .2s ease;
+        }
+
+        .group-chat-bubble:hover {
+            transform: scale(1.06);
+            background: #ffffff;
+            border-color: #ffffff;
+        }
+
+        .peer-notif-dot {
+            position: absolute;
+            top: 6px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: var(--primary);
+            border: 2px solid var(--surface);
+            border-radius: 50%;
+            display: none;
+            z-index: 99999;
+            box-shadow: 0 0 8px var(--primary);
+            pointer-events: none;
+        }
+
+        .peer-wrapper.has-unread .peer-notif-dot { display: block !important; }
+
+        .peer-name-hover {
+            margin-top: 6px;
+            width: 100%;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .peer-status-note {
+            position: absolute;
+            top: -12px;
+            background: var(--modal-bg);
+            padding: 2px 6px;
+            font-size: 9px;
+            font-weight: 900;
+            border-radius: 6px;
+            border: 0.5px solid var(--glass);
+            max-width: 68px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            z-index: 3150;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            text-transform: none;
+        }
+
+        /* ==========================================================================
+           4. NAVIGATION CONTROL BARS
+           ========================================================================== */
+        .top-nav {
+            position: fixed;
+            top: 165px; 
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 6px 18px; 
+            border-radius: 32px; 
+            border: 1px solid var(--glass);
+        }
+
+        .top-btn {
+            width: 38px;
+            height: 38px;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(83, 83, 83, 0.2);
+            border-radius: 50%; 
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-btn:hover, .top-nav .top-btn.active {
+            background: var(--primary);
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+        /* ==========================================================================
+           5. PERSONAL PROFILE FLOATING TARGETS & BUBBLES
+           ========================================================================== */
+        .profile-avatar-node {
+            position: fixed;
+            bottom: 45px;
+            right: 25px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--primary);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            z-index: 2500; 
         }
+
+        .profile-avatar-node:hover { transform: scale(1.05); }
+
+        .name-string {
+            position: fixed;
+            bottom: 22px;
+            right: 25px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 48px; 
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            z-index: 2500;
+            pointer-events: none;
+        }
+
+        .profile-status-note-bubble {
+            position: fixed;
+            bottom: 102px; 
+            right: 25px;   
+            background: var(--modal-bg);
+            color: var(--text-main);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 14px; 
+            white-space: normal;
+            word-break: break-word;
+            border: 0.5px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 2505;
+            text-align: center;
+            text-transform: none; 
+            max-width: 120px;
+        }
+
         .profile-note-action-trigger {
-            position: absolute;
-            top: -4px;
-            right: -4px;
+            position: fixed;
+            bottom: 96px; 
+            right: 39px;  
             background: var(--primary);
-            color: #fff;
+            color: #000000;
             width: 20px;
             height: 20px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 10;
-            font-weight: bold;
-        }
-        .profile-status-note-bubble {
-            background: var(--surface);
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 4px 12px;
-            border-radius: 12px;
             font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            animation: bubblePop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes bubblePop {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .peer-hub-container {
-            position: relative;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .peer-active-hub-viewport {
-            display: flex;
-            gap: 16px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            padding: 4px;
-            flex-grow: 1;
-        }
-        .peer-active-hub-viewport::-webkit-scrollbar { display: none; }
-        .peer-wrapper {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            min-width: 68px;
+            font-weight: 900;
             cursor: pointer;
+            z-index: 2510;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease;
         }
-        .peer-avatar-bubble, .group-chat-bubble {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #3f3f46;
-            background: #27272a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .peer-wrapper:hover .peer-avatar-bubble { border-color: var(--primary); }
-        .peer-name-hover { font-size: 11px; color: var(--text-muted); text-align: center; }
-        .peer-status-note {
-            font-size: 9px;
-            border: 1px solid var(--text-muted);
-            padding: 1px 4px;
-            border-radius: 4px;
-            max-width: 60px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .peer-notif-dot {
-            position: absolute;
-            top: 2px;
-            right: 12px;
-            width: 12px;
-            height: 12px;
-            background: #ef4444;
-            border-radius: 50%;
-            border: 2px solid var(--surface);
+        .profile-note-action-trigger:hover { transform: scale(1.15); }
+
+        /* ==========================================================================
+           6. REAL-TIME SESSION CHAT PANEL DOCK
+           ========================================================================== */
+        .chat-docking-panel {
+            position: fixed;
+            bottom: 26vh;
+            right: 20px;
+            width: 340px;
+            height: 440px;
             display: none;
+            flex-direction: column;
+            z-index: 3500;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
         }
-        .peer-wrapper.has-unread .peer-notif-dot { display: block; }
-        .peer-wrapper.is-offline { opacity: 0.4; }
-        .scroll-nav-btn {
-            background: #27272a;
-            border: none;
-            color: white;
-            width: 28px;
-            height: 28px;
+
+        .chat-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header-bar span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .chat-close-trigger {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
+            background: rgba(116, 116, 116, 0.05);
+            border: 1px solid rgba(78, 78, 78, 0.15);
+            color: var(--primary);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .search-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        .search-bar {
-            width: 100%;
-            padding: 14px 16px 14px 44px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: white;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-        .search-wrapper i {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-        .registry-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 20px;
-        }
-        .searching-active .registry-container { display: none; }
-        .search-results-container { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-        .searching-active .search-results-container { display: block; }
-        .section-group-wrapper {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
+
+        .chat-close-trigger:hover { background: var(--primary); color: #000; }
+
+        .chat-scroller-view {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
+            gap: 14px;
         }
-        .section-group-header {
-            padding: 16px;
-            background: rgba(39,39,42,0.4);
+
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 85%; }
+        .msg-wrapper.incoming { align-self: flex-start; }
+        .msg-wrapper.outgoing { align-self: flex-end; align-items: flex-end; }
+
+        .msg-meta-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.65rem; color: #aaa; }
+        .msg-wrapper.outgoing .msg-meta-row { flex-direction: row-reverse; }
+
+        .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; word-wrap: break-word; }
+        .msg-bubble.incoming { background: rgba(255, 255, 255, 0.06); color: white; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .msg-bubble.outgoing { background: var(--primary); color: #000000; font-weight: 600; }
+
+        .chat-input-row { padding: 10px; display: flex; gap: 8px; background: rgba(255, 255, 255, 0.03); }
+        .chat-input-row input { flex: 1; background: #000000; border: 1px solid rgba(83, 83, 83, 0.2); border-radius: 8px; color: white; padding: 8px; outline: none; }
+        .chat-input-row button { background: var(--primary); color: #000000; border: none; border-radius: 8px; padding: 0 14px; font-weight: 800; cursor: pointer; }
+
+        /* ==========================================================================
+           7. ICD ORIGINAL LAYOUT ADDITIONAL SPECIFIC STYLES
+           ========================================================================== */
+        .category-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border);
-        }
-        .section-group-inner { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .collapsed .section-group-inner { display: none; }
-        .item-row {
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: #18181b;
-            border: 1px solid var(--border);
-            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            user-select: none;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
         }
-        .item-row:hover { border-color: var(--primary); background: rgba(255,115,0,0.04); }
-        .text-content { display: flex; gap: 12px; font-size: 14px; align-items: center; }
-        .item-code-prefix { color: var(--primary); font-weight: 700; min-width: 75px; }
-        .item-desc-text { color: var(--text); }
-        .hidden-overflow-item { display: none !important; }
-        .row-context-actions { display: flex; gap: 6px; }
-        .context-action-node {
-            background: #27272a;
-            border: none;
-            color: var(--text-muted);
-            padding: 6px;
-            border-radius: 4px;
-            cursor: pointer;
+
+        .category-header h2 { margin: 0; font-size: 1.2rem; }
+        .category-header .chevron-icon { color: var(--primary); transition: transform 0.3s ease; }
+
+        .section-group-wrapper {
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
-        .context-action-node:hover { color: #fff; background: #3f3f46; }
-        .delete-trigger:hover { background: #ef4444; }
+
+        .section-group-wrapper.collapsed { grid-template-rows: 0fr; }
+        .section-group-wrapper.collapsed .chevron-icon { transform: rotate(-90deg); }
+        .section-group-inner { min-height: 0; display: flex; flex-direction: column; }
+
+        .search-priority-view {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .searching-active .search-priority-view { display: flex; }
+        .searching-active .category-header, .searching-active .section-group-wrapper { display: none !important; }
+
+        .search-priority-view h3 { margin: 0 0 12px 0; font-size: 0.9rem; letter-spacing: 1px; color: var(--primary); text-transform: uppercase; }
+
         .expand-list-action-trigger {
             background: transparent;
-            border: 1px dashed var(--border);
-            color: var(--text-muted);
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .expand-list-action-trigger:hover { border-color: var(--primary); color: var(--primary); }
-        .control-panel-strip { display: flex; justify-content: flex-end; gap: 12px; }
-        .action-btn-node {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-        .action-btn-node:hover, .action-btn-node.active-mode { border-color: var(--primary); background: var(--glass); }
-        .modal-overlay {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.22s ease;
-        }
-        .modal-overlay.active { opacity: 1; }
-        .modal-content {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 24px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .input-group { display: flex; flex-direction: column; gap: 6px; }
-        .input-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .input-group input, .input-group select {
-            padding: 10px;
-            background: #18181b;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: white;
-        }
-        .modal-copy-zone {
-            background: var(--primary);
-            color: white;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
+            border: none;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
             font-weight: 600;
+            text-align: left;
+            padding: 6px 4px;
+            margin-top: 4px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
         }
-        .modal-close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
-        .chat-dock-panel {
+
+        .bottom-floating-control-strip {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 360px;
-            height: 480px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-            display: none;
-            flex-direction: column;
-            z-index: 999;
-            overflow: hidden;
-        }
-        .chat-header-row { padding: 14px 16px; background: rgba(39,39,42,0.6); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .chat-scroller-view { flex-grow: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .chat-input-row { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: #18181b; }
-        .chat-input-row input { flex-grow: 1; background: var(--surface); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: white; }
-        .chat-input-row button { background: var(--primary); border: none; color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; }
-        .msg-wrapper { display: flex; flex-direction: column; max-width: 80%; gap: 2px; }
-        .msg-wrapper.outgoing { align-self: flex-end; align-items: flex-end; }
-        .msg-wrapper.incoming { align-self: flex-start; align-items: flex-start; }
-        .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; word-break: break-word; }
-        .msg-bubble.outgoing { background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-        .msg-bubble.incoming { background: #27272a; color: white; border-bottom-left-radius: 2px; }
-        #magnetBtn {
-            position: fixed;
-            bottom: 24px;
+            bottom: 110px; 
             left: 50%;
             transform: translateX(-50%);
-            background: var(--primary);
-            color: white;
-            padding: 14px 36px;
-            border-radius: 30px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            box-shadow: 0 8px 24px rgba(255,115,0,0.3);
-            border: none;
+            width: 100%;
+            max-width: 400px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-sizing: border-box;
+            gap: 10px;
+            z-index: 3100;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+        }
+
+        .search-inner-wrapper { flex-grow: 1; position: relative; }
+        .search-inner-wrapper input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass);
+            color: var(--text-main);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .search-inner-wrapper input:focus { border-color: var(--primary) !important; }
+
+        .action-control-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass);
+            border-radius: 50%;
+            color: var(--primary) !important;
             cursor: pointer;
-            z-index: 980;
-            transition: transform 0.1s ease, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
-        #highlighter {
-            position: absolute;
-            left: 12px;
-            right: 12px;
-            background: rgba(255,115,0,0.06);
-            border-left: 3px solid var(--primary);
-            border-radius: 4px;
-            pointer-events: none;
-            opacity: 0;
-            transition: top 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s ease;
-            z-index: 0;
+
+        .action-control-btn:hover, .action-control-btn.active-mode {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #000 !important;
+            transform: translateY(-2px);
         }
-        .section-group-inner { position: relative; }
+
+        .custom-select-wrapper { position: relative; width: 100%; margin-top: 5px; }
+        .custom-select-wrapper select {
+            width: 100%;
+            background: #000 !important;
+            color: white !important;
+            padding: 12px;
+            border: 1px solid rgba(83, 83, 83, 0.3);
+            border-radius: 16px;
+            font-size: 0.8rem !important;
+            font-weight: 600;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .custom-select-wrapper::after {
+            content: '▼'; font-size: 0.65rem; color: var(--primary); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none;
+        }
+
+        .item-row { display: flex; margin: 8px 0; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 8px; }
+        .item-row.hidden-overflow-item { display: none; }
+        .edit-mode-active .item-row.hidden-overflow-item { display: flex !important; }
+        .edit-mode-active .expand-list-action-trigger { display: none !important; }
+
+        .item-row .item-code-prefix { font-family: 'Roboto Mono', monospace; color: var(--primary) !important; font-weight: 700; margin-right: 10px; font-size: 0.95rem; }
+        .item-row .item-desc-text { font-size: 0.78rem !important; color: #aaaaaa; font-weight: 400; }
+
+        .row-context-actions { display: none; gap: 6px; align-items: center; z-index: 10; }
+        .context-action-node {
+            width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--glass); background: rgba(0,0,0,0.4); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .context-action-node.edit-trigger:hover { background: var(--success); color: #000; border-color: var(--success); }
+        .context-action-node.delete-trigger:hover { background: #ff4444; color: #fff; border-color: #ff4444; }
+
+        .edit-mode-active .item-row { cursor: grab !important; border: 1px dashed var(--primary) !important; background: rgba(255, 255, 255, 0.02); }
+        .edit-mode-active .item-row .row-context-actions { display: flex; }
+        .item-row.dragging { opacity: 0.35; background: var(--glass); transform: scale(0.98); }
+
+        /* Modals & Dialog Configuration Frameworks */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 99999;
+        }
+        .modal-overlay.active { opacity: 1; }
+        .modal-content { background: var(--modal-bg); border: 1px solid var(--glass); padding: 30px; border-radius: 28px; width: 320px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 16px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 0.72rem !important; font-weight: 900; letter-spacing: 0.5px; color: var(--primary); text-transform: uppercase; }
+        .input-group input { background: rgba(0, 0, 0, 0.4) !important; border: 1px solid rgba(83, 83, 83, 0.3) !important; padding: 12px; border-radius: 12px; color: #ffffff !important; outline: none; font-size: 0.8rem !important; font-weight: 700; }
+        .modal-char-counter { text-align: right; font-size: 10px; font-weight: 800; color: #666; }
+        .modal-copy-zone { background: var(--primary); color: #000000; text-align: center; padding: 12px; font-weight: 900; font-size: 12px; border-radius: 12px; cursor: pointer; }
+        .modal-close-btn { background: transparent; border: none; color: #666; font-size: 11px; font-weight: 800; cursor: pointer; margin-top: 4px; }
+        .modal-close-btn:hover { color: #fff; }
+        .modal-result { border: 1px solid var(--primary); padding: 14px; text-align: center; border-radius: 12px; font-size: 1.4rem; font-weight: 800; }
     </style>
 </head>
 <body>
 
-    <div class="app-layout" id="mainContainer">
-        <header>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <h1 style="margin:0; font-size:22px; letter-spacing:-0.5px;">eSOA Reference Registry</h1>
-                <p style="margin:0; font-size:13px; color:var(--text-muted);">Real-time Clinical Codes and Parameters Engine</p>
-            </div>
-            
-            <div class="profile-customization-context">
-                <div class="profile-avatar-container">
-                    <img id="userDisplayAvatar" class="profile-avatar-node" src="" alt="Avatar">
-                </div>
-                <span id="userDisplayName" style="font-size:13px; font-weight:600; color:var(--text-muted);">Operator</span>
-            </div>
-        </header>
+    <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" id="slidePrevBtn"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
+        <button class="scroll-nav-btn next" id="slideNextBtn"><i data-lucide="chevron-right"></i></button>
+    </div>
 
-        <div class="peer-hub-container">
-            <button class="scroll-nav-btn prev"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></button>
-            <div class="peer-active-hub-viewport" id="peerActiveHub"></div>
-            <button class="scroll-nav-btn next"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button>
+    <div class="top-nav">
+        <button class="top-btn" title="Reset Layout UI View" onclick="resetViewRegistry()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount Calculator Matrix" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        <button class="top-btn" title="eSOA Dashboard Hub" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
+        <button class="top-btn active" title="ICD10 & Reference Registry" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
+    </div>
+
+    <div class="chat-docking-panel" id="chatDockingPanel">
+        <div class="chat-header-bar">
+            <span id="chatChannelTitleLabel">Channel Session</span>
+            <button class="chat-close-trigger" id="chatCloseTriggerBtn"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
         </div>
-
-        <div class="control-panel-strip">
-            <button class="action-btn-node" id="sortToggleTrigger" onclick="toggleMovableLayout()">
-                <i data-lucide="move" style="width:16px;height:16px;"></i> Reorder Layout
-            </button>
-            <button class="action-btn-node" onclick="toggleModal('addRecordModal', true)">
-                <i data-lucide="plus" style="width:16px;height:16px;"></i> Add Entry
-            </button>
-        </div>
-
-        <div class="search-wrapper">
-            <i data-lucide="search" style="width:18px;height:18px;"></i>
-            <input type="text" id="registrySearch" class="search-bar" placeholder="Filter references globally across registers by code or expression descriptor..." oninput="filterRegistryRealtime()">
-        </div>
-
-        <div class="search-results-container">
-            <h3 style="margin-top:0; color:var(--primary); font-size:12px; text-transform:uppercase; letter-spacing:1px;">Matching Search Targets</h3>
-            <div id="searchResultTargetGroup" style="display:flex; flex-direction:column; gap:8px;"></div>
-        </div>
-
-        <div class="registry-container">
-            <div class="section-group-wrapper" id="icdWrapper">
-                <div class="section-group-header" onclick="toggleCategoryAccordion('icdWrapper', this)">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i data-lucide="activity" style="color:var(--primary); width:18px; height:18px;"></i>
-                        <span style="font-weight:600; font-size:14px;">ICD-10 Diagnostic Classifications</span>
-                    </div>
-                    <i data-lucide="chevron-down" class="chevron-icon" style="width:16px;height:16px; transition:transform 0.2s;"></i>
-                </div>
-                <div class="section-group-inner" id="icd-section-group"></div>
-            </div>
-
-            <div class="section-group-wrapper" id="memberWrapper">
-                <div class="section-group-header" onclick="toggleCategoryAccordion('memberWrapper', this)">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i data-lucide="credit-card" style="color:var(--primary); width:18px; height:18px;"></i>
-                        <span style="font-weight:600; font-size:14px;">Membership Structure Modifiers</span>
-                    </div>
-                    <i data-lucide="chevron-down" class="chevron-icon" style="width:16px;height:16px; transition:transform 0.2s;"></i>
-                </div>
-                <div class="section-group-inner" id="member-section-group"></div>
-            </div>
-
-            <div class="section-group-wrapper" id="zipWrapper">
-                <div class="section-group-header" onclick="toggleCategoryAccordion('zipWrapper', this)">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i data-lucide="map-pin" style="color:var(--primary); width:18px; height:18px;"></i>
-                        <span style="font-weight:600; font-size:14px;">Geographical Operational Zipcodes</span>
-                    </div>
-                    <i data-lucide="chevron-down" class="chevron-icon" style="width:16px;height:16px; transition:transform 0.2s;"></i>
-                </div>
-                <div class="section-group-inner" id="zip-section-group"></div>
-            </div>
+        <div class="chat-scroller-view" id="chatMessagesScrollerContainer"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chatMessageInputField" placeholder="Write operational message..." autocomplete="off">
+            <button id="chatMessageSubmitBtn">SEND</button>
         </div>
     </div>
 
-    <button id="magnetBtn" onclick="copyFocusedItem()">COPY</button>
+    <div class="container" id="mainContainer">
+        <div class="search-priority-view" id="prioritySearchView">
+            <h3>Top Search Matches</h3>
+            <div id="searchResultTargetGroup"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
+            <h2>ICD-10 Diagnostic Codes</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="icd-wrapper">
+            <div class="section-group-inner" id="icd-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
+            <h2>ZIPCODE</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="zip-wrapper">
+            <div class="section-group-inner" id="zip-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+            <h2>MEMBER CATEGORY</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="member-wrapper">
+            <div class="section-group-inner" id="member-section-group"></div>
+        </div>
+    </div>
+
+    <div class="bottom-floating-control-strip">
+        <div class="search-inner-wrapper">
+            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
+        </div>
+        <button class="action-control-btn" title="Add Record Entry" onclick="toggleModal('addRecordModal', true)">
+            <i data-lucide="plus"></i>
+        </button>
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Reference Order Sequence" onclick="toggleMovableLayout()">
+            <i data-lucide="move"></i>
+        </button>
+    </div>
 
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
-        <div class="modal-content">
-            <h3 id="modalDisplayTitle" style="margin-top:0; letter-spacing:-0.5px;">ADD NEW REFERENCE</h3>
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
             
             <div class="input-group" id="modalTypeSelectorGroup">
-                <label>Target Category Register</label>
-                <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
-                    <option value="icd">ICD-10 Diagnosis</option>
-                    <option value="member">Membership Category</option>
-                    <option value="zipcode">Operational Zipcode</option>
-                </select>
+                <label>REFERENCE TYPE</label>
+                <div class="custom-select-wrapper">
+                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+                        <option value="icd">ICD-10 Diagnostic Definition</option>
+                        <option value="member">Membership Category</option>
+                        <option value="zipcode">Zip Code Mapping</option>
+                    </select>
+                </div>
             </div>
-
+            
             <div class="input-group">
-                <label id="primaryFieldLabel">Diagnosis Code</label>
-                <input type="text" id="newRecordKey" placeholder="e.g., A00.0" autocomplete="off">
-            </div>
-
+                 <label id="primaryFieldLabel">Diagnosis Code</label>
+                 <input id="newRecordKey" type="text" autocomplete="off">
+             </div>
             <div class="input-group">
-                <label id="secondaryFieldLabel">Diagnosis Description</label>
-                <input type="text" id="newRecordValue" placeholder="e.g., Cholera due to Vibrio cholerae" autocomplete="off">
-            </div>
-
-            <div class="modal-copy-zone" onclick="pushRecordToDatabase()">COMMIT CHANGES</div>
-            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">CANCEL</button>
+                 <label id="secondaryFieldLabel">Description Value</label>
+                 <input id="newRecordValue" type="text" autocomplete="off">
+             </div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()">SAVE REGISTRY DATA</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <div class="chat-dock-panel" id="chatDock">
-        <div class="chat-header-row">
-            <span id="chatTargetName" style="font-weight:700; font-size:14px; letter-spacing:-0.2px;">Transient Chat Channel</span>
-            <button class="context-action-node" onclick="closeChatSession()"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
-        </div>
-        <div class="chat-scroller-view" id="chatScroller"></div>
-        <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Write message..." autocomplete="off" onkeypress="if(event.key==='Enter') sendChatPayload()">
-            <button onclick="sendChatPayload()">Send</button>
+    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group">
+                 <label>HOSPITAL CHARGES</label>
+                 <input id="hospCharges" type="number" oninput="calcSr()">
+             </div>
+            <div class="input-group">
+                 <label>CASE RATE (PHIC)</label>
+                 <input id="caseRate" type="number" oninput="calcSr()">
+             </div>
+            <div class="modal-result"><div id="finalDiscount">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY CALCULATION</div>
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <script type="module" src="esoa.js"></script>
+    <img src="" class="profile-avatar-node" id="userDisplayAvatar" alt="Operator Head">
+    <div class="name-string" id="userDisplayName">...</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set, push, onChildAdded, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+            authDomain: "svls-289ee.firebaseapp.com",
+            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+            projectId: "svls-289ee",
+            storageBucket: "svls-289ee.firebasestorage.app",
+            messagingSenderId: "500705386198",
+            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+            measurementId: "G-5TNBMQ2HN5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const rtdb = getDatabase(app);
+
+        const userId = localStorage.getItem("userId");
+        if (!userId) window.location.href = "login.html";
+
+        let currentUserName = "Operator";
+        let currentUserAvatarRaw = "avatar-m1";
         let layoutMovableActive = false;
-        let rtdb;
         let activeEditRow = null;
+        let localProfileNoteCache = "";
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
         const baseDataset = {
             icd: [
@@ -520,93 +767,189 @@
                 { code: "K27.9", desc: "PEPTIC ULCER" },
                 { code: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
                 { code: "J11.1", desc: "INFLUENZA" },
-                { code: "E11.9", desc: "DIABETES MELLITUS" },
-                { code: "B34.9", desc: "VIRAL INFECTION" },
-                { code: "BO1.9", desc: "VARICELLA" },
-                { code: "S01.9", desc: "OPEN WOUND of HEAD" },
-                { code: "L03.9", desc: "CELLULITIS" },
-                { code: "L03.2", desc: "CELLULITIS OF FACE" },
-                { code: "J20.9", desc: "ACUTE BRONCHITIS" },
-                { code: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
-                { code: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
-                { code: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
-                { code: "O21.9", desc: "VOMITING OF PREGNANCY" },
-                { code: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
-                { code: "J45.0", desc: "ALLERGIC BRONCHITIS" },
-                { code: "H66.9", desc: "OTITIS MEDIA" },
-                { code: "J03.9", desc: "ACUTE TONSILLITIS" },
-                { code: "K30", desc: "DYSPEPSIA" },
-                { code: "M00.99", desc: "PYOGENIC ARTHRITIS" },
-                { code: "A97.1", desc: "DENGUE WITH WARNING SIGNS" },
-                { code: "K11.2", desc: "SIALOADENITIS" },
-                { code: "M19.99", desc: "ARTHROSIS" },
-                { code: "G43.9", desc: "MIGRAINE" },
-                { code: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+                { code: "E11.9", desc: "DIABETES MELLITUS" }
             ],
             member: [
                 { code: "POS INCAPABLE", desc: "INDIGENT" },
                 { code: "NTHS", desc: "INDIGENT" },
                 { code: "LISTAHAN", desc: "INDIGENT" },
-                { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" },
-                { code: "INDIRECT", desc: "CONTRIBUTOR - INDIGENT" },
-                { code: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
-                { code: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
-                { code: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
+                { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" }
             ],
             zipcode: [
                 { code: "9417", desc: "ARAKAN" },
                 { code: "9415", desc: "ALEOSAN" },
                 { code: "9400", desc: "PIGKAWAYAN" },
                 { code: "9410", desc: "MIDSAYAP" },
-                { code: "9405", desc: "PRES ROXAS" },
-                { code: "9400", desc: "KIDAPAWAN" },
-                { code: "9414", desc: "ANTIPAS" },
-                { code: "9406", desc: "MATALAM" },
-                { code: "9401", desc: "MAKILALA" },
-                { code: "9402", desc: "M'LANG" },
-                { code: "9407", desc: "KABACAN" },
-                { code: "9408", desc: "CARMEN" },
-                { code: "9411", desc: "LIBUNGAN" },
-                { code: "9404", desc: "MAGEPT" }
+                { code: "9402", desc: "M'LANG" }
             ]
         };
-                
-        try {
-            rtdb = getDatabase();
-        } catch(e) {
-            console.warn("RTDB fallback initialization context.");
-        }
 
+        const premium3dAssets = {
+            'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+            'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
+            'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
+            'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
+            'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
+            'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
+            'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
+            'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
+            'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg'
+        };
+
+        // Realtime Firestore Active Monitor Realization
+        const userDocRef = doc(db, "accounts", userId);
+
+        onSnapshot(userDocRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                currentUserName = data.customName || "Operator";
+                currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+                document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+                document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+
+                if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
+                if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
+
+                // Self Visual Profile Note Renderer Engine
+                const selfBubble = document.getElementById('profile-status-bubble-node');
+                if (selfBubble) selfBubble.remove();
+
+                if (data.statusNoteText && data.statusNoteUpdatedAt) {
+                    const delta = Date.now() - data.statusNoteUpdatedAt;
+                    if (delta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
+                        localProfileNoteCache = data.statusNoteText;
+                        const avatar = document.getElementById('userDisplayAvatar');
+                        const trigger = document.querySelector('.profile-note-action-trigger');
+                        if (avatar && trigger) {
+                            const bubble = document.createElement('div');
+                            bubble.className = 'profile-status-note-bubble';
+                            bubble.id = 'profile-status-bubble-node';
+                            bubble.innerText = localProfileNoteCache;
+                            if (data.statusNoteColor) {
+                                bubble.style.borderColor = data.statusNoteColor;
+                                bubble.style.color = data.statusNoteColor;
+                            }
+                            avatar.parentNode.insertBefore(bubble, trigger);
+                        }
+                    } else { localProfileNoteCache = ""; }
+                } else { localProfileNoteCache = ""; }
+
+                // Presence Registry Upstream Sync
+                set(ref(rtdb, 'presence/' + userId), {
+                    uid: userId, name: currentUserName, avatar: currentUserAvatarRaw, timestamp: Date.now(),
+                    statusNote: { text: data.statusNoteText || "", color: data.statusNoteColor || "#e5e5e5", updatedAt: data.statusNoteUpdatedAt || 0 }
+                });
+            }
+        });
+
+        // Dynamic Presence Watch Row Realizations
+        const hub = document.getElementById('peerActiveHub');
+        onValue(ref(rtdb, 'presence'), (snapshot) => {
+            const users = snapshot.val() || {};
+            const NOW = Date.now();
+            hub.innerHTML = '';
+
+            Object.keys(users).forEach(uid => {
+                if (uid === userId) return;
+                const peer = users[uid];
+                const cleanLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
+                const src = premium3dAssets[peer.avatar] || peer.avatar;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'peer-wrapper';
+                wrapper.id = `peer-node-${uid}`;
+                wrapper.innerHTML = `<img class="peer-avatar-bubble" src="${src}"><div class="peer-name-hover">${cleanLabel}</div>`;
+                
+                if (peer.statusNote && peer.statusNote.updatedAt && (NOW - peer.statusNote.updatedAt < TWELVE_HOURS_MS)) {
+                    if (peer.statusNote.text.trim() !== "") {
+                        const note = document.createElement('div');
+                        note.className = 'peer-status-note';
+                        note.innerText = peer.statusNote.text;
+                        if (peer.statusNote.color) {
+                            note.style.color = peer.statusNote.color;
+                            note.style.borderColor = peer.statusNote.color;
+                        }
+                        wrapper.appendChild(note);
+                    }
+                }
+                hub.appendChild(wrapper);
+            });
+            if (window.lucide) window.lucide.createIcons();
+        });
+
+        // Profile Status Creation Modal Generation Block
+        (() => {
+            const avatarNode = document.getElementById('userDisplayAvatar');
+            if (!avatarNode) return;
+
+            const trigger = document.createElement('div');
+            trigger.className = 'profile-note-action-trigger';
+            trigger.innerText = '＋';
+            avatarNode.parentNode.insertBefore(trigger, avatarNode);
+
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.id = 'status-note-custom-modal';
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="input-group">
+                        <label>UPDATE STATUS NOTE</label>
+                        <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                        <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+                    </div>
+                    <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+                    <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const fld = document.getElementById('status-modal-field');
+            const cnt = document.getElementById('status-modal-counter');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fld.value = localProfileNoteCache;
+                cnt.innerText = `${localProfileNoteCache.length} / 10`;
+                window.toggleModal('status-note-custom-modal', true);
+            });
+
+            fld.addEventListener('input', () => {
+                if (fld.value.length > 10) fld.value = fld.value.substring(0, 10);
+                cnt.innerText = `${fld.value.length} / 10`;
+            });
+
+            document.getElementById('status-modal-close-btn').addEventListener('click', () => window.toggleModal('status-note-custom-modal', false));
+
+            document.getElementById('status-modal-save-btn').addEventListener('click', () => {
+                const text = fld.value.trim().substring(0, 10);
+                const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
+                updateDoc(userDocRef, { statusNoteText: text || "", statusNoteColor: text ? color : "", statusNoteUpdatedAt: text ? Date.now() : null })
+                    .then(() => window.toggleModal('status-note-custom-modal', false));
+            });
+        })();
+
+        // Registry Data Injections & Mechanics Architecture Rules
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
             const chevron = headerElement.querySelector('.chevron-icon');
-            if (!wrapper) return;
-                        
-            if (wrapper.classList.contains('collapsed')) {
-                wrapper.classList.remove('collapsed');
-                if (chevron) chevron.style.transform = "rotate(0deg)";
-            } else {
-                wrapper.classList.add('collapsed');
-                if (chevron) chevron.style.transform = "rotate(-90deg)";
-            }
+            wrapper.classList.toggle('collapsed');
+            chevron.style.transform = wrapper.classList.contains('collapsed') ? "rotate(-90deg)" : "rotate(0deg)";
         };
 
         window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
             const container = document.getElementById(targetGroupId);
             if (!container) return;
-                        
             const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
             const rows = container.querySelectorAll('.item-row');
-                        
+            
             if (!isExpanded) {
                 rows.forEach(r => r.classList.remove('hidden-overflow-item'));
                 buttonElement.setAttribute('data-expanded', 'true');
                 buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
             } else {
-                rows.forEach((r, idx) => {
-                    if (idx >= 5) r.classList.add('hidden-overflow-item');
-                });
+                rows.forEach((r, idx) => { if (idx >= 5) r.classList.add('hidden-overflow-item'); });
                 buttonElement.setAttribute('data-expanded', 'false');
                 buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
             }
@@ -615,7 +958,7 @@
 
         async function initializeRegistryData() {
             const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
-                        
+            
             for (const type of ['icd', 'member', 'zipcode']) {
                 const targetContainer = document.getElementById(sectionMap[type]);
                 if (!targetContainer) continue;
@@ -623,29 +966,23 @@
 
                 let activeList = [];
                 try {
-                    if (rtdb) {
-                        const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
-                        if (snapshot.exists()) {
-                            const dataObj = snapshot.val();
-                            activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
-                        }
+                    const snap = await get(child(ref(rtdb), `clinical_references/${type}`));
+                    if (snap.exists()) {
+                        const dataObj = snap.val();
+                        activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
                     }
-                } catch (e) { console.warn("RTDB fault fallback."); }
+                } catch (e) { console.warn("Fallback to offline definitions matrix context."); }
 
-                if (activeList.length === 0) {
-                    activeList = baseDataset[type];
-                }
+                if (activeList.length === 0) activeList = baseDataset[type];
 
-                activeList.forEach((item, index) => {
-                    appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
-                });
+                activeList.forEach((item, index) => { appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5); });
 
                 if (activeList.length > 5) {
                     const expandBtn = document.createElement('button');
                     expandBtn.className = 'expand-list-action-trigger';
                     expandBtn.setAttribute('data-expanded', 'false');
                     expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                    expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
+                    expandBtn.onclick = function() { window.toggleSectionListExpansion(this, sectionMap[type]); };
                     targetContainer.appendChild(expandBtn);
                 }
             }
@@ -655,11 +992,11 @@
         function appendRowToDOM(container, type, key, val, isOverflowItem) {
             const rowDiv = document.createElement('div');
             rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
-            rowDiv.setAttribute('data-ref-type', type);
+            rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
             rowDiv.setAttribute('data-code', key);
             rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
             rowDiv.onclick = function() { handleSelectiveCopy(this); };
-                        
+            
             rowDiv.innerHTML = `
                 <span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
                 <div class="row-context-actions" onclick="event.stopPropagation()">
@@ -667,13 +1004,10 @@
                     <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
                 </div>
             `;
-                        
+            
             const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
-            if (actionTriggerLink) {
-                container.insertBefore(rowDiv, actionTriggerLink);
-            } else {
-                container.appendChild(rowDiv);
-            }
+            if (actionTriggerLink) container.insertBefore(rowDiv, actionTriggerLink);
+            else container.appendChild(rowDiv);
             bindDragDropSequence(rowDiv);
         }
 
@@ -682,53 +1016,37 @@
             const container = document.getElementById('mainContainer');
             const searchTargetGroup = document.getElementById('searchResultTargetGroup');
 
-            if (!searchTargetGroup) return;
             searchTargetGroup.innerHTML = '';
+            if (query === "") { container.classList.remove('searching-active'); fineTuneResetElements(); return; }
 
-            if (query === "") {
-                if (container) container.classList.remove('searching-active');
-                fineTuneResetElements();
-                return;
-            }
-
-            if (container) container.classList.add('searching-active');
-            const originalRows = document.querySelectorAll('.section-group-inner .item-row');
-
-            originalRows.forEach(row => {
+            container.classList.add('searching-active');
+            document.querySelectorAll('.section-group-inner .item-row').forEach(row => {
                 const code = row.getAttribute('data-code').toLowerCase();
                 const textVal = row.getAttribute('data-val').toLowerCase();
-
                 if (code.includes(query) || textVal.includes(query)) {
-                    const clonedRow = row.cloneNode(true);
-                    clonedRow.classList.remove('hidden-overflow-item');
-                    clonedRow.style.display = 'flex';
-                    clonedRow.onclick = function() { handleSelectiveCopy(this); };
-                    searchTargetGroup.appendChild(clonedRow);
+                    const cloned = row.cloneNode(true);
+                    cloned.classList.remove('hidden-overflow-item');
+                    cloned.style.display = 'flex';
+                    cloned.onclick = function() { handleSelectiveCopy(this); };
+                    searchTargetGroup.appendChild(cloned);
                 }
             });
-            if (window.lucide) window.lucide.createIcons();
         };
 
         function fineTuneResetElements() {
-            const groups = ['icd-section-group', 'member-section-group', 'zip-section-group'];
-            groups.forEach(id => {
+            ['icd-section-group', 'member-section-group', 'zip-section-group'].forEach(id => {
                 const target = document.getElementById(id);
                 if (!target) return;
-                                
                 const rows = target.querySelectorAll('.item-row');
                 rows.forEach((row, idx) => {
-                    if (idx >= 5) {
-                        row.classList.add('hidden-overflow-item');
-                    } else {
-                        row.classList.remove('hidden-overflow-item');
-                    }
+                    if (idx >= 5) row.classList.add('hidden-overflow-item');
+                    else row.classList.remove('hidden-overflow-item');
                     row.style.display = 'flex';
                 });
-
-                const triggerBtn = target.querySelector('.expand-list-action-trigger');
-                if (triggerBtn) {
-                    triggerBtn.setAttribute('data-expanded', 'false');
-                    triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                const btn = target.querySelector('.expand-list-action-trigger');
+                if (btn) {
+                    btn.setAttribute('data-expanded', 'false');
+                    btn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
                 }
             });
             if (window.lucide) window.lucide.createIcons();
@@ -737,22 +1055,11 @@
         window.handleSelectiveCopy = function(element) {
             if (layoutMovableActive) return;
             const dataVal = element.getAttribute('data-val');
-
             navigator.clipboard.writeText(dataVal).then(() => {
                 const textNode = element.querySelector('.item-desc-text');
-                if (!textNode) return;
                 const originalText = textNode.textContent;
-                textNode.textContent = "COPIED EXPLICIT VALUE!";
-                                
-                setTimeout(() => { 
-                    textNode.textContent = originalText;
-                    if (typeof resetViewRegistry === 'function') {
-                        resetViewRegistry();
-                    } else {
-                        document.getElementById('registrySearch').value = "";
-                        filterRegistryRealtime();
-                    }
-                }, 1000);
+                textNode.textContent = "COPIED VALUE!";
+                setTimeout(() => { textNode.textContent = originalText; window.resetViewRegistry(); }, 1000);
             });
         };
 
@@ -761,48 +1068,38 @@
             const primaryLabel = document.getElementById('primaryFieldLabel');
             const secondaryLabel = document.getElementById('secondaryFieldLabel');
 
-            if (currentType === 'icd') {
-                primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
-            } else if (currentType === 'member') {
-                primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
-            } else if (currentType === 'zipcode') {
-                primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
-            }
+            if (currentType === 'icd') { primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description"; }
+            else if (currentType === 'member') { primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier"; }
+            else if (currentType === 'zipcode') { primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name"; }
         };
 
         window.openInlineEdit = function(rowElement) {
             activeEditRow = rowElement;
-            const type = rowElement.getAttribute('data-ref-type');
-                        
+            const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+            
             document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
             document.getElementById('modalTypeSelectorGroup').style.display = 'none';
             document.getElementById('modalTypeSelector').value = type;
-                        
-            synchronizeModalInputs();
-                        
+            window.synchronizeModalInputs();
+            
             const codeVal = rowElement.getAttribute('data-code');
             document.getElementById('newRecordKey').value = codeVal;
             document.getElementById('newRecordKey').disabled = true; 
-                         
+            
             const dataVal = rowElement.getAttribute('data-val');
             document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
-                        
-            toggleModal('addRecordModal', true);
+            window.toggleModal('addRecordModal', true);
         };
 
         window.deleteInlineRow = async function(rowElement) {
             if(confirm("Are you certain you want to destroy this reference record?")) {
-                const type = rowElement.getAttribute('data-ref-type');
+                const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
                 const key = rowElement.getAttribute('data-code');
-                const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
-
                 try {
-                    if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
-                } catch(e) { console.warn("Database drop failed."); }
-                                
+                    await set(ref(rtdb, `clinical_references/${type}/${key.replace(/[.#$\[\]]/g, "_")}`), null);
+                } catch(e) {}
                 rowElement.remove();
-                if (typeof resetViewRegistry === 'function') resetViewRegistry();
-                else fineTuneResetElements();
+                window.resetViewRegistry();
             }
         };
 
@@ -810,33 +1107,22 @@
             const type = document.getElementById('modalTypeSelector').value;
             const key = document.getElementById('newRecordKey').value.trim();
             const val = document.getElementById('newRecordValue').value.trim();
-
             if (!key || !val) return alert("Please specify all required data attributes.");
 
-            const referencePayload = { code: key, description: val, syncedAt: Date.now() };
-            const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
-
             try {
-                if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
-            } catch (err) { console.warn("Storage runtime error."); }
+                await set(ref(rtdb, `clinical_references/${type}/${key.replace(/[.#$\[\]]/g, "_")}`), { code: key, description: val, syncedAt: Date.now() });
+            } catch (err) {}
 
             if (activeEditRow) {
                 activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
-                const prefixNode = activeEditRow.querySelector('.item-code-prefix');
-                const descNode = activeEditRow.querySelector('.item-desc-text');
-                if (prefixNode) prefixNode.textContent = key;
-                if (descNode) descNode.textContent = val;
+                activeEditRow.querySelector('.item-desc-text').textContent = val;
             } else {
                 const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
                 const targetNode = document.getElementById(sectionMap[type]);
-                if (targetNode) {
-                    const currentCount = targetNode.querySelectorAll('.item-row').length;
-                    appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
-                }
+                if (targetNode) appendRowToDOM(targetNode, type, key, val, targetNode.querySelectorAll('.item-row').length >= 5);
             }
-
-            toggleModal('addRecordModal', false);
-            resetViewRegistry();
+            window.toggleModal('addRecordModal', false);
+            window.resetViewRegistry();
         };
 
         window.toggleMovableLayout = function() {
@@ -847,15 +1133,13 @@
 
             if (layoutMovableActive) {
                 document.getElementById('registrySearch').value = "";
-                if (container) {
-                    container.classList.remove('searching-active');
-                    container.classList.add('edit-mode-active');
-                }
-                if (triggerBtn) triggerBtn.classList.add('active-mode');
+                container.classList.remove('searching-active');
+                container.classList.add('edit-mode-active');
+                triggerBtn.classList.add('active-mode');
                 wrappers.forEach(w => w.classList.remove('collapsed'));
             } else {
-                if (container) container.classList.remove('edit-mode-active');
-                if (triggerBtn) triggerBtn.classList.remove('active-mode');
+                container.classList.remove('edit-mode-active');
+                triggerBtn.classList.remove('active-mode');
                 fineTuneResetElements();
             }
         };
@@ -889,49 +1173,62 @@
             return elements.reduce((closest, child) => {
                 const boundary = child.getBoundingClientRect();
                 const separation = yPoint - boundary.top - boundary.height / 2;
-                if (separation < 0 && separation > closest.offset) {
-                    return { offset: separation, element: child };
-                } else {
-                    return closest;
-                }
+                if (separation < 0 && separation > closest.offset) return { offset: separation, element: child };
+                else return closest;
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         window.toggleModal = function(id, isActive) {
             const overlay = document.getElementById(id);
-            if (overlay) {
-                if (isActive) {
-                    overlay.style.display = 'flex';
-                    setTimeout(() => overlay.classList.add('active'), 10);
-                } else {
-                    overlay.classList.remove('active');
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
-                        document.getElementById('modalTypeSelectorGroup').style.display = 'block';
-                        document.getElementById('newRecordKey').disabled = false;
-                        document.getElementById('newRecordKey').value = "";
-                        document.getElementById('newRecordValue').value = "";
-                        activeEditRow = null;
-                    }, 220);
-                }
+            if (!overlay) return;
+            if (isActive) {
+                overlay.style.display = 'flex';
+                setTimeout(() => overlay.classList.add('active'), 10);
+            } else {
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
+                    document.getElementById('modalTypeSelectorGroup').style.display = 'block';
+                    document.getElementById('newRecordKey').disabled = false;
+                    document.getElementById('newRecordKey').value = "";
+                    document.getElementById('newRecordValue').value = "";
+                    activeEditRow = null;
+                }, 220);
             }
         };
 
-        window.closeOutside = function(e, id) {
-            if (e.target === document.getElementById(id)) toggleModal(id, false);
-        };
+        window.closeOutside = function(e, id) { if (e.target === document.getElementById(id)) window.toggleModal(id, false); };
 
         window.resetViewRegistry = function() {
             document.getElementById('registrySearch').value = "";
-            filterRegistryRealtime();
-            if (layoutMovableActive) toggleMovableLayout();
+            window.filterRegistryRealtime();
+            if (layoutMovableActive) window.toggleMovableLayout();
             fineTuneResetElements();
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeRegistryData();
-        });
+        // Senior Citizen Discount Calculator System Elements 
+        window.calcSr = function() {
+            const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
+            const caseRate = parseFloat(document.getElementById('caseRate').value) || 0;
+            const computedDiscount = (charges - caseRate) * 0.20;
+            document.getElementById('finalDiscount').textContent = computedDiscount > 0 ? computedDiscount.toFixed(2) : "0.00";
+        };
+
+        window.copyModalValue = function() {
+            const val = document.getElementById('finalDiscount').textContent;
+            navigator.clipboard.writeText(val).then(() => {
+                const btn = document.getElementById('modalCopyBtn');
+                btn.textContent = "COPIED VALUE!";
+                setTimeout(() => { btn.textContent = "COPY CALCULATION"; }, 1000);
+            });
+        };
+
+        // Scroller row trigger handlers
+        document.getElementById('slidePrevBtn').onclick = () => hub.scrollBy({ left: -160, behavior: 'smooth' });
+        document.getElementById('slideNextBtn').onclick = () => hub.scrollBy({ left: 160, behavior: 'smooth' });
+
+        document.addEventListener('DOMContentLoaded', () => { initializeRegistryData(); });
     </script>
 </body>
 </html>
