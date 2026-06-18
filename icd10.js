@@ -1,0 +1,393 @@
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+let layoutMovableActive = false;
+let rtdb;
+let activeEditRow = null;
+
+const baseDataset = {
+    icd: [
+        { code: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
+        { code: "M06.99", desc: "ARTHRITIS" },
+        { code: "I10.1", desc: "HYPERTENSION STAGE II" },
+        { code: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
+        { code: "K29.9", desc: "GASTRITIS" },
+        { code: "G44.2", desc: "TENSION HEADACHE" },
+        { code: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
+        { code: "K29.1", desc: "ACUTE GASTRITIS" },
+        { code: "K27.9", desc: "PEPTIC ULCER" },
+        { code: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
+        { code: "J11.1", desc: "INFLUENZA" },
+        { code: "E11.9", desc: "DIABETES MELLITUS" },
+        { code: "B34.9", desc: "VIRAL INFECTION" },
+        { code: "BO1.9", desc: "VARICELLA" },
+        { code: "S01.9", desc: "OPEN WOUND of HEAD" },
+        { code: "L03.9", desc: "CELLULITIS" },
+        { code: "L03.2", desc: "CELLULITIS OF FACE" },
+        { code: "J20.9", desc: "ACUTE BRONCHITIS" },
+        { code: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
+        { code: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
+        { code: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
+        { code: "O21.9", desc: "VOMITING OF PREGNANCY" },
+        { code: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
+        { code: "J45.0", desc: "ALLERGIC BRONCHITIS" },
+        { code: "H66.9", desc: "OTITIS MEDIA" },
+        { code: "J03.9", desc: "ACUTE TONSILLITIS" },
+        { code: "K30", desc: "DYSPEPSIA" },
+        { code: "M00.99", desc: "PYOGENIC ARTHRITIS" },
+        { code: "A97.1", desc: "DENGUE WITH WARNING SIGNS" },
+        { code: "K11.2", desc: "SIALOADENITIS" },
+        { code: "M19.99", desc: "ARTHROSIS" },
+        { code: "G43.9", desc: "MIGRAINE" },
+        { code: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+    ],
+    member: [
+        { code: "POS INCAPABLE", desc: "INDIGENT" },
+        { code: "NTHS", desc: "INDIGENT" },
+        { code: "LISTAHAN", desc: "INDIGENT" },
+        { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" },
+        { code: "INDIRECT", desc: "CONTRIBUTOR - INDIGENT" },
+        { code: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
+        { code: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
+        { code: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
+    ],
+    zipcode: [
+        { code: "9417", desc: "ARAKAN" },
+        { code: "9415", desc: "ALEOSAN" },
+        { code: "9400", desc: "PIGKAWAYAN" },
+        { code: "9410", desc: "MIDSAYAP" },
+        { code: "9405", desc: "PRES ROXAS" },
+        { code: "9400", desc: "KIDAPAWAN" },
+        { code: "9414", desc: "ANTIPAS" },
+        { code: "9406", desc: "MATALAM" },
+        { code: "9401", desc: "MAKILALA" },
+        { code: "9402", desc: "M'LANG" },
+        { code: "9407", desc: "KABACAN" },
+        { code: "9408", desc: "CARMEN" },
+        { code: "9411", desc: "LIBUNGAN" },
+        { code: "9404", desc: "MAGEPT" }
+    ]
+};
+
+try {
+    rtdb = getDatabase();
+} catch(e) {
+    console.warn("RTDB Instance loaded asynchronously.");
+}
+
+window.toggleCategoryAccordion = function(wrapperId, headerElement) {
+    if (layoutMovableActive) return; 
+    const wrapper = document.getElementById(wrapperId);
+    const chevron = headerElement.querySelector('.chevron-icon');
+    
+    if (wrapper.classList.contains('collapsed')) {
+        wrapper.classList.remove('collapsed');
+        chevron.style.transform = "rotate(0deg)";
+    } else {
+        wrapper.classList.add('collapsed');
+        chevron.style.transform = "rotate(-90deg)";
+    }
+};
+
+window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
+    const container = document.getElementById(targetGroupId);
+    if (!container) return;
+    
+    const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
+    const rows = container.querySelectorAll('.item-row');
+    
+    if (!isExpanded) {
+        rows.forEach(r => r.classList.remove('hidden-overflow-item'));
+        buttonElement.setAttribute('data-expanded', 'true');
+        buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
+    } else {
+        rows.forEach((r, idx) => {
+            if (idx >= 5) r.classList.add('hidden-overflow-item');
+        });
+        buttonElement.setAttribute('data-expanded', 'false');
+        buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+    }
+    if (window.lucide) window.lucide.createIcons();
+};
+
+async function initializeRegistryData() {
+    const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+    
+    for (const type of ['icd', 'member', 'zipcode']) {
+        const targetContainer = document.getElementById(sectionMap[type]);
+        if (!targetContainer) continue;
+        targetContainer.innerHTML = '';
+
+        let activeList = [];
+        try {
+            if (rtdb) {
+                const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
+                if (snapshot.exists()) {
+                    const dataObj = snapshot.val();
+                    activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
+                }
+            }
+        } catch (e) { console.warn("RTDB Fallback strategy activated."); }
+
+        if (activeList.length === 0) {
+            activeList = baseDataset[type];
+        }
+
+        activeList.forEach((item, index) => {
+            appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
+        });
+
+        if (activeList.length > 5) {
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'expand-list-action-trigger';
+            expandBtn.setAttribute('data-expanded', 'false');
+            expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+            expandBtn.onclick = function() { toggleSectionListExpansion(this, sectionMap[type]); };
+            targetContainer.appendChild(expandBtn);
+        }
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function appendRowToDOM(container, type, key, val, isOverflowItem) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
+    rowDiv.setAttribute('data-ref-type', type === 'icd' ? 'icd' : 'misc');
+    rowDiv.setAttribute('data-code', key);
+    rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+    rowDiv.onclick = function() { handleSelectiveCopy(this); };
+    
+    rowDiv.innerHTML = `
+        <span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
+        <div class="row-context-actions" onclick="event.stopPropagation()">
+            <button class="context-action-node edit-trigger" title="Edit Item" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+            <button class="context-action-node delete-trigger" title="Delete Item" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+        </div>
+    `;
+    
+    const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+    if (actionTriggerLink) {
+        container.insertBefore(rowDiv, actionTriggerLink);
+    } else {
+        container.appendChild(rowDiv);
+    }
+    bindDragDropSequence(rowDiv);
+}
+
+window.filterRegistryRealtime = function() {
+    const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+    const targetWrapper = document.getElementById('icdRegistryContainer');
+    const searchTargetGroup = document.getElementById('searchResultTargetGroup');
+
+    searchTargetGroup.innerHTML = '';
+
+    if (query === "") {
+        targetWrapper.classList.remove('searching-active');
+        fineTuneResetElements();
+        return;
+    }
+
+    targetWrapper.classList.add('searching-active');
+    const originalRows = targetWrapper.querySelectorAll('.section-group-inner .item-row');
+
+    originalRows.forEach(row => {
+        const code = row.getAttribute('data-code').toLowerCase();
+        const textVal = row.getAttribute('data-val').toLowerCase();
+
+        if (code.includes(query) || textVal.includes(query)) {
+            const clonedRow = row.cloneNode(true);
+            clonedRow.classList.remove('hidden-overflow-item');
+            clonedRow.style.display = 'flex';
+            clonedRow.onclick = function() { handleSelectiveCopy(this); };
+            searchTargetGroup.appendChild(clonedRow);
+        }
+    });
+};
+
+function fineTuneResetElements() {
+    const groups = ['icd-section-group', 'member-section-group', 'zip-section-group'];
+    groups.forEach(id => {
+        const target = document.getElementById(id);
+        if (!target) return;
+        
+        const rows = target.querySelectorAll('.item-row');
+        rows.forEach((row, idx) => {
+            if (idx >= 5) {
+                row.classList.add('hidden-overflow-item');
+            } else {
+                row.classList.remove('hidden-overflow-item');
+            }
+            row.style.display = 'flex';
+        });
+
+        const triggerBtn = target.querySelector('.expand-list-action-trigger');
+        if (triggerBtn) {
+            triggerBtn.setAttribute('data-expanded', 'false');
+            triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+        }
+    });
+    if (window.lucide) window.lucide.createIcons();
+}
+
+window.handleSelectiveCopy = function(element) {
+    if (layoutMovableActive) return;
+    const dataVal = element.getAttribute('data-val');
+
+    navigator.clipboard.writeText(dataVal).then(() => {
+        const textNode = element.querySelector('.item-desc-text');
+        const originalText = textNode.textContent;
+        textNode.textContent = "COPIED VALUE!";
+        
+        setTimeout(() => { 
+            textNode.textContent = originalText;
+            window.resetViewRegistry();
+        }, 1000);
+    });
+};
+
+window.synchronizeModalInputs = function() {
+    const currentType = document.getElementById('modalTypeSelector').value;
+    const primaryLabel = document.getElementById('primaryFieldLabel');
+    const secondaryLabel = document.getElementById('secondaryFieldLabel');
+
+    if (currentType === 'icd') {
+        primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
+    } else if (currentType === 'member') {
+        primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
+    } else if (currentType === 'zipcode') {
+        primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
+    }
+};
+
+window.openInlineEdit = function(rowElement) {
+    activeEditRow = rowElement;
+    const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
+                 (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+    
+    document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
+    document.getElementById('modalTypeSelectorGroup').style.display = 'none';
+    document.getElementById('modalTypeSelector').value = type;
+    
+    window.synchronizeModalInputs();
+    
+    const codeVal = rowElement.getAttribute('data-code');
+    document.getElementById('newRecordKey').value = codeVal;
+    document.getElementById('newRecordKey').disabled = true; 
+    
+    const dataVal = rowElement.getAttribute('data-val');
+    document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
+    
+    window.toggleModal('addRecordModal', true);
+};
+
+window.deleteInlineRow = async function(rowElement) {
+    if(confirm("Are you certain you want to destroy this reference record?")) {
+        const type = rowElement.getAttribute('data-ref-type') === 'icd' ? 'icd' : 
+                     (rowElement.closest('#member-section-group') ? 'member' : 'zipcode');
+        const key = rowElement.getAttribute('data-code');
+        const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+        try {
+            if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), null);
+        } catch(e) { console.warn("Database update mismatch."); }
+        
+        rowElement.remove();
+        window.resetViewRegistry();
+    }
+};
+
+window.pushRecordToDatabase = async function() {
+    const type = document.getElementById('modalTypeSelector').value;
+    const key = document.getElementById('newRecordKey').value.trim();
+    const val = document.getElementById('newRecordValue').value.trim();
+
+    if (!key || !val) return alert("Please specify all required data attributes.");
+
+    const referencePayload = { code: key, description: val, syncedAt: Date.now() };
+    const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+    try {
+        if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${sanitizedKey}`), referencePayload);
+    } catch (err) { console.warn("Data Sync execution error."); }
+
+    if (activeEditRow) {
+        activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+        activeEditRow.querySelector('.item-desc-text').textContent = val;
+    } else {
+        const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+        const targetNode = document.getElementById(sectionMap[type]);
+        if (targetNode) {
+            const currentCount = targetNode.querySelectorAll('.item-row').length;
+            appendRowToDOM(targetNode, type, key, val, currentCount >= 5);
+        }
+    }
+
+    window.toggleModal('addRecordModal', false);
+    window.resetViewRegistry();
+};
+
+window.toggleMovableLayout = function() {
+    layoutMovableActive = !layoutMovableActive;
+    const container = document.getElementById('icdRegistryContainer');
+    const triggerBtn = document.getElementById('sortToggleTrigger');
+    const wrappers = document.querySelectorAll('.section-group-wrapper');
+
+    if (layoutMovableActive) {
+        document.getElementById('registrySearch').value = "";
+        container.classList.remove('searching-active');
+        container.classList.add('edit-mode-active');
+        triggerBtn.classList.add('active-mode');
+        wrappers.forEach(w => w.classList.remove('collapsed'));
+    } else {
+        container.classList.remove('edit-mode-active');
+        triggerBtn.classList.remove('active-mode');
+        fineTuneResetElements();
+    }
+};
+
+function bindDragDropSequence(element) {
+    element.setAttribute('draggable', 'true');
+    element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+    element.addEventListener('dragend', () => element.classList.remove('dragging'));
+}
+
+document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+        if (!layoutMovableActive) return;
+        e.preventDefault();
+        const activeDragging = document.querySelector('.dragging');
+        if (activeDragging) {
+            const boundingElement = getDragLocationSpace(zone, e.clientY);
+            if (boundingElement == null) {
+                const expandActionLink = zone.querySelector('.expand-list-action-trigger');
+                if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
+                else zone.appendChild(activeDragging);
+            } else {
+                zone.insertBefore(activeDragging, boundingElement);
+            }
+        }
+    });
+});
+
+function getDragLocationSpace(container, yPoint) {
+    const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+    return elements.reduce((closest, child) => {
+        const boundary = child.getBoundingClientRect();
+        const separation = yPoint - boundary.top - boundary.height / 2;
+        if (separation < 0 && separation > closest.offset) {
+            return { offset: separation, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+window.resetViewRegistry = function() {
+    document.getElementById('registrySearch').value = "";
+    window.filterRegistryRealtime();
+    if (layoutMovableActive) window.toggleMovableLayout();
+    fineTuneResetElements();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeRegistryData();
+});
