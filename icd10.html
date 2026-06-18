@@ -1,3 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICD10 & Reference Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="esoa.css">
+    <style>
+        :root {
+            --primary: hsl(111, 100%, 60%);
+            --glass: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --success: #00e676;
+        }
+
+        /* Category Header Chevron indicator styles */
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
+        }
+        .category-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .category-header .chevron-icon {
+            color: var(--primary);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .section-group-wrapper {
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .section-group-wrapper.collapsed {
+            grid-template-rows: 0fr;
+        }
+        .section-group-wrapper.collapsed .chevron-icon {
+            transform: rotate(-90deg);
+        }
+        .section-group-inner {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Search Results Block */
+        .search-priority-view {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+        .searching-active .search-priority-view {
+            display: flex;
+        }
+        .searching-active .category-header,
+        .searching-active .section-group-wrapper {
+            display: none !important;
+        }
+        .search-priority-view h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        /* Inline structural action link positioned after the fifth block element */
+        .expand-list-action-trigger {
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: left;
+            padding: 6px 4px;
+            margin-top: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+            width: fit-content;
+        }
+        .expand-list-action-trigger:hover {
+            opacity: 0.8;
+        }
+
+        /* Floating Control Dock perfectly stacked above the profile layout */
+        .bottom-floating-control-strip {
+            position: fixed;
+            bottom: 110px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-sizing: border-box;
+            gap: 10px;
+            z-index: 3100;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+        }
+        .search-inner-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+        .search-inner-wrapper input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass);
+            color: var(--text-main);
+            border-radius: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-inner-wrapper input:focus {
+            border-color: var(--primary) !important;
+        }
+        .action-control-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass);
+            border-radius: 50%;
+            color: var(--primary) !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-control-btn:hover, .action-control-btn.active-mode {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #000 !important;
+            transform: translateY(-2px);
+        }
+
+        /* Custom Dropdown Field Mechanics Setup */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 5px;
+        }
+        .custom-select-wrapper select {
+            width: 100%;
+            background: #000 !important;
+            color: white !important;
+            padding: 12px;
+            border: 1px solid rgba(83, 83, 83, 0.3);
+            border-radius: 16px;
+            font-size: 0.8rem !important;
+            font-weight: 600;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            text-align: left;
+        }
+        .custom-select-wrapper::after {
+            content: '▼';
+            font-size: 0.65rem;
+            color: var(--primary);
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* Scaled Modal Typography and Left-Aligned Layout Structure */
+        .modal-content .input-group {
+            text-align: left;
+            width: 100%;
+        }
+        .modal-content .input-group label {
+            font-size: 0.72rem !important;
+            letter-spacing: 0.5px;
+            display: block;
+            text-align: left;
+            margin-bottom: 4px;
+        }
+        .modal-content .input-group input,
+        .modal-content .input-group textarea {
+            font-size: 0.8rem !important;
+            padding: 12px !important;
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(83, 83, 83, 0.3) !important;
+            color: #fff !important;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 16px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        /* Scalable Multiline Textarea Component */
+        .modal-content .input-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.4;
+        }
+
+        /* Direct adaptive typography setups with explicit structural rules */
+        .item-row {
+            display: flex;
+            margin: 8px 0;
+            align-items: center;
+        }
+        .item-row.hidden-overflow-item {
+            display: none;
+        }
+
+        /* Force block element overrides during active sorting states */
+        .edit-mode-active .item-row.hidden-overflow-item {
+            display: flex !important;
+        }
+
+        /* Automatically mask expand buttons when layout overrides are active */
+        .edit-mode-active .expand-list-action-trigger {
+            display: none !important;
+        }
+
+        .item-row .item-code-prefix {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--primary) !important;
+            font-weight: 700;
+            margin-right: 10px;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .item-row .item-desc-text {
+            font-size: 0.78rem !important;
+            color: #aaaaaa;
+            font-weight: 400;
+            word-break: break-word;
+        }
+
+        /* Context Actions layout injection for inline row modifications */
+        .row-context-actions {
+            display: none;
+            gap: 6px;
+            align-items: center;
+            z-index: 10;
+            margin-left: auto;
+        }
+        .context-action-node {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--glass);
+            background: rgba(0,0,0,0.4);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .context-action-node.edit-trigger:hover {
+            background: var(--success);
+            color: #000;
+            border-color: var(--success);
+        }
+        .context-action-node.delete-trigger:hover {
+            background: #ff4444;
+            color: #fff;
+            border-color: #ff4444;
+        }
+
+        /* Movable Layout Reordering & Administrative active states */
+        .edit-mode-active .item-row {
+            cursor: grab !important;
+            border: 1px dashed var(--primary) !important;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+        .edit-mode-active .item-row .row-context-actions {
+            display: flex; 
+        }
+        .item-row.dragging {
+            opacity: 0.35;
+            background: var(--glass);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
+
+    <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
+    </div>
+
+    <div class="top-nav">
+        <button class="top-btn" title="Reset" onclick="if(typeof resetFocus === 'function') resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
+        <!-- Active ICD10 Codes Page Button with exact subtle active color matching -->
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+    </div>
+
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">EJ</span>
+
+    <div class="container" id="mainContainer">
+        <div id="highlighter"></div>
+
+        <!-- Realtime Prioritized Search View Target Element -->
+        <div class="search-priority-view" id="prioritySearchView">
+            <h3>Top Search Matches</h3>
+            <div id="searchResultTargetGroup"></div>
+        </div>
+
+        <!-- ICD-10 Accordion -->
+        <div class="category-header" onclick="toggleCategoryAccordion('icd-wrapper', this)">
+            <h2>ICD-10 Diagnostic Codes</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="icd-wrapper">
+            <div class="section-group-inner" id="icd-section-group"></div>
+        </div>
+
+        <!-- ZIPCODE Accordion -->
+        <div class="category-header" onclick="toggleCategoryAccordion('zip-wrapper', this)">
+            <h2>ZIPCODE</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="zip-wrapper">
+            <div class="section-group-inner" id="zip-section-group"></div>
+        </div>
+
+        <!-- MEMBER CATEGORY Accordion (Bottom Placed) -->
+        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+            <h2>MEMBER CATEGORY</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="member-wrapper">
+            <div class="section-group-inner" id="member-section-group"></div>
+        </div>
+    </div>
+
+    <div class="bottom-floating-control-strip">
+        <div class="search-inner-wrapper">
+            <input type="text" id="registrySearch" placeholder="Search references, locations..." oninput="filterRegistryRealtime()">
+        </div>
+        <button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
+            <i data-lucide="plus"></i>
+        </button>
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+            <i data-lucide="move"></i>
+        </button>
+    </div>
+
+    <!-- ADD/EDIT RECORD MODAL -->
+    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
+            <input type="hidden" id="editRowTargetId" value="">
+            
+            <div class="input-group" id="modalTypeSelectorGroup">
+                <label>REFERENCE TYPE</label>
+                <div class="custom-select-wrapper">
+                    <select id="modalTypeSelector" onchange="synchronizeModalInputs()">
+                        <option value="icd">ICD-10 Diagnostic Definition</option>
+                        <option value="member">Membership Category</option>
+                        <option value="zipcode">Zip Code Mapping</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group" style="margin-top:12px;">
+                 <label id="primaryFieldLabel">Diagnosis Code</label>
+                 <input id="newRecordKey" type="text">
+             </div>
+            <div class="input-group" style="margin-top:12px;">
+                 <label id="secondaryFieldLabel">Description Value</label>
+                 <textarea id="newRecordValue"></textarea>
+             </div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center; margin-top:15px; cursor:pointer;">SAVE REGISTRY DATA</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- DISCOUNT CALCULATOR MODAL -->
+    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group">
+                 <label>HOSPITAL CHARGES</label>
+                 <input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+             </div>
+            <div class="input-group" style="margin-top:12px;">
+                 <label>CASE RATE (PHIC)</label>
+                 <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+             </div>
+            <div class="modal-result" style="border-color: var(--primary); margin-top:15px;"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000; text-align: center; cursor:pointer;">COPY CALCULATION</div>
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+        </div>
+    </div>
 <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
