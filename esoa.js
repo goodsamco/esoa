@@ -1283,7 +1283,7 @@ window.closeChatSession = function () {
 };
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
-   ========================================================================== */
+   ========================================================================== 
 let textTimeout; 
 let currentFocusedIndex = 0;
 let allRows = []; 
@@ -1373,6 +1373,62 @@ window.openList = function (cat) {
     window.toggleModal('listModal', true);
 };
 
+/* ==========================================================================
+   7. CORE UTILITY METRICS & UNIFIED INTERACTION LAYOUT
+   ========================================================================== */
+
+// ... keep existing arrays and setup lifecycles unchanged ...
+
+// SHARED INTELLECTUAL UNIFIED MODAL MECHANICS
+window.toggleModal = function (id, show) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+
+    if (show) {
+        if (id === 'srModal') {
+            const hospCharges = document.getElementById('hospCharges');
+            const caseRate = document.getElementById('caseRate');
+            const finalDiscount = document.getElementById('finalDiscount');
+            if (hospCharges) hospCharges.value = '';
+            if (caseRate) caseRate.value = '';
+            if (finalDiscount) finalDiscount.innerText = '0.00';
+        }
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+    } else {
+        modal.classList.remove('active');
+        
+        // Handle unique cleanups only if they exist on the current template view
+        setTimeout(() => {
+            modal.style.display = 'none';
+            
+            const displayTitle = document.getElementById('modalDisplayTitle');
+            const selectorGroup = document.getElementById('modalTypeSelectorGroup');
+            const recordKey = document.getElementById('newRecordKey');
+            const recordValue = document.getElementById('newRecordValue');
+            
+            if (displayTitle) displayTitle.textContent = "ADD NEW REFERENCE";
+            if (selectorGroup) selectorGroup.style.display = 'block';
+            if (recordKey) {
+                recordKey.disabled = false;
+                recordKey.value = "";
+            }
+            if (recordValue) recordValue.value = "";
+            
+            if (typeof activeEditRow !== 'undefined') {
+                activeEditRow = null;
+            }
+        }, 220);
+    }
+};
+
+// UNIFIED CLOSEOUT WINDOW HANDLER
+window.closeOutside = function (e, id) { 
+    const targetModal = document.getElementById(id);
+    if (e.target === targetModal || e.target.id === id) {
+        window.toggleModal(id, false); 
+    }
+};
 /* ==========================================================================
    8. HIGHLIGHTER, MAGNETIC ENGINE & INTERACTION ANIMATIONS
    ========================================================================== */
