@@ -612,7 +612,24 @@ zipcode: [
 ]
 };
 
+/*INSERT*/
+  onSnapshot(userDocRef, (snapshot) => {
+    if (!snapshot.exists()) return;
 
+    const data = snapshot.data();
+
+    set(ref(rtdb, 'presence/' + userId), {
+        uid: userId,
+        name: data.customName || "Operator",
+        avatar: data.avatarUrl || "avatar-m1",
+        timestamp: Date.now(),
+        statusNote: {
+            text: data.statusNoteText || "",
+            color: data.statusNoteColor || "#e5e5e5",
+            updatedAt: data.statusNoteUpdatedAt || 0
+        }
+    });
+});
 /* ==========================================================================
 FIREBASE LOCAL CONTEXT RESOLUTION
 ========================================================================== */
