@@ -1488,3 +1488,346 @@ window.addEventListener('click', () => {
 });
 
 
+
+
+/* 10 */
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+let layoutMovableActive = false;
+let rtdb = null;
+let activeEditRow = null;
+
+const baseDataset = {
+    icd: [
+        { code: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
+        { code: "M06.99", desc: "ARTHRITIS" },
+        { code: "I10.1", desc: "HYPERTENSION STAGE II" },
+        { code: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
+        { code: "K29.9", desc: "GASTRITIS" },
+        { code: "G44.2", desc: "TENSION HEADACHE" },
+        { code: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" }
+    ],
+    member: [
+        { code: "POS INCAPABLE", desc: "INDIGENT" },
+        { code: "NTHS", desc: "INDIGENT" },
+        { code: "DIRECT", desc: "CONTRIBUTOR - INDIVIDUAL PAYING" }
+    ],
+    zipcode: [
+        { code: "9417", desc: "ARAKAN" },
+        { code: "9415", desc: "ALEOSAN" },
+        { code: "9400", desc: "PIGKAWAYAN" }
+    ]
+};
+
+try { rtdb = getDatabase(); } catch(e) { console.warn("Database initialization deferred."); }
+
+// Initialize DOM Events and Handlers mapping
+document.addEventListener('DOMContentLoaded', () => {
+    initializeRegistryData();
+
+    // Accordion UI Event Connectors
+    document.getElementById('icdHeader').addEventListener('click', function() { toggleCategoryAccordion('icd-wrapper', this); });
+    document.getElementById('zipHeader').addEventListener('click', function() { toggleCategoryAccordion('zip-wrapper', this); });
+    document.getElementById('memberHeader').addEventListener('click', function() { toggleCategoryAccordion('member-wrapper', this); });
+
+    // Search input monitoring logic
+    document.getElementById('registrySearch').addEventListener('input', filterRegistryRealtime);
+
+    // Floating action workspace events
+    document.getElementById('addRecordModalTrigger').addEventListener('click', () => { toggleModal('addRecordModal', true); });
+    document.getElementById('sortToggleTrigger').addEventListener('click', toggleMovableLayout);
+    document.getElementById('modalTypeSelector').addEventListener('change', synchronizeModalInputs);
+    document.getElementById('modalSaveBtn').addEventListener('click', pushRecordToDatabase);
+    document.getElementById('modalDismissBtn').addEventListener('click', () => { toggleModal('addRecordModal', false); });
+    document.getElementById('addRecordModal').addEventListener('click', (e) => { if (e.target.id === 'addRecordModal') toggleModal('addRecordModal', false); });
+
+    // Drag-over initialization logic across sorting zones
+    document.querySelectorAll('#icd-section-group, #member-section-group, #zip-section-group').forEach(bindSortingContainer);
+});
+
+async function initializeRegistryData() {
+    const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+    for (const type of ['icd', 'member', 'zipcode']) {
+        const targetContainer = document.getElementById(sectionMap[type]);
+        if (!targetContainer) continue;
+        targetContainer.innerHTML = '';
+
+        let activeList = [];
+        try {
+            if (rtdb) {
+                const snapshot = await get(child(ref(rtdb), `clinical_references/${type}`));
+                if (snapshot.exists()) {
+                    const dataObj = snapshot.val();
+                    activeList = Object.keys(dataObj).map(k => ({ code: dataObj[k].code, desc: dataObj[k].description }));
+                }
+            }
+        } catch (e) {}
+
+        if (activeList.length === 0) activeList = baseDataset[type];
+
+        activeList.forEach((item, index) => {
+            appendRowToDOM(targetContainer, type, item.code, item.desc, index >= 5);
+        });
+
+        if (activeList.length > 5) {
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'expand-list-action-trigger';
+            expandBtn.setAttribute('data-expanded', 'false');
+            expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+            expandBtn.addEventListener('click', function() { toggleSectionListExpansion(this, sectionMap[type]); });
+            targetContainer.appendChild(expandBtn);
+        }
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function appendRowToDOM(container, type, key, val, isOverflowItem) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
+    rowDiv.setAttribute('data-ref-type', type);
+    rowDiv.setAttribute('data-code', key);
+    rowDiv.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+    
+    rowDiv.addEventListener('click', function() { handleSelectiveCopy(this); });
+    
+    rowDiv.innerHTML = `
+        <span class="text-content"><span class="item-code-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
+        <div class="row-context-actions">
+            <button class="context-action-node edit-trigger" title="Edit Item"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+            <button class="context-action-node delete-trigger" title="Delete Item"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+        </div>
+    `;
+
+    rowDiv.querySelector('.edit-trigger').addEventListener('click', (e) => { e.stopPropagation(); openInlineEdit(rowDiv); });
+    rowDiv.querySelector('.delete-trigger').addEventListener('click', (e) => { e.stopPropagation(); deleteInlineRow(rowDiv); });
+    
+    const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+    if (actionTriggerLink) container.insertBefore(rowDiv, actionTriggerLink);
+    else container.appendChild(rowDiv);
+    bindDragDropSequence(rowDiv);
+}
+
+function toggleCategoryAccordion(wrapperId, headerElement) {
+    if (layoutMovableActive) return; 
+    const wrapper = document.getElementById(wrapperId);
+    const chevron = headerElement.querySelector('.chevron-icon');
+    if (wrapper.classList.contains('collapsed')) {
+        wrapper.classList.remove('collapsed');
+        if(chevron) chevron.style.transform = "rotate(0deg)";
+    } else {
+        wrapper.classList.add('collapsed');
+        if(chevron) chevron.style.transform = "rotate(-90deg)";
+    }
+}
+
+function toggleSectionListExpansion(buttonElement, targetGroupId) {
+    const container = document.getElementById(targetGroupId);
+    if (!container) return;
+    const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
+    const rows = container.querySelectorAll('.item-row');
+    
+    if (!isExpanded) {
+        rows.forEach(r => r.classList.remove('hidden-overflow-item'));
+        buttonElement.setAttribute('data-expanded', 'true');
+        buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
+    } else {
+        rows.forEach((r, idx) => { if (idx >= 5) r.classList.add('hidden-overflow-item'); });
+        buttonElement.setAttribute('data-expanded', 'false');
+        buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function filterRegistryRealtime() {
+    const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+    const container = document.getElementById('mainContainer');
+    const searchTargetGroup = document.getElementById('searchResultTargetGroup');
+
+    searchTargetGroup.innerHTML = '';
+    if (query === "") {
+        container.classList.remove('searching-active');
+        fineTuneResetElements();
+        return;
+    }
+
+    container.classList.add('searching-active');
+    container.querySelectorAll('.section-group-inner .item-row').forEach(row => {
+        const code = row.getAttribute('data-code').toLowerCase();
+        const textVal = row.getAttribute('data-val').toLowerCase();
+        if (code.includes(query) || textVal.includes(query)) {
+            const clonedRow = row.cloneNode(true);
+            clonedRow.classList.remove('hidden-overflow-item');
+            clonedRow.style.display = 'flex';
+            clonedRow.addEventListener('click', function() { handleSelectiveCopy(this); });
+            searchTargetGroup.appendChild(clonedRow);
+        }
+    });
+}
+
+function fineTuneResetElements() {
+    ['icd-section-group', 'member-section-group', 'zip-section-group'].forEach(id => {
+        const target = document.getElementById(id);
+        if (!target) return;
+        const rows = target.querySelectorAll('.item-row');
+        rows.forEach((row, idx) => {
+            if (idx >= 5) row.classList.add('hidden-overflow-item');
+            else row.classList.remove('hidden-overflow-item');
+            row.style.display = 'flex';
+        });
+        const triggerBtn = target.querySelector('.expand-list-action-trigger');
+        if (triggerBtn) {
+            triggerBtn.setAttribute('data-expanded', 'false');
+            triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+        }
+    });
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function handleSelectiveCopy(element) {
+    if (layoutMovableActive) return;
+    const dataVal = element.getAttribute('data-val');
+    navigator.clipboard.writeText(dataVal).then(() => {
+        const textNode = element.querySelector('.item-desc-text');
+        const originalText = textNode.textContent;
+        textNode.textContent = "COPIED VALUE!";
+        setTimeout(() => { textNode.textContent = originalText; resetViewRegistry(); }, 1000);
+    });
+}
+
+function synchronizeModalInputs() {
+    const currentType = document.getElementById('modalTypeSelector').value;
+    const primaryLabel = document.getElementById('primaryFieldLabel');
+    const secondaryLabel = document.getElementById('secondaryFieldLabel');
+    if (currentType === 'icd') {
+        primaryLabel.textContent = "Diagnosis Code"; secondaryLabel.textContent = "Diagnosis Description";
+    } else if (currentType === 'member') {
+        primaryLabel.textContent = "Membership Code"; secondaryLabel.textContent = "Full Category Specifier";
+    } else if (currentType === 'zipcode') {
+        primaryLabel.textContent = "Zipcode"; secondaryLabel.textContent = "Municipality Name";
+    }
+}
+
+function openInlineEdit(rowElement) {
+    activeEditRow = rowElement;
+    const type = rowElement.getAttribute('data-ref-type');
+    document.getElementById('modalDisplayTitle').textContent = "EDIT REGISTRY RECORD";
+    document.getElementById('modalTypeSelectorGroup').style.display = 'none';
+    document.getElementById('modalTypeSelector').value = type;
+    synchronizeModalInputs();
+    
+    const codeVal = rowElement.getAttribute('data-code');
+    document.getElementById('newRecordKey').value = codeVal;
+    document.getElementById('newRecordKey').disabled = true; 
+    
+    const dataVal = rowElement.getAttribute('data-val');
+    document.getElementById('newRecordValue').value = type === 'icd' ? dataVal : dataVal.replace(`${codeVal} - `, '');
+    toggleModal('addRecordModal', true);
+}
+
+async function deleteInlineRow(rowElement) {
+    if(confirm("Are you certain you want to destroy this reference record?")) {
+        const type = rowElement.getAttribute('data-ref-type');
+        const key = rowElement.getAttribute('data-code');
+        try {
+            if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${key.replace(/[.#$\[\]]/g, "_")}`), null);
+        } catch(e) {}
+        rowElement.remove();
+        resetViewRegistry();
+    }
+}
+
+async function pushRecordToDatabase() {
+    const type = document.getElementById('modalTypeSelector').value;
+    const key = document.getElementById('newRecordKey').value.trim();
+    const val = document.getElementById('newRecordValue').value.trim();
+    if (!key || !val) return alert("Please specify all parameters.");
+
+    try {
+        if (rtdb) await set(ref(rtdb, `clinical_references/${type}/${key.replace(/[.#$\[\]]/g, "_")}`), { code: key, description: val });
+    } catch (err) {}
+
+    if (activeEditRow) {
+        activeEditRow.setAttribute('data-val', type === 'icd' ? val : `${key} - ${val}`);
+        activeEditRow.querySelector('.item-desc-text').textContent = val;
+    } else {
+        const sectionMap = { icd: 'icd-section-group', member: 'member-section-group', zipcode: 'zip-section-group' };
+        const targetNode = document.getElementById(sectionMap[type]);
+        if (targetNode) appendRowToDOM(targetNode, type, key, val, targetNode.querySelectorAll('.item-row').length >= 5);
+    }
+    toggleModal('addRecordModal', false);
+    resetViewRegistry();
+}
+
+function toggleMovableLayout() {
+    layoutMovableActive = !layoutMovableActive;
+    const container = document.getElementById('mainContainer');
+    const triggerBtn = document.getElementById('sortToggleTrigger');
+    if (layoutMovableActive) {
+        document.getElementById('registrySearch').value = "";
+        container.classList.remove('searching-active');
+        container.classList.add('edit-mode-active');
+        triggerBtn.classList.add('active-mode');
+        document.querySelectorAll('.section-group-wrapper').forEach(w => w.classList.remove('collapsed'));
+    } else {
+        container.classList.remove('edit-mode-active');
+        triggerBtn.classList.remove('active-mode');
+        fineTuneResetElements();
+    }
+}
+
+function bindDragDropSequence(element) {
+    element.setAttribute('draggable', 'true');
+    element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+    element.addEventListener('dragend', () => element.classList.remove('dragging'));
+}
+
+function bindSortingContainer(zone) {
+    zone.addEventListener('dragover', e => {
+        if (!layoutMovableActive) return;
+        e.preventDefault();
+        const activeDragging = document.querySelector('.dragging');
+        if (activeDragging) {
+            const elements = [...zone.querySelectorAll('.item-row:not(.dragging)')];
+            const boundingElement = elements.reduce((closest, child) => {
+                const boundary = child.getBoundingClientRect();
+                const separation = e.clientY - boundary.top - boundary.height / 2;
+                return (separation < 0 && separation > closest.offset) ? { offset: separation, element: child } : closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+
+            if (boundingElement == null) {
+                const expandLink = zone.querySelector('.expand-list-action-trigger');
+                if (expandLink) zone.insertBefore(activeDragging, expandLink);
+                else zone.appendChild(activeDragging);
+            } else {
+                zone.insertBefore(activeDragging, boundingElement);
+            }
+        }
+    });
+}
+
+function toggleModal(id, isActive) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    if (isActive) {
+        overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('active'), 10);
+    } else {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
+            document.getElementById('modalTypeSelectorGroup').style.display = 'block';
+            document.getElementById('newRecordKey').disabled = false;
+            document.getElementById('newRecordKey').value = "";
+            document.getElementById('newRecordValue').value = "";
+            activeEditRow = null;
+        }, 220);
+    }
+}
+
+function resetViewRegistry() {
+    document.getElementById('registrySearch').value = "";
+    filterRegistryRealtime();
+    if (layoutMovableActive) toggleMovableLayout();
+    fineTuneResetElements();
+}
