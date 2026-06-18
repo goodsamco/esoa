@@ -223,25 +223,17 @@ onSnapshot(userDocRef, (snapshot) => {
         }
 
 if (!document.hidden) {
-    const presenceData = {
-        uid: userId,
-        name: currentUserName,
-        avatar: currentUserAvatarRaw,
-        timestamp: Date.now()
+    // Target fields directly inside the user's presence node 
+    // This leaves 'presence/userId/statusNote' completely untouched regardless of page reloads!
+    const presenceUpdates = {
+        [`presence/${userId}/uid`]: userId,
+        [`presence/${userId}/name`]: currentUserName,
+        [`presence/${userId}/avatar`]: currentUserAvatarRaw,
+        [`presence/${userId}/timestamp`]: Date.now()
     };
 
-    // If a note is already in your local cache variable, make sure we include it 
-    // so it doesn't get dropped during the handshake
-    if (localProfileNoteCache && localProfileNoteCache.trim() !== "") {
-        presenceData.statusNote = {
-            text: localProfileNoteCache,
-            color: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5',
-            updatedAt: Date.now() // Optional: ommit if you don't want to reset the 12hr clock on reload
-        };
-    }
-
-    // Now this will execute perfectly without throwing an error!
-    update(ref(rtdb, 'presence/' + userId), presenceData)
+    // Use a multi-path root update to cleanly write properties without touching the sibling 'statusNote' node
+    update(ref(rtdb), presenceUpdates)
         .catch(err => console.error("Presence sync failed:", err));
 
     updateDoc(userDocRef, { isOnline: true });
