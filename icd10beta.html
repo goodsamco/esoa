@@ -3,38 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA - ICD10 Codes Engine (Beta)</title>
+    <title>eSOA - Full Orange Edition (Beta)</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <link rel="stylesheet" href="esoa.css">
 </head>
 <body onmouseleave="resetMagnet()">
 
-    <!-- Peer Presence Display Tracker Hub Grid Row Box Matrix Layout -->
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
         <div class="peer-active-hub" id="peerActiveHub"></div>
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
-    <!-- Persistent Global Functional Control Navigation Deck Panels -->
     <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        <button class="top-btn" title="Search Items" onclick="resetFocus()"><i data-lucide="search"></i></button> 
+        <button class="top-btn" title="Add Item" onclick="toggleModal('srModal', true)"><i data-lucide="plus-circle"></i></button>
+        <button class="top-btn" title="Edit Configuration" onclick="window.location.href='customization.html'"><i data-lucide="edit-3"></i></button>
         
-        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        <!-- Active Structural State Variant Highlight -->
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn active" title="eSOA" onclick="window.location.href='esoa.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="receipt"></i></button>
+        <button class="top-btn" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <!-- Profile Interface Trigger Elements Matrix -->
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-    <span id="userDisplayName" class="name-string">Name</span>
+    <div class="profile-container" style="position: relative; display: inline-block;">
+        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+        <span id="userDisplayName" class="name-string">Name</span>
+    </div>
 
-    <!-- Dedicated Live Multi-User Chat Sub-System Target Core Panels -->
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
@@ -49,41 +47,58 @@
         </div>
     </div>
 
-    <!-- Core Structural Medical Coding Grid Items Containers Viewport -->
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
         
-        <h2>Default Diagnostics Target Tracker</h2>
-        <div class="item-row" id="reset-target" data-val="RESET"><span class="text-content">CLEAR FOCUS</span></div>
+        <h2>DISCOUNT</h2>
+        <div class="item-row" id="reset-target" data-val="H-DISCOUNT"><span class="text-content">H-DISCOUNT</span></div>
         
-        <h2>Gastrointestinal & Metabolic Systems</h2>
-        <div class="item-row" data-val="K35.8"><span class="text-content">ACUTE APPENDICITIS - K35.8</span></div>
-        <div class="item-row" data-val="K40.9"><span class="text-content">INGUINAL HERNIA - K40.9</span></div>
-        <div class="item-row" data-val="E11.9"><span class="text-content">DIABETES MELLITUS TYPE II - E11.9</span></div>
-        <div class="item-row" data-val="K80.2"><span class="text-content">CHOLELITHIASIS / GALLSTONES - K80.2</span></div>
-        <div class="item-row" data-val="A09.9"><span class="text-content">ACUTE GASTROENTERITIS (AGE) - A09.9</span></div>
-        <div class="add-btn-circle" onclick="openList('gi')"><i data-lucide="plus"></i></div>
+        <h2>ACCOUNT</h2>
+        <div class="item-row" data-val="110098112460"><span class="text-content">110098112460</span></div>
         
-        <h2>Cardiovascular & Circulatory Systems</h2>
-        <div class="item-row" data-val="I10"><span class="text-content">ESSENTIAL HYPERTENSION - I10</span></div>
-        <div class="item-row" data-val="I21.9"><span class="text-content">MYOCARDIAL INFARCTION (AMI) - I21.9</span></div>
-        <div class="item-row" data-val="I63.9"><span class="text-content">CEREBROVASCULAR ACCIDENT (CVA) - I63.9</span></div>
-        <div class="add-btn-circle" onclick="openList('cardio')"><i data-lucide="plus"></i></div>
+        <h2>Laboratory & Diagnostic</h2>
+        <div class="item-row" data-val="CHEMISTRY: FBS"><span class="text-content">CHEMISTRY: FBS</span></div>
+        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span></div>
+        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL CHOLESTEROL</span></div>
+        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span></div>
+        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY: URINE-URINALYSIS</span></div>
+        <div class="item-row" data-val="HEMATOLOGY: CBC"><span class="text-content">HEMATOLOGY: CBC</span></div>
+        <div class="item-row" data-val="CHEMISTRY: ALT"><span class="text-content">CHEMISTRY: ALT</span></div>
+        <div class="add-btn-circle" onclick="openList('lab')"><i data-lucide="plus"></i></div>
         
-        <h2>Respiratory & Infectious Processes</h2>
-        <div class="item-row" data-val="J18.9"><span class="text-content">PNEUMONIA (PNA) UNSPECIFIED - J18.9</span></div>
-        <div class="item-row" data-val="J45.909"><span class="text-content">BRONCHIAL ASTHMA - J45.909</span></div>
-        <div class="item-row" data-val="A91"><span class="text-content">DENGUE HEMORRHAGIC FEVER - A91</span></div>
-        <div class="item-row" data-val="U07.1"><span class="text-content">COVID-19 VIRUS IDENTIFIED - U07.1</span></div>
-        <div class="add-btn-circle" onclick="openList('respiratory')"><i data-lucide="plus"></i></div>
+        <h2>Medical Supplies</h2>
+        <div class="item-row" data-val="IV CATHETER G. 20"><span class="text-content">IV CATHETER G. 20</span></div>
+        <div class="item-row" data-val="IV CATHETER G. 24"><span class="text-content">IV CATHETER G. 24</span></div>
+        <div class="item-row" data-val="MICROSET"><span class="text-content">MICROSET</span></div>
+        <div class="item-row" data-val="MACROSET"><span class="text-content">MACROSET</span></div>
+        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10 CC)</span></div>
+        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL PAPER TAPE 2X10 YARD</span></div>
+        <div class="item-row" data-val="COTTON BALLS, 3'S/PACK"><span class="text-content">COTTON BALLS, 3'S/PACK</span></div>
+        <div class="add-btn-circle" onclick="openList('supply')"><i data-lucide="plus"></i></div>
+        
+        <h2>Others</h2>
+        <div class="item-row" data-val="ER FEE"><span class="text-content">ER FEE</span></div>
+        <div class="item-row" data-val="ADMISSION FEE"><span class="text-content">ADMISSION FEE</span></div>
+        <div class="item-row" data-val="MISCELLANEOUS"><span class="text-content">MISCELLANEOUS</span></div>
+        <div class="item-row" data-val="BED SHEET"><span class="text-content">BED SHEET</span></div>
+        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span></div>
+        <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
+        <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
+        <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
+        <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
+        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
+        <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
+        <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
+        <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
+        <div class="item-row" data-val="X-RAY"><span class="text-content">X-RAY</span></div>
+        <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
+        <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
     </div>
 
-    <!-- Fluid Magnetized Dynamic Action Layer Controls -->
     <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
         <button class="btn-main-copy" id="magnetBtn">COPY</button>
     </div>
 
-    <!-- Structural Overlay Variant Window Matrix System Components -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -105,13 +120,12 @@
 
     <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="listTitle">SELECT DIAGNOSTIC CODE</h3>
+            <h3 id="listTitle">SELECT ITEM</h3>
             <div id="listContainer"></div> 
             <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <!-- Initialization Scripts Module Bundles Execution -->
-    <script type="module" src="icd10.js"></script>
+    <script type="module" src="esoa.js"></script>
 </body>
 </html>
