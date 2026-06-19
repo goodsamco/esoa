@@ -3,14 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA - Full Orange Edition (Beta)</title>
+    <title>eSOA - ICD10 & Places Console (Beta)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <link rel="stylesheet" href="esoa.css">
+    <style>
+        /* Standalone App Utility Layout Extensions */
+        .search-action-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .search-field {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .search-field:focus {
+            border-color: var(--success);
+        }
+        .action-toggle-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--glass);
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: none;
+            background: transparent;
+            color: #888;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mode-btn.active-mode {
+            background: var(--glass);
+            color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .inline-editor-pane {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed var(--glass);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .inline-editor-pane.visible {
+            display: block;
+        }
+        .editor-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid var(--glass);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .editor-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .editor-btn {
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-save { background: var(--success); color: #000; }
+        .btn-cancel { background: rgba(255,255,255,0.1); color: #fff; }
+        .item-row {
+            position: relative;
+        }
+        .row-action-overlay {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            gap: 6px;
+        }
+        .item-row:hover .row-action-overlay.show-triggers {
+            display: flex;
+        }
+        .row-btn {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--glass);
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .row-btn:hover {
+            border-color: var(--success);
+            color: var(--success);
+        }
+    </style>
 </head>
-<body onmouseleave="resetMagnet()">
+<body onmouseleave="if(window.resetMagnet) resetMagnet()">
 
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
@@ -19,106 +136,100 @@
     </div>
 
     <div class="top-nav">
-        <button class="top-btn" title="Search Items" onclick="resetFocus()"><i data-lucide="search"></i></button> 
-        <button class="top-btn" title="Add Item" onclick="toggleModal('srModal', true)"><i data-lucide="plus-circle"></i></button>
-        <button class="top-btn" title="Edit Configuration" onclick="window.location.href='customization.html'"><i data-lucide="edit-3"></i></button>
+        <button class="top-btn" title="Reset Focus Engine" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Discount Calculator" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
         
-        <button class="top-btn active" title="eSOA" onclick="window.location.href='esoa.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="receipt"></i></button>
-        <button class="top-btn" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
-        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+        <button class="top-btn" title="eSOA Viewport" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
+        <button class="top-btn active" title="ICD10 Codes Console" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" title="CF4 Form Engine" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <div class="profile-container" style="position: relative; display: inline-block;">
-        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-        <span id="userDisplayName" class="name-string">Name</span>
-    </div>
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
-            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+            <button class="chat-close-trigger" onclick="if(window.closeChatSession) closeChatSession()"><i data-lucide="x"></i></button>
         </div>
-        
         <div class="chat-scroller-view" id="chatScroller"></div>
-        
         <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
-            <button onclick="sendChatPayload()">Send</button>
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter' && window.sendChatPayload) sendChatPayload()">
+            <button onclick="if(window.sendChatPayload) sendChatPayload()">Send</button>
         </div>
     </div>
 
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
         
-        <h2>DISCOUNT</h2>
-        <div class="item-row" id="reset-target" data-val="H-DISCOUNT"><span class="text-content">H-DISCOUNT</span></div>
-        
-        <h2>ACCOUNT</h2>
-        <div class="item-row" data-val="110098112460"><span class="text-content">110098112460</span></div>
-        
-        <h2>Laboratory & Diagnostic</h2>
-        <div class="item-row" data-val="CHEMISTRY: FBS"><span class="text-content">CHEMISTRY: FBS</span></div>
-        <div class="item-row" data-val="CHEMISTRY: URIC ACID"><span class="text-content">CHEMISTRY: URIC ACID</span></div>
-        <div class="item-row" data-val="CHEMISTRY: TOTAL CHOLESTEROL"><span class="text-content">CHEMISTRY: TOTAL CHOLESTEROL</span></div>
-        <div class="item-row" data-val="CHEMISTRY: CREATININE"><span class="text-content">CHEMISTRY: CREATININE</span></div>
-        <div class="item-row" data-val="MICROSCOPY: URINE-URINALYSIS"><span class="text-content">MICROSCOPY: URINE-URINALYSIS</span></div>
-        <div class="item-row" data-val="HEMATOLOGY: CBC"><span class="text-content">HEMATOLOGY: CBC</span></div>
-        <div class="item-row" data-val="CHEMISTRY: ALT"><span class="text-content">CHEMISTRY: ALT</span></div>
-        <div class="add-btn-circle" onclick="openList('lab')"><i data-lucide="plus"></i></div>
-        
-        <h2>Medical Supplies</h2>
-        <div class="item-row" data-val="IV CATHETER G. 20"><span class="text-content">IV CATHETER G. 20</span></div>
-        <div class="item-row" data-val="IV CATHETER G. 24"><span class="text-content">IV CATHETER G. 24</span></div>
-        <div class="item-row" data-val="MICROSET"><span class="text-content">MICROSET</span></div>
-        <div class="item-row" data-val="MACROSET"><span class="text-content">MACROSET</span></div>
-        <div class="item-row" data-val="SYRINGE DISPOSABLE (10 CC)"><span class="text-content">SYRINGE DISPOSABLE (10 CC)</span></div>
-        <div class="item-row" data-val="SURGICAL PAPER TAPE 2X10 YARD (5CMX9.1INCH)"><span class="text-content">SURGICAL PAPER TAPE 2X10 YARD</span></div>
-        <div class="item-row" data-val="COTTON BALLS, 3'S/PACK"><span class="text-content">COTTON BALLS, 3'S/PACK</span></div>
-        <div class="add-btn-circle" onclick="openList('supply')"><i data-lucide="plus"></i></div>
-        
-        <h2>Others</h2>
-        <div class="item-row" data-val="ER FEE"><span class="text-content">ER FEE</span></div>
-        <div class="item-row" data-val="ADMISSION FEE"><span class="text-content">ADMISSION FEE</span></div>
-        <div class="item-row" data-val="MISCELLANEOUS"><span class="text-content">MISCELLANEOUS</span></div>
-        <div class="item-row" data-val="BED SHEET"><span class="text-content">BED SHEET</span></div>
-        <div class="item-row" data-val="HM-VITAMIN B-COMPLEX"><span class="text-content">HM-VITAMIN B-COMPLEX</span></div>
-        <div class="item-row" data-val="HM-CETIRIZINE"><span class="text-content">HM-CETIRIZINE</span></div>
-        <div class="item-row" data-val="HM-CEFUROXIME"><span class="text-content">HM-CEFUROXIME</span></div>
-        <div class="item-row" data-val="HM-MULTIVITAMINS"><span class="text-content">HM-MULTIVITAMINS</span></div>
-        <div class="item-row" data-val="HM-CELECOXIB"><span class="text-content">HM-CELECOXIB</span></div>
-        <div class="item-row" data-val="HM-LOSARTAN"><span class="text-content">HM-LOSARTAN</span></div>
-        <div class="item-row" data-val="HM-ASCORBIC ACID"><span class="text-content">HM-ASCORBIC ACID</span></div>
-        <div class="item-row" data-val="HM-CO-AMOXICLAV"><span class="text-content">HM-CO-AMOXICLAV</span></div>
-        <div class="item-row" data-val="HM-PARACETAMOL"><span class="text-content">HM-PARACETAMOL</span></div>
-        <div class="item-row" data-val="X-RAY"><span class="text-content">X-RAY</span></div>
-        <div class="item-row" data-val="ULTRASOUND"><span class="text-content">ULTRASOUND</span></div>
-        <div class="add-btn-circle" onclick="openList('others')"><i data-lucide="plus"></i></div>
+        <div class="action-toggle-row">
+            <button class="mode-btn active-mode" id="modeSearch" onclick="switchOperationMode('search')">Search Mode</button>
+            <button class="mode-btn" id="modeAdd" onclick="switchOperationMode('add')">Add Item</button>
+            <button class="mode-btn" id="modeEdit" onclick="switchOperationMode('edit')">Edit Mode</button>
+        </div>
+
+        <div class="search-action-header" id="searchBarBlock">
+            <input type="text" class="search-field" id="consoleFilterField" placeholder="Filter current view parameters..." oninput="evaluateConsoleSearch()">
+        </div>
+
+        <div class="inline-editor-pane" id="editorCompositionPane">
+            <label id="editorActionTitle" style="font-size:0.7rem; font-weight:800; color:var(--success); display:block; margin-bottom:8px; text-transform:uppercase;">Create Parameter Row</label>
+            <select class="editor-input" id="itemTargetCategory">
+                <option value="icd10">ICD10 Codes</option>
+                <option value="places">Places</option>
+                <option value="membership">Membership Category</option>
+            </select>
+            <input type="text" class="editor-input" id="itemPayloadValue" placeholder="Enter value string here...">
+            <div class="editor-actions">
+                <button class="editor-btn btn-cancel" onclick="clearCompositionPane()">Cancel</button>
+                <button class="editor-btn btn-save" onclick="saveItemModification()">Apply changes</button>
+            </div>
+        </div>
+
+        <div id="workspaceListsContainer">
+            <h2>ICD10 Codes</h2>
+            <div id="group-icd10">
+                <div class="item-row" data-val="A09.9 - Gastroenteritis"><span class="text-content">A09.9 - Gastroenteritis</span></div>
+                <div class="item-row" data-val="J20.9 - Acute Bronchitis"><span class="text-content">J20.9 - Acute Bronchitis</span></div>
+                <div class="item-row" data-val="I10 - Essential Hypertension"><span class="text-content">I10 - Essential Hypertension</span></div>
+                <div class="item-row" data-val="E11.9 - Type 2 Diabetes Mellitus"><span class="text-content">E11.9 - Type 2 Diabetes Mellitus</span></div>
+            </div>
+            
+            <h2>Places</h2>
+            <div id="group-places">
+                <div class="item-row" data-val="Barangay Lepaga"><span class="text-content">Barangay Lepaga</span></div>
+                <div class="item-row" data-val="Poblacion M'lang"><span class="text-content">Poblacion M'lang</span></div>
+                <div class="item-row" data-val="Emergency Room Dept"><span class="text-content">Emergency Room Dept</span></div>
+            </div>
+            
+            <h2>Membership Category</h2>
+            <div id="group-membership">
+                <div class="item-row" data-val="PhilHealth Informally Employed"><span class="text-content">PhilHealth Informally Employed</span></div>
+                <div class="item-row" data-val="Indigent / NHTS Category"><span class="text-content">Indigent / NHTS Category</span></div>
+                <div class="item-row" data-val="Senior Citizen Member Status"><span class="text-content">Senior Citizen Member Status</span></div>
+                <div class="item-row" data-val="Formal Economy Employed Sector"><span class="text-content">Formal Economy Employed Sector</span></div>
+            </div>
+        </div>
     </div>
 
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
-        <button class="btn-main-copy" id="magnetBtn">COPY</button>
-    </div>
-
-    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+    <div class="modal-overlay" id="srModal" onclick="if(window.closeOutside) closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
             <div class="input-group"> 
                 <label>HOSPITAL CHARGES</label> 
-                <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> 
+                <input id="hospCharges" type="number" placeholder="0.00"> 
             </div>
             <div class="input-group"> 
                 <label>CASE RATE (PHIC)</label> 
-                <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> 
+                <input id="caseRate" type="number" placeholder="0.00"> 
             </div>
-            <div class="modal-result">
-                <div id="finalDiscount">0.00</div>
-            </div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> 
+            <div class="modal-result"><div id="finalDiscount">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn">COPY RESULT</div> 
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
+    <div class="modal-overlay" id="listModal" onclick="if(window.closeOutside) closeOutside(event, 'listModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="listTitle">SELECT ITEM</h3>
             <div id="listContainer"></div> 
@@ -127,5 +238,174 @@
     </div>
 
     <script type="module" src="esoa.js"></script>
+
+    <script>
+        let operationalMode = 'search';
+        let targetEditingRowRef = null;
+
+        function switchOperationMode(mode) {
+            operationalMode = mode;
+            
+            // UI Button Accent States Reset
+            document.getElementById('modeSearch').classList.remove('active-mode');
+            document.getElementById('modeAdd').classList.remove('active-mode');
+            document.getElementById('modeEdit').classList.remove('active-mode');
+            
+            const pane = document.getElementById('editorCompositionPane');
+            const searchBlock = document.getElementById('searchBarBlock');
+            
+            // Clean action references
+            clearCompositionPane();
+            removeRowActionTriggers();
+
+            if (mode === 'search') {
+                document.getElementById('modeSearch').classList.add('active-mode');
+                searchBlock.style.display = 'flex';
+                pane.classList.remove('visible');
+            } else if (mode === 'add') {
+                document.getElementById('modeAdd').classList.add('active-mode');
+                searchBlock.style.display = 'none';
+                document.getElementById('editorActionTitle').innerText = "Create Parameter Row";
+                document.getElementById('itemTargetCategory').style.display = 'block';
+                pane.classList.add('visible');
+                document.getElementById('itemPayloadValue').focus();
+            } else if (mode === 'edit') {
+                document.getElementById('modeEdit').classList.add('active-mode');
+                searchBlock.style.display = 'none';
+                pane.classList.remove('visible');
+                injectRowActionTriggers();
+            }
+            
+            // Reset filter view visibility values
+            evaluateConsoleSearch();
+        }
+
+        function evaluateConsoleSearch() {
+            const criteria = document.getElementById('consoleFilterField').value.toLowerCase().trim();
+            const matchingRows = document.querySelectorAll('.item-row');
+            
+            matchingRows.forEach(row => {
+                if (operationalMode !== 'search') {
+                    row.style.display = 'flex';
+                    return;
+                }
+                const valueText = (row.getAttribute('data-val') || '').toLowerCase();
+                if (valueText.includes(criteria)) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function injectRowActionTriggers() {
+            const rows = document.querySelectorAll('.item-row');
+            rows.forEach(row => {
+                let overlay = row.querySelector('.row-action-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'row-action-overlay';
+                    
+                    const btnModify = document.createElement('div');
+                    btnModify.className = 'row-btn';
+                    btnModify.innerHTML = '<i data-lucide="edit-2" style="width:12px;height:12px;"></i>';
+                    btnModify.onclick = (e) => {
+                        e.stopPropagation();
+                        initiateRowInlineEdit(row);
+                    };
+                    
+                    const btnRemove = document.createElement('div');
+                    btnRemove.className = 'row-btn';
+                    btnRemove.innerHTML = '<i data-lucide="trash-2" style="width:12px;height:12px;"></i>';
+                    btnRemove.onclick = (e) => {
+                        e.stopPropagation();
+                        row.remove();
+                    };
+                    
+                    overlay.appendChild(btnModify);
+                    overlay.appendChild(btnRemove);
+                    row.appendChild(overlay);
+                }
+                overlay.classList.add('show-triggers');
+            });
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function removeRowActionTriggers() {
+            const overlays = document.querySelectorAll('.row-action-overlay');
+            overlays.forEach(overlay => overlay.classList.remove('show-triggers'));
+        }
+
+        function initiateRowInlineEdit(row) {
+            targetEditingRowRef = row;
+            const currentVal = row.getAttribute('data-val');
+            
+            document.getElementById('editorActionTitle').innerText = "Modify Row Selection";
+            document.getElementById('itemTargetCategory').style.display = 'none';
+            document.getElementById('itemPayloadValue').value = currentVal;
+            
+            const pane = document.getElementById('editorCompositionPane');
+            pane.classList.add('visible');
+            document.getElementById('itemPayloadValue').focus();
+        }
+
+        function clearCompositionPane() {
+            targetEditingRowRef = null;
+            document.getElementById('itemPayloadValue').value = '';
+            document.getElementById('editorCompositionPane').classList.remove('visible');
+        }
+
+        function saveItemModification() {
+            const inputVal = document.getElementById('itemPayloadValue').value.trim();
+            if(!inputVal) return;
+
+            if (targetEditingRowRef) {
+                // Modifying existing parameter line values
+                targetEditingRowRef.setAttribute('data-val', inputVal);
+                const textSpan = targetEditingRowRef.querySelector('.text-content');
+                if (textSpan) textSpan.innerText = inputVal;
+                clearCompositionPane();
+            } else {
+                // Appending new parameter list object variables
+                const category = document.getElementById('itemTargetCategory').value;
+                const parentGroup = document.getElementById(`group-${category}`);
+                
+                if (parentGroup) {
+                    const newRow = document.createElement('div');
+                    newRow.className = 'item-row';
+                    newRow.setAttribute('data-val', inputVal);
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'text-content';
+                    textSpan.innerText = inputVal;
+                    
+                    newRow.appendChild(textSpan);
+                    parentGroup.appendChild(newRow);
+                    
+                    document.getElementById('itemPayloadValue').value = '';
+                    document.getElementById('itemPayloadValue').focus();
+                }
+            }
+            
+            // Re-sync action items triggers state if editing
+            if (operationalMode === 'edit') {
+                injectRowActionTriggers();
+            }
+        }
+
+        // Global layout fallback integration targets 
+        window.toggleModal = function(id, state) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                if (state) modal.classList.add('active');
+                else modal.classList.remove('active');
+            }
+        };
+
+        window.resetFocus = function() {
+            document.getElementById('consoleFilterField').value = '';
+            evaluateConsoleSearch();
+        };
+    </script>
 </body>
 </html>
