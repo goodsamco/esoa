@@ -385,6 +385,29 @@
             document.getElementById('consoleFilterField').value = '';
             evaluateConsoleSearch();
         };
+
+        // Persistent hooks for adding user status note triggers
+        (() => {
+            const checkNodeInterval = setInterval(() => {
+                const avatarNode = document.getElementById('userDisplayAvatar');
+                if (avatarNode && avatarNode.parentNode) {
+                    clearInterval(checkNodeInterval);
+                    
+                    const trigger = document.createElement('div');
+                    trigger.className = 'profile-note-action-trigger';
+                    trigger.innerText = '＋';
+                    avatarNode.parentNode.insertBefore(trigger, avatarNode);
+
+                    trigger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const existingInput = prompt("Update your Status Note (Max 10 chars):");
+                        if (existingInput !== null && window.esoaUpdateStatusNote) {
+                            window.esoaUpdateStatusNote(existingInput.substring(0, 10));
+                        }
+                    });
+                }
+            }, 100);
+        })();
     </script>
 </body>
 </html>
