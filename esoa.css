@@ -1396,6 +1396,32 @@ h2 {
    ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES (WRAPPING)
    ========================================================================== */
 
+/* Sits close on top of individual peer avatar bubbles and wraps text downward 
+.peer-status-note {
+    position: absolute;
+    top: -6px; 
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); 
+    backdrop-filter: blur(12px) saturate(180%); 
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    font-size: 0.48rem; 
+    letter-spacing: 0.3px;
+    font-weight: 800;
+    padding: 3px 6px;
+    border-radius: 8px;
+    width: 50px; 
+    white-space: normal;
+    word-break: break-word;
+    border: 0.5px solid rgba(255, 255, 255, 0.08); 
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    z-index: 3300;
+    pointer-events: none;
+    text-align: center;
+    text-transform: none;
+}
+*/
+
 /* Sits close on top of individual peer avatar bubbles and wraps text downward */
 .peer-status-note {
     position: absolute;
@@ -1421,6 +1447,35 @@ h2 {
     text-transform: none; /* Allows any typed casing (mix, lower, upper) */
 }
 
+/* Shared baseline settings for thought trail bubbles */
+.peer-status-note::before,
+.peer-status-note::after {
+    content: '';
+    position: absolute;
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+/* First trail node (Medium size, close to base on the left) */
+.peer-status-note::before {
+    width: 6px;
+    height: 6px;
+    bottom: -5px;
+    left: 20%;
+}
+
+/* Second trail node (Smallest size, lower down and further left) */
+.peer-status-note::after {
+    width: 4px;
+    height: 4px;
+    bottom: -9px;
+    left: 8%;
+}
 /* Sits close on top of your own bottom-right profile avatar node and wraps downward */
 .profile-status-note-bubble {
     position: fixed;
