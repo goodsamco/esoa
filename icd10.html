@@ -111,25 +111,25 @@
             opacity: 0.8;
         }
 
-        /* Elevated Floating Control Dock with Extra Vertical Space for Notes */
+        /* Elevated & Height-Extended Floating Control Dock retaining exact 35px pill rounding */
         .bottom-floating-control-strip {
             position: fixed;
-            bottom: 125px; 
+            bottom: 160px; /* Elevated much higher to grant maximum screen clearance */
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
-            max-width: 420px;
-            height: 94px;
-            background: rgba(0, 0, 0, 0.80);
+            max-width: 400px;
+            height: 88px; /* Increased container height room for notes */
+            background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            border-radius: 24px;
+            border-radius: 35px; /* Restored exact rounded corners footprint */
             display: flex;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 16px;
             box-sizing: border-box;
-            gap: 12px;
+            gap: 10px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
         }
@@ -141,13 +141,13 @@
 
         .search-inner-wrapper input {
             width: 100%;
-            padding: 14px 16px;
-            background: rgba(0, 0, 0, 0.5);
+            padding: 12px 14px; /* Increased interior padding depth for content visibility */
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            border-radius: 14px;
+            border-radius: 20px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             box-sizing: border-box;
             outline: none;
             transition: border-color 0.2s;
@@ -158,11 +158,11 @@
         }
 
         .action-control-btn {
-            width: 46px;
-            height: 46px;
+            width: 44px;
+            height: 44px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass);
-            border-radius: 14px;
+            border-radius: 50%; /* Restored exact circular roundness */
             color: var(--primary) !important;
             cursor: pointer;
             display: flex;
@@ -248,7 +248,7 @@
             line-height: 1.4;
         }
 
-        /* Preserved perfectly structured item rows */
+        /* Structural row alignment placeholders ensuring stable geometry across mode toggles */
         .item-row {
             display: flex;
             align-items: flex-start;
@@ -257,7 +257,7 @@
             padding: 6px;
             width: 100%;
             box-sizing: border-box;
-            border: 1px solid transparent; /* Structural placeholder matching edit mode layout footprint */
+            border: 1px solid transparent; /* Structural placeholder matching edit state dimensions */
             transition: background 0.2s, border-color 0.2s;
         } 
 
@@ -339,7 +339,7 @@
             border-color: #ff4444;
         }
 
-        /* Unified Layout Reordering Alignment & Administrative active states */
+        /* Stable geometric alignment preservation during active administrative states */
         .edit-mode-active .item-row {
             cursor: grab !important;
             border: 1px dashed var(--primary) !important;
