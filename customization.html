@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -814,7 +815,7 @@
             }
         }
 
-        document.getElementById('btnSaveConfig').addEventListener('click', async () => {
+document.getElementById('btnSaveConfig').addEventListener('click', async () => {
             const customName = document.getElementById('customName').value.trim();
 
             try {
@@ -826,6 +827,7 @@
                     bgValue: configData.bgValue,
                     btnMode: configData.btnMode,
                     btnValue: configData.btnValue,
+                    statusNoteColor: configData.btnValue, // Added: matches btnValue
                     fontFamily: configData.font
                 };
 
@@ -837,6 +839,7 @@
                 localStorage.setItem("bgValue", payload.bgValue);
                 localStorage.setItem("btnMode", payload.btnMode);
                 localStorage.setItem("btnValue", payload.btnValue);
+                localStorage.setItem("statusNoteColor", payload.statusNoteColor); // Added to localStorage
                 localStorage.setItem("fontFamily", payload.fontFamily);
 
                 showStudioModal("Preferences Saved Successfully!", "Your dynamic configuration matrix values have updated seamlessly.", false, "esoa.html");
@@ -845,7 +848,7 @@
                 showStudioModal("Error Saving Preferences", err.message, true);
             }
         });
-
+        
         window.onload = () => {
             fetchSavedConfigurations();
             lucide.createIcons();
