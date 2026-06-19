@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICD10 & Reference Registry</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="esoa.css">
 
     <style>
         :root {
@@ -19,7 +20,6 @@
             --modal-bg: rgba(17, 17, 17, 0.98);
         }
 
-        /* Base Resets & Layout Framework */
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
@@ -40,7 +40,7 @@
             flex-direction: column;
         }
 
-        /* Peer Active Activity Rows */
+        /* Fixed Peer Active Rows Layout */
         .peer-wrapper-row {
             display: flex;
             align-items: center;
@@ -65,10 +65,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: default;
+            cursor: pointer;
         }
 
-        .peer-avatar-bubble, .user-avatar-node {
+        .peer-avatar-bubble, .profile-avatar-node {
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -86,7 +86,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Profile & Peer Status Note Speech Bubbles */
         .profile-status-note-bubble, .peer-status-note {
             position: absolute;
             bottom: 56px;
@@ -102,7 +101,6 @@
             z-index: 10;
         }
 
-        /* Plus (+) trigger node built over profile avatar container layout line */
         .profile-note-action-trigger {
             position: absolute;
             top: -2px;
@@ -129,6 +127,94 @@
             flex-shrink: 0;
         }
 
+        .top-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+        }
+
+        .top-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .top-btn:hover { background: rgba(255, 255, 255, 0.12); }
+
+        /* Chat Docking Panel Layout */
+        .chat-docking-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            height: 400px;
+            background: var(--modal-bg);
+            border: 1px solid var(--glass);
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            z-index: 3500;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        .chat-docking-panel.active { display: flex; }
+
+        .chat-header-bar {
+            background: rgba(255,255,255,0.03);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass);
+        }
+        .chat-header-bar span { font-weight: 600; font-size: 0.85rem; color: var(--primary); }
+        .chat-close-trigger { background: transparent; border: none; color: #888; cursor: pointer; }
+
+        .chat-scroller-view {
+            flex-grow: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .chat-input-row {
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid var(--glass);
+            background: rgba(0,0,0,0.2);
+        }
+        .chat-input-row input {
+            flex-grow: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass);
+            border-radius: 14px;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .chat-input-row button {
+            background: var(--primary);
+            border: none;
+            color: #000;
+            padding: 8px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
         /* Category Header Chevron indicator styles */
         .category-header {
             display: flex;
@@ -140,7 +226,9 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             margin-top: 20px;
         }
+
         .category-header h2 { margin: 0; font-size: 1.2rem; font-family: 'Poppins', sans-serif; letter-spacing: 0.5px; }
+
         .category-header .chevron-icon {
             color: var(--primary);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -152,6 +240,7 @@
             transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
+
         .section-group-wrapper.collapsed { grid-template-rows: 0fr; }
         .section-group-wrapper.collapsed + .category-header .chevron-icon { transform: rotate(-90deg); }
 
@@ -171,14 +260,16 @@
             padding: 14px;
             margin-bottom: 20px;
         }
+
         .searching-active .search-priority-view { display: flex; }
         .searching-active .category-header,
         .searching-active .section-group-wrapper { display: none !important; }
+
         .search-priority-view h3 {
             margin: 0 0 12px 0; font-size: 0.9rem; letter-spacing: 1px; color: var(--primary); text-transform: uppercase;
         }
 
-        /* Inline structural action link positioned after fifth element */
+        /* Inline structural action link positioned after the fifth block element */
         .expand-list-action-trigger {
             background: transparent; border: none; color: var(--primary);
             font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600;
@@ -187,56 +278,27 @@
         }
         .expand-list-action-trigger:hover { opacity: 0.8; }
 
-        /* Preserved strictly left-aligned item structures */
-        .item-row {
-            display: flex; align-items: flex-start; text-align: left;
-            margin: 8px 0; padding: 6px 4px; width: 100%; box-sizing: border-box;
-            transition: background-color 0.2s;
-        } 
-        .item-row .text-content { display: flex; align-items: flex-start; text-align: left; flex-grow: 1; }
-        .item-row.hidden-overflow-item { display: none; }
-        .edit-mode-active .item-row.hidden-overflow-item { display: flex !important; }
-        .edit-mode-active .expand-list-action-trigger { display: none !important; }
-
-        .item-row .item-title-prefix {
-            font-family: 'Poppins', sans-serif; color: var(--primary) !important;
-            font-weight: 700; margin-right: 12px; font-size: 0.9rem; flex-shrink: 0;
-            min-width: 90px; text-transform: uppercase; text-align: left;
-        }
-        .item-row .item-desc-text {
-            font-size: 0.78rem !important; color: #aaaaaa; font-weight: 400;
-            word-break: break-word; white-space: pre-wrap; text-align: left; flex-grow: 1;
-        }
-
-        /* Context Actions layout injection for row modifications */
-        .row-context-actions {
-            display: none; gap: 6px; align-items: center; z-index: 10;
-            margin-left: auto; padding-left: 10px; flex-shrink: 0;
-        }
-        .context-action-node {
-            width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--glass);
-            background: rgba(0,0,0,0.4); color: var(--text-main); display: flex;
-            align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;
-        }
-        .context-action-node.edit-trigger:hover { background: var(--success); color: #000; border-color: var(--success); }
-        .context-action-node.delete-trigger:hover { background: #ff4444; color: #fff; border-color: #ff4444; }
-
-        /* Movable Layout Reordering States */
-        .edit-mode-active .item-row {
-            cursor: grab !important; border: 1px dashed var(--primary) !important;
-            background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 8px;
-        }
-        .edit-mode-active .item-row .row-context-actions { display: flex; }
-        .item-row.dragging { opacity: 0.35; background: var(--glass); transform: scale(0.98); }
-
-        /* Floating Control Dock perfectly stacked above items layout */
+        /* Floating Control Dock perfectly stacked above the profile layout */
         .bottom-floating-control-strip {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 40px); max-width: 440px; height: 70px;
-            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass); border-radius: 35px; display: flex;
-            align-items: center; padding: 0 16px; box-sizing: border-box; gap: 10px;
-            z-index: 3100; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            position: fixed;
+            bottom: 30px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 440px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-sizing: border-box;
+            gap: 10px;
+            z-index: 3100;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
         }
 
         .search-inner-wrapper { flex-grow: 1; position: relative; }
@@ -254,28 +316,14 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0;
         }
-        .action-control-btn:hover, .action-control-btn.active-mode {
+
+        .action-control-btn:hover, 
+        .action-control-btn.active-mode {
             background: var(--primary) !important; border-color: var(--primary) !important;
             color: #000 !important; transform: translateY(-2px);
         }
 
-        /* Unified Fixed Modal Theme (Single Dark Aesthetic Option Only) */
-        .modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center; z-index: 4000;
-            opacity: 0; transition: opacity 0.2s ease;
-        }
-        .modal-overlay.active { opacity: 1; }
-        
-        .modal-content {
-            background: var(--modal-bg); border: 1px solid var(--glass);
-            width: 100%; max-width: 400px; padding: 24px; border-radius: 24px;
-            display: flex; flex-direction: column; gap: 16px; box-sizing: border-box;
-        }
-
-        .modal-content h3 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 1rem; color: var(--primary); }
-
+        /* Custom Dropdown Field Mechanics Setup */
         .custom-select-wrapper { position: relative; width: 100%; margin-top: 5px; }
         .custom-select-wrapper select {
             width: 100%; background: #000 !important; color: white !important;
@@ -288,11 +336,28 @@
             position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none;
         }
 
+        /* Scaled Modal Typography and Left-Aligned Layout Structure */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 4000;
+            opacity: 0; transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active { opacity: 1; }
+
+        .modal-content {
+            background: var(--modal-bg); border: 1px solid var(--glass);
+            width: 100%; max-width: 400px; padding: 24px; border-radius: 24px;
+            display: flex; flex-direction: column; gap: 16px; box-sizing: border-box;
+        }
+        .modal-content h3 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 1rem; color: var(--primary); }
+
         .modal-content .input-group { text-align: left; width: 100%; }
         .modal-content .input-group label {
             font-size: 0.72rem !important; letter-spacing: 0.5px; display: block;
             text-align: left; margin-bottom: 4px; color: #888; font-weight: 600;
         }
+
         .modal-content .input-group input,
         .modal-content .input-group textarea {
             font-size: 0.8rem !important; padding: 12px !important; background: rgba(0, 0, 0, 0.4) !important;
@@ -300,9 +365,55 @@
             text-align: left; width: 100%; box-sizing: border-box; border-radius: 16px;
             font-family: 'Inter', sans-serif; outline: none;
         }
+
         .modal-content .input-group textarea { resize: vertical; min-height: 70px; }
-        
-        .modal-char-counter { font-size: 0.65rem; color: #666; text-align: right; margin-top: 4px; }
+
+        /* Preserved strictly left-aligned item structures */
+        .item-row {
+            display: flex; align-items: flex-start; text-align: left;
+            margin: 8px 0; padding: 6px 4px; width: 100%; box-sizing: border-box;
+            transition: background-color 0.2s;
+        } 
+
+        .item-row .text-content { display: flex; align-items: flex-start; text-align: left; flex-grow: 1; }
+        .item-row.hidden-overflow-item { display: none; }
+        .edit-mode-active .item-row.hidden-overflow-item { display: flex !important; }
+        .edit-mode-active .expand-list-action-trigger { display: none !important; }
+
+        .item-row .item-title-prefix {
+            font-family: 'Poppins', sans-serif; color: var(--primary) !important;
+            font-weight: 700; margin-right: 12px; font-size: 0.9rem; flex-shrink: 0;
+            min-width: 90px; text-transform: uppercase; text-align: left;
+        }
+
+        .item-row .item-desc-text {
+            font-size: 0.78rem !important; color: #aaaaaa; font-weight: 400;
+            word-break: break-word; white-space: pre-wrap; text-align: left; flex-grow: 1;
+        }
+
+        /* Context Actions layout injection for inline row modifications */
+        .row-context-actions {
+            display: none; gap: 6px; align-items: center; z-index: 10;
+            margin-left: auto; padding-left: 10px; flex-shrink: 0;
+        }
+
+        .context-action-node {
+            width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--glass);
+            background: rgba(0,0,0,0.4); color: var(--text-main); display: flex;
+            align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;
+        }
+
+        .context-action-node.edit-trigger:hover { background: var(--success); color: #000; border-color: var(--success); }
+        .context-action-node.delete-trigger:hover { background: #ff4444; color: #fff; border-color: #ff4444; }
+
+        /* Movable Layout Reordering & Administrative active states */
+        .edit-mode-active .item-row {
+            cursor: grab !important; border: 1px dashed var(--primary) !important;
+            background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 8px;
+        }
+
+        .edit-mode-active .item-row .row-context-actions { display: flex; }
+        .item-row.dragging { opacity: 0.35; background: var(--glass); transform: scale(0.98); }
         
         .modal-copy-zone {
             background: var(--primary); color: #000; padding: 12px; border-radius: 16px;
@@ -315,112 +426,217 @@
             font-weight: 600; cursor: pointer; padding: 4px; margin-top: -4px; width: fit-content; align-self: center;
         }
         .modal-close-btn:hover { color: #fff; }
+        
+        .modal-char-counter { font-size: 0.65rem; color: #666; text-align: right; margin-top: 4px; }
+        .modal-result { border: 1px solid var(--glass); padding: 12px; border-radius: 16px; margin: 4px 0; }
     </style>
 </head>
-<body>
+<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
     <div class="peer-wrapper-row">
         <div class="self-profile-container">
-            <img class="user-avatar-node" id="userDisplayAvatar" src="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg" alt="Profile"/>
+            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
             <div id="userDisplayName" style="display:none;">Operator</div>
         </div>
         <div class="peer-active-hub" id="peerActiveHub"></div>
     </div>
 
-    <main id="mainContainer">
+    <div class="top-nav">
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button> 
+        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button> 
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button> 
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+    </div>
+
+    <div class="chat-docking-panel" id="chatDock">
+        <div class="chat-header-bar">
+            <span id="chatTargetName">Active Session Chat</span>
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+        </div>
         
-        <div class="search-priority-view">
-            <h3>SEARCH RESULTS</h3>
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div id="highlighter"></div>
+
+        <div class="search-priority-view" id="prioritySearchView">
+            <h3>Top Code Matches</h3>
             <div id="searchResultTargetGroup"></div>
         </div>
 
         <div class="category-header" onclick="toggleCategoryAccordion('icd10-wrapper', this)">
-            <h2>ICD10 Reference Registry</h2>
-            <i class="chevron-icon" data-lucide="chevron-down" style="width:18px; height:18px;"></i>
+            <h2>ICD10 References</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
-        
         <div class="section-group-wrapper" id="icd10-wrapper">
-            <div class="section-group-inner" id="icd10-section-group">
-                </div>
+            <div class="section-group-inner" id="icd10-section-group"></div>
         </div>
 
-    </main>
+        <div class="category-header" onclick="toggleCategoryAccordion('zipcode-wrapper', this)">
+            <h2>Zipcodes Reference</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="zipcode-wrapper">
+            <div class="section-group-inner" id="zipcode-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+            <h2>Member Categories</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="member-wrapper">
+            <div class="section-group-inner" id="member-section-group"></div>
+        </div>
+    </div>
 
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search references real-time..." oninput="filterRegistryRealtime()" autocomplete="off"/>
+            <input type="text" id="registrySearch" placeholder="Search codes, classifications, notes..." oninput="filterRegistryRealtime()">
         </div>
-        <button class="action-control-btn" id="sortToggleTrigger" title="Reorder Layout" onclick="toggleMovableLayout()">
-            <i data-lucide="move" style="width:18px;height:18px;"></i>
+        <button class="action-control-btn" title="Add Reference" onclick="toggleModal('addRecordModal', true)">
+            <i data-lucide="plus"></i>
         </button>
-        <button class="action-control-btn" title="Add Record" onclick="toggleModal('addRecordModal', true)">
-            <i data-lucide="plus" style="width:18px;height:18px;"></i>
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+            <i data-lucide="move"></i>
         </button>
     </div>
 
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3>
-            
-            <div class="custom-select-wrapper" id="modalTypeSelectorGroup">
-                <select id="recordCategory">
-                    <option value="icd10_codes" selected>ICD10 DIAGNOSIS CODE</option>
-                </select>
-            </div>
-
+            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3> 
+            <div class="input-group" id="modalTypeSelectorGroup">
+                <label>REGISTRY DOMAIN</label>
+                <div class="custom-select-wrapper">
+                    <select id="modalTypeSelector">
+                        <option value="icd10_codes" selected>ICD10 Code Registry</option>
+                        <option value="zipcodes">Zipcodes Reference</option>
+                        <option value="member_categories">Member Categories</option>
+                    </select>
+                </div>
+            </div> 
             <div class="input-group">
-                <label>REFERENCE IDENTIFIER KEY</label>
-                <input type="text" id="newRecordKey" placeholder="e.g., I10" autocomplete="off"/>
-            </div>
-
+                 <label id="primaryFieldLabel">Code / Key</label>
+                 <input id="newRecordKey" type="text" autocomplete="off">
+             </div>
             <div class="input-group">
-                <label>DESCRIPTION OR VALUE META</label>
-                <textarea id="newRecordValue" placeholder="Describe clinical protocol context details..."></textarea>
-            </div>
-
-            <div class="modal-copy-zone" id="modalSubmitBtn" onclick="pushRecordToDatabase()">SAVE REFERENCE</div>
-            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">CANCEL</button>
+                 <label id="secondaryFieldLabel">Description / Class Details</label>
+                 <textarea id="newRecordValue"></textarea>
+             </div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()">SAVE REFERENCE</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
 
+    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group">
+                 <label>HOSPITAL CHARGES</label>
+                 <input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+             </div>
+            <div class="input-group">
+                 <label>CASE RATE (PHIC)</label>
+                 <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+             </div>
+            <div class="modal-result"><div id="finalDiscount" style="color: var(--primary); text-align: center; font-weight:700;">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()">COPY CALCULATION</div>
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+        </div>
+    </div>
+
+    <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // ==========================================
-        // [INITIALIZATION & GLOBAL STATE VARIABLES]
-        // ==========================================
         let layoutMovableActive = false;
-        let rtdb, db;
+        let rtdb;
+        let db;
         let activeEditRow = null;
         let userDocRef;
         let localProfileNoteCache = "";
-                
+        
         const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
         const userId = localStorage.getItem("userId") || "dev_fallback_user";
 
+        // Fixed Comprehensive Local Reference Registry Datasets
         const baseDataset = {
             icd10_codes: [
-                { title: "I10", desc: "ESSENTIAL (PRIMARY) HYPERTENSION" },
-                { title: "E11.9", desc: "TYPE 2 DIABETES MELLITUS WITHOUT COMPLICATIONS" },
-                { title: "J45.909", desc: "UNSPECIFIED ASTHMA, UNCOMPLICATED" },
-                { title: "A09", desc: "INFECTIOUS GASTROENTERITIS AND COLITIS, UNSPECIFIED" },
-                { title: "J20.9", desc: "ACUTE BRONCHITIS, UNSPECIFIED" },
-                { title: "M54.5", desc: "LOW BACK PAIN" },
-                { title: "N39.0", desc: "URINARY TRACT INFECTION, SITE NOT SPECIFIED" },
-                { title: "J18.9", desc: "PNEUMONIA, UNSPECIFIED ORGANISM" }
+                { title: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
+                { title: "M06.99", desc: "ARTHRITIS" },
+                { title: "I10.1", desc: "HYPERTENSION STAGE II" },
+                { title: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
+                { title: "K29.9", desc: "GASTRITIS" },
+                { title: "G44.2", desc: "TENSION HEADACHE" },
+                { title: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
+                { title: "K29.1", desc: "ACUTE GASTRITIS" },
+                { title: "K27.9", desc: "PEPTIC ULCER" },
+                { title: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
+                { title: "J11.1", desc: "INFLUENZA" },
+                { title: "E11.9", desc: "DIABETES MELLITUS" },
+                { title: "B34.9", desc: "VIRAL INFECTION" },
+                { title: "BO1.9", desc: "VARICELLA" },
+                { title: "S01.9", desc: "OPEN WOUND OF HEAD" },
+                { title: "L03.9", desc: "CELLULITIS" },
+                { title: "L03.2", desc: "CELLULITIS OF FACE" },
+                { title: "J20.9", desc: "ACUTE BRONCHITIS" },
+                { title: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
+                { title: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
+                { title: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
+                { title: "O21.9", desc: "VOMITING OF PREGNANCY" },
+                { title: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
+                { title: "J45.0", desc: "ALLERGIC BRONCHITIS" },
+                { title: "H66.9", desc: "OTITIS MEDIA" },
+                { title: "J03.9", desc: "ACUTE TONSILLITIS" },
+                { title: "K30", desc: "DYSPEPSIA" },
+                { title: "M00.99", desc: "PYOGENIC ARTHRITIS" },
+                { title: "A97.1", desc: "DENGUE WITTULUNAN - 9403H WARNING SIGNS" },
+                { title: "K11.2", desc: "SIALOADENITIS" },
+                { title: "M19.99", desc: "ARTHROSIS" },
+                { title: "G43.9", desc: "MIGRAINE" },
+                { title: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+            ],
+            zipcodes: [
+                { title: "ARAKAN", desc: "9417" },
+                { title: "ALEOSAN", desc: "9415" },
+                { title: "PIGKAWAYAN", desc: "9400" },
+                { title: "MIDSAYAP", desc: "9410" },
+                { title: "PRES ROXAS", desc: "9405" },
+                { title: "KIDAPAWAN", desc: "9400" },
+                { title: "ANTIPAS", desc: "9414" },
+                { title: "MATALAM", desc: "9406" },
+                { title: "MAKILALA", desc: "9401" },
+                { title: "M'LANG", desc: "9402" },
+                { title: "KABACAN", desc: "9407" },
+                { title: "CARMEN", desc: "9408" },
+                { title: "LIBUNGAN", desc: "9411" },
+                { title: "MAGEPT", desc: "9404110098112460" }
+            ],
+            member_categories: [
+                { title: "POS INCAPABLE", desc: "INDIGENT" },
+                { title: "NTHS", desc: "INDIGENT" },
+                { title: "LISTAHAN", desc: "INDIGENT" },
+                { title: "DIRECT CONTRIBUTOR", desc: "INDIVIDUAL PAYING" },
+                { title: "INDIRECT CONTRIBUTOR", desc: "INDIGENT" },
+                { title: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
+                { title: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
+                { title: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
             ]
-        };
+        }; 
 
         const premium3dAssets = {
             'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
             'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
         };
 
-        // ==========================================
-        // [DATABASE SYNC & USER PRESENCE LOGIC]
-        // ==========================================
         try {
             const firebaseConfig = {
                 apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -436,8 +652,24 @@
             db = getFirestore(app);
             rtdb = getDatabase(app);
         } catch(e) {
-            console.warn("RTDB initialization runtime interface drop.");
+            console.warn("RTDB environment connection local fallback initiated.");
         }
+
+        // Active Hub Setup Interactivity Fixed Scope
+        window.openChatSession = function(peerUid, peerName) {
+            const chatDock = document.getElementById('chatDock');
+            const chatTargetName = document.getElementById('chatTargetName');
+            if (chatDock) {
+                chatTargetName.innerText = `Session with ${peerName}`;
+                chatDock.classList.add('active');
+                chatDock.setAttribute('data-active-peer', peerUid);
+            }
+        };
+
+        window.closeChatSession = function() {
+            const chatDock = document.getElementById('chatDock');
+            if (chatDock) chatDock.classList.remove('active');
+        };
 
         if (userId && db) {
             userDocRef = doc(db, "accounts", userId);
@@ -446,7 +678,6 @@
                     const data = snapshot.data();
                     const currentUserName = data.customName || "Operator";
                     const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
-                    
                     document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
                     document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
 
@@ -509,8 +740,10 @@
                         const wrapper = document.createElement('div');
                         wrapper.className = 'peer-wrapper';
                         wrapper.id = `peer-node-${uid}`;
-                        wrapper.innerHTML = `<img class="peer-avatar-bubble" src="${src}"><div class="peer-name-hover">${cleanLabel}</div>`;
-                                                
+                        wrapper.innerHTML = `<img class="peer-avatar-bubble" src="${src}"><div class="peer-name-hover">${cleanLabel}</div>`; 
+                        
+                        wrapper.onclick = () => window.openChatSession(uid, peer.name || "Operator");
+                        
                         if (peer.statusNote && peer.statusNote.updatedAt && (NOW - peer.statusNote.updatedAt < TWELVE_HOURS_MS)) {
                             if (peer.statusNote.text.trim() !== "") {
                                 const note = document.createElement('div');
@@ -530,9 +763,7 @@
             });
         }
 
-        // ==========================================
-        // [UI & LAYOUT COMPONENT CONTROLS]
-        // ==========================================
+        // Status Field Control Injections
         (() => {
             const avatarNode = document.getElementById('userDisplayAvatar');
             if (!avatarNode) return;
@@ -590,42 +821,318 @@
 
         function pullParsedAccentColor() {
             let customAccent = localStorage.getItem('btnValue') || localStorage.getItem('accentColor') || localStorage.getItem('customAccent');
-            if (customAccent) { document.documentElement.style.setProperty('--primary', customAccent); }
+            if (customAccent) {
+                document.documentElement.style.setProperty('--primary', customAccent);
+            }
         }
 
         window.toggleCategoryAccordion = function(wrapperId, headerElement) {
             if (layoutMovableActive) return; 
             const wrapper = document.getElementById(wrapperId);
-            const chevron = headerElement.querySelector('.chevron-icon');
-            if (!wrapper || !chevron) return;
-                        
+            const chevron = headerElement.querySelector('.chevron-icon'); 
+            
             if (wrapper.classList.contains('collapsed')) {
                 wrapper.classList.remove('collapsed');
-                chevron.style.transform = "rotate(0deg)";
+                if(chevron) chevron.style.transform = "rotate(0deg)";
             } else {
                 wrapper.classList.add('collapsed');
-                chevron.style.transform = "rotate(-90deg)";
+                if(chevron) chevron.style.transform = "rotate(-90deg)";
             }
         };
 
         window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
             const container = document.getElementById(targetGroupId);
-            if (!container) return;
-                        
+            if (!container) return; 
+            
             const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
-            const rows = container.querySelectorAll('.item-row');
-                        
+            const rows = container.querySelectorAll('.item-row'); 
+            
             if (!isExpanded) {
                 rows.forEach(r => r.classList.remove('hidden-overflow-item'));
                 buttonElement.setAttribute('data-expanded', 'true');
                 buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
             } else {
-                rows.forEach((r, idx) => { if (idx >= 5) r.classList.add('hidden-overflow-item'); });
+                rows.forEach((r, idx) => {
+                    if (idx >= 5) r.classList.add('hidden-overflow-item');
+                });
                 buttonElement.setAttribute('data-expanded', 'false');
                 buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
             }
             if (window.lucide) window.lucide.createIcons();
         };
+
+        async function initializeRegistryData() {
+            pullParsedAccentColor();
+            setupDomainSection('icd10_codes', 'icd10-section-group');
+            setupDomainSection('zipcodes', 'zipcode-section-group');
+            setupDomainSection('member_categories', 'member-section-group');
+        }
+
+        async function setupDomainSection(domainKey, elementId) {
+            const targetContainer = document.getElementById(elementId);
+            if (!targetContainer) return;
+            targetContainer.innerHTML = '';
+
+            let activeList = [];
+            try {
+                if (rtdb) {
+                    const snapshot = await get(child(ref(rtdb), `clinical_references/${domainKey}`));
+                    if (snapshot.exists()) {
+                        const dataObj = snapshot.val();
+                        activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
+                    }
+                }
+            } catch (e) { console.warn("Database storage fetch fallback."); }
+
+            if (activeList.length === 0) {
+                activeList = baseDataset[domainKey];
+            }
+
+            activeList.forEach((item, index) => {
+                appendRowToDOM(targetContainer, item.title, item.desc, index >= 5, domainKey);
+            });
+
+            if (activeList.length > 5) {
+                const expandBtn = document.createElement('button');
+                expandBtn.className = 'expand-list-action-trigger';
+                expandBtn.setAttribute('data-expanded', 'false');
+                expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                expandBtn.onclick = function() { toggleSectionListExpansion(this, elementId); };
+                targetContainer.appendChild(expandBtn);
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function appendRowToDOM(container, key, val, isOverflowItem, domain) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
+            rowDiv.setAttribute('data-title', key);
+            rowDiv.setAttribute('data-val', val);
+            rowDiv.setAttribute('data-domain', domain);
+            rowDiv.onclick = function() { handleSelectiveCopy(this); }; 
+            
+            rowDiv.innerHTML = `
+                <span class="text-content"><span class="item-title-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
+                <div class="row-context-actions" onclick="event.stopPropagation()">
+                    <button class="context-action-node edit-trigger" title="Edit Entry" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+                    <button class="context-action-node delete-trigger" title="Delete Entry" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                </div>
+            `; 
+            
+            const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+            if (actionTriggerLink) {
+                container.insertBefore(rowDiv, actionTriggerLink);
+            } else {
+                container.appendChild(rowDiv);
+            }
+            bindDragDropSequence(rowDiv);
+        }
+
+        window.filterRegistryRealtime = function() {
+            const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+            const container = document.getElementById('mainContainer');
+            const searchTargetGroup = document.getElementById('searchResultTargetGroup');
+
+            searchTargetGroup.innerHTML = '';
+
+            if (query === "") {
+                container.classList.remove('searching-active');
+                fineTuneResetElements('icd10-section-group');
+                fineTuneResetElements('zipcode-section-group');
+                fineTuneResetElements('member-section-group');
+                return;
+            }
+
+            container.classList.add('searching-active');
+            const originalRows = container.querySelectorAll('.section-group-inner .item-row');
+
+            originalRows.forEach(row => {
+                const title = row.getAttribute('data-title').toLowerCase();
+                const textVal = row.getAttribute('data-val').toLowerCase();
+
+                if (title.includes(query) || textVal.includes(query)) {
+                    const clonedRow = row.cloneNode(true);
+                    clonedRow.classList.remove('hidden-overflow-item');
+                    clonedRow.style.display = 'flex';
+                    clonedRow.onclick = function() { handleSelectiveCopy(this); };
+                    searchTargetGroup.appendChild(clonedRow);
+                }
+            });
+        };
+
+        function fineTuneResetElements(elementId) {
+            const target = document.getElementById(elementId);
+            if (!target) return; 
+            
+            const rows = target.querySelectorAll('.item-row');
+            rows.forEach((row, idx) => {
+                if (idx >= 5) {
+                    row.classList.add('hidden-overflow-item');
+                } else {
+                    row.classList.remove('hidden-overflow-item');
+                }
+                row.style.display = 'flex';
+            });
+
+            const triggerBtn = target.querySelector('.expand-list-action-trigger');
+            if (triggerBtn) {
+                triggerBtn.setAttribute('data-expanded', 'false');
+                triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        window.handleSelectiveCopy = function(element) {
+            if (layoutMovableActive) return;
+            const dataVal = element.getAttribute('data-val');
+
+            navigator.clipboard.writeText(dataVal).then(() => {
+                const textNode = element.querySelector('.item-desc-text');
+                const originalText = textNode.textContent;
+                textNode.textContent = "COPIED VALUE!"; 
+                
+                setTimeout(() => { 
+                    textNode.textContent = originalText;
+                    window.resetViewRegistry();
+                }, 1000);
+            });
+        };
+
+        window.openInlineEdit = function(rowElement) {
+            activeEditRow = rowElement; 
+            
+            document.getElementById('modalDisplayTitle').textContent = "EDIT REFERENCE";
+            document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
+            
+            const titleVal = rowElement.getAttribute('data-title');
+            document.getElementById('newRecordKey').value = titleVal;
+            document.getElementById('newRecordKey').disabled = false; // Code/Key mutation fully unlocked
+            
+            const descVal = rowElement.getAttribute('data-val');
+            document.getElementById('newRecordValue').value = descVal; 
+            
+            window.toggleModal('addRecordModal', true);
+        };
+
+        window.deleteInlineRow = async function(rowElement) {
+            if(confirm("Are you certain you want to destroy this reference record?")) {
+                const key = rowElement.getAttribute('data-title');
+                const domain = rowElement.getAttribute('data-domain') || 'icd10_codes';
+                const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+                try {
+                    if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), null);
+                } catch(e) { console.warn("Database deletion request drop."); } 
+                
+                rowElement.remove();
+                window.resetViewRegistry();
+            }
+        };
+
+        window.pushRecordToDatabase = async function() {
+            const key = document.getElementById('newRecordKey').value.trim();
+            const val = document.getElementById('newRecordValue').value.trim();
+            const domain = activeEditRow ? activeEditRow.getAttribute('data-domain') : document.getElementById('modalTypeSelector').value;
+
+            if (!key || !val) return alert("Please specify all required data attributes.");
+
+            const referencePayload = { title: key, description: val, syncedAt: Date.now() };
+            const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+            // If updating an active entry, clean old tracking references out of database if key changed
+            if (activeEditRow) {
+                const oldKey = activeEditRow.getAttribute('data-title');
+                if (oldKey !== key) {
+                    const oldSanitizedKey = oldKey.replace(/[.#$\[\]]/g, "_");
+                    try { if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${oldSanitizedKey}`), null); } catch(e){}
+                }
+            }
+
+            try {
+                if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), referencePayload);
+            } catch (err) { console.warn("Database connection runtime dropped."); }
+
+            if (activeEditRow) {
+                activeEditRow.setAttribute('data-title', key);
+                activeEditRow.setAttribute('data-val', val);
+                activeEditRow.querySelector('.item-title-prefix').textContent = key;
+                activeEditRow.querySelector('.item-desc-text').textContent = val;
+            } else {
+                let elementId = 'icd10-section-group';
+                if (domain === 'zipcodes') elementId = 'zipcode-section-group';
+                if (domain === 'member_categories') elementId = 'member-section-group';
+                
+                const targetNode = document.getElementById(elementId);
+                if (targetNode) {
+                    const currentCount = targetNode.querySelectorAll('.item-row').length;
+                    appendRowToDOM(targetNode, key, val, currentCount >= 5, domain);
+                }
+            }
+
+            window.toggleModal('addRecordModal', false);
+            window.resetViewRegistry();
+        };
+
+        window.toggleMovableLayout = function() {
+            layoutMovableActive = !layoutMovableActive;
+            const container = document.getElementById('mainContainer');
+            const triggerBtn = document.getElementById('sortToggleTrigger');
+            const wrappers = document.querySelectorAll('.section-group-wrapper');
+
+            if (layoutMovableActive) {
+                document.getElementById('registrySearch').value = "";
+                container.classList.remove('searching-active');
+                container.classList.add('edit-mode-active');
+                triggerBtn.classList.add('active-mode');
+                wrappers.forEach(w => w.classList.remove('collapsed'));
+            } else {
+                container.classList.remove('edit-mode-active');
+                triggerBtn.classList.remove('active-mode');
+                fineTuneResetElements('icd10-section-group');
+                fineTuneResetElements('zipcode-section-group');
+                fineTuneResetElements('member-section-group');
+            }
+        };
+
+        function bindDragDropSequence(element) {
+            element.setAttribute('draggable', 'true');
+            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+            element.addEventListener('dragend', () => element.classList.remove('dragging'));
+        }
+
+        ['icd10-section-group', 'zipcode-section-group', 'member-section-group'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('dragover', e => {
+                    if (!layoutMovableActive) return;
+                    e.preventDefault();
+                    const activeDragging = document.querySelector('.dragging');
+                    if (activeDragging) {
+                        const boundingElement = getDragLocationSpace(element, e.clientY);
+                        if (boundingElement == null) {
+                            const expandActionLink = element.querySelector('.expand-list-action-trigger');
+                            if (expandActionLink) element.insertBefore(activeDragging, expandActionLink);
+                            else element.appendChild(activeDragging);
+                        } else {
+                            element.insertBefore(activeDragging, boundingElement);
+                        }
+                    }
+                });
+            }
+        });
+
+        function getDragLocationSpace(container, yPoint) {
+            const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+            return elements.reduce((closest, child) => {
+                const boundary = child.getBoundingClientRect();
+                const separation = yPoint - boundary.top - boundary.height / 2;
+                if (separation < 0 && separation > closest.offset) {
+                    return { offset: separation, element: child };
+                } else {
+                    return closest; 
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
 
         window.toggleModal = function(id, isActive) {
             const overlay = document.getElementById(id);
@@ -652,265 +1159,15 @@
             if (e.target === document.getElementById(id)) window.toggleModal(id, false);
         };
 
-        window.handleSelectiveCopy = function(element) {
-            if (layoutMovableActive) return;
-            const dataVal = element.getAttribute('data-val');
-
-            navigator.clipboard.writeText(dataVal).then(() => {
-                const textNode = element.querySelector('.item-desc-text');
-                const originalText = textNode.textContent;
-                textNode.textContent = "COPIED VALUE!";
-                                
-                setTimeout(() => { 
-                    textNode.textContent = originalText;
-                    window.resetViewRegistry();
-                }, 1000);
-            });
-        };
-
-        // ==========================================
-        // [DOM GENERATION & DATA RENDERING LOGIC]
-        // ==========================================
-        async function initializeRegistryData() {
-            pullParsedAccentColor();
-            const targetContainer = document.getElementById('icd10-section-group');
-            if (!targetContainer) return;
-            targetContainer.innerHTML = '';
-
-            let activeList = [];
-            try {
-                if (rtdb) {
-                    const snapshot = await get(child(ref(rtdb), "clinical_references/icd10_codes"));
-                    if (snapshot.exists()) {
-                        const dataObj = snapshot.val();
-                        activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
-                    }
-                }
-            } catch (e) { console.warn("Database structure fallback routing initiated."); }
-
-            if (activeList.length === 0) {
-                activeList = baseDataset.icd10_codes;
-            }
-
-            activeList.forEach((item, index) => {
-                appendRowToDOM(targetContainer, item.title, item.desc, index >= 5);
-            });
-
-            if (activeList.length > 5) {
-                const expandBtn = document.createElement('button');
-                expandBtn.className = 'expand-list-action-trigger';
-                expandBtn.setAttribute('data-expanded', 'false');
-                expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-                expandBtn.onclick = function() { window.toggleSectionListExpansion(this, 'icd10-section-group'); };
-                targetContainer.appendChild(expandBtn);
-            }
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        function appendRowToDOM(container, key, val, isOverflowItem) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
-            rowDiv.setAttribute('data-title', key);
-            rowDiv.setAttribute('data-val', val);
-            rowDiv.onclick = function() { window.handleSelectiveCopy(this); };
-                                
-            rowDiv.innerHTML = `
-                <span class="text-content"><span class="item-title-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
-                <div class="row-context-actions" onclick="event.stopPropagation()">
-                    <button class="context-action-node edit-trigger" title="Edit Entry" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                    <button class="context-action-node delete-trigger" title="Delete Entry" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-                </div>
-            `;
-                                
-            const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
-            if (actionTriggerLink) {
-                container.insertBefore(rowDiv, actionTriggerLink);
-            } else {
-                container.appendChild(rowDiv);
-            }
-            bindDragDropSequence(rowDiv);
-        }
-
         window.resetViewRegistry = function() {
             document.getElementById('registrySearch').value = "";
             window.filterRegistryRealtime();
             if (layoutMovableActive) window.toggleMovableLayout();
-            fineTuneResetElements();
+            fineTuneResetElements('icd10-section-group');
+            fineTuneResetElements('zipcode-section-group');
+            fineTuneResetElements('member-section-group');
         };
 
-        function fineTuneResetElements() {
-            const target = document.getElementById('icd10-section-group');
-            if (!target) return;
-                                
-            const rows = target.querySelectorAll('.item-row');
-            rows.forEach((row, idx) => {
-                if (idx >= 5) { row.classList.add('hidden-overflow-item'); } 
-                else { row.classList.remove('hidden-overflow-item'); }
-                row.style.display = 'flex';
-            });
-
-            const triggerBtn = target.querySelector('.expand-list-action-trigger');
-            if (triggerBtn) {
-                triggerBtn.setAttribute('data-expanded', 'false');
-                triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-            }
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        // ==========================================
-        // [ITEMS SEARCH LOGIC]
-        // ==========================================
-        window.filterRegistryRealtime = function() {
-            const query = document.getElementById('registrySearch').value.toLowerCase().trim();
-            const container = document.getElementById('mainContainer');
-            const searchTargetGroup = document.getElementById('searchResultTargetGroup');
-
-            searchTargetGroup.innerHTML = '';
-
-            if (query === "") {
-                container.classList.remove('searching-active');
-                fineTuneResetElements();
-                return;
-            }
-
-            container.classList.add('searching-active');
-            const originalRows = container.querySelectorAll('.section-group-inner .item-row');
-
-            originalRows.forEach(row => {
-                const title = row.getAttribute('data-title').toLowerCase();
-                const textVal = row.getAttribute('data-val').toLowerCase();
-
-                if (title.includes(query) || textVal.includes(query)) {
-                    const clonedRow = row.cloneNode(true);
-                    clonedRow.classList.remove('hidden-overflow-item');
-                    clonedRow.style.display = 'flex';
-                    clonedRow.onclick = function() { window.handleSelectiveCopy(this); };
-                    searchTargetGroup.appendChild(clonedRow);
-                }
-            });
-        };
-
-        // ==========================================
-        // [ADD / EDIT DATA TRANSACTION LOGIC]
-        // ==========================================
-        window.pushRecordToDatabase = async function() {
-            const key = document.getElementById('newRecordKey').value.trim();
-            const val = document.getElementById('newRecordValue').value.trim();
-
-            if (!key || !val) return alert("Please specify all required data attributes.");
-
-            const referencePayload = { title: key, description: val, syncedAt: Date.now() };
-            const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
-
-            try {
-                if (rtdb) await set(ref(rtdb, `clinical_references/icd10_codes/${sanitizedKey}`), referencePayload);
-            } catch (err) { console.warn("Database operations drop trace fallback."); }
-
-            if (activeEditRow) {
-                activeEditRow.setAttribute('data-val', val);
-                activeEditRow.querySelector('.item-desc-text').textContent = val;
-            } else {
-                const targetNode = document.getElementById('icd10-section-group');
-                if (targetNode) {
-                    const currentCount = targetNode.querySelectorAll('.item-row').length;
-                    appendRowToDOM(targetNode, key, val, currentCount >= 5);
-                }
-            }
-
-            window.toggleModal('addRecordModal', false);
-            window.resetViewRegistry();
-        };
-
-        // ==========================================
-        // [MOVABLE REORDERING (DRAG & DROP)]
-        // ==========================================
-        window.toggleMovableLayout = function() {
-            layoutMovableActive = !layoutMovableActive;
-            const container = document.getElementById('mainContainer');
-            const triggerBtn = document.getElementById('sortToggleTrigger');
-            const wrappers = document.querySelectorAll('.section-group-wrapper');
-
-            if (layoutMovableActive) {
-                document.getElementById('registrySearch').value = "";
-                container.classList.remove('searching-active');
-                container.classList.add('edit-mode-active');
-                triggerBtn.classList.add('active-mode');
-                wrappers.forEach(w => w.classList.remove('collapsed'));
-            } else {
-                container.classList.remove('edit-mode-active');
-                triggerBtn.classList.remove('active-mode');
-                fineTuneResetElements();
-            }
-        };
-
-        function bindDragDropSequence(element) {
-            element.setAttribute('draggable', 'true');
-            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
-            element.addEventListener('dragend', () => element.classList.remove('dragging'));
-        }
-
-        document.getElementById('icd10-section-group').addEventListener('dragover', e => {
-            if (!layoutMovableActive) return;
-            e.preventDefault();
-            const activeDragging = document.querySelector('.dragging');
-            if (activeDragging) {
-                const zone = document.getElementById('icd10-section-group');
-                const boundingElement = getDragLocationSpace(zone, e.clientY);
-                if (boundingElement == null) {
-                    const expandActionLink = zone.querySelector('.expand-list-action-trigger');
-                    if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
-                    else zone.appendChild(activeDragging);
-                } else {
-                    zone.insertBefore(activeDragging, boundingElement);
-                }
-            }
-        });
-
-        function getDragLocationSpace(container, yPoint) {
-            const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
-            return elements.reduce((closest, child) => {
-                const boundary = child.getBoundingClientRect();
-                const separation = yPoint - boundary.top - boundary.height / 2;
-                if (separation < 0 && separation > closest.offset) {
-                    return { offset: separation, element: child };
-                } else { return closest; }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        // ==========================================
-        // [CONTEXT ENTRY HANDLERS]
-        // ==========================================
-        window.openInlineEdit = function(rowElement) {
-            activeEditRow = rowElement;
-                        
-            document.getElementById('modalDisplayTitle').textContent = "EDIT REFERENCE";
-            document.getElementById('modalTypeSelectorGroup').style.display = 'none';
-                        
-            const titleVal = rowElement.getAttribute('data-title');
-            document.getElementById('newRecordKey').value = titleVal;
-            document.getElementById('newRecordKey').disabled = true;
-                        
-            const descVal = rowElement.getAttribute('data-val');
-            document.getElementById('newRecordValue').value = descVal;
-                        
-            window.toggleModal('addRecordModal', true);
-        };
-
-        window.deleteInlineRow = async function(rowElement) {
-            if(confirm("Are you certain you want to destroy this reference record?")) {
-                const key = rowElement.getAttribute('data-title');
-                const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
-
-                try {
-                    if (rtdb) await set(ref(rtdb, `clinical_references/icd10_codes/${sanitizedKey}`), null);
-                } catch(e) { console.warn("Database communications trace fault drop."); }
-                                        
-                rowElement.remove();
-                window.resetViewRegistry();
-            }
-        };
-
-        // DOM Initializer Trigger Configuration Scope
         document.addEventListener('DOMContentLoaded', () => {
             initializeRegistryData();
         });
