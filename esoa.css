@@ -1423,6 +1423,7 @@ h2 {
 */
 
 /* Sits close on top of individual peer avatar bubbles and wraps text downward */
+/* Sits close on top of individual peer avatar bubbles and wraps text downward */
 .peer-status-note {
     position: absolute;
     top: -6px; 
@@ -1447,7 +1448,7 @@ h2 {
     text-transform: none; /* Allows any typed casing (mix, lower, upper) */
 }
 
-/* Shared baseline settings for thought trail bubbles */
+/* Shared baseline settings for thought trail bubbles - matching identical background/glass/border aesthetics */
 .peer-status-note::before,
 .peer-status-note::after {
     content: '';
@@ -1461,21 +1462,22 @@ h2 {
     pointer-events: none;
 }
 
-/* First trail node (Medium size, close to base on the left) */
+/* Top Trail Bubble: Attached directly at the far bottom-left corner */
 .peer-status-note::before {
     width: 6px;
     height: 6px;
-    bottom: -5px;
-    left: 20%;
+    bottom: -4px;
+    left: 0px; /* Outermost point on the left side */
 }
 
-/* Second trail node (Smallest size, lower down and further left) */
+/* Bottom Trail Bubble: Steps further down and inward towards the right */
 .peer-status-note::after {
     width: 4px;
     height: 4px;
-    bottom: -9px;
-    left: 8%;
+    bottom: -8px;
+    left: 5px; /* Shifted inward towards the right/inner core */
 }
+
 /* Sits close on top of your own bottom-right profile avatar node and wraps downward */
 .profile-status-note-bubble {
     position: fixed;
