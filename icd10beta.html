@@ -2,378 +2,220 @@
     <meta charset="UTF-8">    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <title>eSOA - ICD10 & Records Edition (Beta)</title>        
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">    
     <script src="https://unpkg.com/lucide@latest"></script>        
+    <link rel="stylesheet" href="esoa.css">
     <style>
-        :root {
-            --primary-orange: #ff6600;
-            --dark-orange: #cc5200;
-            --light-orange: rgba(255, 102, 0, 0.1);
-            --bg-dark: #121212;
-            --bg-panel: #1e1e1e;
-            --text-main: #ffffff;
-            --text-muted: #aaaaaa;
-            --border-color: #333333;
-        }
-
-        body {
-            font-family: 'Poppins', 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        /* Top Navigation */
-        .top-nav {
-            display: flex;
-            gap: 10px;
-            background: var(--bg-panel);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 15px;
-        }
-        .top-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-        .top-btn:hover {
-            background: var(--light-orange);
-            border-color: var(--primary-orange);
-        }
-        .top-btn.active {
-            background-color: rgba(255, 102, 0, 0.2) !important;
-            border-color: var(--primary-orange);
-        }
-
-        /* Workspace Control Box (Positioned high up) */
-        .workspace-controls {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-color);
+        /* Contextual integration overrides for Search and Management controls inside native layout styling paradigms */
+        .workspace-controls-panel {
+            margin: 0 auto 20px auto;
+            max-width: 800px;
+            background: rgba(255, 102, 0, 0.05);
+            border: 1px solid rgba(255, 102, 0, 0.25);
             border-radius: 12px;
             padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .search-row {
             display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 12px;
+            align-items: center;
         }
-        .search-bar {
+        .search-input-field {
             flex: 1;
-            background: #2a2a2a;
-            border: 1px solid var(--border-color);
-            padding: 10px 15px;
-            border-radius: 8px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px 14px;
             color: #fff;
-            font-family: inherit;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
         }
-        .search-bar:focus {
+        .search-input-field:focus {
             outline: none;
-            border-color: var(--primary-orange);
+            border-color: #ff6600;
         }
-        .action-btn-group {
-            display: flex;
-            gap: 8px;
-        }
-        .action-btn {
-            background: var(--primary-orange);
-            color: white;
+        .control-btn {
+            background: #ff6600;
+            color: #fff;
             border: none;
-            padding: 0 15px;
-            border-radius: 8px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
             font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.85rem;
+            transition: all 0.2s ease;
         }
-        .action-btn.secondary {
-            background: #333;
+        .control-btn.secondary {
+            background: #2a2a2a;
             border: 1px solid #444;
         }
-        .action-btn.edit-toggle.active-mode {
-            background: #d32f2f;
-            box-shadow: 0 0 8px rgba(211,47,47,0.5);
+        .control-btn.edit-mode-on {
+            background: #cc2400;
         }
-
-        /* Profile Layout Summary Row */
-        .profile-summary-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255, 102, 0, 0.03);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary-orange);
-        }
-        .profile-avatar-node {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: #333;
-            cursor: pointer;
-        }
-        .name-string {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        /* Database Records Lists Container */
-        .container {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
-        h2 {
-            color: var(--primary-orange);
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 25px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #2d2d2d;
-            padding-bottom: 5px;
-        }
-        h2:first-of-type { margin-top: 0; }
-
+        
+        /* Layout behaviors inside container items when working in Edit mode vs Selection Mode */
         .item-row {
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #262626;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
         }
-        .item-row:hover {
-            border-color: #444;
-            background: #2a2a2a;
-        }
-        .text-content {
-            font-size: 0.9rem;
-            word-break: break-word;
-        }
-        .code-badge {
-            font-family: 'Roboto Mono', monospace;
-            background: rgba(255,102,0,0.15);
-            color: var(--primary-orange);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            margin-right: 8px;
-        }
-
-        /* Row Action Tools during Edit Mode */
-        .row-actions {
+        .inline-management-tools {
             display: none;
-            gap: 5px;
+            gap: 6px;
         }
-        .edit-mode-active .row-actions {
+        .edit-active .inline-management-tools {
             display: flex;
         }
-        .row-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-        }
-        .row-btn:hover {
+        .tool-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #444;
             color: #fff;
-            background: #333;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
         }
-        .row-btn.del:hover {
-            color: #ff4444;
-            background: rgba(255,68,68,0.1);
+        .tool-btn:hover {
+            background: #ff6600;
+            border-color: #ff6600;
+        }
+        .tool-btn.danger-zone:hover {
+            background: #cc2400;
+            border-color: #cc2400;
         }
 
-        /* Dynamic Expand Controls */
-        .toggle-view-btn {
+        .toggle-section-trigger {
             background: transparent;
             border: none;
-            color: var(--primary-orange);
-            font-size: 0.85rem;
+            color: #ff6600;
             cursor: pointer;
-            padding: 6px 0;
             font-weight: 600;
+            font-size: 0.85rem;
+            margin: 5px 0 20px 0;
             display: inline-flex;
             align-items: center;
             gap: 4px;
         }
-        .toggle-view-btn:hover {
-            text-decoration: underline;
-        }
-        .hidden-item {
+        .hidden-row-item {
             display: none !important;
         }
-        .revealed-all .hidden-item {
+        .force-reveal-all .hidden-row-item {
             display: flex !important;
-        }
-
-        /* Modal Overlays */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: var(--bg-panel);
-            border: 1px solid var(--primary-orange);
-            padding: 25px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .modal-content h3 {
-            margin-top: 0;
-            color: var(--primary-orange);
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        .input-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-        .input-group select, .input-group input {
-            width: 100%;
-            background: #2a2a2a;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            border-radius: 6px;
-            color: #fff;
-            box-sizing: border-box;
-        }
-        .modal-action-row {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
         }
     </style>
 </head>
-<body>
+<body onmouseleave="resetMagnet()">
 
-    <div class="top-nav">
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
-        <button class="top-btn" title="eSOA Dashboard" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'"><i data-lucide="stethoscope"></i></button>
-        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+    <div class="peer-wrapper-row">        
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>        
+        <div class="peer-active-hub" id="peerActiveHub"></div>        
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>    
     </div>
 
-    <div class="workspace-controls">
-        <div class="search-row">
-            <input type="text" id="globalSearch" class="search-bar" placeholder="Search across codes, descriptions, locations, categories..." oninput="executeSearch()">
-            <div class="action-btn-group">
-                <button class="action-btn" onclick="openUpsertModal(null)"><i data-lucide="plus"></i> Add Item</button>
-                <button class="action-btn secondary edit-toggle" id="editModeBtn" onclick="toggleEditMode()"><i data-lucide="edit-3"></i> Edit Mode</button>
-            </div>
-        </div>
+    <div class="top-nav">        
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>         
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>    
+        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>                
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>        
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>    
     </div>
 
-    <div class="profile-summary-row">
-        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar">
-        <div>
-            <span id="userDisplayName" class="name-string">ICD-10 Registry Workspace</span>
-        </div>
+    <div class="workspace-controls-panel">
+        <input type="text" id="registrySearchInput" class="search-input-field" placeholder="Search ICD description, localized zipcodes, status parameters..." oninput="triggerSearchQuery()">
+        <button class="control-btn" onclick="openUpsertModal()"><i data-lucide="plus"></i> Add Entry</button>
+        <button class="control-btn secondary" id="editActionToggle" onclick="toggleSystemEditMode()"><i data-lucide="sliders"></i> Edit Mode</button>
+    </div>
+
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">    
+    <span id="userDisplayName" class="name-string">ICD-10 / Zip / Members Database Workspace</span>
+
+    <div class="chat-docking-panel" id="chatDock">        
+        <div class="chat-header-bar">            
+            <span id="chatTargetName">Active Session Chat</span>            
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>        
+        </div>                
+        <div class="chat-scroller-view" id="chatScroller"></div>                
+        <div class="chat-input-row">            
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">            
+            <button onclick="sendChatPayload()">Send</button>        
+        </div>    
     </div>
 
     <div class="container" id="mainContainer">
         </div>
 
-    <div class="modal-overlay" id="upsertModal">
-        <div class="modal-content">
-            <h3 id="modalTitle">Add Database Entry</h3>
-            <input type="hidden" id="targetId">
-            
-            <div class="input-group">
-                <label>Category</label>
-                <select id="itemCategory">
-                    <option value="icd">ICD-10 Diagnostic Codes</option>
-                    <option value="zipcode">Zipcodes & Locations</option>
-                    <option value="member">Member Status & Categories</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Code / Field Identifier</label>
-                <input type="text" id="itemCode" placeholder="e.g., J06.9, 9407, or INDIGENT">
-            </div>
-            <div class="input-group">
-                <label>Description / Match Value</label>
-                <input type="text" id="itemValue" placeholder="e.g., UPPER RESPIRATORY TRACT INFECTION">
-            </div>
+    <div class="bottom-zone" id="copyZone">         
+         <button class="btn-main-copy" id="magnetBtn">REGISTRY WORKSPACE ACTIVE</button>    
+    </div>
 
-            <div class="modal-action-row">
-                <button class="action-btn secondary" onclick="closeUpsertModal()">Cancel</button>
-                <button class="action-btn" onclick="saveDataPayload()">Save Entry</button>
+    <div class="modal-overlay" id="upsertModal" style="display: none; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;">
+        <div class="modal-content" style="background: #1e1e1e; border: 2px solid #ff6600; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px;" onclick="event.stopPropagation()">
+            <h3 id="modalFormTitle" style="color: #ff6600; margin-top: 0; font-family: 'Poppins';">Add Entry</h3>
+            <input type="hidden" id="entryTargetId">
+            
+            <div class="input-group" style="margin-bottom: 12px;">
+                 <label style="display:block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px;">CATEGORY TARGET</label>
+                 <select id="entryCategory" style="width:100%; background:#2a2a2a; border:1px solid #444; color:#fff; padding:8px; border-radius:6px;">
+                     <option value="icd">ICD10 & Diagnosis</option>
+                     <option value="zipcode">Zipcode & Places</option>
+                     <option value="member">Membership Status</option>
+                 </select>
+            </div>
+            <div class="input-group" style="margin-bottom: 12px;">
+                 <label style="display:block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px;">CODE / KEY IDENTIFIER</label>
+                 <input id="entryCode" type="text" placeholder="e.g. J06.9 or ARAKAN" style="width:100%; background:#2a2a2a; border:1px solid #444; color:#fff; padding:8px; border-radius:6px; box-sizing: border-box;">
+            </div>
+            <div class="input-group" style="margin-bottom: 20px;">
+                 <label style="display:block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px;">DESCRIPTION / MATCH VALUE</label>
+                 <input id="entryValue" type="text" placeholder="Description value..." style="width:100%; background:#2a2a2a; border:1px solid #444; color:#fff; padding:8px; border-radius:6px; box-sizing: border-box;">
+            </div>
+            
+            <div style="display:flex; justify-content: flex-end; gap: 8px;">
+                <button class="control-btn secondary" onclick="closeUpsertModal()">Dismiss</button>
+                <button class="control-btn" onclick="commitEntryPayload()">Save Record</button>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // Reactive Global State / Memory DB Matrix
-        let DB = {
+        // Internal Context State Matrix & Datastores
+        let dbMatrix = {
             icd: [
-                { id: "icd1", code: "J06.9", val: "UPPER RESPIRATORY TRACT INFECTION" },
-                { id: "icd2", code: "M06.99", val: "ARTHRITIS" },
-                { id: "icd3", code: "I10.1", val: "HYPERTENSION STAGE II" },
-                { id: "icd4", code: "I10.9", val: "ESSENTIAL HYPERTENSION" },
-                { id: "icd5", code: "K29.9", val: "GASTRITIS" },
-                { id: "icd6", code: "G44.2", val: "TENSION HEADACHE" },
-                { id: "icd7", code: "H81.1", val: "BENIGN PAROXYSMAL VERTIGO" },
-                { id: "icd8", code: "K29.1", val: "ACUTE GASTRITIS" },
-                { id: "icd9", code: "K27.9", val: "PEPTIC ULCER" },
-                { id: "icd10", code: "H60.3", val: "EXTERNAL INFECTIVE OTITIS" },
-                { id: "icd11", code: "J11.1", val: "INFLUENZA" },
-                { id: "icd12", code: "E11.9", val: "DIABETES MELLITUS" },
-                { id: "icd13", code: "B34.9", val: "VIRAL INFECTION" },
-                { id: "icd14", code: "BO1.9", val: "VARICELLA" },
-                { id: "icd15", code: "S01.9", val: "OPEN WOUND OF HEAD" },
-                { id: "icd16", code: "L03.9", val: "CELLULITIS" },
-                { id: "icd17", code: "L03.2", val: "CELLULITIS OF FACE" },
-                { id: "icd18", code: "J20.9", val: "ACUTE BRONCHITIS" },
-                { id: "icd19", code: "T78.4", val: "HYPERSENSITIVITY REACTION" },
-                { id: "icd20", code: "T79.3", val: "POST-TRAUMATIC WOUND INFECTION" },
-                { id: "icd21", code: "J45.90", val: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
-                { id: "icd22", code: "O21.9", val: "VOMITING OF PREGNANCY" },
-                { id: "icd23", code: "B34.1", val: "ECHOVIRUS INFECTION NOS" },
-                { id: "icd24", code: "J45.0", val: "ALLERGIC BRONCHITIS" },
-                { id: "icd25", code: "H66.9", val: "OTITIS MEDIA" },
-                { id: "icd26", code: "J03.9", val: "ACUTE TONSILLITIS" },
-                { id: "icd27", code: "K30", val: "DYSPEPSIA" },
-                { id: "icd28", code: "M00.99", val: "PYOGENIC ARTHRITIS" },
-                { id: "icd29", code: "A97.1", val: "DENGUE WITTULUNAN - 9403H WARNING SIGNS" },
-                { id: "icd30", code: "K11.2", val: "SIALOADENITIS" },
-                { id: "icd31", code: "M19.99", val: "ARTHROSIS" },
-                { id: "icd32", code: "G43.9", val: "MIGRAINE" },
-                { id: "icd33", code: "K21.9", val: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+                { id: "i1", code: "J06.9", val: "UPPER RESPIRATORY TRACT INFECTION" },
+                { id: "i2", code: "M06.99", val: "ARTHRITIS" },
+                { id: "i3", code: "I10.1", val: "HYPERTENSION STAGE II" },
+                { id: "i4", code: "I10.9", val: "ESSENTIAL HYPERTENSION" },
+                { id: "i5", code: "K29.9", val: "GASTRITIS" },
+                { id: "i6", code: "G44.2", val: "TENSION HEADACHE" },
+                { id: "i7", code: "H81.1", val: "BENIGN PAROXYSMAL VERTIGO" },
+                { id: "i8", code: "K29.1", val: "ACUTE GASTRITIS" },
+                { id: "i9", code: "K27.9", val: "PEPTIC ULCER" },
+                { id: "i10", code: "H60.3", val: "EXTERNAL INFECTIVE OTITIS" },
+                { id: "i11", code: "J11.1", val: "INFLUENZA" },
+                { id: "i12", code: "E11.9", val: "DIABETES MELLITUS" },
+                { id: "i13", code: "B34.9", val: "VIRAL INFECTION" },
+                { id: "i14", code: "BO1.9", val: "VARICELLA" },
+                { id: "i15", code: "S01.9", val: "OPEN WOUND OF HEAD" },
+                { id: "i16", code: "L03.9", val: "CELLULITIS" },
+                { id: "i17", code: "L03.2", val: "CELLULITIS OF FACE" },
+                { id: "i18", code: "J20.9", val: "ACUTE BRONCHITIS" },
+                { id: "i19", code: "T78.4", val: "HYPERSENSITIVITY REACTION" },
+                { id: "i20", code: "T79.3", val: "POST-TRAUMATIC WOUND INFECTION" },
+                { id: "i21", code: "J45.90", val: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
+                { id: "i22", code: "O21.9", val: "VOMITING OF PREGNANCY" },
+                { id: "i23", code: "B34.1", val: "ECHOVIRUS INFECTION NOS" },
+                { id: "i24", code: "J45.0", val: "ALLERGIC BRONCHITIS" },
+                { id: "i25", code: "H66.9", val: "OTITIS MEDIA" },
+                { id: "i26", code: "J03.9", val: "ACUTE TONSILLITIS" },
+                { id: "i27", code: "K30", val: "DYSPEPSIA" },
+                { id: "i28", code: "M00.99", val: "PYOGENIC ARTHRITIS" },
+                { id: "i29", code: "A97.1", val: "DENGUE WITTULUNAN - 9403H WARNING SIGNS" },
+                { id: "i30", code: "K11.2", val: "SIALOADENITIS" },
+                { id: "i31", code: "M19.99", val: "ARTHROSIS" },
+                { id: "i32", code: "G43.9", val: "MIGRAINE" },
+                { id: "i33", code: "K21.9", val: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
             ],
             zipcode: [
                 { id: "z1", code: "ARAKAN", val: "9417" },
@@ -403,150 +245,170 @@
             ]
         };
 
-        let config = {
+        let activeConfig = {
             editMode: false,
-            searchQuery: "",
-            toggledSections: { icd: false, zipcode: false, member: false }
+            filterTerm: "",
+            expandedSections: { icd: false, zipcode: false, member: false }
         };
 
-        // Render UI Pipeline
-        function renderWorkspaceEngine() {
+        // Complete UI Render Loop processing inside #mainContainer
+        function syncContainerDOM() {
             const container = document.getElementById("mainContainer");
             container.innerHTML = "";
 
-            const targetCategories = [
-                { key: "icd", label: "ICD-10 Diagnosis Registries" },
-                { key: "zipcode", label: "Geographic Zipcodes & Locations" },
-                { key: "member", label: "Member Classification & Coverage" }
+            const targetRegistryCategories = [
+                { key: "icd", headerTitle: "ICD10 & Diagnosis Codes" },
+                { key: "zipcode", headerTitle: "ZIPCODE & Places" },
+                { key: "member", headerTitle: "MEMBER CATEGORY Status" }
             ];
 
-            targetCategories.forEach(cat => {
-                let items = [...DB[cat.key]];
+            targetRegistryCategories.forEach(cat => {
+                let dataset = [...dbMatrix[cat.key]];
 
-                // Application of Sort Rule automatically processing if Edit Mode is Active
-                if (config.editMode) {
-                    items.sort((a, b) => a.code.localeCompare(b.code));
+                // Sort operational structures when running inside Edit Mode automatically
+                if (activeConfig.editMode) {
+                    dataset.sort((a, b) => a.code.localeCompare(b.code));
                 }
 
-                // Application of Multi-field String Filter Engine
-                if (config.searchQuery.trim() !== "") {
-                    const q = config.searchQuery.toLowerCase();
-                    items = items.filter(i => i.code.toLowerCase().includes(q) || i.val.toLowerCase().includes(q));
+                // Query filter logic
+                if (activeConfig.filterTerm.trim() !== "") {
+                    const searchStr = activeConfig.filterTerm.toLowerCase();
+                    dataset = dataset.filter(item => 
+                        item.code.toLowerCase().includes(searchStr) || 
+                        item.val.toLowerCase().includes(searchStr)
+                    );
                 }
 
-                if (items.length === 0 && config.searchQuery.trim() !== "") return;
+                if (dataset.length === 0 && activeConfig.filterTerm.trim() !== "") return;
 
-                // Section Headers Rendering
-                const sectionHeader = document.createElement("h2");
-                sectionHeader.innerText = cat.label;
-                container.appendChild(sectionHeader);
+                // Create header block elements using original styling rules
+                const header = document.createElement("h2");
+                header.innerText = cat.headerTitle;
+                container.appendChild(header);
 
-                const sectionWrapper = document.createElement("div");
-                sectionWrapper.id = `section-${cat.key}`;
-                if (config.editMode) sectionWrapper.classList.add("revealed-all");
+                const dataBlockWrapper = document.createElement("div");
+                dataBlockWrapper.id = `block-${cat.key}`;
+                if (activeConfig.editMode) {
+                    dataBlockWrapper.classList.add("force-reveal-all");
+                }
 
-                // Pagination logic mapping
-                items.forEach((item, index) => {
-                    const row = document.createElement("div");
-                    row.className = "item-row";
+                dataset.forEach((item, index) => {
+                    const elementRow = document.createElement("div");
+                    elementRow.className = "item-row";
+                    elementRow.setAttribute("data-val", `${item.code} - ${item.val}`);
                     
-                    // Enforce the 5 items visibility cap constraint unless Edit mode or section explicit toggled
-                    if (index >= 5 && !config.editMode && !config.toggledSections[cat.key]) {
-                        row.classList.add("hidden-item");
+                    // Assign systemic visibility rules tracking pagination thresholds (5 items maximum visible natively)
+                    if (index >= 5 && !activeConfig.editMode && !activeConfig.expandedSections[cat.key]) {
+                        elementRow.classList.add("hidden-row-item");
                     }
 
-                    row.innerHTML = `
-                        <span class="text-content">
-                            <span class="code-badge">${item.code}</span> — ${item.val}
-                        </span>
-                        <div class="row-actions">
-                            <button class="row-btn edit" data-cat="${cat.key}" data-id="${item.id}" title="Edit Detail"><i data-lucide="edit-2"></i></button>
-                            <button class="row-btn del" data-cat="${cat.key}" data-id="${item.id}" title="Delete Record"><i data-lucide="trash-2"></i></button>
+                    elementRow.innerHTML = `
+                        <span class="text-content"><strong>${item.code}</strong> — ${item.val}</span>
+                        <div class="inline-management-tools">
+                            <button class="tool-btn edit-action-trigger" data-category="${cat.key}" data-id="${item.id}"><i data-lucide="edit-2"></i></button>
+                            <button class="tool-btn danger-zone delete-action-trigger" data-category="${cat.key}" data-id="${item.id}"><i data-lucide="trash-2"></i></button>
                         </div>
                     `;
-                    sectionWrapper.appendChild(row);
+
+                    // Bind Copy operation directly unless in dynamic edit modes
+                    elementRow.onclick = (e) => {
+                        if (activeConfig.editMode) return;
+                        
+                        // Execute immediate copy to system clipboard buffer
+                        navigator.clipboard.writeText(`${item.code} - ${item.val}`).then(() => {
+                            const copyBtn = document.getElementById("magnetBtn");
+                            copyBtn.innerText = "COPIED TO CLIPBOARD!";
+                            setTimeout(() => { copyBtn.innerText = "REGISTRY WORKSPACE ACTIVE"; }, 1500);
+                            
+                            // Instantly reset lookup elements and return list status back to standard settings
+                            resetFocus();
+                        });
+                    };
+
+                    dataBlockWrapper.appendChild(elementRow);
                 });
 
-                container.appendChild(sectionWrapper);
+                container.appendChild(dataBlockWrapper);
 
-                // Appending dynamic Toggle UI element if length outstrips constraint limit rule
-                if (items.length > 5 && !config.editMode) {
-                    const isExpanded = config.toggledSections[cat.key];
-                    const toggleBtn = document.createElement("button");
-                    toggleBtn.className = "toggle-view-btn";
-                    toggleBtn.innerHTML = isExpanded 
-                        ? `<i data-lucide='chevron-up'></i> Show Less` 
-                        : `<i data-lucide='chevron-down'></i> Show All (${items.length - 5} hidden)`;
+                // Add Toggle elements conditional mechanics
+                if (dataset.length > 5 && !activeConfig.editMode) {
+                    const isRowExpanded = activeConfig.expandedSections[cat.key];
+                    const expansionBtn = document.createElement("button");
+                    expansionBtn.className = "toggle-section-trigger";
+                    expansionBtn.innerHTML = isRowExpanded 
+                        ? `<i data-lucide="chevron-up"></i> Hide items` 
+                        : `<i data-lucide="chevron-down"></i> Show remaining (${dataset.length - 5} entries)`;
                     
-                    toggleBtn.onclick = () => {
-                        config.toggledSections[cat.key] = !config.toggledSections[cat.key];
-                        renderWorkspaceEngine();
+                    expansionBtn.onclick = () => {
+                        activeConfig.expandedSections[cat.key] = !activeConfig.expandedSections[cat.key];
+                        syncContainerDOM();
                     };
-                    container.appendChild(toggleBtn);
+                    container.appendChild(expansionBtn);
                 }
             });
 
-            // Re-bind click elements for structural actions inside runtime rows
-            if (config.editMode) {
-                container.classList.add("edit-mode-active");
-                document.querySelectorAll(".row-btn.edit").forEach(btn => {
-                    btn.onclick = () => openUpsertModal(btn.getAttribute("data-cat"), btn.getAttribute("data-id"));
+            // Bind click triggers for modification operations inside view state matrices
+            if (activeConfig.editMode) {
+                container.classList.add("edit-active");
+                
+                document.querySelectorAll(".edit-action-trigger").forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        openUpsertModal(btn.getAttribute("data-category"), btn.getAttribute("data-id"));
+                    };
                 });
-                document.querySelectorAll(".row-btn.del").forEach(btn => {
-                    btn.onclick = () => purgeRecord(btn.getAttribute("data-cat"), btn.getAttribute("data-id"));
+
+                document.querySelectorAll(".delete-action-trigger").forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        executeRowDeletion(btn.getAttribute("data-category"), btn.getAttribute("data-id"));
+                    };
                 });
             } else {
-                container.classList.remove("edit-mode-active");
+                container.classList.remove("edit-active");
             }
 
             lucide.createIcons();
         }
 
-        // Global Orchestration Mechanics
-        window.executeSearch = function() {
-            config.searchQuery = document.getElementById("globalSearch").value;
-            renderWorkspaceEngine();
+        // Global Utility Window API hooks
+        window.triggerSearchQuery = function() {
+            activeConfig.filterTerm = document.getElementById("registrySearchInput").value;
+            syncContainerDOM();
         };
 
-        window.toggleEditMode = function() {
-            config.editMode = !config.editMode;
-            const btn = document.getElementById("editModeBtn");
-            if (config.editMode) {
-                btn.classList.add("active-mode");
-                btn.innerHTML = `<i data-lucide="eye"></i> Exit Edit Mode`;
+        window.toggleSystemEditMode = function() {
+            activeConfig.editMode = !activeConfig.editMode;
+            const toggleElement = document.getElementById("editActionToggle");
+            if (activeConfig.editMode) {
+                toggleElement.classList.add("edit-mode-on");
+                toggleElement.innerHTML = `<i data-lucide="eye"></i> Standard Mode`;
             } else {
-                btn.classList.remove("active-mode");
-                btn.innerHTML = `<i data-lucide="edit-3"></i> Edit Mode`;
+                toggleElement.classList.remove("edit-mode-on");
+                toggleElement.innerHTML = `<i data-lucide="sliders"></i> Edit Mode`;
             }
-            renderWorkspaceEngine();
+            syncContainerDOM();
         };
 
-        // Window exposed Modal Management Actions
-        window.openUpsertModal = function(category = null, recordId = null) {
+        window.openUpsertModal = function(category = null, targetId = null) {
             const modal = document.getElementById("upsertModal");
-            const title = document.getElementById("modalTitle");
-            const catSelect = document.getElementById("itemCategory");
-            const codeInput = document.getElementById("itemCode");
-            const valInput = document.getElementById("itemValue");
-            const idInput = document.getElementById("targetId");
-
             modal.style.display = "flex";
 
-            if (category && recordId) {
-                title.innerText = "Edit Database Record";
-                const activeItem = DB[category].find(i => i.id === recordId);
-                idInput.value = activeItem.id;
-                catSelect.value = category;
-                catSelect.disabled = true; // Lock category changing on update action
-                codeInput.value = activeItem.code;
-                valInput.value = activeItem.val;
+            if (category && targetId) {
+                document.getElementById("modalFormTitle").innerText = "Modify Registry Entry";
+                const activeRecord = dbMatrix[category].find(element => element.id === targetId);
+                document.getElementById("entryTargetId").value = activeRecord.id;
+                document.getElementById("entryCategory").value = category;
+                document.getElementById("entryCategory").disabled = true;
+                document.getElementById("entryCode").value = activeRecord.code;
+                document.getElementById("entryValue").value = activeRecord.val;
             } else {
-                title.innerText = "Add New Record";
-                idInput.value = "";
-                catSelect.disabled = false;
-                catSelect.value = category || "icd";
-                codeInput.value = "";
-                valInput.value = "";
+                document.getElementById("modalFormTitle").innerText = "Create New Entry";
+                document.getElementById("entryTargetId").value = "";
+                document.getElementById("entryCategory").disabled = false;
+                document.getElementById("entryCategory").value = category || "icd";
+                document.getElementById("entryCode").value = "";
+                document.getElementById("entryValue").value = "";
             }
         };
 
@@ -554,55 +416,52 @@
             document.getElementById("upsertModal").style.display = "none";
         };
 
-        window.saveDataPayload = function() {
-            const id = document.getElementById("targetId").value;
-            const cat = document.getElementById("itemCategory").value;
-            const code = document.getElementById("itemCode").value.trim();
-            const val = document.getElementById("itemValue").value.trim();
+        window.commitEntryPayload = function() {
+            const id = document.getElementById("entryTargetId").value;
+            const category = document.getElementById("entryCategory").value;
+            const code = document.getElementById("entryCode").value.trim();
+            const value = document.getElementById("entryValue").value.trim();
 
-            if (!code || !val) {
-                alert("Both identification fields must be valid.");
+            if (!code || !value) {
+                alert("Please enter values into all operational fields before continuing.");
                 return;
             }
 
             if (id) {
-                // Runtime Update Operation
-                const record = DB[cat].find(i => i.id === id);
-                if (record) {
-                    record.code = code;
-                    record.val = val;
+                let matchingElement = dbMatrix[category].find(e => e.id === id);
+                if (matchingElement) {
+                    matchingElement.code = code;
+                    matchingElement.val = value;
                 }
             } else {
-                // Runtime Mutation Core Push Operation
-                const newRecord = {
-                    id: cat + Date.now(),
+                dbMatrix[category].push({
+                    id: "custom-" + Date.now(),
                     code: code,
-                    val: val
-                };
-                DB[cat].push(newRecord);
+                    val: value
+                });
             }
 
             closeUpsertModal();
-            renderWorkspaceEngine();
+            syncContainerDOM();
         };
 
-        window.purgeRecord = function(category, id) {
-            if (confirm("Confirm database operational deletion strategy for selected row record?")) {
-                DB[category] = DB[category].filter(item => item.id !== id);
-                renderWorkspaceEngine();
+        window.executeRowDeletion = function(category, targetId) {
+            if (confirm("Confirm standard execution strategy to erase selected entry from system record?")) {
+                dbMatrix[category] = dbMatrix[category].filter(item => item.id !== targetId);
+                syncContainerDOM();
             }
         };
 
         window.resetFocus = function() {
-            document.getElementById("globalSearch").value = "";
-            config.searchQuery = "";
-            config.toggledSections = { icd: false, zipcode: false, member: false };
-            renderWorkspaceEngine();
+            document.getElementById("registrySearchInput").value = "";
+            activeConfig.filterTerm = "";
+            activeConfig.expandedSections = { icd: false, zipcode: false, member: false };
+            syncContainerDOM();
         };
 
-        // Bootstrapping
+        // Window Initial Boot Process Execution
         window.onload = () => {
-            renderWorkspaceEngine();
+            syncContainerDOM();
         };
     </script>
 </body>
