@@ -1423,7 +1423,6 @@ h2 {
 */
 
 /* Sits close on top of individual peer avatar bubbles and wraps text downward */
-/* Sits close on top of individual peer avatar bubbles and wraps text downward */
 .peer-status-note {
     position: absolute;
     top: -6px; 
@@ -1440,7 +1439,7 @@ h2 {
     width: 50px; /* Locked width to force downward stacking */
     white-space: normal;
     word-break: break-word;
-    border: 0.5px solid rgba(255, 255, 255, 0.08); /* Thinner hairline border */
+    border: 0.5px solid var(--primary); /* Anchored to primary theme accent variable */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 3300;
     pointer-events: none;
@@ -1456,7 +1455,7 @@ h2 {
     background: rgba(var(--surface-rgb, 20, 20, 20), 0.7);
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border: 0.5px solid rgba(255, 255, 255, 0.08);
+    border: 0.5px solid var(--primary); /* Injected custom theme accent color scheme mapping */
     border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     pointer-events: none;
