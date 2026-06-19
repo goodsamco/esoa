@@ -17,6 +17,78 @@
             --success: #00e676;
         }
 
+        /* Profile Area and Status Note Bubble Components */
+        .profile-container-block {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Structural hook used by esoa.js to append the status note bubble text */
+        .avatar-status-note-bubble {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #000;
+            border: 1.5px solid var(--primary);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 100;
+            cursor: pointer;
+        }
+
+        /* Personal Notes Registry Board Styling */
+        .personal-notes-board {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 16px;
+            margin: 15px 0 25px 0;
+            text-align: left;
+        }
+
+        .personal-notes-board h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notes-display-wall {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .my-custom-note-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--primary);
+            padding: 8px 12px;
+            border-radius: 4px 8px 8px 4px;
+            font-size: 0.8rem;
+            color: #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
         /* Category Header Chevron indicator styles */
         .category-header {
             display: flex;
@@ -76,7 +148,8 @@
         }
 
         .searching-active .category-header,
-        .searching-active .section-group-wrapper {
+        .searching-active .section-group-wrapper,
+        .searching-active .personal-notes-board {
             display: none !important;
         }
 
@@ -88,7 +161,7 @@
             text-transform: uppercase;
         }
 
-        /* Inline structural action link positioned after the fifth block element */
+        /* Inline structural action link */
         .expand-list-action-trigger {
             background: transparent;
             border: none;
@@ -248,7 +321,7 @@
             line-height: 1.4;
         }
 
-        /* Preserved strictly left-aligned item structures */
+        /* Preserved left-aligned item structures */
         .item-row {
             display: flex;
             align-items: flex-start;
@@ -299,7 +372,7 @@
             flex-grow: 1;
         }
 
-        /* Context Actions layout injection for inline row modifications */
+        /* Context Actions layout injection */
         .row-context-actions {
             display: none;
             gap: 6px;
@@ -336,7 +409,6 @@
             border-color: #ff4444;
         }
 
-        /* Movable Layout Reordering & Administrative active states */
         .edit-mode-active .item-row {
             cursor: grab !important;
             border: 1px dashed var(--primary) !important;
@@ -372,7 +444,12 @@
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <!-- Grouped Profile Container Area: Intercepts and mounts status notes and profile targets -->
+    <div class="profile-container-block">
+        <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+        <!-- The esoa.js hook for custom profile updates/bubble notes -->
+        <div class="avatar-status-note-bubble" id="userStatusBubble" style="display: none;"></div>
+    </div>
     <span id="userDisplayName" class="name-string">Name</span>
 
     <div class="chat-docking-panel" id="chatDock">
@@ -390,11 +467,20 @@
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
+        <!-- Personal Workspace Notes Module (Monitored directly by esoa.js bindings) -->
+        <div class="personal-notes-board" id="personalNotesSection">
+            <h3><i data-lucide="sticky-note" style="width:16px;height:16px;"></i> My Workspace Notes</h3>
+            <div class="notes-display-wall" id="personalNotesContainer">
+                <!-- Sync logs auto-rendered here by external module handles -->
+            </div>
+        </div>
+
         <div class="search-priority-view" id="prioritySearchView">
             <h3>Top Code Matches</h3>
             <div id="searchResultTargetGroup"></div>
         </div>
 
+        <!-- ICD10 Registry Panel -->
         <div class="category-header" onclick="toggleCategoryAccordion('icd10-wrapper', this)">
             <h2>ICD10 References</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -403,6 +489,7 @@
             <div class="section-group-inner" id="icd10-section-group"></div>
         </div>
 
+        <!-- Places Registry Panel -->
         <div class="category-header" onclick="toggleCategoryAccordion('places-wrapper', this)">
             <h2>Places</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -411,6 +498,7 @@
             <div class="section-group-inner" id="places-section-group"></div>
         </div>
 
+        <!-- Membership Categories Panel -->
         <div class="category-header" onclick="toggleCategoryAccordion('membership-wrapper', this)">
             <h2>Membership Category</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -432,6 +520,7 @@
         </button>
     </div>
 
+    <!-- Registry Record Modifier Modal Structure -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3> 
@@ -728,7 +817,6 @@
 
         window.openInlineEdit = function(rowElement) {
             activeEditRow = rowElement; 
-            
             document.getElementById('modalDisplayTitle').textContent = "EDIT REFERENCE";
             document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
             
