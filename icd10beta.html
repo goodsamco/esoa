@@ -380,10 +380,8 @@
             <span id="chatTargetName">Active Session Chat</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
         </div>
-        
-        <div class="chat-scroller-view" id="chatScroller"></div>
-        
-        <div class="chat-input-row">
+                <div class="chat-scroller-view" id="chatScroller"></div>
+                <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
@@ -481,19 +479,19 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let layoutMovableActive = false;
         let rtdb;
         let db;
         let activeEditRow = null;
+        let originalEditKey = ""; // Tracks initial key during mutations
         let userDocRef;
         let localProfileNoteCache = "";
         
         const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
         const userId = localStorage.getItem("userId");
 
-        // Maximized Reference List Datasets for All Domains
         const baseDataset = {
             icd10_codes: [
                 { title: "I10", desc: "ESSENTIAL (PRIMARY) HYPERTENSION" },
@@ -892,8 +890,11 @@
             document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
             
             const titleVal = rowElement.getAttribute('data-title');
-            document.getElementById('newRecordKey').value = titleVal;
-            document.getElementById('newRecordKey').disabled = true; 
+            originalEditKey = titleVal; // Keep track of the original name to delete it if altered
+            
+            const keyInputField = document.getElementById('newRecordKey');
+            keyInputField.value = titleVal;
+            keyInputField.disabled = false; // Primary Code Key input field is now fully editable
             
             const descVal = rowElement.getAttribute('data-val');
             document.getElementById('newRecordValue').value = descVal; 
@@ -926,12 +927,23 @@
             const referencePayload = { title: key, description: val, syncedAt: Date.now() };
             const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
+            // Clean up old document key path if the identifier title was altered during the edit operation
+            if (activeEditRow && originalEditKey && originalEditKey !== key) {
+                const sanitizedOldKey = originalEditKey.replace(/[.#$\[\]]/g, "_");
+                const targetDomain = activeEditRow.getAttribute('data-domain') || domain;
+                try {
+                    if (rtdb) await set(ref(rtdb, `clinical_references/${targetDomain}/${sanitizedOldKey}`), null);
+                } catch (err) { console.warn("Clean remove of altered reference pointer rejected."); }
+            }
+
             try {
                 if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), referencePayload);
             } catch (err) { console.warn("Database connection runtime dropped."); }
 
             if (activeEditRow) {
+                activeEditRow.setAttribute('data-title', key);
                 activeEditRow.setAttribute('data-val', val);
+                activeEditRow.querySelector('.item-title-prefix').textContent = key;
                 activeEditRow.querySelector('.item-desc-text').textContent = val;
             } else {
                 let elementId = 'icd10-section-group';
@@ -1028,6 +1040,7 @@
                         document.getElementById('newRecordKey').value = "";
                         document.getElementById('newRecordValue').value = "";
                         activeEditRow = null;
+                        originalEditKey = "";
                         adjustModalLabels();
                     }, 220); 
                 }
