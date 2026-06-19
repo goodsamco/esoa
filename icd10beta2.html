@@ -6,65 +6,283 @@
     <title>eSOA - ICD10 Diagnosis Codes</title>
     
     <!-- Design System Typography Links -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;600;800&family=Poppins:wght=400;600;800&family=Roboto+Mono:wght=400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght=400;600;800&family=Roboto+Mono:wght=400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <link rel="stylesheet" href="esoa.css">
     <style>
-        /* Precision Adjustments for Action Panels & Modals */
-        .modal-overlay {
-            align-items: center; /* Centers vertically */
-            padding-bottom: 80px; /* Slightly higher layout biasing to completely clear notes */
-        }
-        
-        /* Floating Control Triggers replacing the bottom-right zone */
-        .primary-action-trigger-bar {
-            position: fixed;
-            top: 225px; /* Directly under top-nav, perfectly safe from profile notes */
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 99;
-            width: calc(100% - 40px);
-            max-width: 600px;
+        /* Exact theme styling matching image_64c943.png, image_64c967.png, and image_64c943.png */
+        :root {
+            --brand-pink: #ff1493; /* Vibrant hot pink accent */
+            --glass-bg: rgba(28, 25, 23, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        .action-pill-btn {
+        /* Elevating modals slightly higher to completely clear any user status notes */
+        .modal-overlay {
+            align-items: center;
+            padding-bottom: 120px; 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .modal-content {
+            background: rgba(20, 18, 17, 0.82);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 30px;
+            width: 90%;
+            max-width: 440px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.8);
+        }
+
+        /* --- Floating Action Capsule Bar (image_64c943.png) --- */
+        .action-capsule-dock {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(32, 28, 26, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 40px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: calc(100% - 40px);
+            max-width: 500px;
+            z-index: 999;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .capsule-search-wrapper {
             flex: 1;
-            background: rgba(17, 17, 17, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            background: rgba(15, 13, 12, 0.7);
+            border-radius: 30px;
+            padding: 2px 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .capsule-search-wrapper input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
             color: #fafafa;
-            padding: 10px;
-            border-radius: 12px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
+            font-size: 0.95rem;
+            height: 42px;
+        }
+
+        .capsule-search-wrapper input::placeholder {
+            color: #6a6562;
+        }
+
+        .capsule-circle-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--brand-pink);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
+            padding: 0;
         }
 
-        .action-pill-btn:active {
-            background: #fbff00;
+        .capsule-circle-btn.primary-toggle {
+            background: var(--brand-pink);
             color: #111111;
-            transform: scale(0.98);
         }
 
-        /* Offset container to clear the upper global controls */
+        .capsule-circle-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* --- Reference Item List Modal UI (image_64c967.png) --- */
+        .modal-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title-row h3 {
+            color: var(--brand-pink);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: 0.06em;
+            margin: 0;
+        }
+
+        .reference-list-scroller {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 320px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 4px;
+        }
+
+        .ref-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 14, 147, 0.25);
+            border-radius: 14px;
+            padding: 12px 16px;
+        }
+
+        .ref-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .ref-item-key {
+            color: var(--brand-pink);
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 800;
+            font-size: 0.95rem;
+            min-width: 60px;
+        }
+
+        .ref-item-desc {
+            color: #b5b0ad;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        .ref-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .ref-action-btn {
+            background: transparent;
+            border: none;
+            color: #8a827e;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.15s ease;
+        }
+
+        .ref-action-btn:hover {
+            color: #fafafa;
+        }
+
+        /* --- Add New Reference Layout Form (image_64c943.png) --- */
+        .modal-form-heading {
+            color: #fafafa;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 0.03em;
+            margin: 0 0 24px 0;
+        }
+
+        .pink-form-label {
+            color: var(--brand-pink);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-select-native {
+            width: 100%;
+            background: #0f0d0c;
+            border: none;
+            border-radius: 16px;
+            color: #fafafa;
+            padding: 14px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ff1493' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        .form-input-native {
+            width: 100%;
+            background: rgba(30, 26, 24, 0.6);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 16px;
+            color: #fafafa;
+            padding: 14px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+
+        .form-textarea-native {
+            width: 100%;
+            background: rgba(30, 26, 24, 0.6);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 16px;
+            color: #fafafa;
+            padding: 14px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            height: 100px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        .btn-submit-pink {
+            width: 100%;
+            background: var(--brand-pink);
+            color: #000000;
+            border: none;
+            border-radius: 18px;
+            padding: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-dismiss-text {
+            display: block;
+            background: transparent;
+            border: none;
+            color: #6a6562;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            text-decoration: underline;
+            margin: 16px auto 0 auto;
+            cursor: pointer;
+        }
+
+        /* Adjustment for main layout flow alignment */
         #mainContainer {
-            margin-top: 290px !important; 
-        }
-
-        /* Interactive list row custom states */
-        .item-row.edit-active {
-            border: 1px dashed rgba(251, 255, 0, 0.4);
+            margin-top: 210px !important;
+            padding-bottom: 120px;
         }
     </style>
 </head>
@@ -73,9 +291,7 @@
     <!-- 1. Real-Time Peer Presence Slider Hub -->
     <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
-        <div class="peer-active-hub" id="peerActiveHub">
-            <!-- Dynamically populated via Firebase Realtime Database Engine -->
-        </div>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
@@ -88,34 +304,11 @@
         <button class="top-btn" title="CF4 Claim Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <!-- Primary Action Hub: Fixed High to Evade Profile Notes -->
-    <div class="primary-action-trigger-bar">
-        <button class="action-pill-btn" onclick="toggleModal('searchAddModal', true)">
-            <i data-lucide="search" style="width:14px; height:14px;"></i> SEARCH / ADD
-        </button>
-        <button class="action-pill-btn" onclick="toggleModal('managementModal', true)">
-            <i data-lucide="sliders" style="width:14px; height:14px;"></i> SORT / EDIT
-        </button>
-    </div>
-
     <!-- 3. Real-Time Account Avatar Hooks & Status Elements -->
     <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     <span id="userDisplayName" class="name-string">Operator</span>
 
-    <!-- 4. Real-Time Chat Overlaid Dock Panel Overlay -->
-    <div class="chat-docking-panel" id="chatDock">
-        <div class="chat-header-bar">
-            <span id="chatTargetName">Active Session Chat</span>
-            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
-        </div>
-        <div class="chat-scroller-view" id="chatScroller"></div>
-        <div class="chat-input-row">
-            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
-            <button onclick="sendChatPayload()">Send</button>
-        </div>
-    </div>
-
-    <!-- 5. Main Content Matrix: ICD10 Clipboard Copy Data Targets -->
+    <!-- Primary Core Interactive Content Container -->
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
         
@@ -126,64 +319,80 @@
         <h2>Respiratory System</h2>
         <div class="item-row" data-val="J20.9"><span class="text-content">J20.9 — Acute Bronchitis, Unspecified</span></div>
         <div class="item-row" data-val="J18.9"><span class="text-content">J18.9 — Pneumonia, Unspecified Organism</span></div>
-        <div class="item-row" data-val="J45.909"><span class="text-content">J45.909 — Unspecified Asthma</span></div>
         
         <h2>Circulatory & Metabolic</h2>
         <div class="item-row" data-val="I10"><span class="text-content">I10 — Essential (Primary) Hypertension</span></div>
         <div class="item-row" data-val="E11.9"><span class="text-content">E11.9 — Type 2 Diabetes Mellitus without complications</span></div>
-        <div class="item-row" data-val="I63.9"><span class="text-content">I63.9 — Cerebral Infarction, Unspecified (Stroke)</span></div>
-
-        <h2>Genitourinary & Others</h2>
-        <div class="item-row" data-val="N39.0"><span class="text-content">N39.0 — Urinary Tract Infection, Site Not Specified</span></div>
-        <div class="item-row" data-val="R51"><span class="text-content">R51 — Headache</span></div>
-        <div class="item-row" data-val="R50.9"><span class="text-content">R50.9 — Fever, Unspecified</span></div>
     </div>
 
-    <!-- 6. Bottom Magnetic Dynamic Utility Zone (Kept for instant item copying feedback) -->
-    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
-        <button class="btn-main-copy" id="magnetBtn">COPY FOCUSED</button>
+    <!-- --- FLOATING CAPSULE CONTROL DOCK (image_64c943.png) --- -->
+    <div class="action-capsule-dock">
+        <div class="capsule-search-wrapper">
+            <input type="text" id="dockSearchInput" placeholder="Search codes, classifications, notes..." oninput="liveSearchCodes()">
+        </div>
+        <button class="capsule-circle-btn" onclick="toggleModal('addReferenceModal', true)" title="Add Code">
+            <i data-lucide="plus" style="width: 20px; height: 20px; stroke-width: 2.5;"></i>
+        </button>
+        <button class="capsule-circle-btn primary-toggle" onclick="toggleModal('referenceListModal', true)" title="Manage Registry">
+            <i data-lucide="move" style="width: 18px; height: 18px; stroke-width: 2.5;"></i>
+        </button>
     </div>
 
-    <!-- MODAL A: Search & Add Master Modal -->
-    <div class="modal-overlay" id="searchAddModal" onclick="closeOutside(event, 'searchAddModal')">
+    <!-- --- MODAL 1: ICD10 REFERENCES MANAGEMENT (image_64c967.png) --- -->
+    <div class="modal-overlay" id="referenceListModal" onclick="closeOutside(event, 'referenceListModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>SEARCH & ADD DIAGNOSIS</h3>
-            <div class="input-group">
-                <label>FILTER DATABASE</label>
-                <input id="modalSearchInput" type="text" placeholder="Type to filter codes..." oninput="filterICDCodes()">
+            <div class="modal-title-row">
+                <h3>ICD10 REFERENCES</h3>
+                <i data-lucide="chevron-down" style="color: var(--brand-pink); cursor: pointer;" onclick="toggleModal('referenceListModal', false)"></i>
             </div>
-            <div class="input-group" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                <label>NEW DIAGNOSIS CODE</label>
-                <input id="newCodeKey" type="text" placeholder="e.g., K21.9">
+            
+            <div class="reference-list-scroller" id="modalRefScroller">
+                <!-- Populated dynamically to mirror live state -->
+                <div class="ref-list-item">
+                    <div class="ref-item-meta"><span class="ref-item-key">DA</span><span class="ref-item-desc">DFA</span></div>
+                    <div class="ref-item-actions">
+                        <button class="ref-action-btn"><i data-lucide="edit-3" style="width:14px; height:14px;"></i></button>
+                        <button class="ref-action-btn"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                    </div>
+                </div>
+                <div class="ref-list-item">
+                    <div class="ref-item-meta"><span class="ref-item-key">I10</span><span class="ref-item-desc">ESSENTIAL HYERTENSION</span></div>
+                    <div class="ref-item-actions">
+                        <button class="ref-action-btn"><i data-lucide="edit-3" style="width:14px; height:14px;"></i></button>
+                        <button class="ref-action-btn"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                    </div>
+                </div>
             </div>
-            <div class="input-group">
-                <label>DIAGNOSIS DESCRIPTION</label>
-                <input id="newCodeDesc" type="text" placeholder="e.g., GERD without Esophagitis">
-            </div>
-            <div class="modal-copy-zone" style="background:#fbff00; color:#111; font-weight:800;" onclick="executeAddCode()">INSERT NEW ENTRY</div>
-            <button class="modal-close-btn" onclick="toggleModal('searchAddModal', false)">Dismiss</button>
+            
+            <button class="btn-dismiss-text" onclick="toggleModal('referenceListModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <!-- MODAL B: Management Master Modal (Sort, Edit, Delete) -->
-    <div class="modal-overlay" id="managementModal" onclick="closeOutside(event, 'managementModal')">
+    <!-- --- MODAL 2: ADD NEW REFERENCE SYSTEM (image_64c943.png) --- -->
+    <div class="modal-overlay" id="addReferenceModal" onclick="closeOutside(event, 'addReferenceModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>MANAGE ENTRIES</h3>
+            <h3 class="modal-form-heading">ADD NEW REFERENCE</h3>
             
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button class="action-pill-btn" style="background:rgba(255,255,255,0.05);" onclick="triggerAlphaSort()">
-                    <i data-lucide="arrow-down-a-z"></i> SORT A-Z
-                </button>
-                <button class="action-pill-btn" id="editModeToggleBtn" style="background:rgba(255,255,255,0.05);" onclick="toggleGlobalEditMode()">
-                    <i data-lucide="edit-3"></i> TOGGLE EDIT MODE
-                </button>
+            <div style="margin-bottom: 20px;">
+                <label class="pink-form-label">REGISTRY DOMAIN</label>
+                <select class="form-select-native">
+                    <option>ICD10 Code Registry</option>
+                    <option>Custom Classifications</option>
+                </select>
             </div>
 
-            <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:10px;">
-                When Edit Mode is active, clicking items in the main list behind will flag them for removal or modification.
-            </p>
+            <div style="margin-bottom: 20px;">
+                <label class="pink-form-label">CODE / KEY</label>
+                <input type="text" id="formCodeKey" class="form-input-native">
+            </div>
 
-            <button class="modal-close-btn" onclick="toggleModal('managementModal', false)">Dismiss</button>
+            <div style="margin-bottom: 20px;">
+                <label class="pink-form-label">DESCRIPTION / CLASS DETAILS</label>
+                <textarea id="formCodeDesc" class="form-textarea-native"></textarea>
+            </div>
+
+            <button class="btn-submit-pink" onclick="submitFormCodeEntry()">SAVE REFERENCE</button>
+            <button class="btn-dismiss-text" onclick="toggleModal('addReferenceModal', false)">Dismiss</button>
         </div>
     </div>
 
@@ -205,13 +414,24 @@
         </div>
     </div>
 
+    <!-- Real-Time Chat Overlaid Dock Panel Overlay -->
+    <div class="chat-docking-panel" id="chatDock">
+        <div class="chat-header-bar">
+            <span id="chatTargetName">Active Session Chat</span>
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
+    </div>
+
     <!-- Initialization Scripts -->
     <script type="module" src="esoa.js"></script>
     <script>
-        let isEditModeActive = false;
-
-        function filterICDCodes() {
-            const query = document.getElementById('modalSearchInput').value.toLowerCase();
+        function liveSearchCodes() {
+            const query = document.getElementById('dockSearchInput').value.toLowerCase();
             const rows = document.querySelectorAll('.item-row');
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
@@ -219,63 +439,52 @@
             });
         }
 
-        function executeAddCode() {
-            const code = document.getElementById('newCodeKey').value.trim();
-            const desc = document.getElementById('newCodeDesc').value.trim();
-            if(!code || !desc) return alert('Fill out both fields.');
-            
+        function submitFormCodeEntry() {
+            const key = document.getElementById('formCodeKey').value.trim();
+            const desc = document.getElementById('formCodeDesc').value.trim();
+            if(!key || !desc) return;
+
             const container = document.getElementById('mainContainer');
-            const newRow = document.createElement('div');
-            newRow.className = 'item-row';
-            newRow.setAttribute('data-val', code);
-            newRow.innerHTML = `<span class="text-content">${code} — ${desc}</span>`;
+            const targetRow = document.createElement('div');
+            targetRow.className = 'item-row';
+            targetRow.setAttribute('data-val', key.toUpperCase());
+            targetRow.innerHTML = `<span class="text-content">${key.toUpperCase()} — ${desc}</span>`;
+            container.appendChild(targetRow);
+
+            // Clear inputs and toggle
+            document.getElementById('formCodeKey').value = '';
+            document.getElementById('formCodeDesc').value = '';
+            toggleModal('addReferenceModal', false);
             
-            // Re-bind click handlers if dynamic click triggers apply in your architecture
-            container.appendChild(newRow);
-            
-            // Reset fields & dismiss modal
-            document.getElementById('newCodeKey').value = '';
-            document.getElementById('newCodeDesc').value = '';
-            toggleModal('searchAddModal', false);
+            // Sync with layout instances
+            syncManagementList();
         }
 
-        function toggleGlobalEditMode() {
-            isEditModeActive = !isEditModeActive;
-            const btn = document.getElementById('editModeToggleBtn');
-            const rows = document.querySelectorAll('.item-row');
-            
-            if(isEditModeActive) {
-                btn.style.background = '#fbff00';
-                btn.style.color = '#111111';
-                rows.forEach(r => {
-                    r.classList.add('edit-active');
-                    r.onclick = function() {
-                        if(confirm(`Remove entry: ${this.getAttribute('data-val')}?`)) {
-                            this.remove();
-                        }
-                    };
-                });
-            } else {
-                btn.style.background = 'rgba(255,255,255,0.05)';
-                btn.style.color = '#fafafa';
-                rows.forEach(r => {
-                    r.classList.remove('edit-active');
-                    // Restores your native copy tracking logic defined inside esoa.js
-                    r.onclick = null; 
-                });
-            }
+        function syncManagementList() {
+            const scroller = document.getElementById('modalRefScroller');
+            scroller.innerHTML = '';
+            document.querySelectorAll('.item-row').forEach(row => {
+                const val = row.getAttribute('data-val');
+                const rawTxt = row.querySelector('.text-content').textContent;
+                const desc = rawTxt.split('—')[1]?.trim() || rawTxt;
+
+                const element = document.createElement('div');
+                element.className = 'ref-list-item';
+                element.innerHTML = `
+                    <div class="ref-item-meta"><span class="ref-item-key">${val}</span><span class="ref-item-desc">${desc}</span></div>
+                    <div class="ref-item-actions">
+                        <button class="ref-action-btn" onclick="alert('Modify ${val}')"><i data-lucide="edit-3" style='width:14px; height:14px;'></i></button>
+                        <button class="ref-action-btn" onclick="document.querySelector('[data-val=\\'${val}\\']').remove(); syncManagementList();"><i data-lucide="trash-2" style='width:14px; height:14px;'></i></button>
+                    </div>
+                `;
+                scroller.appendChild(element);
+            });
+            if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function triggerAlphaSort() {
-            const container = document.getElementById('mainContainer');
-            const headings = Array.from(container.querySelectorAll('h2'));
-            alert('Sorting structure executed!');
-            toggleModal('managementModal', false);
-        }
-
-        // Global Lucide Icon framework initialization 
         document.addEventListener('DOMContentLoaded', () => {
             if(typeof lucide !== 'undefined') lucide.createIcons();
+            syncManagementList();
         });
     </script>
 </body>
