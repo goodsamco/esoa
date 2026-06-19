@@ -1,468 +1,117 @@
-<!DOCTYPE html><html lang="en"><head>    
-    <meta charset="UTF-8">    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
-    <title>eSOA - ICD10 & Records Edition (Beta)</title>        
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">    
-    <script src="https://unpkg.com/lucide@latest"></script>        
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - ICD10 Codes Engine (Beta)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <link rel="stylesheet" href="esoa.css">
-    <style>
-        /* Contextual integration overrides for Search and Management controls inside native layout styling paradigms */
-        .workspace-controls-panel {
-            margin: 0 auto 20px auto;
-            max-width: 800px;
-            background: rgba(255, 102, 0, 0.05);
-            border: 1px solid rgba(255, 102, 0, 0.25);
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .search-input-field {
-            flex: 1;
-            background: #1e1e1e;
-            border: 1px solid #333;
-            border-radius: 6px;
-            padding: 10px 14px;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-        }
-        .search-input-field:focus {
-            outline: none;
-            border-color: #ff6600;
-        }
-        .control-btn {
-            background: #ff6600;
-            color: #fff;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-        .control-btn.secondary {
-            background: #2a2a2a;
-            border: 1px solid #444;
-        }
-        .control-btn.edit-mode-on {
-            background: #cc2400;
-        }
-        
-        /* Layout behaviors inside container items when working in Edit mode vs Selection Mode */
-        .item-row {
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .inline-management-tools {
-            display: none;
-            gap: 6px;
-        }
-        .edit-active .inline-management-tools {
-            display: flex;
-        }
-        .tool-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-        }
-        .tool-btn:hover {
-            background: #ff6600;
-            border-color: #ff6600;
-        }
-        .tool-btn.danger-zone:hover {
-            background: #cc2400;
-            border-color: #cc2400;
-        }
-
-        .toggle-section-trigger {
-            background: transparent;
-            border: none;
-            color: #ff6600;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin: 5px 0 20px 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .hidden-row-item {
-            display: none !important;
-        }
-        .force-reveal-all .hidden-row-item {
-            display: flex !important;
-        }
-    </style>
 </head>
 <body onmouseleave="resetMagnet()">
 
-    <div class="peer-wrapper-row">        
-        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>        
-        <div class="peer-active-hub" id="peerActiveHub"></div>        
-        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>    
+    <!-- Peer Presence Display Tracker Hub Grid Row Box Matrix Layout -->
+    <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
-    <div class="top-nav">        
-        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button>         
-        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>    
-        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>                
-        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>        
-        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>    
+    <!-- Persistent Global Functional Control Navigation Deck Panels -->
+    <div class="top-nav">
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button>
+        
+        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button>
+        <!-- Active Structural State Variant Highlight -->
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button>
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
-    <div class="workspace-controls-panel">
-        <input type="text" id="registrySearchInput" class="search-input-field" placeholder="Search ICD description, localized zipcodes, status parameters..." oninput="triggerSearchQuery()">
-        <button class="control-btn" onclick="openUpsertModal()"><i data-lucide="plus"></i> Add Entry</button>
-        <button class="control-btn secondary" id="editActionToggle" onclick="toggleSystemEditMode()"><i data-lucide="sliders"></i> Edit Mode</button>
+    <!-- Profile Interface Trigger Elements Matrix -->
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
+
+    <!-- Dedicated Live Multi-User Chat Sub-System Target Core Panels -->
+    <div class="chat-docking-panel" id="chatDock">
+        <div class="chat-header-bar">
+            <span id="chatTargetName">Active Session Chat</span>
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+        </div>
+        
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
     </div>
 
-    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">    
-    <span id="userDisplayName" class="name-string">ICD-10 / Zip / Members Database Workspace</span>
-
-    <div class="chat-docking-panel" id="chatDock">        
-        <div class="chat-header-bar">            
-            <span id="chatTargetName">Active Session Chat</span>            
-            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>        
-        </div>                
-        <div class="chat-scroller-view" id="chatScroller"></div>                
-        <div class="chat-input-row">            
-            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">            
-            <button onclick="sendChatPayload()">Send</button>        
-        </div>    
-    </div>
-
+    <!-- Core Structural Medical Coding Grid Items Containers Viewport -->
     <div class="container" id="mainContainer">
-        </div>
-
-    <div class="bottom-zone" id="copyZone">         
-         <button class="btn-main-copy" id="magnetBtn">REGISTRY WORKSPACE ACTIVE</button>    
+        <div id="highlighter"></div>
+        
+        <h2>Default Diagnostics Target Tracker</h2>
+        <div class="item-row" id="reset-target" data-val="RESET"><span class="text-content">CLEAR FOCUS</span></div>
+        
+        <h2>Gastrointestinal & Metabolic Systems</h2>
+        <div class="item-row" data-val="K35.8"><span class="text-content">ACUTE APPENDICITIS - K35.8</span></div>
+        <div class="item-row" data-val="K40.9"><span class="text-content">INGUINAL HERNIA - K40.9</span></div>
+        <div class="item-row" data-val="E11.9"><span class="text-content">DIABETES MELLITUS TYPE II - E11.9</span></div>
+        <div class="item-row" data-val="K80.2"><span class="text-content">CHOLELITHIASIS / GALLSTONES - K80.2</span></div>
+        <div class="item-row" data-val="A09.9"><span class="text-content">ACUTE GASTROENTERITIS (AGE) - A09.9</span></div>
+        <div class="add-btn-circle" onclick="openList('gi')"><i data-lucide="plus"></i></div>
+        
+        <h2>Cardiovascular & Circulatory Systems</h2>
+        <div class="item-row" data-val="I10"><span class="text-content">ESSENTIAL HYPERTENSION - I10</span></div>
+        <div class="item-row" data-val="I21.9"><span class="text-content">MYOCARDIAL INFARCTION (AMI) - I21.9</span></div>
+        <div class="item-row" data-val="I63.9"><span class="text-content">CEREBROVASCULAR ACCIDENT (CVA) - I63.9</span></div>
+        <div class="add-btn-circle" onclick="openList('cardio')"><i data-lucide="plus"></i></div>
+        
+        <h2>Respiratory & Infectious Processes</h2>
+        <div class="item-row" data-val="J18.9"><span class="text-content">PNEUMONIA (PNA) UNSPECIFIED - J18.9</span></div>
+        <div class="item-row" data-val="J45.909"><span class="text-content">BRONCHIAL ASTHMA - J45.909</span></div>
+        <div class="item-row" data-val="A91"><span class="text-content">DENGUE HEMORRHAGIC FEVER - A91</span></div>
+        <div class="item-row" data-val="U07.1"><span class="text-content">COVID-19 VIRUS IDENTIFIED - U07.1</span></div>
+        <div class="add-btn-circle" onclick="openList('respiratory')"><i data-lucide="plus"></i></div>
     </div>
 
-    <div class="modal-overlay" id="upsertModal" style="display: none; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;">
-        <div class="modal-content" style="background: #1e1e1e; border: 2px solid #ff6600; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px;" onclick="event.stopPropagation()">
-            <h3 id="modalFormTitle" style="color: #ff6600; margin-top: 0; font-family: 'Poppins';">Add Entry</h3>
-            <input type="hidden" id="entryTargetId">
-            
-            <div class="input-group" style="margin-bottom: 12px;">
-                 <label style="display:block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px;">CATEGORY TARGET</label>
-                 <select id="entryCategory" style="width:100%; background:#2a2a2a; border:1px solid #444; color:#fff; padding:8px; border-radius:6px;">
-                     <option value="icd">ICD10 & Diagnosis</option>
-                     <option value="zipcode">Zipcode & Places</option>
-                     <option value="member">Membership Status</option>
-                 </select>
+    <!-- Fluid Magnetized Dynamic Action Layer Controls -->
+    <div class="bottom-zone" id="copyZone" onclick="copyFocusedItem()"> 
+        <button class="btn-main-copy" id="magnetBtn">COPY</button>
+    </div>
+
+    <!-- Structural Overlay Variant Window Matrix System Components -->
+    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group"> 
+                <label>HOSPITAL CHARGES</label> 
+                <input id="hospCharges" type="number" placeholder="0.00" oninput="calcSr()"> 
             </div>
-            <div class="input-group" style="margin-bottom: 12px;">
-                 <label style="display:block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px;">CODE / KEY IDENTIFIER</label>
-                 <input id="entryCode" type="text" placeholder="e.g. J06.9 or ARAKAN" style="width:100%; background:#2a2a2a; border:1px solid #444; color:#fff; padding:8px; border-radius:6px; box-sizing: border-box;">
+            <div class="input-group"> 
+                <label>CASE RATE (PHIC)</label> 
+                <input id="caseRate" type="number" placeholder="0.00" oninput="calcSr()"> 
             </div>
-            <div class="input-group" style="margin-bottom: 20px;">
-                 <label style="display:block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px;">DESCRIPTION / MATCH VALUE</label>
-                 <input id="entryValue" type="text" placeholder="Description value..." style="width:100%; background:#2a2a2a; border:1px solid #444; color:#fff; padding:8px; border-radius:6px; box-sizing: border-box;">
+            <div class="modal-result">
+                <div id="finalDiscount">0.00</div>
             </div>
-            
-            <div style="display:flex; justify-content: flex-end; gap: 8px;">
-                <button class="control-btn secondary" onclick="closeUpsertModal()">Dismiss</button>
-                <button class="control-btn" onclick="commitEntryPayload()">Save Record</button>
-            </div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="copyModalValue()">COPY RESULT</div> 
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
 
-    <script type="module">
-        // Internal Context State Matrix & Datastores
-        let dbMatrix = {
-            icd: [
-                { id: "i1", code: "J06.9", val: "UPPER RESPIRATORY TRACT INFECTION" },
-                { id: "i2", code: "M06.99", val: "ARTHRITIS" },
-                { id: "i3", code: "I10.1", val: "HYPERTENSION STAGE II" },
-                { id: "i4", code: "I10.9", val: "ESSENTIAL HYPERTENSION" },
-                { id: "i5", code: "K29.9", val: "GASTRITIS" },
-                { id: "i6", code: "G44.2", val: "TENSION HEADACHE" },
-                { id: "i7", code: "H81.1", val: "BENIGN PAROXYSMAL VERTIGO" },
-                { id: "i8", code: "K29.1", val: "ACUTE GASTRITIS" },
-                { id: "i9", code: "K27.9", val: "PEPTIC ULCER" },
-                { id: "i10", code: "H60.3", val: "EXTERNAL INFECTIVE OTITIS" },
-                { id: "i11", code: "J11.1", val: "INFLUENZA" },
-                { id: "i12", code: "E11.9", val: "DIABETES MELLITUS" },
-                { id: "i13", code: "B34.9", val: "VIRAL INFECTION" },
-                { id: "i14", code: "BO1.9", val: "VARICELLA" },
-                { id: "i15", code: "S01.9", val: "OPEN WOUND OF HEAD" },
-                { id: "i16", code: "L03.9", val: "CELLULITIS" },
-                { id: "i17", code: "L03.2", val: "CELLULITIS OF FACE" },
-                { id: "i18", code: "J20.9", val: "ACUTE BRONCHITIS" },
-                { id: "i19", code: "T78.4", val: "HYPERSENSITIVITY REACTION" },
-                { id: "i20", code: "T79.3", val: "POST-TRAUMATIC WOUND INFECTION" },
-                { id: "i21", code: "J45.90", val: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
-                { id: "i22", code: "O21.9", val: "VOMITING OF PREGNANCY" },
-                { id: "i23", code: "B34.1", val: "ECHOVIRUS INFECTION NOS" },
-                { id: "i24", code: "J45.0", val: "ALLERGIC BRONCHITIS" },
-                { id: "i25", code: "H66.9", val: "OTITIS MEDIA" },
-                { id: "i26", code: "J03.9", val: "ACUTE TONSILLITIS" },
-                { id: "i27", code: "K30", val: "DYSPEPSIA" },
-                { id: "i28", code: "M00.99", val: "PYOGENIC ARTHRITIS" },
-                { id: "i29", code: "A97.1", val: "DENGUE WITTULUNAN - 9403H WARNING SIGNS" },
-                { id: "i30", code: "K11.2", val: "SIALOADENITIS" },
-                { id: "i31", code: "M19.99", val: "ARTHROSIS" },
-                { id: "i32", code: "G43.9", val: "MIGRAINE" },
-                { id: "i33", code: "K21.9", val: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
-            ],
-            zipcode: [
-                { id: "z1", code: "ARAKAN", val: "9417" },
-                { id: "z2", code: "ALEOSAN", val: "9415" },
-                { id: "z3", code: "PIGKAWAYAN", val: "9400" },
-                { id: "z4", code: "MIDSAYAP", val: "9410" },
-                { id: "z5", code: "PRES ROXAS", val: "9405" },
-                { id: "z6", code: "KIDAPAWAN", val: "9400" },
-                { id: "z7", code: "ANTIPAS", val: "9414" },
-                { id: "z8", code: "MATALAM", val: "9406" },
-                { id: "z9", code: "MAKILALA", val: "9401" },
-                { id: "z10", code: "M'LANG", val: "9402" },
-                { id: "z11", code: "KABACAN", val: "9407" },
-                { id: "z12", code: "CARMEN", val: "9408" },
-                { id: "z13", code: "LIBUNGAN", val: "9411" },
-                { id: "z14", code: "MAGEPT", val: "9404110098112460" }
-            ],
-            member: [
-                { id: "m1", code: "POS INCAPABLE", val: "INDIGENT" },
-                { id: "m2", code: "NTHS", val: "INDIGENT" },
-                { id: "m3", code: "LISTAHAN", val: "INDIGENT" },
-                { id: "m4", code: "DIRECT CONTRIBUTOR", val: "INDIVIDUAL PAYING" },
-                { id: "m5", code: "INDIRECT CONTRIBUTOR", val: "INDIGENT" },
-                { id: "m6", code: "SELF EARNING", val: "INDIVIDUAL PAYING" },
-                { id: "m7", code: "INFORMAL SECTOR", val: "INDIVIDUAL PAYING" },
-                { id: "m8", code: "SPONSORED LGU", val: "EMPLOYED GOVERNMENT" }
-            ]
-        };
+    <div class="modal-overlay" id="listModal" onclick="closeOutside(event, 'listModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="listTitle">SELECT DIAGNOSTIC CODE</h3>
+            <div id="listContainer"></div> 
+            <button class="modal-close-btn" onclick="toggleModal('listModal', false)">Dismiss</button>
+        </div>
+    </div>
 
-        let activeConfig = {
-            editMode: false,
-            filterTerm: "",
-            expandedSections: { icd: false, zipcode: false, member: false }
-        };
-
-        // Complete UI Render Loop processing inside #mainContainer
-        function syncContainerDOM() {
-            const container = document.getElementById("mainContainer");
-            container.innerHTML = "";
-
-            const targetRegistryCategories = [
-                { key: "icd", headerTitle: "ICD10 & Diagnosis Codes" },
-                { key: "zipcode", headerTitle: "ZIPCODE & Places" },
-                { key: "member", headerTitle: "MEMBER CATEGORY Status" }
-            ];
-
-            targetRegistryCategories.forEach(cat => {
-                let dataset = [...dbMatrix[cat.key]];
-
-                // Sort operational structures when running inside Edit Mode automatically
-                if (activeConfig.editMode) {
-                    dataset.sort((a, b) => a.code.localeCompare(b.code));
-                }
-
-                // Query filter logic
-                if (activeConfig.filterTerm.trim() !== "") {
-                    const searchStr = activeConfig.filterTerm.toLowerCase();
-                    dataset = dataset.filter(item => 
-                        item.code.toLowerCase().includes(searchStr) || 
-                        item.val.toLowerCase().includes(searchStr)
-                    );
-                }
-
-                if (dataset.length === 0 && activeConfig.filterTerm.trim() !== "") return;
-
-                // Create header block elements using original styling rules
-                const header = document.createElement("h2");
-                header.innerText = cat.headerTitle;
-                container.appendChild(header);
-
-                const dataBlockWrapper = document.createElement("div");
-                dataBlockWrapper.id = `block-${cat.key}`;
-                if (activeConfig.editMode) {
-                    dataBlockWrapper.classList.add("force-reveal-all");
-                }
-
-                dataset.forEach((item, index) => {
-                    const elementRow = document.createElement("div");
-                    elementRow.className = "item-row";
-                    elementRow.setAttribute("data-val", `${item.code} - ${item.val}`);
-                    
-                    // Assign systemic visibility rules tracking pagination thresholds (5 items maximum visible natively)
-                    if (index >= 5 && !activeConfig.editMode && !activeConfig.expandedSections[cat.key]) {
-                        elementRow.classList.add("hidden-row-item");
-                    }
-
-                    elementRow.innerHTML = `
-                        <span class="text-content"><strong>${item.code}</strong> — ${item.val}</span>
-                        <div class="inline-management-tools">
-                            <button class="tool-btn edit-action-trigger" data-category="${cat.key}" data-id="${item.id}"><i data-lucide="edit-2"></i></button>
-                            <button class="tool-btn danger-zone delete-action-trigger" data-category="${cat.key}" data-id="${item.id}"><i data-lucide="trash-2"></i></button>
-                        </div>
-                    `;
-
-                    // Bind Copy operation directly unless in dynamic edit modes
-                    elementRow.onclick = (e) => {
-                        if (activeConfig.editMode) return;
-                        
-                        // Execute immediate copy to system clipboard buffer
-                        navigator.clipboard.writeText(`${item.code} - ${item.val}`).then(() => {
-                            const copyBtn = document.getElementById("magnetBtn");
-                            copyBtn.innerText = "COPIED TO CLIPBOARD!";
-                            setTimeout(() => { copyBtn.innerText = "REGISTRY WORKSPACE ACTIVE"; }, 1500);
-                            
-                            // Instantly reset lookup elements and return list status back to standard settings
-                            resetFocus();
-                        });
-                    };
-
-                    dataBlockWrapper.appendChild(elementRow);
-                });
-
-                container.appendChild(dataBlockWrapper);
-
-                // Add Toggle elements conditional mechanics
-                if (dataset.length > 5 && !activeConfig.editMode) {
-                    const isRowExpanded = activeConfig.expandedSections[cat.key];
-                    const expansionBtn = document.createElement("button");
-                    expansionBtn.className = "toggle-section-trigger";
-                    expansionBtn.innerHTML = isRowExpanded 
-                        ? `<i data-lucide="chevron-up"></i> Hide items` 
-                        : `<i data-lucide="chevron-down"></i> Show remaining (${dataset.length - 5} entries)`;
-                    
-                    expansionBtn.onclick = () => {
-                        activeConfig.expandedSections[cat.key] = !activeConfig.expandedSections[cat.key];
-                        syncContainerDOM();
-                    };
-                    container.appendChild(expansionBtn);
-                }
-            });
-
-            // Bind click triggers for modification operations inside view state matrices
-            if (activeConfig.editMode) {
-                container.classList.add("edit-active");
-                
-                document.querySelectorAll(".edit-action-trigger").forEach(btn => {
-                    btn.onclick = (e) => {
-                        e.stopPropagation();
-                        openUpsertModal(btn.getAttribute("data-category"), btn.getAttribute("data-id"));
-                    };
-                });
-
-                document.querySelectorAll(".delete-action-trigger").forEach(btn => {
-                    btn.onclick = (e) => {
-                        e.stopPropagation();
-                        executeRowDeletion(btn.getAttribute("data-category"), btn.getAttribute("data-id"));
-                    };
-                });
-            } else {
-                container.classList.remove("edit-active");
-            }
-
-            lucide.createIcons();
-        }
-
-        // Global Utility Window API hooks
-        window.triggerSearchQuery = function() {
-            activeConfig.filterTerm = document.getElementById("registrySearchInput").value;
-            syncContainerDOM();
-        };
-
-        window.toggleSystemEditMode = function() {
-            activeConfig.editMode = !activeConfig.editMode;
-            const toggleElement = document.getElementById("editActionToggle");
-            if (activeConfig.editMode) {
-                toggleElement.classList.add("edit-mode-on");
-                toggleElement.innerHTML = `<i data-lucide="eye"></i> Standard Mode`;
-            } else {
-                toggleElement.classList.remove("edit-mode-on");
-                toggleElement.innerHTML = `<i data-lucide="sliders"></i> Edit Mode`;
-            }
-            syncContainerDOM();
-        };
-
-        window.openUpsertModal = function(category = null, targetId = null) {
-            const modal = document.getElementById("upsertModal");
-            modal.style.display = "flex";
-
-            if (category && targetId) {
-                document.getElementById("modalFormTitle").innerText = "Modify Registry Entry";
-                const activeRecord = dbMatrix[category].find(element => element.id === targetId);
-                document.getElementById("entryTargetId").value = activeRecord.id;
-                document.getElementById("entryCategory").value = category;
-                document.getElementById("entryCategory").disabled = true;
-                document.getElementById("entryCode").value = activeRecord.code;
-                document.getElementById("entryValue").value = activeRecord.val;
-            } else {
-                document.getElementById("modalFormTitle").innerText = "Create New Entry";
-                document.getElementById("entryTargetId").value = "";
-                document.getElementById("entryCategory").disabled = false;
-                document.getElementById("entryCategory").value = category || "icd";
-                document.getElementById("entryCode").value = "";
-                document.getElementById("entryValue").value = "";
-            }
-        };
-
-        window.closeUpsertModal = function() {
-            document.getElementById("upsertModal").style.display = "none";
-        };
-
-        window.commitEntryPayload = function() {
-            const id = document.getElementById("entryTargetId").value;
-            const category = document.getElementById("entryCategory").value;
-            const code = document.getElementById("entryCode").value.trim();
-            const value = document.getElementById("entryValue").value.trim();
-
-            if (!code || !value) {
-                alert("Please enter values into all operational fields before continuing.");
-                return;
-            }
-
-            if (id) {
-                let matchingElement = dbMatrix[category].find(e => e.id === id);
-                if (matchingElement) {
-                    matchingElement.code = code;
-                    matchingElement.val = value;
-                }
-            } else {
-                dbMatrix[category].push({
-                    id: "custom-" + Date.now(),
-                    code: code,
-                    val: value
-                });
-            }
-
-            closeUpsertModal();
-            syncContainerDOM();
-        };
-
-        window.executeRowDeletion = function(category, targetId) {
-            if (confirm("Confirm standard execution strategy to erase selected entry from system record?")) {
-                dbMatrix[category] = dbMatrix[category].filter(item => item.id !== targetId);
-                syncContainerDOM();
-            }
-        };
-
-        window.resetFocus = function() {
-            document.getElementById("registrySearchInput").value = "";
-            activeConfig.filterTerm = "";
-            activeConfig.expandedSections = { icd: false, zipcode: false, member: false };
-            syncContainerDOM();
-        };
-
-        // Window Initial Boot Process Execution
-        window.onload = () => {
-            syncContainerDOM();
-        };
-    </script>
+    <!-- Initialization Scripts Module Bundles Execution -->
+    <script type="module" src="icd10.js"></script>
 </body>
 </html>
