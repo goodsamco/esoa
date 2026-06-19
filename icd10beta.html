@@ -380,8 +380,8 @@
             <span id="chatTargetName">Active Session Chat</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
         </div>
-                <div class="chat-scroller-view" id="chatScroller"></div>
-                <div class="chat-input-row">
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
@@ -478,20 +478,13 @@
     <script type="module" src="esoa.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, set, get, child, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let layoutMovableActive = false;
         let rtdb;
-        let db;
         let activeEditRow = null;
-        let originalEditKey = ""; // Tracks initial key during mutations
-        let userDocRef;
-        let localProfileNoteCache = "";
+        let originalEditKey = "";
         
-        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-        const userId = localStorage.getItem("userId");
-
         const baseDataset = {
             icd10_codes: [
                 { title: "I10", desc: "ESSENTIAL (PRIMARY) HYPERTENSION" },
@@ -516,11 +509,6 @@
             ]
         }; 
 
-        const premium3dAssets = {
-            'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
-            'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
-        };
-
         try {
             const firebaseConfig = {
                 apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -533,155 +521,10 @@
                 measurementId: "G-5TNBMQ2HN5"
             };
             const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
             rtdb = getDatabase(app);
         } catch(e) {
             console.warn("RTDB environment connection local fallback initiated.");
         }
-
-        if (userId && db) {
-            userDocRef = doc(db, "accounts", userId);
-            onSnapshot(userDocRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.data();
-                    const currentUserName = data.customName || "Operator";
-                    const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
-                    document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
-                    document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
-
-                    if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
-                    if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
-
-                    const selfBubble = document.getElementById('profile-status-bubble-node');
-                    if (selfBubble) selfBubble.remove();
-
-                    if (data.statusNoteText && data.statusNoteUpdatedAt) {
-                        const delta = Date.now() - data.statusNoteUpdatedAt;
-                        if (delta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
-                            localProfileNoteCache = data.statusNoteText;
-                            const avatar = document.getElementById('userDisplayAvatar');
-                            const trigger = document.querySelector('.profile-note-action-trigger');
-                            if (avatar && trigger) {
-                                const bubble = document.createElement('div');
-                                bubble.className = 'profile-status-note-bubble';
-                                bubble.id = 'profile-status-bubble-node';
-                                bubble.innerText = localProfileNoteCache;
-                                if (data.statusNoteColor) {
-                                    bubble.style.borderColor = data.statusNoteColor;
-                                    bubble.style.color = data.statusNoteColor;
-                                }
-                                avatar.parentNode.insertBefore(bubble, trigger);
-                            }
-                        } else { localProfileNoteCache = ""; }
-                    } else { localProfileNoteCache = ""; }
-
-                    set(ref(rtdb, 'presence/' + userId), {
-                        uid: userId, 
-                        name: currentUserName, 
-                        avatar: currentUserAvatarRaw, 
-                        timestamp: Date.now(),
-                        statusNote: { 
-                            text: data.statusNoteText || "", 
-                            color: data.statusNoteColor || "#e5e5e5", 
-                            updatedAt: data.statusNoteUpdatedAt || 0 
-                        }
-                    });
-                }
-            });
-        }
-
-        if (rtdb) {
-            const hub = document.getElementById('peerActiveHub');
-            onValue(ref(rtdb, 'presence'), (snapshot) => {
-                const users = snapshot.val() || {};
-                const NOW = Date.now();
-                if (hub) {
-                    hub.innerHTML = '';
-                    Object.keys(users).forEach(uid => {
-                        if (uid === userId) return;
-                        const peer = users[uid];
-                        const cleanLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
-                        const src = premium3dAssets[peer.avatar] || peer.avatar;
-
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'peer-wrapper';
-                        wrapper.id = `peer-node-${uid}`;
-                        wrapper.innerHTML = `<img class="peer-avatar-bubble" src="${src}"><div class="peer-name-hover">${cleanLabel}</div>`; 
-                        
-                        if (peer.statusNote && peer.statusNote.updatedAt && (NOW - peer.statusNote.updatedAt < TWELVE_HOURS_MS)) {
-                            if (peer.statusNote.text.trim() !== "") {
-                                const note = document.createElement('div');
-                                note.className = 'peer-status-note';
-                                note.innerText = peer.statusNote.text;
-                                if (peer.statusNote.color) {
-                                    note.style.color = peer.statusNote.color;
-                                    note.style.borderColor = peer.statusNote.color;
-                                }
-                                wrapper.appendChild(note);
-                            }
-                        }
-                        hub.appendChild(wrapper);
-                    });
-                }
-                if (window.lucide) window.lucide.createIcons();
-            });
-        }
-
-        // Status Field Control Injections
-        (() => {
-            const avatarNode = document.getElementById('userDisplayAvatar');
-            if (!avatarNode) return;
-
-            const trigger = document.createElement('div');
-            trigger.className = 'profile-note-action-trigger';
-            trigger.innerText = '＋';
-            avatarNode.parentNode.insertBefore(trigger, avatarNode);
-
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
-            overlay.id = 'status-note-custom-modal';
-            overlay.innerHTML = `
-                <div class="modal-content">
-                    <div class="input-group">
-                        <label>UPDATE STATUS NOTE</label>
-                        <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
-                        <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
-                    </div>
-                    <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
-                    <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            const fld = document.getElementById('status-modal-field');
-            const cnt = document.getElementById('status-modal-counter');
-
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                fld.value = localProfileNoteCache;
-                cnt.innerText = `${localProfileNoteCache.length} / 10`;
-                window.toggleModal('status-note-custom-modal', true);
-            });
-
-            fld.addEventListener('input', () => {
-                if (fld.value.length > 10) fld.value = fld.value.substring(0, 10);
-                cnt.innerText = `${fld.value.length} / 10`;
-            });
-
-            document.getElementById('status-modal-close-btn').addEventListener('click', () => window.toggleModal('status-note-custom-modal', false));
-
-            document.getElementById('status-modal-save-btn').addEventListener('click', () => {
-                const text = fld.value.trim().substring(0, 10);
-                const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
-                if (userDocRef) {
-                    updateDoc(userDocRef, { 
-                        statusNoteText: text || "", 
-                        statusNoteColor: text ? color : "", 
-                        statusNoteUpdatedAt: text ? Date.now() : null 
-                    }).then(() => window.toggleModal('status-note-custom-modal', false));
-                }
-            });
-        })();
 
         function pullParsedAccentColor() {
             let customAccent =
@@ -890,11 +733,11 @@
             document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
             
             const titleVal = rowElement.getAttribute('data-title');
-            originalEditKey = titleVal; // Keep track of the original name to delete it if altered
+            originalEditKey = titleVal;
             
             const keyInputField = document.getElementById('newRecordKey');
             keyInputField.value = titleVal;
-            keyInputField.disabled = false; // Primary Code Key input field is now fully editable
+            keyInputField.disabled = false; 
             
             const descVal = rowElement.getAttribute('data-val');
             document.getElementById('newRecordValue').value = descVal; 
@@ -927,7 +770,6 @@
             const referencePayload = { title: key, description: val, syncedAt: Date.now() };
             const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
-            // Clean up old document key path if the identifier title was altered during the edit operation
             if (activeEditRow && originalEditKey && originalEditKey !== key) {
                 const sanitizedOldKey = originalEditKey.replace(/[.#$\[\]]/g, "_");
                 const targetDomain = activeEditRow.getAttribute('data-domain') || domain;
