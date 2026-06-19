@@ -1,0 +1,1050 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICD10 & Reference Registry</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="esoa.css">
+
+     <style>
+        :root {
+            --primary: hsl(111, 100%, 60%);
+            --glass: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --success: #00e676;
+        }
+
+        /* Category Header Chevron indicator styles */
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
+        }
+
+        .category-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .category-header .chevron-icon {
+            color: var(--primary);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-group-wrapper {
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .section-group-wrapper.collapsed {
+            grid-template-rows: 0fr;
+        }
+
+        .section-group-wrapper.collapsed .category-header .chevron-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-group-inner {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Search Results Block */
+        .search-priority-view {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .searching-active .search-priority-view {
+            display: flex;
+        }
+
+        .searching-active .category-header,
+        .searching-active .section-group-wrapper {
+            display: none !important;
+        }
+
+        .search-priority-view h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        /* Inline structural action link positioned after the fifth block element */
+        .expand-list-action-trigger {
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: left;
+            padding: 6px 4px;
+            margin-top: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+            width: fit-content;
+        }
+
+        .expand-list-action-trigger:hover {
+            opacity: 0.8;
+        }
+
+        /* Floating Control Dock perfectly stacked above the profile layout */
+        .bottom-floating-control-strip {
+            position: fixed;
+            bottom: 110px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-sizing: border-box;
+            gap: 10px;
+            z-index: 3100;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+        }
+
+        .search-inner-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .search-inner-wrapper input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass);
+            color: var(--text-main);
+            border-radius: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-inner-wrapper input:focus {
+            border-color: var(--primary) !important;
+        }
+
+        .action-control-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass);
+            border-radius: 50%;
+            color: var(--primary) !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-control-btn:hover, 
+        .action-control-btn.active-mode {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #000 !important;
+            transform: translateY(-2px);
+        }
+
+        /* Custom Dropdown Field Mechanics Setup */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .custom-select-wrapper select {
+            width: 100%;
+            background: #000 !important;
+            color: white !important;
+            padding: 12px;
+            border: 1px solid rgba(83, 83, 83, 0.3);
+            border-radius: 16px;
+            font-size: 0.8rem !important;
+            font-weight: 600;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .custom-select-wrapper::after {
+            content: '▼';
+            font-size: 0.65rem;
+            color: var(--primary);
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* Scaled Modal Typography and Left-Aligned Layout Structure */
+        .modal-content .input-group {
+            text-align: left;
+            width: 100%;
+        }
+
+        .modal-content .input-group label {
+            font-size: 0.72rem !important;
+            letter-spacing: 0.5px;
+            display: block;
+            text-align: left;
+            margin-bottom: 4px;
+        }
+
+        .modal-content .input-group input,
+        .modal-content .input-group textarea {
+            font-size: 0.8rem !important;
+            padding: 12px !important;
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(83, 83, 83, 0.3) !important;
+            color: #fff !important;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 16px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        .modal-content .input-group textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.4;
+        }
+
+        /* Preserved strictly left-aligned item structures */
+        .item-row {
+            display: flex;
+            align-items: flex-start;
+            text-align: left;
+            margin: 8px 0;
+            padding: 4px 0;
+            width: 100%;
+        } 
+
+        .item-row .text-content {
+            display: flex;
+            align-items: flex-start;
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        .item-row.hidden-overflow-item {
+            display: none;
+        }
+
+        .edit-mode-active .item-row.hidden-overflow-item {
+            display: flex !important;
+        }
+
+        .edit-mode-active .expand-list-action-trigger {
+            display: none !important;
+        }
+
+        .item-row .item-title-prefix {
+            font-family: 'Poppins', sans-serif;
+            color: var(--primary) !important;
+            font-weight: 700;
+            margin-right: 12px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            min-width: 90px;
+            text-transform: uppercase;
+            text-align: left;
+        }
+
+        .item-row .item-desc-text {
+            font-size: 0.78rem !important;
+            color: #aaaaaa;
+            font-weight: 400;
+            word-break: break-word;
+            white-space: pre-wrap;
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        /* Context Actions layout injection for inline row modifications */
+        .row-context-actions {
+            display: none;
+            gap: 6px;
+            align-items: center;
+            z-index: 10;
+            margin-left: auto;
+            padding-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .context-action-node {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--glass);
+            background: rgba(0,0,0,0.4);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .context-action-node.edit-trigger:hover {
+            background: var(--success);
+            color: #000;
+            border-color: var(--success);
+        }
+
+        .context-action-node.delete-trigger:hover {
+            background: #ff4444;
+            color: #fff;
+            border-color: #ff4444;
+        }
+
+        /* Movable Layout Reordering & Administrative active states */
+        .edit-mode-active .item-row {
+            cursor: grab !important;
+            border: 1px dashed var(--primary) !important;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .edit-mode-active .item-row .row-context-actions {
+            display: flex; 
+        }
+
+        .item-row.dragging {
+            opacity: 0.35;
+            background: var(--glass);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
+
+        <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub">
+            </div>
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
+    </div>
+
+    <div class="top-nav">
+        <button class="top-btn" title="Reset" onclick="resetFocus()"><i data-lucide="refresh-cw"></i></button> 
+        <button class="top-btn" title="Senior Discount" onclick="toggleModal('srModal', true)"><i data-lucide="user-check"></i></button> 
+        <button class="top-btn" title="eSOA" onclick="window.location.href='esoa.html'"><i data-lucide="receipt"></i></button> 
+        <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button> 
+        <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
+    </div>
+
+ <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
+
+
+    <div class="chat-docking-panel" id="chatDock">
+        <div class="chat-header-bar">
+            <span id="chatTargetName">Active Session Chat</span>
+            <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
+        </div>
+        
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        
+        <div class="chat-input-row">
+            <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
+            <button onclick="sendChatPayload()">Send</button>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div id="highlighter"></div>
+
+        <div class="search-priority-view" id="prioritySearchView">
+            <h3>Top Code Matches</h3>
+            <div id="searchResultTargetGroup"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('icd10-wrapper', this)">
+            <h2>ICD10 References</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="icd10-wrapper">
+            <div class="section-group-inner" id="icd10-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('zipcode-wrapper', this)">
+            <h2>Zipcodes Reference</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="zipcode-wrapper">
+            <div class="section-group-inner" id="zipcode-section-group"></div>
+        </div>
+
+        <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
+            <h2>Member Categories</h2>
+            <i data-lucide="chevron-down" class="chevron-icon"></i>
+        </div>
+        <div class="section-group-wrapper" id="member-wrapper">
+            <div class="section-group-inner" id="member-section-group"></div>
+        </div>
+    </div>
+
+    <div class="bottom-floating-control-strip">
+        <div class="search-inner-wrapper">
+            <input type="text" id="registrySearch" placeholder="Search codes, classifications, notes..." oninput="filterRegistryRealtime()">
+        </div>
+        <button class="action-control-btn" title="Add Reference" onclick="toggleModal('addRecordModal', true)">
+            <i data-lucide="plus"></i>
+        </button>
+        <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
+            <i data-lucide="move"></i>
+        </button>
+    </div>
+
+    <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3> 
+            <div class="input-group" id="modalTypeSelectorGroup">
+                <label>REGISTRY DOMAIN</label>
+                <div class="custom-select-wrapper">
+                    <select id="modalTypeSelector">
+                        <option value="icd10_codes" selected>ICD10 Code Registry</option>
+                        <option value="zipcodes">Zipcodes Reference</option>
+                        <option value="member_categories">Member Categories</option>
+                    </select>
+                </div>
+            </div> 
+            <div class="input-group">
+                 <label id="primaryFieldLabel">Code / Key</label>
+                 <input id="newRecordKey" type="text" autocomplete="off">
+             </div>
+            <div class="input-group">
+                 <label id="secondaryFieldLabel">Description / Class Details</label>
+                 <textarea id="newRecordValue"></textarea>
+             </div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()">SAVE REFERENCE</div>
+            <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>DISCOUNT CALCULATOR</h3>
+            <div class="input-group">
+                 <label>HOSPITAL CHARGES</label>
+                 <input id="hospCharges" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+             </div>
+            <div class="input-group">
+                 <label>CASE RATE (PHIC)</label>
+                 <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
+             </div>
+            <div class="modal-result"><div id="finalDiscount" style="color: var(--primary); text-align: center; font-weight:700;">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()">COPY CALCULATION</div>
+            <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
+        </div>
+    </div>
+
+    <script type="module" src="esoa.js"></script>
+    <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+let layoutMovableActive = false;
+let rtdb;
+let db;
+let activeEditRow = null;
+let userDocRef;
+let localProfileNoteCache = "";
+
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+const userId = localStorage.getItem("userId") || "dev_fallback_user";
+
+// Fixed Comprehensive Local Reference Registry Datasets
+const baseDataset = {
+    icd10_codes: [
+        { title: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
+        { title: "M06.99", desc: "ARTHRITIS" },
+        { title: "I10.1", desc: "HYPERTENSION STAGE II" },
+        { title: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
+        { title: "K29.9", desc: "GASTRITIS" },
+        { title: "G44.2", desc: "TENSION HEADACHE" },
+        { title: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
+        { title: "K29.1", desc: "ACUTE GASTRITIS" },
+        { title: "K27.9", desc: "PEPTIC ULCER" },
+        { title: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
+        { title: "J11.1", desc: "INFLUENZA" },
+        { title: "E11.9", desc: "DIABETES MELLITUS" },
+        { title: "B34.9", desc: "VIRAL INFECTION" },
+        { title: "BO1.9", desc: "VARICELLA" },
+        { title: "S01.9", desc: "OPEN WOUND OF HEAD" },
+        { title: "L03.9", desc: "CELLULITIS" },
+        { title: "L03.2", desc: "CELLULITIS OF FACE" },
+        { title: "J20.9", desc: "ACUTE BRONCHITIS" },
+        { title: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
+        { title: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
+        { title: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
+        { title: "O21.9", desc: "VOMITING OF PREGNANCY" },
+        { title: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
+        { title: "J45.0", desc: "ALLERGIC BRONCHITIS" },
+        { title: "H66.9", desc: "OTITIS MEDIA" },
+        { title: "J03.9", desc: "ACUTE TONSILLITIS" },
+        { title: "K30", desc: "DYSPEPSIA" },
+        { title: "M00.99", desc: "PYOGENIC ARTHRITIS" },
+        { title: "A97.1", desc: "DENGUE WITTULUNAN - 9403H WARNING SIGNS" },
+        { title: "K11.2", desc: "SIALOADENITIS" },
+        { title: "M19.99", desc: "ARTHROSIS" },
+        { title: "G43.9", desc: "MIGRAINE" },
+        { title: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+    ],
+    zipcodes: [
+        { title: "ARAKAN", desc: "9417" },
+        { title: "ALEOSAN", desc: "9415" },
+        { title: "PIGKAWAYAN", desc: "9400" },
+        { title: "MIDSAYAP", desc: "9410" },
+        { title: "PRES ROXAS", desc: "9405" },
+        { title: "KIDAPAWAN", desc: "9400" },
+        { title: "ANTIPAS", desc: "9414" },
+        { title: "MATALAM", desc: "9406" },
+        { title: "MAKILALA", desc: "9401" },
+        { title: "M'LANG", desc: "9402" },
+        { title: "KABACAN", desc: "9407" },
+        { title: "CARMEN", desc: "9408" },
+        { title: "LIBUNGAN", desc: "9411" },
+        { title: "MAGEPT", desc: "9404110098112460" }
+    ],
+    member_categories: [
+        { title: "POS INCAPABLE", desc: "INDIGENT" },
+        { title: "NTHS", desc: "INDIGENT" },
+        { title: "LISTAHAN", desc: "INDIGENT" },
+        { title: "DIRECT CONTRIBUTOR", desc: "INDIVIDUAL PAYING" },
+        { title: "INDIRECT CONTRIBUTOR", desc: "INDIGENT" },
+        { title: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
+        { title: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
+        { title: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
+    ]
+}; 
+
+const premium3dAssets = {
+    'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+    'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
+};
+
+try {
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    rtdb = getDatabase(app);
+} catch(e) {
+    console.warn("RTDB environment connection local fallback initiated.");
+}
+
+// Strictly Self-Centric Account Verification and Presence Setup
+if (userId && db) {
+    userDocRef = doc(db, "accounts", userId);
+    onSnapshot(userDocRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.data();
+            const currentUserName = data.customName || "Operator";
+            const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+            document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+            document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+
+            if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
+            if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
+
+            const selfBubble = document.getElementById('profile-status-bubble-node');
+            if (selfBubble) selfBubble.remove();
+
+            if (data.statusNoteText && data.statusNoteUpdatedAt) {
+                const delta = Date.now() - data.statusNoteUpdatedAt;
+                if (delta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
+                    localProfileNoteCache = data.statusNoteText;
+                    const avatar = document.getElementById('userDisplayAvatar');
+                    const trigger = document.querySelector('.profile-note-action-trigger');
+                    if (avatar && trigger) {
+                        const bubble = document.createElement('div');
+                        bubble.className = 'profile-status-note-bubble';
+                        bubble.id = 'profile-status-bubble-node';
+                        bubble.innerText = localProfileNoteCache;
+                        if (data.statusNoteColor) {
+                            bubble.style.borderColor = data.statusNoteColor;
+                            bubble.style.color = data.statusNoteColor;
+                        }
+                        avatar.parentNode.insertBefore(bubble, trigger);
+                    }
+                } else { localProfileNoteCache = ""; }
+            } else { localProfileNoteCache = ""; }
+
+            if (rtdb) {
+                set(ref(rtdb, 'presence/' + userId), {
+                    uid: userId, 
+                    name: currentUserName, 
+                    avatar: currentUserAvatarRaw, 
+                    timestamp: Date.now(),
+                    statusNote: { 
+                        text: data.statusNoteText || "", 
+                        color: data.statusNoteColor || "#e5e5e5", 
+                        updatedAt: data.statusNoteUpdatedAt || 0 
+                    }
+                });
+            }
+        }
+    });
+}
+
+// Personal Status Field Control Injection Mechanics
+(() => {
+    const avatarNode = document.getElementById('userDisplayAvatar');
+    if (!avatarNode) return;
+
+    const trigger = document.createElement('div');
+    trigger.className = 'profile-note-action-trigger';
+    trigger.innerText = '＋';
+    avatarNode.parentNode.insertBefore(trigger, avatarNode);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'status-note-custom-modal';
+    overlay.innerHTML = `
+        <div class="modal-content">
+            <div class="input-group">
+                <label>UPDATE STATUS NOTE</label>
+                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+            </div>
+            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const fld = document.getElementById('status-modal-field');
+    const cnt = document.getElementById('status-modal-counter');
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fld.value = localProfileNoteCache;
+        cnt.innerText = `${localProfileNoteCache.length} / 10`;
+        window.toggleModal('status-note-custom-modal', true);
+    });
+
+    fld.addEventListener('input', () => {
+        if (fld.value.length > 10) fld.value = fld.value.substring(0, 10);
+        cnt.innerText = `${fld.value.length} / 10`;
+    });
+
+    document.getElementById('status-modal-close-btn').addEventListener('click', () => window.toggleModal('status-note-custom-modal', false));
+
+    document.getElementById('status-modal-save-btn').addEventListener('click', () => {
+        const text = fld.value.trim().substring(0, 10);
+        const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
+        if (userDocRef) {
+            updateDoc(userDocRef, { 
+                statusNoteText: text || "", 
+                statusNoteColor: text ? color : "", 
+                statusNoteUpdatedAt: text ? Date.now() : null 
+            }).then(() => window.toggleModal('status-note-custom-modal', false));
+        }
+    });
+})();
+
+function pullParsedAccentColor() {
+    let customAccent = localStorage.getItem('btnValue') || localStorage.getItem('accentColor') || localStorage.getItem('customAccent');
+    if (customAccent) {
+        document.documentElement.style.setProperty('--primary', customAccent);
+    }
+}
+
+window.toggleCategoryAccordion = function(wrapperId, headerElement) {
+    if (layoutMovableActive) return; 
+    const wrapper = document.getElementById(wrapperId);
+    const chevron = headerElement.querySelector('.chevron-icon'); 
+    
+    if (wrapper.classList.contains('collapsed')) {
+        wrapper.classList.remove('collapsed');
+        if(chevron) chevron.style.transform = "rotate(0deg)";
+    } else {
+        wrapper.classList.add('collapsed');
+        if(chevron) chevron.style.transform = "rotate(-90deg)";
+    }
+};
+
+window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
+    const container = document.getElementById(targetGroupId);
+    if (!container) return; 
+    
+    const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
+    const rows = container.querySelectorAll('.item-row'); 
+    
+    if (!isExpanded) {
+        rows.forEach(r => r.classList.remove('hidden-overflow-item'));
+        buttonElement.setAttribute('data-expanded', 'true');
+        buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
+    } else {
+        rows.forEach((r, idx) => {
+            if (idx >= 5) r.classList.add('hidden-overflow-item');
+        });
+        buttonElement.setAttribute('data-expanded', 'false');
+        buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+    }
+    if (window.lucide) window.lucide.createIcons();
+};
+
+async function initializeRegistryData() {
+    pullParsedAccentColor();
+    setupDomainSection('icd10_codes', 'icd10-section-group');
+    setupDomainSection('zipcodes', 'zipcode-section-group');
+    setupDomainSection('member_categories', 'member-section-group');
+}
+
+async function setupDomainSection(domainKey, elementId) {
+    const targetContainer = document.getElementById(elementId);
+    if (!targetContainer) return;
+    targetContainer.innerHTML = '';
+
+    let activeList = [];
+    try {
+        if (rtdb) {
+            const snapshot = await get(child(ref(rtdb), `clinical_references/${domainKey}`));
+            if (snapshot.exists()) {
+                const dataObj = snapshot.val();
+                activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
+            }
+        }
+    } catch (e) { console.warn("Database storage fetch fallback."); }
+
+    if (activeList.length === 0) {
+        activeList = baseDataset[domainKey];
+    }
+
+    activeList.forEach((item, index) => {
+        appendRowToDOM(targetContainer, item.title, item.desc, index >= 5, domainKey);
+    });
+
+    if (activeList.length > 5) {
+        const expandBtn = document.createElement('button');
+        expandBtn.className = 'expand-list-action-trigger';
+        expandBtn.setAttribute('data-expanded', 'false');
+        expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+        expandBtn.onclick = function() { toggleSectionListExpansion(this, elementId); };
+        targetContainer.appendChild(expandBtn);
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function appendRowToDOM(container, key, val, isOverflowItem, domain) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
+    rowDiv.setAttribute('data-title', key);
+    rowDiv.setAttribute('data-val', val);
+    rowDiv.setAttribute('data-domain', domain);
+    rowDiv.onclick = function() { handleSelectiveCopy(this); }; 
+    
+    rowDiv.innerHTML = `
+        <span class="text-content"><span class="item-title-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
+        <div class="row-context-actions" onclick="event.stopPropagation()">
+            <button class="context-action-node edit-trigger" title="Edit Entry" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+            <button class="context-action-node delete-trigger" title="Delete Entry" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+        </div>
+    `; 
+    
+    const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+    if (actionTriggerLink) {
+        container.insertBefore(rowDiv, actionTriggerLink);
+    } else {
+        container.appendChild(rowDiv);
+    }
+    bindDragDropSequence(rowDiv);
+}
+
+window.filterRegistryRealtime = function() {
+    const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+    const container = document.getElementById('mainContainer');
+    const searchTargetGroup = document.getElementById('searchResultTargetGroup');
+
+    searchTargetGroup.innerHTML = '';
+
+    if (query === "") {
+        container.classList.remove('searching-active');
+        fineTuneResetElements('icd10-section-group');
+        fineTuneResetElements('zipcode-section-group');
+        fineTuneResetElements('member-section-group');
+        return;
+    }
+
+    container.classList.add('searching-active');
+    const originalRows = container.querySelectorAll('.section-group-inner .item-row');
+
+    originalRows.forEach(row => {
+        const title = row.getAttribute('data-title').toLowerCase();
+        const textVal = row.getAttribute('data-val').toLowerCase();
+
+        if (title.includes(query) || textVal.includes(query)) {
+            const clonedRow = row.cloneNode(true);
+            clonedRow.classList.remove('hidden-overflow-item');
+            clonedRow.style.display = 'flex';
+            clonedRow.onclick = function() { handleSelectiveCopy(this); };
+            searchTargetGroup.appendChild(clonedRow);
+        }
+    });
+};
+
+function fineTuneResetElements(elementId) {
+    const target = document.getElementById(elementId);
+    if (!target) return; 
+    
+    const rows = target.querySelectorAll('.item-row');
+    rows.forEach((row, idx) => {
+        if (idx >= 5) {
+            row.classList.add('hidden-overflow-item');
+        } else {
+            row.classList.remove('hidden-overflow-item');
+        }
+        row.style.display = 'flex';
+    });
+
+    const triggerBtn = target.querySelector('.expand-list-action-trigger');
+    if (triggerBtn) {
+        triggerBtn.setAttribute('data-expanded', 'false');
+        triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+window.handleSelectiveCopy = function(element) {
+    if (layoutMovableActive) return;
+    const dataVal = element.getAttribute('data-val');
+
+    navigator.clipboard.writeText(dataVal).then(() => {
+        const textNode = element.querySelector('.item-desc-text');
+        const originalText = textNode.textContent;
+        textNode.textContent = "COPIED VALUE!"; 
+        
+        setTimeout(() => { 
+            textNode.textContent = originalText;
+            window.resetViewRegistry();
+        }, 1000);
+    });
+};
+
+window.openInlineEdit = function(rowElement) {
+    activeEditRow = rowElement; 
+    
+    document.getElementById('modalDisplayTitle').textContent = "EDIT REFERENCE";
+    document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
+    
+    const titleVal = rowElement.getAttribute('data-title');
+    document.getElementById('newRecordKey').value = titleVal;
+    document.getElementById('newRecordKey').disabled = false;
+    
+    const descVal = rowElement.getAttribute('data-val');
+    document.getElementById('newRecordValue').value = descVal; 
+    
+    window.toggleModal('addRecordModal', true);
+};
+
+window.deleteInlineRow = async function(rowElement) {
+    if(confirm("Are you certain you want to destroy this reference record?")) {
+        const key = rowElement.getAttribute('data-title');
+        const domain = rowElement.getAttribute('data-domain') || 'icd10_codes';
+        const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+        try {
+            if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), null);
+        } catch(e) { console.warn("Database deletion request drop."); } 
+        
+        rowElement.remove();
+        window.resetViewRegistry();
+    }
+};
+
+window.pushRecordToDatabase = async function() {
+    const key = document.getElementById('newRecordKey').value.trim();
+    const val = document.getElementById('newRecordValue').value.trim();
+    const domain = activeEditRow ? activeEditRow.getAttribute('data-domain') : document.getElementById('modalTypeSelector').value;
+
+    if (!key || !val) return alert("Please specify all required data attributes.");
+
+    const referencePayload = { title: key, description: val, syncedAt: Date.now() };
+    const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+    if (activeEditRow) {
+        const oldKey = activeEditRow.getAttribute('data-title');
+        if (oldKey !== key) {
+            const oldSanitizedKey = oldKey.replace(/[.#$\[\]]/g, "_");
+            try { if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${oldSanitizedKey}`), null); } catch(e){}
+        }
+    }
+
+    try {
+        if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), referencePayload);
+    } catch (err) { console.warn("Database connection runtime dropped."); }
+
+    if (activeEditRow) {
+        activeEditRow.setAttribute('data-title', key);
+        activeEditRow.setAttribute('data-val', val);
+        activeEditRow.querySelector('.item-title-prefix').textContent = key;
+        activeEditRow.querySelector('.item-desc-text').textContent = val;
+    } else {
+        let elementId = 'icd10-section-group';
+        if (domain === 'zipcodes') elementId = 'zipcode-section-group';
+        if (domain === 'member_categories') elementId = 'member-section-group';
+        
+        const targetNode = document.getElementById(elementId);
+        if (targetNode) {
+            const currentCount = targetNode.querySelectorAll('.item-row').length;
+            appendRowToDOM(targetNode, key, val, currentCount >= 5, domain);
+        }
+    }
+
+    window.toggleModal('addRecordModal', false);
+    window.resetViewRegistry();
+};
+
+window.toggleMovableLayout = function() {
+    layoutMovableActive = !layoutMovableActive;
+    const container = document.getElementById('mainContainer');
+    const triggerBtn = document.getElementById('sortToggleTrigger');
+    const wrappers = document.querySelectorAll('.section-group-wrapper');
+
+    if (layoutMovableActive) {
+        document.getElementById('registrySearch').value = "";
+        container.classList.remove('searching-active');
+        container.classList.add('edit-mode-active');
+        triggerBtn.classList.add('active-mode');
+        wrappers.forEach(w => w.classList.remove('collapsed'));
+    } else {
+        container.classList.remove('edit-mode-active');
+        triggerBtn.classList.remove('active-mode');
+        fineTuneResetElements('icd10-section-group');
+        fineTuneResetElements('zipcode-section-group');
+        fineTuneResetElements('member-section-group');
+    }
+};
+
+function bindDragDropSequence(element) {
+    element.setAttribute('draggable', 'true');
+    element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+    element.addEventListener('dragend', () => element.classList.remove('dragging'));
+}
+
+['icd10-section-group', 'zipcode-section-group', 'member-section-group'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+        element.addEventListener('dragover', e => {
+            if (!layoutMovableActive) return;
+            e.preventDefault();
+            const activeDragging = document.querySelector('.dragging');
+            if (activeDragging) {
+                const boundingElement = getDragLocationSpace(element, e.clientY);
+                if (boundingElement == null) {
+                    const expandActionLink = element.querySelector('.expand-list-action-trigger');
+                    if (expandActionLink) element.insertBefore(activeDragging, expandActionLink);
+                    else element.appendChild(activeDragging);
+                } else {
+                    element.insertBefore(activeDragging, boundingElement);
+                }
+            }
+        });
+    }
+});
+
+function getDragLocationSpace(container, yPoint) {
+    const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+    return elements.reduce((closest, child) => {
+        const boundary = child.getBoundingClientRect();
+        const separation = yPoint - boundary.top - boundary.height / 2;
+        if (separation < 0 && separation > closest.offset) {
+            return { offset: separation, element: child };
+        } else {
+            return closest; 
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+window.toggleModal = function(id, isActive) {
+    const overlay = document.getElementById(id);
+    if (overlay) {
+        if (isActive) {
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+        } else {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('modalDisplayTitle').textContent = "ADD NEW REFERENCE";
+                document.getElementById('modalTypeSelectorGroup').style.display = 'block';
+                document.getElementById('newRecordKey').disabled = false;
+                document.getElementById('newRecordKey').value = "";
+                document.getElementById('newRecordValue').value = "";
+                activeEditRow = null;
+            }, 220); 
+        }
+    }
+};
+
+window.closeOutside = function(e, id) {
+    if (e.target === document.getElementById(id)) window.toggleModal(id, false);
+};
+
+window.resetViewRegistry = function() {
+    document.getElementById('registrySearch').value = "";
+    window.filterRegistryRealtime();
+    if (layoutMovableActive) window.toggleMovableLayout();
+    fineTuneResetElements('icd10-section-group');
+    fineTuneResetElements('zipcode-section-group');
+    fineTuneResetElements('member-section-group');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeRegistryData();
+});
+    </script>
+</body>
+</html>
