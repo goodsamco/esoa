@@ -379,8 +379,10 @@
         <div class="chat-header-bar">
             <span id="chatTargetName">Active Session Chat</span>
             <button class="chat-close-trigger" onclick="closeChatSession()"><i data-lucide="x"></i></button>
-        </div> 
-        <div class="chat-scroller-view" id="chatScroller"></div> 
+        </div>
+        
+        <div class="chat-scroller-view" id="chatScroller"></div>
+        
         <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
