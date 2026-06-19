@@ -727,7 +727,7 @@ onValue(presenceRef, (snapshot) => {
 });
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS
-   ========================================================================== */
+   ========================================================================== 
 function bindBackgroundNotifListener(partnerId) {
     if (mappedRouteTrackingHooks[partnerId]) return;
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -803,11 +803,127 @@ function bindBackgroundGcListener() {
         }
     });
 }
+*/
+/* ==========================================================================
+   5. BACKGROUND CHAT NOTIFICATION HOOKS (CLOUD PERSISTENT)
+   ========================================================================== */
 
+// --- CLOUD STATE ENGINE COUPLERS ---
+function setUnreadStateCloud(partnerId) {
+    const unreadRef = ref(rtdb, `users/${userId}/unread_states/${partnerId}`);
+    set(unreadRef, true).catch(err => console.error("Failed to sync unread state:", err));
+}
+
+function clearUnreadStateCloud(partnerId) {
+    const unreadRef = ref(rtdb, `users/${userId}/unread_states/${partnerId}`);
+    remove(unreadRef).catch(err => console.error("Failed to clear unread state:", err));
+}
+
+// GLOBAL OBSERVER RUNNING FOR CROSS-DEVICE UPDATES & RELOADS
+function startCloudUnreadListener() {
+    const userUnreadRef = ref(rtdb, `users/${userId}/unread_states`);
+    
+    onValue(userUnreadRef, (snapshot) => {
+        // Clear all local visual unread badges first to prevent stale classes
+        document.querySelectorAll('.has-unread').forEach(el => el.classList.remove('has-unread'));
+        
+        if (snapshot.exists()) {
+            const unreads = snapshot.val();
+            
+            Object.keys(unreads).forEach(chatId => {
+                if (unreads[chatId] === true) {
+                    if (chatId === "BARANGAY_GC") {
+                        const gcContainer = document.getElementById('gc-hub-node');
+                        if (gcContainer) gcContainer.classList.add('has-unread');
+                    } else {
+                        const peerContainer = document.getElementById(`peer-node-${chatId}`);
+                        if (peerContainer) peerContainer.classList.add('has-unread');
+                    }
+                }
+            });
+        }
+    });
+}
+
+function bindBackgroundNotifListener(partnerId) {
+    if (mappedRouteTrackingHooks[partnerId]) return;
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+
+    let initialSyncComplete = false;
+    onValue(chatRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });                                    
+    
+    const hook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender === partnerId && selectedActiveChatPartnerId !== partnerId) {
+                // Update state in cloud instead of targeting the local DOM
+                setUnreadStateCloud(partnerId);
+            }
+        }
+    });
+    mappedRouteTrackingHooks[partnerId] = hook;
+
+    onValue(chatRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== partnerId) {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            // Update state in cloud on external reaction modifications
+                            setUnreadStateCloud(partnerId);
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+function bindBackgroundGcListener() {
+    if (backgroundGcTrackingHook) return;
+    const gcRouteRef = ref(rtdb, `group_chat/messages`);
+
+    let initialSyncComplete = false;
+    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
+
+    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
+        if (!initialSyncComplete) return;
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+                // Save Group Chat unread notification flag to cloud reference
+                setUnreadStateCloud("BARANGAY_GC");
+            }
+        }
+    });
+
+    onValue(gcRouteRef, (snapshot) => {
+        if (!initialSyncComplete) return;
+        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
+            const messages = snapshot.val();
+            Object.keys(messages).forEach(mId => {
+                const m = messages[mId];
+                if (m.reactions) {
+                    Object.keys(m.reactions).forEach(uId => {
+                        if (uId !== userId) {
+                            // Trigger unread notification flag for GC on external reactions modifications
+                            setUnreadStateCloud("BARANGAY_GC");
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
 
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
-   ========================================================================== */
+   ========================================================================== 
 let activeReplyPayload = null; 
 
 function formatMessageTimestamp(timestamp) {
@@ -1281,6 +1397,97 @@ window.closeChatSession = function () {
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
+
+*/
+
+/* ==========================================================================
+   6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
+   ========================================================================== */
+let activeReplyPayload = null; 
+
+function formatMessageTimestamp(timestamp) {
+    if (!timestamp) return '';
+    const msgDate = new Date(timestamp);
+    const today = new Date();
+
+    const isToday = msgDate.getDate() === today.getDate() &&
+                    msgDate.getMonth() === today.getMonth() &&
+                    msgDate.getFullYear() === today.getFullYear();
+
+    if (isToday) {
+        return msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return msgDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + 
+               msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+}
+
+function resolveUserRealName(uid, fallbackDataName) {
+    if (uid === userId) return "You";
+    if (fallbackDataName) return fallbackDataName.split(' ')[0];
+    
+    const peerNode = document.getElementById(`peer-node-${uid}`);
+    if (peerNode && peerNode.querySelector('.peer-name-hover')) {
+        return peerNode.querySelector('.peer-name-hover').innerText.split(' ')[0];
+    }
+    return "User " + uid.substring(0, 5);
+}
+
+function initGroupChatChannel() {
+    isGroupChat = true;
+    selectedActiveChatPartnerId = "BARANGAY_GC";
+    document.getElementById('chatTargetName').innerText = `Group Chat`;
+    document.getElementById('chatScroller').innerHTML = '';
+    document.getElementById('chatDock').style.display = 'flex';
+    clearActiveReplyRow();
+
+    // 🔥 CLEAR UNREAD STATUS FROM THE CLOUD
+    clearUnreadStateCloud("BARANGAY_GC");
+
+    cleanupTransientListeners();
+
+    const chatRouteRef = ref(rtdb, `group_chat/messages`);
+    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+        }
+    });
+}
+
+function initTransientChatChannel(partnerId, partnerName) {
+    isGroupChat = false;
+    selectedActiveChatPartnerId = partnerId;
+    clearActiveReplyRow();
+    
+    const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
+    document.getElementById('chatTargetName').innerText = `${cleanName}`;
+    document.getElementById('chatScroller').innerHTML = '';
+    document.getElementById('chatDock').style.display = 'flex';
+
+    // 🔥 CLEAR UNREAD STATUS FROM THE CLOUD
+    clearUnreadStateCloud(partnerId);
+
+    cleanupTransientListeners();
+
+    const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
+    const input = document.getElementById('chatMsgInput');
+
+    input.oninput = () => {
+        const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
+        set(typingRef, true);
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
+    };
+    
+    const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
+    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
+        if (childSnap.exists()) {
+            const msg = childSnap.val();
+            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
+        }
+    });
+}
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
@@ -1298,6 +1505,7 @@ const extraItems = {
 };
 
 // Initialization Execution Lifecycles
+/*
 window.addEventListener('DOMContentLoaded', () => {
     allRows = document.querySelectorAll('.item-row');
     highlighter = document.getElementById('highlighter');
@@ -1306,6 +1514,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
     const hubContainer = document.getElementById('peerActiveHub');
+    */
+window.addEventListener('DOMContentLoaded', () => {
+    allRows = document.querySelectorAll('.item-row');
+    highlighter = document.getElementById('highlighter');
+    container = document.getElementById('mainContainer');
+    magnetBtn = document.getElementById('magnetBtn');
+
+    // 🔥 START LISTENING TO CLOUD UNREAD STATES IMMEDIATELY ON BOOT UP
+    startCloudUnreadListener();
+
+    // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
+    const hubContainer = document.getElementById('peerActiveHub'); /*ends here */
     const prevBtn = document.querySelector('.scroll-nav-btn.prev');
     const nextBtn = document.querySelector('.scroll-nav-btn.next');
 
