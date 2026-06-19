@@ -358,12 +358,11 @@
 </head>
 <body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
-    <div class="peer-wrapper-row">
-        <div class="self-profile-container">
-            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
-            <div id="userDisplayName" style="display:none;">Operator</div>
-        </div>
-        <div class="peer-active-hub" id="peerActiveHub"></div>
+        <div class="peer-wrapper-row">
+        <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
+        <div class="peer-active-hub" id="peerActiveHub">
+            </div>
+        <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
     <div class="top-nav">
@@ -373,6 +372,10 @@
         <button class="top-btn active" title="ICD10 Codes" onclick="window.location.href='icd10.html'" style="background-color: rgba(255, 255, 255, 0.15);"><i data-lucide="stethoscope"></i></button> 
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
+
+ <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <span id="userDisplayName" class="name-string">Name</span>
+
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
