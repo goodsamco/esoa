@@ -444,7 +444,7 @@
 
     <script type="module" src="esoa.js"></script>
     <script type="module">
-       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -458,7 +458,6 @@ let localProfileNoteCache = "";
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const userId = localStorage.getItem("userId");
 
-// CF4 Standardized Medical fallback dataset structure mapping
 const baseDataset = {
     cf4_guides: [
         { title: "PERTINENT SIGN", desc: "CHEST PAIN, DYSPNEA, DIAPHORESIS, COUGH, FEVER, VOMITING" },
@@ -784,7 +783,7 @@ window.openInlineEdit = function(rowElement) {
     
     const titleVal = rowElement.getAttribute('data-title');
     document.getElementById('newRecordKey').value = titleVal;
-    document.getElementById('newRecordKey').disabled = true; 
+    document.getElementById('newRecordKey').disabled = false; // Enabled to allow text title adjustment edits
     
     const descVal = rowElement.getAttribute('data-val');
     document.getElementById('newRecordValue').value = descVal; 
@@ -812,6 +811,17 @@ window.pushRecordToDatabase = async function() {
 
     if (!key || !val) return alert("Please specify all required data attributes.");
 
+    // If an entry is edited and its title changed, drop the previous structural entry path node
+    if (activeEditRow) {
+        const oldKey = activeEditRow.getAttribute('data-title');
+        if (oldKey !== key) {
+            const sanitizedOldKey = oldKey.replace(/[.#$\[\]]/g, "_");
+            try {
+                if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedOldKey}`), null);
+            } catch(e) { console.warn("Pruning legacy key path failed."); }
+        }
+    }
+
     const referencePayload = { title: key, description: val, syncedAt: Date.now() };
     const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
@@ -820,7 +830,9 @@ window.pushRecordToDatabase = async function() {
     } catch (err) { console.warn("Database connection runtime dropped."); }
 
     if (activeEditRow) {
+        activeEditRow.setAttribute('data-title', key);
         activeEditRow.setAttribute('data-val', val);
+        activeEditRow.querySelector('.item-title-prefix').textContent = key;
         activeEditRow.querySelector('.item-desc-text').textContent = val;
     } else {
         const targetNode = document.getElementById('cf4-section-group');
