@@ -96,6 +96,16 @@
             gap: 8px;
         }
 
+        .workspace-note-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #dddddd;
+            word-break: break-word;
+        }
+
         /* Category Header Chevron indicator styles */
         .category-header {
             display: flex;
@@ -451,8 +461,10 @@
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
+    <!-- Grouped Profile Block: Matches layout hooks specified by your exact onSnapshot execution -->
     <div class="profile-container-block">
         <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+        <!-- The critical anchor node where esoa.js performs .insertBefore() layout attachment -->
         <div class="profile-note-action-trigger">+</div>
     </div>
     <span id="userDisplayName" class="name-string">Name</span>
@@ -472,6 +484,7 @@
     <div class="container" id="mainContainer">
         <div id="highlighter"></div>
 
+        <!-- Personal Workspace Notes Panel Section -->
         <div class="personal-notes-board" id="personalNotesSection">
             <h3><i data-lucide="sticky-note" style="width:16px;height:16px;"></i> My Workspace Notes</h3>
             <div class="notes-display-wall" id="personalNotesContainer"></div>
@@ -482,6 +495,7 @@
             <div id="searchResultTargetGroup"></div>
         </div>
 
+        <!-- ICD10 Registry Panel -->
         <div class="category-header" onclick="toggleCategoryAccordion('icd10-wrapper', this)">
             <h2>ICD10 References</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -490,6 +504,7 @@
             <div class="section-group-inner" id="icd10-section-group"></div>
         </div>
 
+        <!-- Places Registry Panel -->
         <div class="category-header" onclick="toggleCategoryAccordion('places-wrapper', this)">
             <h2>Places</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -498,6 +513,7 @@
             <div class="section-group-inner" id="places-section-group"></div>
         </div>
 
+        <!-- Membership Categories Panel -->
         <div class="category-header" onclick="toggleCategoryAccordion('membership-wrapper', this)">
             <h2>Membership Category</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
@@ -519,6 +535,7 @@
         </button>
     </div>
 
+    <!-- Registry Record Modifier Modal Structure -->
     <div class="modal-overlay" id="addRecordModal" onclick="closeOutside(event, 'addRecordModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 id="modalDisplayTitle">ADD NEW REFERENCE</h3> 
@@ -529,6 +546,7 @@
                         <option value="icd10_codes">ICD10 Code Registry</option>
                         <option value="places">Places Registry</option>
                         <option value="membership_categories">Membership Categories</option>
+                        <option value="workspace_notes">My Workspace Notes</option>
                     </select>
                 </div>
             </div> 
@@ -545,6 +563,7 @@
         </div>
     </div>
 
+    <!-- Discount Calculator Modal Overlay -->
     <div class="modal-overlay" id="srModal" onclick="closeOutside(event, 'srModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>DISCOUNT CALCULATOR</h3>
@@ -663,24 +682,53 @@
             const domain = document.getElementById('modalTypeSelector').value;
             const keyLabel = document.getElementById('primaryFieldLabel');
             const valLabel = document.getElementById('secondaryFieldLabel');
+            const keyInput = document.getElementById('newRecordKey');
             
-            if(domain === 'icd10_codes') {
+            if (domain === 'workspace_notes') {
+                keyLabel.textContent = "Note Topic Title";
+                valLabel.textContent = "Your Note Content Details";
+                keyInput.disabled = false;
+            } else if(domain === 'icd10_codes') {
                 keyLabel.textContent = "Code / Key";
                 valLabel.textContent = "Description / Class Details";
+                keyInput.disabled = false;
             } else if(domain === 'places') {
                 keyLabel.textContent = "Location Slug";
                 valLabel.textContent = "Full Place Name Description";
+                keyInput.disabled = false;
             } else {
                 keyLabel.textContent = "Category Identifier";
                 valLabel.textContent = "Membership Framework Terms";
+                keyInput.disabled = false;
             }
         };
 
         async function initializeRegistryData() {
             pullParsedAccentColor();
+            renderSavedWorkspaceNotes();
             await loadDomainRegistry('icd10_codes', 'icd10-section-group');
             await loadDomainRegistry('places', 'places-section-group');
             await loadDomainRegistry('membership_categories', 'membership-section-group');
+        }
+
+        // Logic framework for local storage handling of custom workspace notes
+        function renderSavedWorkspaceNotes() {
+            const container = document.getElementById('personalNotesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            let notes = JSON.parse(localStorage.getItem('workspace_notes') || '[]');
+            if(notes.length === 0) {
+                container.innerHTML = `<div style="font-size: 0.78rem; color: #666; padding: 4px;">No active entries saved inside workspace.</div>`;
+                return;
+            }
+
+            notes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'workspace-note-card';
+                noteCard.innerHTML = `<strong>${note.title}:</strong> <span>${note.desc}</span>`;
+                container.appendChild(noteCard);
+            });
         }
 
         async function loadDomainRegistry(domainKey, targetGroupId) {
@@ -852,6 +900,16 @@
             const domain = document.getElementById('modalTypeSelector').value;
 
             if (!key || !val) return alert("Please specify all required data attributes.");
+
+            // Specialized routing logic checking if note option was specified
+            if (domain === 'workspace_notes') {
+                let notes = JSON.parse(localStorage.getItem('workspace_notes') || '[]');
+                notes.push({ title: key, desc: val });
+                localStorage.setItem('workspace_notes', JSON.stringify(notes));
+                renderSavedWorkspaceNotes();
+                toggleModal('addRecordModal', false);
+                return;
+            }
 
             const referencePayload = { title: key, description: val, syncedAt: Date.now() };
             const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
