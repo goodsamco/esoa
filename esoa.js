@@ -1486,3 +1486,131 @@ window.addEventListener('beforeunload', () => {
 window.addEventListener('click', () => {
     document.querySelectorAll('.reaction-picker-tray').forEach(el => el.remove());
 });
+
+
+/* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
+10. */
+
+let standbyTimer;
+const standbyDelay = 60000; // 1 Minute in milliseconds
+let isStandbyActive = false;
+let activeProfilesMap = new Map(); // Keep track of current elements by UID
+
+// 1. Setup the DOM structure dynamically on load
+function initStandbyDOM() {
+    const overlay = document.createElement('div');
+    overlay.id = 'standby-overlay';
+    
+    overlay.innerHTML = `
+        <div class="standby-stage">
+            <img id="standby-center-avatar" class="standby-center-profile" src="" alt="Me">
+            <div id="standby-orbit-container" class="standby-orbit-container"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// 2. Activate Standby Mode
+function enterStandby() {
+    if (isStandbyActive) return;
+    isStandbyActive = true;
+    
+    // Set current active user's image inside the center profile ring
+    const centerAvatarImg = document.getElementById('standby-center-avatar');
+    if (centerAvatarImg && typeof currentUserAvatarRaw !== 'undefined') {
+        centerAvatarImg.src = currentUserAvatarRaw;
+    }
+
+    document.body.classList.add('standby-active');
+    listenToStandbyPresence(); // Begin tracking active circles
+}
+
+// 3. Exit Standby Mode
+function exitStandby() {
+    if (!isStandbyActive) return;
+    isStandbyActive = false;
+    
+    document.body.classList.remove('standby-active');
+    
+    // Clear out orbit listeners and elements cleanly
+    const container = document.getElementById('standby-orbit-container');
+    if (container) container.innerHTML = '';
+    activeProfilesMap.clear();
+    
+    resetStandbyTimer();
+}
+
+// 4. Timer Reset Utilities
+function resetStandbyTimer() {
+    clearTimeout(standbyTimer);
+    if (isStandbyActive) {
+        exitStandby();
+    }
+    standbyTimer = setTimeout(enterStandby, standbyDelay);
+}
+
+// Listen for global user activity inputs to break standby
+['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(event => {
+    window.addEventListener(event, resetStandbyTimer, { passive: true });
+});
+
+// 5. Mathematical Circle Distribution and Realtime Synchronization
+function listenToStandbyPresence() {
+    const orbitContainer = document.getElementById('standby-orbit-container');
+    if (!orbitContainer || typeof rtdb === 'undefined') return;
+
+    // Listen to your existing presence node path
+    const presenceRef = ref(rtdb, 'presence/');
+    
+    onValue(presenceRef, (snapshot) => {
+        if (!isStandbyActive) return; // Guard clause if user wakes up quickly
+
+        const data = snapshot.val() || {};
+        
+        // Filter out your own ID so you only map surrounding friends
+        const users = Object.values(data).filter(u => u.uid !== userId);
+        const radius = 170; // Orbit circle path layout radius in pixels
+        const totalUsers = users.length;
+
+        // Trace and remove profiles that went offline
+        activeProfilesMap.forEach((el, uid) => {
+            if (!data[uid]) {
+                el.classList.add('popping-out');
+                el.addEventListener('animationend', () => el.remove());
+                activeProfilesMap.delete(uid);
+            }
+        });
+
+        // Position or create elements smoothly using index distributions
+        users.forEach((user, index) => {
+            // Compute structural angular layout spacing 
+            const angle = (index / totalUsers) * 2 * Math.PI;
+            const tx = `${Math.round(radius * Math.cos(angle))}px`;
+            const ty = `${Math.round(radius * Math.sin(angle))}px`;
+
+            let node = activeProfilesMap.get(user.uid);
+
+            if (!node) {
+                // It's a new connection: generate DOM & POP it in
+                node = document.createElement('div');
+                node.className = 'standby-orbit-node';
+                node.style.backgroundImage = `url('${user.avatar || 'https://via.placeholder.com/150'}')`;
+                node.title = user.name || 'Active User';
+                
+                orbitContainer.appendChild(node);
+                activeProfilesMap.set(user.uid, node);
+            }
+
+            // Continuously recalculate positions if layout changes dynamically
+            node.style.setProperty('--tx', tx);
+            node.style.setProperty('--ty', ty);
+        });
+    });
+}
+
+// Run setup initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initStandbyDOM();
+    resetStandbyTimer();
+});
+
