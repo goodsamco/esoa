@@ -1490,127 +1490,154 @@ window.addEventListener('click', () => {
 
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
+/* ==========================================================================\n   10. STANDBY IDLE COORD & MORPH CONTROLLER\n   ========================================================================== */
 
 let standbyTimer;
-const standbyDelay = 60000; // 1 Minute in milliseconds
-let isStandbyActive = false;
-let activeProfilesMap = new Map(); // Keep track of current elements by UID
+const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
+let isStandbyEnabled = false;
 
-// 1. Setup the DOM structure dynamically on load
-function initStandbyDOM() {
+// 1. Structural DOM Injection
+function initStandbySystem() {
+    if (document.getElementById('standby-overlay')) return;
+    
     const overlay = document.createElement('div');
     overlay.id = 'standby-overlay';
-    
     overlay.innerHTML = `
         <div class="standby-stage">
-            <img id="standby-center-avatar" class="standby-center-profile" src="" alt="Me">
-            <div id="standby-orbit-container" class="standby-orbit-container"></div>
+            <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
+            <div id="standby-orbit-ring" class="standby-orbit-ring"></div>
         </div>
     `;
     document.body.appendChild(overlay);
 }
 
-// 2. Activate Standby Mode
-function enterStandby() {
-    if (isStandbyActive) return;
-    isStandbyActive = true;
-    
-    // Set current active user's image inside the center profile ring
-    const centerAvatarImg = document.getElementById('standby-center-avatar');
-    if (centerAvatarImg && typeof currentUserAvatarRaw !== 'undefined') {
-        centerAvatarImg.src = currentUserAvatarRaw;
+// 2. Activate Standby Overlay Stage
+function startStandbyMode() {
+    if (isStandbyEnabled) return;
+    isStandbyEnabled = true;
+
+    // Center layout profile configuration
+    const centerProfile = document.getElementById('standby-center-node');
+    if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
+        const premium3dAssets = {
+            'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+            'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
+            'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
+            'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
+            'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
+            'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
+            'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
+            'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
+            'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg'
+        };
+        centerProfile.src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
     }
 
     document.body.classList.add('standby-active');
-    listenToStandbyPresence(); // Begin tracking active circles
+    renderPersistentSymmetricalDots();
 }
 
-// 3. Exit Standby Mode
-function exitStandby() {
-    if (!isStandbyActive) return;
-    isStandbyActive = false;
-    
+// 3. Dismount Standby view context
+function cancelStandbyMode() {
+    if (!isStandbyEnabled) return;
+    isStandbyEnabled = false;
     document.body.classList.remove('standby-active');
-    
-    // Clear out orbit listeners and elements cleanly
-    const container = document.getElementById('standby-orbit-container');
-    if (container) container.innerHTML = '';
-    activeProfilesMap.clear();
-    
-    resetStandbyTimer();
+    resetStandbyTimeout();
 }
 
-// 4. Timer Reset Utilities
-function resetStandbyTimer() {
+// 4. Activity Interceptor
+function resetStandbyTimeout() {
     clearTimeout(standbyTimer);
-    if (isStandbyActive) {
-        exitStandby();
+    if (isStandbyEnabled) {
+        cancelStandbyMode();
     }
-    standbyTimer = setTimeout(enterStandby, standbyDelay);
+    standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Listen for global user activity inputs to break standby
-['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(event => {
-    window.addEventListener(event, resetStandbyTimer, { passive: true });
+// Listen for global window inputs to drop out of standby
+['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
 
-// 5. Mathematical Circle Distribution and Realtime Synchronization
-function listenToStandbyPresence() {
-    const orbitContainer = document.getElementById('standby-orbit-container');
-    if (!orbitContainer || typeof rtdb === 'undefined') return;
+// 5. Symmetric Dot Distribution & Real-Time Morph Mapping
+function renderPersistentSymmetricalDots() {
+    const ringContainer = document.getElementById('standby-orbit-ring');
+    if (!ringContainer || typeof rtdb === 'undefined') return;
 
-    // Listen to your existing presence node path
-    const presenceRef = ref(rtdb, 'presence/');
-    
-    onValue(presenceRef, (snapshot) => {
-        if (!isStandbyActive) return; // Guard clause if user wakes up quickly
+    // Fixed configuration mapping for persistent structural symmetry nodes
+    const FIXED_DOT_COUNT = 8; 
+    const ORBIT_RADIUS = 210; // Pixel offset radius from core anchor center
+    const DOT_SIZES = [6, 12, 8, 14, 7, 11, 9, 13]; // Varying dot size footprint matrix
 
-        const data = snapshot.val() || {};
-        
-        // Filter out your own ID so you only map surrounding friends
-        const users = Object.values(data).filter(u => u.uid !== userId);
-        const radius = 170; // Orbit circle path layout radius in pixels
-        const totalUsers = users.length;
+    ringContainer.innerHTML = ''; // Wipe past dynamic assignments
 
-        // Trace and remove profiles that went offline
-        activeProfilesMap.forEach((el, uid) => {
-            if (!data[uid]) {
-                el.classList.add('popping-out');
-                el.addEventListener('animationend', () => el.remove());
-                activeProfilesMap.delete(uid);
-            }
+    // Generate persistent balanced background slots
+    const slotElements = [];
+    for (let i = 0; i < FIXED_DOT_COUNT; i++) {
+        const angle = (i / FIXED_DOT_COUNT) * 2 * Math.PI;
+        const tx = `${Math.round(ORBIT_RADIUS * Math.cos(angle))}px`;
+        const ty = `${Math.round(ORBIT_RADIUS * Math.sin(angle))}px`;
+
+        const slotNode = document.createElement('div');
+        slotNode.className = 'standby-node-slot';
+        slotNode.style.setProperty('--tx', tx);
+        slotNode.style.setProperty('--ty', ty);
+
+        const innerDot = document.createElement('div');
+        innerDot.className = 'standby-ambient-dot';
+        innerDot.style.setProperty('--dot-size', `${DOT_SIZES[i % DOT_SIZES.length]}px`);
+
+        slotNode.appendChild(innerDot);
+        ringContainer.appendChild(slotNode);
+        slotElements.push(slotNode);
+    }
+
+    // Connect to Realtime Database presence pipeline loop
+    const standbyPresenceRef = ref(rtdb, 'presence/');
+    onValue(standbyPresenceRef, (snapshot) => {
+        if (!isStandbyEnabled) return; // Halt loop execution if active view dismounted
+
+        const activeUsersData = snapshot.val() || {};
+        // Isolate remote connections
+        const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
+
+        // Clear active status configurations on structural slots
+        slotElements.forEach(slot => {
+            slot.classList.remove('is-active');
+            slot.style.removeProperty('--avatar-img');
         });
 
-        // Position or create elements smoothly using index distributions
-        users.forEach((user, index) => {
-            // Compute structural angular layout spacing 
-            const angle = (index / totalUsers) * 2 * Math.PI;
-            const tx = `${Math.round(radius * Math.cos(angle))}px`;
-            const ty = `${Math.round(radius * Math.sin(angle))}px`;
+        // Distribute active avatars inside persistent slot allocations
+        onlineRemotes.forEach((user, index) => {
+            if (index >= FIXED_DOT_COUNT) return; // Bound check guard clause
 
-            let node = activeProfilesMap.get(user.uid);
+            const targetedSlot = slotElements[index];
+            const premium3dAssets = {
+                'https://global.discourse-cdn.com Monzo...': 'https://global.discourse-cdn.com...',
+                'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+                'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
+                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
+                'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
+                'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
+                'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
+                'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
+                'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
+                'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
+                'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg'
+            };
+            const resolvedUserAvatar = premium3dAssets[user.avatar] || user.avatar || 'https://via.placeholder.com/150';
 
-            if (!node) {
-                // It's a new connection: generate DOM & POP it in
-                node = document.createElement('div');
-                node.className = 'standby-orbit-node';
-                node.style.backgroundImage = `url('${user.avatar || 'https://via.placeholder.com/150'}')`;
-                node.title = user.name || 'Active User';
-                
-                orbitContainer.appendChild(node);
-                activeProfilesMap.set(user.uid, node);
-            }
-
-            // Continuously recalculate positions if layout changes dynamically
-            node.style.setProperty('--tx', tx);
-            node.style.setProperty('--ty', ty);
+            targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
+            targetedSlot.classList.add('is-active');
         });
     });
 }
 
-// Run setup initialization
+// 6. Execution Attach
 document.addEventListener('DOMContentLoaded', () => {
-    initStandbyDOM();
-    resetStandbyTimer();
+    initStandbySystem();
+    resetStandbyTimeout();
 });
+
 
