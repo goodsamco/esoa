@@ -1491,12 +1491,12 @@ window.addEventListener('click', () => {
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
 /* ==========================================================================\n   10. STANDBY IDLE COORD & MORPH CONTROLLER\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER\n   ========================================================================== */
 
 let standbyTimer;
 const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
 
-// 1. Structural DOM Injection
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
@@ -1511,34 +1511,19 @@ function initStandbySystem() {
     document.body.appendChild(overlay);
 }
 
-// 2. Activate Standby Overlay Stage
 function startStandbyMode() {
     if (isStandbyEnabled) return;
     isStandbyEnabled = true;
 
-    // Center layout profile configuration
     const centerProfile = document.getElementById('standby-center-node');
     if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
-        const premium3dAssets = {
-            'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
-            'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
-            'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
-            'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
-            'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
-            'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
-            'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
-            'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
-            'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg'
-        };
-        centerProfile.src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+        centerProfile.src = currentUserAvatarRaw;
     }
 
     document.body.classList.add('standby-active');
     renderPersistentSymmetricalDots();
 }
 
-// 3. Dismount Standby view context
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
@@ -1546,7 +1531,6 @@ function cancelStandbyMode() {
     resetStandbyTimeout();
 }
 
-// 4. Activity Interceptor
 function resetStandbyTimeout() {
     clearTimeout(standbyTimer);
     if (isStandbyEnabled) {
@@ -1555,24 +1539,22 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Listen for global window inputs to drop out of standby
+// Global wake listeners
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
 
-// 5. Symmetric Dot Distribution & Real-Time Morph Mapping
 function renderPersistentSymmetricalDots() {
     const ringContainer = document.getElementById('standby-orbit-ring');
     if (!ringContainer || typeof rtdb === 'undefined') return;
 
-    // Fixed configuration mapping for persistent structural symmetry nodes
-    const FIXED_DOT_COUNT = 8; 
-    const ORBIT_RADIUS = 210; // Pixel offset radius from core anchor center
-    const DOT_SIZES = [6, 12, 8, 14, 7, 11, 9, 13]; // Varying dot size footprint matrix
+    // A beautiful cluster arrangement right next to the profile border
+    const FIXED_DOT_COUNT = 12; 
+    const ORBIT_RADIUS = 85; 
+    const DOT_SIZES = [5, 9, 6, 11, 4, 10, 5, 8, 6, 12, 5, 7]; // Symmetrical layout variance
 
-    ringContainer.innerHTML = ''; // Wipe past dynamic assignments
+    ringContainer.innerHTML = ''; 
 
-    // Generate persistent balanced background slots
     const slotElements = [];
     for (let i = 0; i < FIXED_DOT_COUNT; i++) {
         const angle = (i / FIXED_DOT_COUNT) * 2 * Math.PI;
@@ -1593,40 +1575,26 @@ function renderPersistentSymmetricalDots() {
         slotElements.push(slotNode);
     }
 
-    // Connect to Realtime Database presence pipeline loop
+    // Bind real-time data to morph specific dots into profiles
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
-        if (!isStandbyEnabled) return; // Halt loop execution if active view dismounted
+        if (!isStandbyEnabled) return;
 
         const activeUsersData = snapshot.val() || {};
-        // Isolate remote connections
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
-        // Clear active status configurations on structural slots
+        // Reset all back to ambient tracking dot states first
         slotElements.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        // Distribute active avatars inside persistent slot allocations
+        // Morph active users into the pre-existing slots
         onlineRemotes.forEach((user, index) => {
-            if (index >= FIXED_DOT_COUNT) return; // Bound check guard clause
+            if (index >= FIXED_DOT_COUNT) return; 
 
             const targetedSlot = slotElements[index];
-            const premium3dAssets = {
-                'https://global.discourse-cdn.com Monzo...': 'https://global.discourse-cdn.com...',
-                'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
-                'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
-                'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
-                'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
-                'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
-                'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
-                'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
-                'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
-                'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg'
-            };
-            const resolvedUserAvatar = premium3dAssets[user.avatar] || user.avatar || 'https://via.placeholder.com/150';
+            const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
 
             targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
             targetedSlot.classList.add('is-active');
@@ -1634,10 +1602,7 @@ function renderPersistentSymmetricalDots() {
     });
 }
 
-// 6. Execution Attach
 document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
 });
-
-
