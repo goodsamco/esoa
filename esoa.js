@@ -727,7 +727,7 @@ onValue(presenceRef, (snapshot) => {
 });
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS
-   ========================================================================== 
+   ========================================================================== */
 function bindBackgroundNotifListener(partnerId) {
     if (mappedRouteTrackingHooks[partnerId]) return;
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
@@ -806,7 +806,7 @@ function bindBackgroundGcListener() {
 */
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS (CLOUD PERSISTENT)
-   ========================================================================== */
+   ========================================================================== 
 
 // --- CLOUD STATE ENGINE COUPLERS ---
 function setUnreadStateCloud(partnerId) {
@@ -923,7 +923,7 @@ function bindBackgroundGcListener() {
 
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
-   ========================================================================== 
+   ========================================================================== */
 let activeReplyPayload = null; 
 
 function formatMessageTimestamp(timestamp) {
@@ -1398,11 +1398,11 @@ window.closeChatSession = function () {
     selectedActiveChatPartnerId = null;
 };
 
-*/
+
 
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
-   ========================================================================== */
+   ========================================================================== 
 let activeReplyPayload = null; 
 
 function formatMessageTimestamp(timestamp) {
@@ -1505,7 +1505,6 @@ const extraItems = {
 };
 
 // Initialization Execution Lifecycles
-/*
 window.addEventListener('DOMContentLoaded', () => {
     allRows = document.querySelectorAll('.item-row');
     highlighter = document.getElementById('highlighter');
@@ -1514,18 +1513,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
     const hubContainer = document.getElementById('peerActiveHub');
-    */
-window.addEventListener('DOMContentLoaded', () => {
-    allRows = document.querySelectorAll('.item-row');
-    highlighter = document.getElementById('highlighter');
-    container = document.getElementById('mainContainer');
-    magnetBtn = document.getElementById('magnetBtn');
-
-    // 🔥 START LISTENING TO CLOUD UNREAD STATES IMMEDIATELY ON BOOT UP
-    startCloudUnreadListener();
-
-    // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
-    const hubContainer = document.getElementById('peerActiveHub'); /*ends here */
     const prevBtn = document.querySelector('.scroll-nav-btn.prev');
     const nextBtn = document.querySelector('.scroll-nav-btn.next');
 
