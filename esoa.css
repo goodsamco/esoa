@@ -1661,7 +1661,7 @@ body.standby-active .standby-center-profile {
 */
 
 /* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (WITH SYSTEM CLOCK & DATE)\n   ========================================================================== */
-/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (12-HOUR CLOCK & PERFECT HORIZON LOCK)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY AMBIENT MODE (HORIZON LEVELING + SEPARATED 12H ROUNDED CLOCK)\n   ========================================================================== */
 
 #standby-overlay {
     position: fixed;
@@ -1669,14 +1669,10 @@ body.standby-active .standby-center-profile {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(10, 10, 10, 0.25);
+    background: rgba(10, 10, 10, 0.35);
     backdrop-filter: blur(0px);
     -webkit-backdrop-filter: blur(0px);
     z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
     opacity: 0;
     pointer-events: none;
     transition: backdrop-filter 0.8s cubic-bezier(0.25, 1, 0.5, 1),
@@ -1695,41 +1691,58 @@ body.standby-active > :not(#standby-overlay) {
     transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Elevated, Centered Apple Watch Style Typography */
+/* Placed Higher and Free from Orbit Congestion */
 .standby-clock-container {
+    position: absolute;
+    top: 12%; /* Safely elevated above the orbit field */
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
-    z-index: 60;
+    z-index: 100000;
     user-select: none;
-    margin-bottom: 90px; /* Elevated high up to guarantee no overlap with drifting bubbles */
+    width: 100%;
 }
 
 .standby-time-display {
-    /* Uses Apple's Rounded system font variant with generic fallbacks */
-    font-family: "SF Pro Rounded", ui-rounded, "Apple Symbols", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 82px;
-    font-weight: 800; /* Bold with rounded geometric profiles */
-    line-height: 1.05;
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 84px;
+    font-weight: 800; /* Ultra Bold with soft rounded edges */
+    line-height: 1.0;
     color: var(--primary);
     letter-spacing: -1px;
     font-variant-numeric: tabular-nums;
     -webkit-font-feature-settings: "tnum";
     font-feature-settings: "tnum";
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+}
+
+.standby-am-pm {
+    font-size: 20px;
+    font-weight: 700;
+    margin-left: 6px;
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
 .standby-date-display {
-    font-family: "SF Pro Rounded", ui-rounded, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    font-weight: 600;
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
     color: var(--primary);
     opacity: 0.6;
-    letter-spacing: 0.8px;
-    margin-top: 6px;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
     text-transform: uppercase;
 }
 
-/* Master Pivot Stage */
+/* Master Space Stage Center Pivot Point */
 .standby-stage {
-    position: relative;
+    position: absolute;
+    top: 60%; /* Pushed slightly downward for balanced spatial harmony */
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 0;
     height: 0;
     display: flex;
@@ -1737,7 +1750,7 @@ body.standby-active > :not(#standby-overlay) {
     align-items: center;
 }
 
-/* Center Avatar Node */
+/* Center Core Profile */
 .standby-center-profile {
     position: absolute;
     width: 84px;
@@ -1758,7 +1771,7 @@ body.standby-active .standby-center-profile {
     opacity: 1;
 }
 
-/* Clockwise Orbit Ring */
+/* Master Orbit Ring Group */
 .standby-orbit-ring {
     position: absolute;
     width: 0;
@@ -1768,7 +1781,7 @@ body.standby-active .standby-center-profile {
     animation: standbyClockwiseRotation 120s linear infinite;
 }
 
-/* Individual Slot Anchor - Pure linear spatial offsets */
+/* Node Slot Anchors - Glide Positions */
 .standby-node-slot {
     position: absolute;
     width: 0;
@@ -1780,9 +1793,11 @@ body.standby-active .standby-center-profile {
     transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Perfect Symmetrical Ambient Floating Dot Component */
+/* FIXED HORIZON LEVELING SYSTEM: Counter-Rotates flawlessly via fixed top/left parameters */
 .standby-ambient-dot {
     position: absolute;
+    top: 50%;
+    left: 50%;
     width: var(--dot-size, 6px);
     height: var(--dot-size, 6px);
     border-radius: 50%;
@@ -1790,17 +1805,17 @@ body.standby-active .standby-center-profile {
     opacity: 0.25;
     box-shadow: 0 0 8px var(--primary);
     
-    /* HORIZON LEVEL LOCK: Applies counter-rotation directly at the node source. 
-       We wrap inner visuals cleanly via absolute layout rules so they never spin off axis */
-    transform: translate(-50%, -50%);
-    
+    /* Counteracts parent orbit angle explicitly from its true center */
+    transform: translate(-50%, -50%) rotate(360deg);
+    animation: standbyCounterClockwiseRotation 120s linear infinite;
+
     transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 opacity 0.4s ease,
                 box-shadow 0.4s ease;
 }
 
-/* Active Peer Profile Image Elements - Locks counter rotation inline perfectly */
+/* Active Peer Bubble Morph State */
 .standby-node-slot.is-active .standby-ambient-dot {
     width: 50px;   
     height: 50px;
@@ -1810,17 +1825,15 @@ body.standby-active .standby-center-profile {
     background-position: center;
     border: 2px solid var(--primary);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-    /* Enforces counter-rotation to match the outer ring animation perfectly */
-    animation: standbyCounterClockwiseRotation 120s linear infinite;
 }
 
-/* Perfectly Balanced Inverse Rotational Keyframes */
+/* Core System Keyframe Clocks */
 @keyframes standbyClockwiseRotation {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
 
 @keyframes standbyCounterClockwiseRotation {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to { transform: translate(-50%, -50%) rotate(-360deg); }
+    from { transform: translate(-50%, -50%) rotate(360deg); }
+    to { transform: translate(-50%, -50%) rotate(0deg); }
 }
