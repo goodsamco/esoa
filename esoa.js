@@ -1492,9 +1492,13 @@ window.addEventListener('click', () => {
 10. */
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER\n   ========================================================================== */
 
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (LOCK HORIZON + SHUFFLE)\n   ========================================================================== */
+
 let standbyTimer;
+let shuffleInterval;
 const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
+let slotElementsArray = [];
 
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
@@ -1508,6 +1512,9 @@ function initStandbySystem() {
         </div>
     `;
     document.body.appendChild(overlay);
+    
+    // Tracks browser window animation loops to pass real-time angle coordinates to variables
+    syncHorizonCounterRotation();
 }
 
 function startStandbyMode() {
@@ -1521,12 +1528,18 @@ function startStandbyMode() {
 
     document.body.classList.add('standby-active');
     renderPersistentSymmetricalDots();
+    
+    // Start the 5-second organic position/size shuffle routine
+    clearInterval(shuffleInterval);
+    shuffleInterval = setInterval(applyOrganicFloatingMotion, 5000);
+    applyOrganicFloatingMotion(); 
 }
 
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
     document.body.classList.remove('standby-active');
+    clearInterval(shuffleInterval);
     resetStandbyTimeout();
 }
 
@@ -1538,7 +1551,7 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Global window activity wakeup hooks
+// Global window event triggers to exit standby view context
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
@@ -1547,35 +1560,44 @@ function renderPersistentSymmetricalDots() {
     const ringContainer = document.getElementById('standby-orbit-ring');
     if (!ringContainer || typeof rtdb === 'undefined') return;
 
-    // Fixed close-knit boundary metrics
-    const FIXED_DOT_COUNT = 12; 
-    const ORBIT_RADIUS = 76; // Tightly wraps right outside your 84px core profile avatar radius boundary!
-    const DOT_SIZES = [5, 9, 6, 11, 4, 10, 5, 8, 6, 12, 5, 7]; 
-
     ringContainer.innerHTML = ''; 
+    slotElementsArray = [];
 
-    const slotElements = [];
-    for (let i = 0; i < FIXED_DOT_COUNT; i++) {
-        const angle = (i / FIXED_DOT_COUNT) * 2 * Math.PI;
-        // Accurate coordinate transformation matrix offsets
-        const tx = `${Math.round(ORBIT_RADIUS * Math.cos(angle))}px`;
-        const ty = `${Math.round(ORBIT_RADIUS * Math.sin(angle))}px`;
+    // Layer distributions: Inner ring, Middle ring, Outer ring
+    const LAYERS = [
+        { count: 10, radius: 75 },
+        { count: 14, radius: 135 },
+        { count: 18, radius: 200 }
+    ];
+    
+    const BASE_DOT_SIZES = [5, 9, 6, 11, 4, 10, 7, 12, 6, 8];
 
-        const slotNode = document.createElement('div');
-        slotNode.className = 'standby-node-slot';
-        slotNode.style.setProperty('--tx', tx);
-        slotNode.style.setProperty('--ty', ty);
+    let sizeIndex = 0;
+    LAYERS.forEach((layer) => {
+        for (let i = 0; i < layer.count; i++) {
+            const angle = (i / layer.count) * 2 * Math.PI;
+            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
+            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
 
-        const innerDot = document.createElement('div');
-        innerDot.className = 'standby-ambient-dot';
-        innerDot.style.setProperty('--dot-size', `${DOT_SIZES[i % DOT_SIZES.length]}px`);
+            const slotNode = document.createElement('div');
+            slotNode.className = 'standby-node-slot';
+            slotNode.style.setProperty('--tx', tx);
+            slotNode.style.setProperty('--ty', ty);
 
-        slotNode.appendChild(innerDot);
-        ringContainer.appendChild(slotNode);
-        slotElements.push(slotNode);
-    }
+            const innerDot = document.createElement('div');
+            innerDot.className = 'standby-ambient-dot';
+            
+            const nativeSize = BASE_DOT_SIZES[sizeIndex % BASE_DOT_SIZES.length];
+            innerDot.style.setProperty('--dot-size', `${nativeSize}px`);
+            sizeIndex++;
 
-    // Dynamic Firebase morph integration
+            slotNode.appendChild(innerDot);
+            ringContainer.appendChild(slotNode);
+            slotElementsArray.push(slotNode);
+        }
+    });
+
+    // Real-time Firebase Presence Assignment Engine Loop
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
         if (!isStandbyEnabled) return;
@@ -1583,23 +1605,63 @@ function renderPersistentSymmetricalDots() {
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
-        // Reset all back to clean background dots first
-        slotElements.forEach(slot => {
+        slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        // Map live users directly onto the pre-positioned cluster dots
         onlineRemotes.forEach((user, index) => {
-            if (index >= FIXED_DOT_COUNT) return; 
+            if (index >= slotElementsArray.length) return; 
 
-            const targetedSlot = slotElements[index];
+            const targetedSlot = slotElementsArray[index];
             const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
 
             targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
             targetedSlot.classList.add('is-active');
         });
     });
+}
+
+// 5-Second Organic Apple Fluid Floating Routine Modifier
+function applyOrganicFloatingMotion() {
+    if (!isStandbyEnabled) return;
+    
+    slotElementsArray.forEach(slot => {
+        // Random fluid drift variance layout limits between -12px to +12px
+        const driftX = (Math.random() * 24 - 12).toFixed(1) + 'px';
+        const driftY = (Math.random() * 24 - 12).toFixed(1) + 'px';
+        // Random scale adjustments between 0.75 and 1.35
+        const driftScale = (Math.random() * 0.6 + 0.75).toFixed(2);
+
+        slot.style.setProperty('--fx', driftX);
+        slot.style.setProperty('--fy', driftY);
+        slot.style.setProperty('--f-scale', driftScale);
+    });
+}
+
+// Computes rotational matrix parameters to lock the horizon of profile images
+function syncHorizonCounterRotation() {
+    const ring = document.getElementById('standby-orbit-ring');
+    
+    function loop() {
+        if (isStandbyEnabled && ring) {
+            const computedStyle = window.getComputedStyle(ring);
+            const matrix = computedStyle.transform;
+            
+            if (matrix && matrix !== 'none') {
+                const values = matrix.split('(')[1].split(')')[0].split(',');
+                const a = parseFloat(values[0]);
+                const b = parseFloat(values[1]);
+                let angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+                if (angle < 0) angle += 360;
+                
+                // Updates modern CSS custom property directly onto the root container node loop execution
+                ring.style.setProperty('--base-rotation', `${angle}deg`);
+            }
+        }
+        requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
