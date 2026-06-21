@@ -1540,11 +1540,7 @@ h2 {
 
 /* ==========================================================================\n   STANDBY MODE (APPLE-STYLE) \n   ==========================================================================
 15.
-/* ==========================================================================\n   STANDBY AMBIENT ORBIT LAYER (APPLE-STYLE)\n   ========================================================================== */
-
-/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (APPLE-STYLE)\n   ========================================================================== */
-
-/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (APPLE-STYLE)\n   ========================================================================== */
+/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (LOCK HORIZON + SHUFFLE)\n   ========================================================================== */
 
 #standby-overlay {
     position: fixed;
@@ -1552,7 +1548,7 @@ h2 {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(10, 10, 10, 0.2);
+    background: rgba(10, 10, 10, 0.25);
     backdrop-filter: blur(0px);
     -webkit-backdrop-filter: blur(0px);
     z-index: 99999;
@@ -1573,11 +1569,11 @@ body.standby-active #standby-overlay {
 }
 
 body.standby-active > :not(#standby-overlay) {
-    filter: blur(4px);
+    filter: blur(5px);
     transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Core Pivot Center Stage */
+/* Master Core Stage */
 .standby-stage {
     position: relative;
     width: 0;
@@ -1587,15 +1583,15 @@ body.standby-active > :not(#standby-overlay) {
     align-items: center;
 }
 
-/* Center Profile Avatar */
+/* Center Core Profile */
 .standby-center-profile {
     position: absolute;
     width: 84px;
     height: 84px;
     border-radius: 50%;
     border: 2px solid var(--primary);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
-    z-index: 10;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+    z-index: 50;
     transform: translate(-50%, -50%) scale(0.3);
     left: 50%;
     top: 50%;
@@ -1608,17 +1604,18 @@ body.standby-active .standby-center-profile {
     opacity: 1;
 }
 
-/* Constellation Ring Container */
+/* Constellation Base System Ring */
 .standby-orbit-ring {
     position: absolute;
     width: 0;
     height: 0;
     left: 50%;
     top: 50%;
-    animation: standbyClockwiseRotation 80s linear infinite;
+    /* Standardized global CSS rotation parameter handled dynamically via animation */
+    animation: standbyClockwiseRotation 90s linear infinite;
 }
 
-/* Symmetrical Slot Anchor points - Absolute offset from center pivot */
+/* Anchor Slot Nodes */
 .standby-node-slot {
     position: absolute;
     width: 0;
@@ -1626,35 +1623,39 @@ body.standby-active .standby-center-profile {
     display: flex;
     justify-content: center;
     align-items: center;
-    transform: translate(var(--tx), var(--ty));
+    /* Combines math positioning translation variables with dynamic floating offsets */
+    transform: translate(calc(var(--tx) + var(--fx, 0px)), calc(var(--ty) + var(--fy, 0px)));
+    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Persistent background dots surrounding your profile closely */
+/* Persistent Dot Component */
 .standby-ambient-dot {
     position: absolute;
-    width: var(--dot-size, 8px);
-    height: var(--dot-size, 8px);
+    width: calc(var(--dot-size, 8px) * var(--f-scale, 1));
+    height: calc(var(--dot-size, 8px) * var(--f-scale, 1));
     border-radius: 50%;
     background-color: var(--primary);
     opacity: 0.25;
     box-shadow: 0 0 8px var(--primary);
-    transform: translate(-50%, -50%) scale(1);
+    /* LOCKED HORIZON MATRIX: Counter-rotates inverse to the global parent ring container rotation */
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--base-rotation, 0deg)));
     transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 opacity 0.4s ease,
-                box-shadow 0.4s ease;
+                box-shadow 0.4s ease,
+                transform 0.1s linear; /* Responsive, inline tracking counter-rotation sync */
 }
 
-/* Active Profile Morphing State - Pops open directly over the dot position */
+/* Morphing Configuration Overrides when a Live User binds onto a target slot element */
 .standby-node-slot.is-active .standby-ambient-dot {
-    width: 48px;   
-    height: 48px;
+    width: 52px;   
+    height: 52px;
     opacity: 1;
     background-image: var(--avatar-img);
     background-size: cover;
     background-position: center;
     border: 2px solid var(--primary);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes standbyClockwiseRotation {
