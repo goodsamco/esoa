@@ -1540,9 +1540,7 @@ h2 {
 
 /* ==========================================================================\n   STANDBY MODE (APPLE-STYLE) \n   ==========================================================================
 15.
-/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (LOCK HORIZON + SHUFFLE)\n   ========================================================================== */
-
-/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (INDEPENDENT ASYNCHRONOUS POP)\n   ========================================================================== */
+/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (SYMMETRICAL SLIDING CIRCLES)\n   ========================================================================== */
 
 #standby-overlay {
     position: fixed;
@@ -1613,10 +1611,10 @@ body.standby-active .standby-center-profile {
     height: 0;
     left: 50%;
     top: 50%;
-    animation: standbyClockwiseRotation 100s linear infinite;
+    animation: standbyClockwiseRotation 120s linear infinite;
 }
 
-/* Individual Slot Anchors - Smooth transitions for location/scale mutation overrides */
+/* Individual Slot Anchors - Smooth, uninterrupted 5-second glides */
 .standby-node-slot {
     position: absolute;
     width: 0;
@@ -1625,29 +1623,31 @@ body.standby-active .standby-center-profile {
     justify-content: center;
     align-items: center;
     transform: translate(var(--tx), var(--ty));
-    /* Transitions only scale and opacity via separate animation hooks to preserve spring pop behaviors */
-    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Lock structural transformation timeline transitions exactly to 5s to create fluid drifting */
+    transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Symmetrical Ambient Floating Dot */
+/* Perfect Symmetrical Ambient Floating Dot Component */
 .standby-ambient-dot {
     position: absolute;
-    width: calc(var(--dot-size, 8px) * var(--f-scale, 1));
-    height: calc(var(--dot-size, 8px) * var(--f-scale, 1));
+    /* Scale maps dynamically: small close, big far */
+    width: var(--dot-size, 6px);
+    height: var(--dot-size, 6px);
     border-radius: 50%;
     background-color: var(--primary);
     opacity: 0.25;
     box-shadow: 0 0 8px var(--primary);
-    /* Locked Horizon tracking equation */
-    transform: translate(-50%, -50%) rotate(calc(-1 * var(--base-rotation, 0deg))) scale(var(--pop-scale, 1));
-    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1),
-                height 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+    /* Horizon Lock tracking matrix */
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--base-rotation, 0deg)));
+    /* Only morph properties transition with an Apple elastic spring curve when active users load */
+    transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
+                height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 opacity 0.4s ease,
                 box-shadow 0.4s ease,
                 transform 0.1s linear;
 }
 
-/* Active Profile Override Matrix */
+/* Active Profile Spring Morphing Overrides */
 .standby-node-slot.is-active .standby-ambient-dot {
     width: 50px;   
     height: 50px;
