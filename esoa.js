@@ -1491,6 +1491,7 @@ window.addEventListener('click', () => {
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (PERMANENT FIXED USER SLOTS)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (DETERMINISTIC PERMANENT SLOTS)\n   ========================================================================== */
 
 let standbyTimer;
 let shuffleInterval;
@@ -1556,7 +1557,7 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Global wake inputs
+// Global window event triggers to exit standby view context
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
@@ -1568,11 +1569,11 @@ function renderPersistentSymmetricalDots() {
     ringContainer.innerHTML = ''; 
     slotElementsArray = [];
 
-    // Dense distribution layers
+    // LAYERS RADII EXPANDED: Moved inner layer to 110px to perfectly clear the 84px center profile boundary
     const LAYERS = [
-        { count: 10, radius: 75 },
-        { count: 14, radius: 135 },
-        { count: 18, radius: 200 }
+        { count: 10, radius: 110 }, 
+        { count: 14, radius: 170 }, 
+        { count: 18, radius: 230 }  
     ];
     
     const BASE_DOT_SIZES = [5, 9, 6, 11, 4, 10, 7, 12, 6, 8];
@@ -1611,24 +1612,23 @@ function renderPersistentSymmetricalDots() {
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
-        // 1. Reset all nodes back to their clean background ambient states
+        // Reset all nodes back to clean ambient background dots
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        // 2. Map every live remote user directly to their unique dedicated dot slot
+        // Map live users directly onto their permanent deterministic slot 
         onlineRemotes.forEach((user) => {
             if (!user.uid) return;
 
-            // Generate a deterministic index unique to this user's UID string
             const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_SLOTS_COUNT);
             const targetedSlot = slotElementsArray[dedicatedIndex];
 
             if (targetedSlot) {
                 const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
                 targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-                targetedSlot.classList.add('is-active'); // Triggers the Apple spring/pop zoom morph!
+                targetedSlot.classList.add('is-active'); // Pops up smoothly inside its dedicated dot
             }
         });
     });
