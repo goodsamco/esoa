@@ -1490,7 +1490,6 @@ window.addEventListener('click', () => {
 
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
-/* ==========================================================================\n   10. STANDBY IDLE COORD & MORPH CONTROLLER\n   ========================================================================== */
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER\n   ========================================================================== */
 
 let standbyTimer;
@@ -1539,7 +1538,7 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Global wake listeners
+// Global window activity wakeup hooks
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
@@ -1548,16 +1547,17 @@ function renderPersistentSymmetricalDots() {
     const ringContainer = document.getElementById('standby-orbit-ring');
     if (!ringContainer || typeof rtdb === 'undefined') return;
 
-    // A beautiful cluster arrangement right next to the profile border
+    // Fixed close-knit boundary metrics
     const FIXED_DOT_COUNT = 12; 
-    const ORBIT_RADIUS = 85; 
-    const DOT_SIZES = [5, 9, 6, 11, 4, 10, 5, 8, 6, 12, 5, 7]; // Symmetrical layout variance
+    const ORBIT_RADIUS = 76; // Tightly wraps right outside your 84px core profile avatar radius boundary!
+    const DOT_SIZES = [5, 9, 6, 11, 4, 10, 5, 8, 6, 12, 5, 7]; 
 
     ringContainer.innerHTML = ''; 
 
     const slotElements = [];
     for (let i = 0; i < FIXED_DOT_COUNT; i++) {
         const angle = (i / FIXED_DOT_COUNT) * 2 * Math.PI;
+        // Accurate coordinate transformation matrix offsets
         const tx = `${Math.round(ORBIT_RADIUS * Math.cos(angle))}px`;
         const ty = `${Math.round(ORBIT_RADIUS * Math.sin(angle))}px`;
 
@@ -1575,7 +1575,7 @@ function renderPersistentSymmetricalDots() {
         slotElements.push(slotNode);
     }
 
-    // Bind real-time data to morph specific dots into profiles
+    // Dynamic Firebase morph integration
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
         if (!isStandbyEnabled) return;
@@ -1583,13 +1583,13 @@ function renderPersistentSymmetricalDots() {
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
-        // Reset all back to ambient tracking dot states first
+        // Reset all back to clean background dots first
         slotElements.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        // Morph active users into the pre-existing slots
+        // Map live users directly onto the pre-positioned cluster dots
         onlineRemotes.forEach((user, index) => {
             if (index >= FIXED_DOT_COUNT) return; 
 
