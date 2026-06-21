@@ -1489,9 +1489,7 @@ window.addEventListener('click', () => {
 
 
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
-10. */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (ASYNCHRONOUS DESYNCHRONIZED POP)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (SYMMETRICAL SLIDING MATRIX)\n   ========================================================================== */
+10. 
 
 let standbyTimer;
 let shuffleInterval;
@@ -1677,6 +1675,210 @@ function syncHorizonCounterRotation() {
         requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initStandbySystem();
+    resetStandbyTimeout();
+});
+*/
+
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
+
+let standbyTimer;
+let shuffleInterval;
+let clockUpdateInterval;
+const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
+let isStandbyEnabled = false;
+let slotElementsArray = [];
+
+function getDeterministicSlotIndex(uid, totalSlots) {
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % totalSlots;
+}
+
+function initStandbySystem() {
+    if (document.getElementById('standby-overlay')) return;
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'standby-overlay';
+    overlay.innerHTML = `
+        <div class="standby-clock-container">
+            <div id="standby-time" class="standby-time-display">00:00</div>
+            <div id="standby-date" class="standby-date-display"></div>
+        </div>
+        <div class="standby-stage">
+            <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
+            <div id="standby-orbit-ring" class="standby-orbit-ring"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// Live Real-Time Clock Engine Updater Routine
+function startStandbyClock() {
+    const timeDisplay = document.getElementById('standby-time');
+    const dateDisplay = document.getElementById('standby-date');
+
+    function updateTimeAndDate() {
+        const now = new Date();
+        
+        // Time format: HH:MM
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        
+        if (timeDisplay) {
+            timeDisplay.textContent = `${hours}:${minutes}`;
+        }
+
+        // Custom Date Format: Day, Month Date Year (e.g., Saturday, July 20 2026)
+        const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+        let dateString = now.toLocaleDateString('en-US', options);
+        // Strips comma separator between date and year to match requested criteria exactly
+        dateString = dateString.replace(/,([^,]*)$/, '$1');
+
+        if (dateDisplay) {
+            dateDisplay.textContent = dateString;
+        }
+    }
+
+    clearInterval(clockUpdateInterval);
+    updateTimeAndDate();
+    clockUpdateInterval = setInterval(updateTimeAndDate, 1000);
+}
+
+function startStandbyMode() {
+    if (isStandbyEnabled) return;
+    isStandbyEnabled = true;
+
+    const centerProfile = document.getElementById('standby-center-node');
+    if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
+        centerProfile.src = currentUserAvatarRaw;
+    }
+
+    document.body.classList.add('standby-active');
+    renderPersistentSymmetricalDots();
+    startStandbyClock();
+
+    clearInterval(shuffleInterval);
+    shuffleInterval = setInterval(slideAmbientPositions, 5000);
+    slideAmbientPositions();
+}
+
+function cancelStandbyMode() {
+    if (!isStandbyEnabled) return;
+    isStandbyEnabled = false;
+    document.body.classList.remove('standby-active');
+    clearInterval(shuffleInterval);
+    clearInterval(clockUpdateInterval);
+    resetStandbyTimeout();
+}
+
+function resetStandbyTimeout() {
+    clearTimeout(standbyTimer);
+    if (isStandbyEnabled) {
+        cancelStandbyMode();
+    }
+    standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
+}
+
+['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, resetStandbyTimeout, { passive: true });
+});
+
+function renderPersistentSymmetricalDots() {
+    const ringContainer = document.getElementById('standby-orbit-ring');
+    if (!ringContainer || typeof rtdb === 'undefined') return;
+
+    ringContainer.innerHTML = ''; 
+    slotElementsArray = [];
+
+    // Concentric Symmetrical Rings structure arrangement
+    const LAYERS = [
+        { count: 8,  radius: 88,  dotSize: 4  }, // Close layer -> Small size
+        { count: 12, radius: 130, dotSize: 7  }, // Middle layer -> Medium size
+        { count: 16, radius: 175, dotSize: 11 }, // Distant layer -> Big size
+        { count: 20, radius: 220, dotSize: 15 }  // Outermost layer -> Biggest size
+    ];
+
+    const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
+
+    LAYERS.forEach((layer) => {
+        for (let i = 0; i < layer.count; i++) {
+            const angle = (i / layer.count) * 2 * Math.PI;
+            
+            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
+            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
+
+            const slotNode = document.createElement('div');
+            slotNode.className = 'standby-node-slot';
+            slotNode.dataset.baseAngle = angle;
+            slotNode.dataset.nativeRadius = layer.radius;
+            
+            slotNode.style.setProperty('--tx', tx);
+            slotNode.style.setProperty('--ty', ty);
+
+            const innerDot = document.createElement('div');
+            innerDot.className = 'standby-ambient-dot';
+            innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
+
+            slotNode.appendChild(innerDot);
+            ringContainer.appendChild(slotNode);
+            slotElementsArray.push(slotNode);
+        }
+    });
+
+    const standbyPresenceRef = ref(rtdb, 'presence/');
+    onValue(standbyPresenceRef, (snapshot) => {
+        if (!isStandbyEnabled) return;
+
+        const activeUsersData = snapshot.val() || {};
+        const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
+
+        slotElementsArray.forEach(slot => {
+            slot.classList.remove('is-active');
+            slot.style.removeProperty('--avatar-img');
+        });
+
+        onlineRemotes.forEach((user) => {
+            if (!user.uid) return;
+
+            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
+            const targetedSlot = slotElementsArray[dedicatedIndex];
+
+            if (targetedSlot) {
+                const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
+                targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
+                targetedSlot.classList.add('is-active'); 
+            }
+        });
+    });
+}
+
+function slideAmbientPositions() {
+    if (!isStandbyEnabled) return;
+
+    slotElementsArray.forEach((slot, index) => {
+        const baseAngle = parseFloat(slot.dataset.baseAngle);
+        const nativeRadius = parseInt(slot.dataset.nativeRadius);
+
+        const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
+        const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
+
+        const targetAngle = baseAngle + angleShift;
+        const targetRadius = nativeRadius + radiusShift;
+
+        const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
+        const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
+
+        slot.style.setProperty('--tx', newTx);
+        slot.style.setProperty('--ty', newTy);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
