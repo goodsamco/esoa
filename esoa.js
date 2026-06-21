@@ -1491,12 +1491,13 @@ window.addEventListener('click', () => {
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (ASYNCHRONOUS DESYNCHRONIZED POP)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (SYMMETRICAL SLIDING MATRIX)\n   ========================================================================== */
 
 let standbyTimer;
+let shuffleInterval;
 const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
 let slotElementsArray = [];
-let slotTimersArray = []; // Store unique, decoupled async timers per dot
 
 function getDeterministicSlotIndex(uid, totalSlots) {
     let hash = 0;
@@ -1533,17 +1534,18 @@ function startStandbyMode() {
 
     document.body.classList.add('standby-active');
     renderPersistentSymmetricalDots();
+
+    // Trigger desynchronized 5s fluid gliding layout transitions
+    clearInterval(shuffleInterval);
+    shuffleInterval = setInterval(slideAmbientPositions, 5000);
+    slideAmbientPositions();
 }
 
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
     document.body.classList.remove('standby-active');
-    
-    // Wipe out active independent async thread pools cleanly
-    slotTimersArray.forEach(clearTimeout);
-    slotTimersArray = [];
-    
+    clearInterval(shuffleInterval);
     resetStandbyTimeout();
 }
 
@@ -1565,40 +1567,44 @@ function renderPersistentSymmetricalDots() {
 
     ringContainer.innerHTML = ''; 
     slotElementsArray = [];
-    slotTimersArray = [];
 
-    const TOTAL_DOTS = 32; 
-    const BASE_DOT_SIZES = [5, 9, 6, 11, 4, 10, 7, 12, 6, 8];
+    // Concentric Symmetrical Rings structure arrangement
+    const LAYERS = [
+        { count: 8,  radius: 88,  dotSize: 4  }, // Close layer -> Completely round, Small size
+        { count: 12, radius: 130, dotSize: 7  }, // Middle layer -> Medium size
+        { count: 16, radius: 175, dotSize: 11 }, // Distant layer -> Completely round, Big size
+        { count: 20, radius: 220, dotSize: 15 }  // Outermost layer -> Biggest size
+    ];
 
-    for (let i = 0; i < TOTAL_DOTS; i++) {
-        // Perfect Middle Radius calculation: Spaced out cleanly from 90px up to 160px
-        const midRadius = 90 + (i % 4) * 23; 
-        const angle = (i / TOTAL_DOTS) * 2 * Math.PI;
-        
-        const tx = `${Math.round(midRadius * Math.cos(angle))}px`;
-        const ty = `${Math.round(midRadius * Math.sin(angle))}px`;
+    const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
 
-        const slotNode = document.createElement('div');
-        slotNode.className = 'standby-node-slot';
-        slotNode.style.setProperty('--tx', tx);
-        slotNode.style.setProperty('--ty', ty);
-        slotNode.style.setProperty('--pop-scale', '1');
+    LAYERS.forEach((layer) => {
+        for (let i = 0; i < layer.count; i++) {
+            const angle = (i / layer.count) * 2 * Math.PI;
+            
+            // Store pristine basic layout configurations directly inside target elements
+            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
+            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
 
-        const innerDot = document.createElement('div');
-        innerDot.className = 'standby-ambient-dot';
-        
-        const nativeSize = BASE_DOT_SIZES[i % BASE_DOT_SIZES.length];
-        innerDot.style.setProperty('--dot-size', `${nativeSize}px`);
+            const slotNode = document.createElement('div');
+            slotNode.className = 'standby-node-slot';
+            slotNode.dataset.baseAngle = angle;
+            slotNode.dataset.nativeRadius = layer.radius;
+            
+            slotNode.style.setProperty('--tx', tx);
+            slotNode.style.setProperty('--ty', ty);
 
-        slotNode.appendChild(innerDot);
-        ringContainer.appendChild(slotNode);
-        slotElementsArray.push(slotNode);
+            const innerDot = document.createElement('div');
+            innerDot.className = 'standby-ambient-dot';
+            innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
 
-        // Kickstart desynchronized, independent shift cycles for this individual slot element
-        setupAsynchronousDotLifecycle(slotNode, i, TOTAL_DOTS);
-    }
+            slotNode.appendChild(innerDot);
+            ringContainer.appendChild(slotNode);
+            slotElementsArray.push(slotNode);
+        }
+    });
 
-    // Dynamic Realtime Morph Connector Pipeline Loop
+    // Realtime Firebase Presence Integration Engine
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
         if (!isStandbyEnabled) return;
@@ -1620,53 +1626,34 @@ function renderPersistentSymmetricalDots() {
             if (targetedSlot) {
                 const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
                 targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-                targetedSlot.classList.add('is-active');
+                targetedSlot.classList.add('is-active'); // Pops smoothly into its spot
             }
         });
     });
 }
 
-// Spawns independent randomized schedules per circle node element
-function setupAsynchronousDotLifecycle(slotNode, index, totalSlots) {
+// Slidably shifts coordinates smoothly on a 5-second interval time wrapper
+function slideAmbientPositions() {
     if (!isStandbyEnabled) return;
 
-    // Desynchronizes initial burst triggers so everything doesn't update at the exact same frame layout
-    const initialStaggerDelay = Math.random() * 5000;
+    slotElementsArray.forEach((slot, index) => {
+        const baseAngle = parseFloat(slot.dataset.baseAngle);
+        const nativeRadius = parseInt(slot.dataset.nativeRadius);
 
-    function runIndividualShuffle() {
-        if (!isStandbyEnabled) return;
+        // Desynchronized organic layout micro-deviations (keeps the circles perfectly round, but shifts their drift values asynchronously)
+        const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
+        const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
 
-        // Step 1: Smoothly collapse down (Pop Out completely)
-        slotNode.style.setProperty('--pop-scale', '0');
+        const targetAngle = baseAngle + angleShift;
+        const targetRadius = nativeRadius + radiusShift;
 
-        // Step 2: Swap the location coordinates & scaling factor while hidden
-        setTimeout(() => {
-            if (!isStandbyEnabled) return;
+        const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
+        const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
 
-            const randomRadius = 90 + Math.floor(Math.random() * 70); // Generates variance between 90px and 160px mid range
-            const currentAngle = (index / totalSlots) * 2 * Math.PI + (Math.random() * 0.4 - 0.2); // Organic position displacement offset
-            
-            const newTx = `${Math.round(randomRadius * Math.cos(currentAngle))}px`;
-            const newTy = `${Math.round(randomRadius * Math.sin(currentAngle))}px`;
-            const randomScale = (Math.random() * 0.6 + 0.75).toFixed(2);
-
-            slotNode.style.setProperty('--tx', newTx);
-            slotNode.style.setProperty('--ty', newTy);
-            slotNode.style.setProperty('--f-scale', randomScale);
-
-            // Step 3: Bounce open cleanly in the new coordinate space layout (Pop Back In)
-            slotNode.style.setProperty('--pop-scale', '1');
-
-        }, 500); // 500ms collapse window transition threshold
-
-        // Reschedule next cycle with a fully randomized delay timeframe wrapper (e.g. 4.5s to 7.5s)
-        const nextRandomInterval = 4500 + Math.random() * 3000;
-        const timerId = setTimeout(runIndividualShuffle, nextRandomInterval);
-        slotTimersArray.push(timerId);
-    }
-
-    const initialTimerId = setTimeout(runIndividualShuffle, initialStaggerDelay);
-    slotTimersArray.push(initialTimerId);
+        // Setting custom properties overrides coordinates smoothly via CSS transition rules without popping
+        slot.style.setProperty('--tx', newTx);
+        slot.style.setProperty('--ty', newTy);
+    });
 }
 
 function syncHorizonCounterRotation() {
