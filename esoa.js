@@ -1490,16 +1490,14 @@ window.addEventListener('click', () => {
 
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (PERMANENT FIXED USER SLOTS)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (DETERMINISTIC PERMANENT SLOTS)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (ASYNCHRONOUS DESYNCHRONIZED POP)\n   ========================================================================== */
 
 let standbyTimer;
-let shuffleInterval;
 const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
 let slotElementsArray = [];
+let slotTimersArray = []; // Store unique, decoupled async timers per dot
 
-// Helper function to turn any string (UID) into a consistent numeric index bounded by total slots
 function getDeterministicSlotIndex(uid, totalSlots) {
     let hash = 0;
     for (let i = 0; i < uid.length; i++) {
@@ -1535,17 +1533,17 @@ function startStandbyMode() {
 
     document.body.classList.add('standby-active');
     renderPersistentSymmetricalDots();
-    
-    clearInterval(shuffleInterval);
-    shuffleInterval = setInterval(applyOrganicFloatingMotion, 5000);
-    applyOrganicFloatingMotion(); 
 }
 
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
     document.body.classList.remove('standby-active');
-    clearInterval(shuffleInterval);
+    
+    // Wipe out active independent async thread pools cleanly
+    slotTimersArray.forEach(clearTimeout);
+    slotTimersArray = [];
+    
     resetStandbyTimeout();
 }
 
@@ -1557,7 +1555,6 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Global window event triggers to exit standby view context
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
@@ -1568,43 +1565,40 @@ function renderPersistentSymmetricalDots() {
 
     ringContainer.innerHTML = ''; 
     slotElementsArray = [];
+    slotTimersArray = [];
 
-    // LAYERS RADII EXPANDED: Moved inner layer to 110px to perfectly clear the 84px center profile boundary
-    const LAYERS = [
-        { count: 10, radius: 110 }, 
-        { count: 14, radius: 170 }, 
-        { count: 18, radius: 230 }  
-    ];
-    
+    const TOTAL_DOTS = 32; 
     const BASE_DOT_SIZES = [5, 9, 6, 11, 4, 10, 7, 12, 6, 8];
-    const TOTAL_SLOTS_COUNT = LAYERS.reduce((acc, l) => acc + l.count, 0);
 
-    let sizeIndex = 0;
-    LAYERS.forEach((layer) => {
-        for (let i = 0; i < layer.count; i++) {
-            const angle = (i / layer.count) * 2 * Math.PI;
-            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
-            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
+    for (let i = 0; i < TOTAL_DOTS; i++) {
+        // Perfect Middle Radius calculation: Spaced out cleanly from 90px up to 160px
+        const midRadius = 90 + (i % 4) * 23; 
+        const angle = (i / TOTAL_DOTS) * 2 * Math.PI;
+        
+        const tx = `${Math.round(midRadius * Math.cos(angle))}px`;
+        const ty = `${Math.round(midRadius * Math.sin(angle))}px`;
 
-            const slotNode = document.createElement('div');
-            slotNode.className = 'standby-node-slot';
-            slotNode.style.setProperty('--tx', tx);
-            slotNode.style.setProperty('--ty', ty);
+        const slotNode = document.createElement('div');
+        slotNode.className = 'standby-node-slot';
+        slotNode.style.setProperty('--tx', tx);
+        slotNode.style.setProperty('--ty', ty);
+        slotNode.style.setProperty('--pop-scale', '1');
 
-            const innerDot = document.createElement('div');
-            innerDot.className = 'standby-ambient-dot';
-            
-            const nativeSize = BASE_DOT_SIZES[sizeIndex % BASE_DOT_SIZES.length];
-            innerDot.style.setProperty('--dot-size', `${nativeSize}px`);
-            sizeIndex++;
+        const innerDot = document.createElement('div');
+        innerDot.className = 'standby-ambient-dot';
+        
+        const nativeSize = BASE_DOT_SIZES[i % BASE_DOT_SIZES.length];
+        innerDot.style.setProperty('--dot-size', `${nativeSize}px`);
 
-            slotNode.appendChild(innerDot);
-            ringContainer.appendChild(slotNode);
-            slotElementsArray.push(slotNode);
-        }
-    });
+        slotNode.appendChild(innerDot);
+        ringContainer.appendChild(slotNode);
+        slotElementsArray.push(slotNode);
 
-    // Real-time Firebase Presence Assignment Engine Loop
+        // Kickstart desynchronized, independent shift cycles for this individual slot element
+        setupAsynchronousDotLifecycle(slotNode, i, TOTAL_DOTS);
+    }
+
+    // Dynamic Realtime Morph Connector Pipeline Loop
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
         if (!isStandbyEnabled) return;
@@ -1612,40 +1606,67 @@ function renderPersistentSymmetricalDots() {
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
-        // Reset all nodes back to clean ambient background dots
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        // Map live users directly onto their permanent deterministic slot 
         onlineRemotes.forEach((user) => {
             if (!user.uid) return;
 
-            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_SLOTS_COUNT);
+            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
             const targetedSlot = slotElementsArray[dedicatedIndex];
 
             if (targetedSlot) {
                 const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
                 targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-                targetedSlot.classList.add('is-active'); // Pops up smoothly inside its dedicated dot
+                targetedSlot.classList.add('is-active');
             }
         });
     });
 }
 
-function applyOrganicFloatingMotion() {
+// Spawns independent randomized schedules per circle node element
+function setupAsynchronousDotLifecycle(slotNode, index, totalSlots) {
     if (!isStandbyEnabled) return;
-    
-    slotElementsArray.forEach(slot => {
-        const driftX = (Math.random() * 24 - 12).toFixed(1) + 'px';
-        const driftY = (Math.random() * 24 - 12).toFixed(1) + 'px';
-        const driftScale = (Math.random() * 0.6 + 0.75).toFixed(2);
 
-        slot.style.setProperty('--fx', driftX);
-        slot.style.setProperty('--fy', driftY);
-        slot.style.setProperty('--f-scale', driftScale);
-    });
+    // Desynchronizes initial burst triggers so everything doesn't update at the exact same frame layout
+    const initialStaggerDelay = Math.random() * 5000;
+
+    function runIndividualShuffle() {
+        if (!isStandbyEnabled) return;
+
+        // Step 1: Smoothly collapse down (Pop Out completely)
+        slotNode.style.setProperty('--pop-scale', '0');
+
+        // Step 2: Swap the location coordinates & scaling factor while hidden
+        setTimeout(() => {
+            if (!isStandbyEnabled) return;
+
+            const randomRadius = 90 + Math.floor(Math.random() * 70); // Generates variance between 90px and 160px mid range
+            const currentAngle = (index / totalSlots) * 2 * Math.PI + (Math.random() * 0.4 - 0.2); // Organic position displacement offset
+            
+            const newTx = `${Math.round(randomRadius * Math.cos(currentAngle))}px`;
+            const newTy = `${Math.round(randomRadius * Math.sin(currentAngle))}px`;
+            const randomScale = (Math.random() * 0.6 + 0.75).toFixed(2);
+
+            slotNode.style.setProperty('--tx', newTx);
+            slotNode.style.setProperty('--ty', newTy);
+            slotNode.style.setProperty('--f-scale', randomScale);
+
+            // Step 3: Bounce open cleanly in the new coordinate space layout (Pop Back In)
+            slotNode.style.setProperty('--pop-scale', '1');
+
+        }, 500); // 500ms collapse window transition threshold
+
+        // Reschedule next cycle with a fully randomized delay timeframe wrapper (e.g. 4.5s to 7.5s)
+        const nextRandomInterval = 4500 + Math.random() * 3000;
+        const timerId = setTimeout(runIndividualShuffle, nextRandomInterval);
+        slotTimersArray.push(timerId);
+    }
+
+    const initialTimerId = setTimeout(runIndividualShuffle, initialStaggerDelay);
+    slotTimersArray.push(initialTimerId);
 }
 
 function syncHorizonCounterRotation() {
