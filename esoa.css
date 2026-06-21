@@ -1542,6 +1542,8 @@ h2 {
 15.
 /* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (LOCK HORIZON + SHUFFLE)\n   ========================================================================== */
 
+/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (INDEPENDENT ASYNCHRONOUS POP)\n   ========================================================================== */
+
 #standby-overlay {
     position: fixed;
     top: 0;
@@ -1573,7 +1575,7 @@ body.standby-active > :not(#standby-overlay) {
     transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Master Core Stage */
+/* Master Pivot Stage */
 .standby-stage {
     position: relative;
     width: 0;
@@ -1583,7 +1585,7 @@ body.standby-active > :not(#standby-overlay) {
     align-items: center;
 }
 
-/* Center Core Profile */
+/* Center Avatar Node */
 .standby-center-profile {
     position: absolute;
     width: 84px;
@@ -1604,18 +1606,17 @@ body.standby-active .standby-center-profile {
     opacity: 1;
 }
 
-/* Constellation Base System Ring */
+/* Continuously Rotating Core System Ring */
 .standby-orbit-ring {
     position: absolute;
     width: 0;
     height: 0;
     left: 50%;
     top: 50%;
-    /* Standardized global CSS rotation parameter handled dynamically via animation */
-    animation: standbyClockwiseRotation 90s linear infinite;
+    animation: standbyClockwiseRotation 100s linear infinite;
 }
 
-/* Anchor Slot Nodes */
+/* Individual Slot Anchors - Smooth transitions for location/scale mutation overrides */
 .standby-node-slot {
     position: absolute;
     width: 0;
@@ -1623,12 +1624,12 @@ body.standby-active .standby-center-profile {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Combines math positioning translation variables with dynamic floating offsets */
-    transform: translate(calc(var(--tx) + var(--fx, 0px)), calc(var(--ty) + var(--fy, 0px)));
-    transition: transform 4.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translate(var(--tx), var(--ty));
+    /* Transitions only scale and opacity via separate animation hooks to preserve spring pop behaviors */
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Persistent Dot Component */
+/* Symmetrical Ambient Floating Dot */
 .standby-ambient-dot {
     position: absolute;
     width: calc(var(--dot-size, 8px) * var(--f-scale, 1));
@@ -1637,19 +1638,19 @@ body.standby-active .standby-center-profile {
     background-color: var(--primary);
     opacity: 0.25;
     box-shadow: 0 0 8px var(--primary);
-    /* LOCKED HORIZON MATRIX: Counter-rotates inverse to the global parent ring container rotation */
-    transform: translate(-50%, -50%) rotate(calc(-1 * var(--base-rotation, 0deg)));
-    transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
-                height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
+    /* Locked Horizon tracking equation */
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--base-rotation, 0deg))) scale(var(--pop-scale, 1));
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+                height 0.5s cubic-bezier(0.25, 1, 0.5, 1),
                 opacity 0.4s ease,
                 box-shadow 0.4s ease,
-                transform 0.1s linear; /* Responsive, inline tracking counter-rotation sync */
+                transform 0.1s linear;
 }
 
-/* Morphing Configuration Overrides when a Live User binds onto a target slot element */
+/* Active Profile Override Matrix */
 .standby-node-slot.is-active .standby-ambient-dot {
-    width: 52px;   
-    height: 52px;
+    width: 50px;   
+    height: 50px;
     opacity: 1;
     background-image: var(--avatar-img);
     background-size: cover;
