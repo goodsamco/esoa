@@ -1490,15 +1490,22 @@ window.addEventListener('click', () => {
 
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
 10. */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER\n   ========================================================================== */
-
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (LOCK HORIZON + SHUFFLE)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (PERMANENT FIXED USER SLOTS)\n   ========================================================================== */
 
 let standbyTimer;
 let shuffleInterval;
 const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
 let slotElementsArray = [];
+
+// Helper function to turn any string (UID) into a consistent numeric index bounded by total slots
+function getDeterministicSlotIndex(uid, totalSlots) {
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % totalSlots;
+}
 
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
@@ -1513,7 +1520,6 @@ function initStandbySystem() {
     `;
     document.body.appendChild(overlay);
     
-    // Tracks browser window animation loops to pass real-time angle coordinates to variables
     syncHorizonCounterRotation();
 }
 
@@ -1529,7 +1535,6 @@ function startStandbyMode() {
     document.body.classList.add('standby-active');
     renderPersistentSymmetricalDots();
     
-    // Start the 5-second organic position/size shuffle routine
     clearInterval(shuffleInterval);
     shuffleInterval = setInterval(applyOrganicFloatingMotion, 5000);
     applyOrganicFloatingMotion(); 
@@ -1551,7 +1556,7 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
-// Global window event triggers to exit standby view context
+// Global wake inputs
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
@@ -1563,7 +1568,7 @@ function renderPersistentSymmetricalDots() {
     ringContainer.innerHTML = ''; 
     slotElementsArray = [];
 
-    // Layer distributions: Inner ring, Middle ring, Outer ring
+    // Dense distribution layers
     const LAYERS = [
         { count: 10, radius: 75 },
         { count: 14, radius: 135 },
@@ -1571,6 +1576,7 @@ function renderPersistentSymmetricalDots() {
     ];
     
     const BASE_DOT_SIZES = [5, 9, 6, 11, 4, 10, 7, 12, 6, 8];
+    const TOTAL_SLOTS_COUNT = LAYERS.reduce((acc, l) => acc + l.count, 0);
 
     let sizeIndex = 0;
     LAYERS.forEach((layer) => {
@@ -1605,32 +1611,35 @@ function renderPersistentSymmetricalDots() {
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
+        // 1. Reset all nodes back to their clean background ambient states
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        onlineRemotes.forEach((user, index) => {
-            if (index >= slotElementsArray.length) return; 
+        // 2. Map every live remote user directly to their unique dedicated dot slot
+        onlineRemotes.forEach((user) => {
+            if (!user.uid) return;
 
-            const targetedSlot = slotElementsArray[index];
-            const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
+            // Generate a deterministic index unique to this user's UID string
+            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_SLOTS_COUNT);
+            const targetedSlot = slotElementsArray[dedicatedIndex];
 
-            targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-            targetedSlot.classList.add('is-active');
+            if (targetedSlot) {
+                const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
+                targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
+                targetedSlot.classList.add('is-active'); // Triggers the Apple spring/pop zoom morph!
+            }
         });
     });
 }
 
-// 5-Second Organic Apple Fluid Floating Routine Modifier
 function applyOrganicFloatingMotion() {
     if (!isStandbyEnabled) return;
     
     slotElementsArray.forEach(slot => {
-        // Random fluid drift variance layout limits between -12px to +12px
         const driftX = (Math.random() * 24 - 12).toFixed(1) + 'px';
         const driftY = (Math.random() * 24 - 12).toFixed(1) + 'px';
-        // Random scale adjustments between 0.75 and 1.35
         const driftScale = (Math.random() * 0.6 + 0.75).toFixed(2);
 
         slot.style.setProperty('--fx', driftX);
@@ -1639,7 +1648,6 @@ function applyOrganicFloatingMotion() {
     });
 }
 
-// Computes rotational matrix parameters to lock the horizon of profile images
 function syncHorizonCounterRotation() {
     const ring = document.getElementById('standby-orbit-ring');
     
@@ -1655,7 +1663,6 @@ function syncHorizonCounterRotation() {
                 let angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
                 if (angle < 0) angle += 360;
                 
-                // Updates modern CSS custom property directly onto the root container node loop execution
                 ring.style.setProperty('--base-rotation', `${angle}deg`);
             }
         }
