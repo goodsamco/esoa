@@ -1684,6 +1684,7 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (12H DOCK READY ENGINE)\n   ========================================================================== */
 
 let standbyTimer;
 let shuffleInterval;
@@ -1700,6 +1701,7 @@ function getDeterministicSlotIndex(uid, totalSlots) {
     return Math.abs(hash) % totalSlots;
 }
 
+// Pre-assembles overlay structures immediately so transition execution is smooth and instantaneous
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
@@ -1707,7 +1709,9 @@ function initStandbySystem() {
     overlay.id = 'standby-overlay';
     overlay.innerHTML = `
         <div class="standby-clock-container">
-            <div id="standby-time" class="standby-time-display">00:00</div>
+            <div class="standby-time-display">
+                <span id="standby-time">12:00</span><span id="standby-ampm" class="standby-am-pm">AM</span>
+            </div>
             <div id="standby-date" class="standby-date-display"></div>
         </div>
         <div class="standby-stage">
@@ -1716,31 +1720,36 @@ function initStandbySystem() {
         </div>
     `;
     document.body.appendChild(overlay);
+    
+    // Warm up concentric dots layer structures quietly behind the scenes
+    renderPersistentSymmetricalDots();
 }
 
-// Live Real-Time Clock Engine Updater Routine
+// Real-Time 12-Hour Clock Loop
 function startStandbyClock() {
     const timeDisplay = document.getElementById('standby-time');
+    const ampmDisplay = document.getElementById('standby-ampm');
     const dateDisplay = document.getElementById('standby-date');
 
     function updateTimeAndDate() {
         const now = new Date();
         
-        // Time format: HH:MM
         let hours = now.getHours();
         let minutes = now.getMinutes();
-        hours = hours < 10 ? '0' + hours : hours;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        // Convert to standard 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12; // The hour '0' should be '12'
         minutes = minutes < 10 ? '0' + minutes : minutes;
         
-        if (timeDisplay) {
-            timeDisplay.textContent = `${hours}:${minutes}`;
-        }
+        if (timeDisplay) timeDisplay.textContent = `${hours}:${minutes}`;
+        if (ampmDisplay) ampmDisplay.textContent = ampm;
 
-        // Custom Date Format: Day, Month Date Year (e.g., Saturday, July 20 2026)
+        // Structured date parsing format: Saturday, July 20 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
-        // Strips comma separator between date and year to match requested criteria exactly
-        dateString = dateString.replace(/,([^,]*)$/, '$1');
+        dateString = dateString.replace(/,([^,]*)$/, '$1'); // Clears layout comma separators smoothly
 
         if (dateDisplay) {
             dateDisplay.textContent = dateString;
@@ -1758,12 +1767,15 @@ function startStandbyMode() {
 
     const centerProfile = document.getElementById('standby-center-node');
     if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
-        centerProfile.src = currentUserAvatarRaw;
+        const fallbackAsset = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+        centerProfile.src = fallbackAsset;
     }
 
     document.body.classList.add('standby-active');
-    renderPersistentSymmetricalDots();
     startStandbyClock();
+
+    // Re-trigger Realtime Presence Sync check instantly upon entry
+    syncActiveStandbyPresence();
 
     clearInterval(shuffleInterval);
     shuffleInterval = setInterval(slideAmbientPositions, 5000);
@@ -1793,17 +1805,16 @@ function resetStandbyTimeout() {
 
 function renderPersistentSymmetricalDots() {
     const ringContainer = document.getElementById('standby-orbit-ring');
-    if (!ringContainer || typeof rtdb === 'undefined') return;
+    if (!ringContainer) return;
 
     ringContainer.innerHTML = ''; 
     slotElementsArray = [];
 
-    // Concentric Symmetrical Rings structure arrangement
     const LAYERS = [
-        { count: 8,  radius: 88,  dotSize: 4  }, // Close layer -> Small size
-        { count: 12, radius: 130, dotSize: 7  }, // Middle layer -> Medium size
-        { count: 16, radius: 175, dotSize: 11 }, // Distant layer -> Big size
-        { count: 20, radius: 220, dotSize: 15 }  // Outermost layer -> Biggest size
+        { count: 8,  radius: 92,  dotSize: 4  }, 
+        { count: 12, radius: 140, dotSize: 6  }, 
+        { count: 16, radius: 190, dotSize: 10 }, 
+        { count: 20, radius: 240, dotSize: 14 }  
     ];
 
     const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
@@ -1832,6 +1843,10 @@ function renderPersistentSymmetricalDots() {
             slotElementsArray.push(slotNode);
         }
     });
+}
+
+function syncActiveStandbyPresence() {
+    if (typeof rtdb === 'undefined' || !isStandbyEnabled) return;
 
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
@@ -1839,6 +1854,7 @@ function renderPersistentSymmetricalDots() {
 
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
+        const TOTAL_DOTS = slotElementsArray.length;
 
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
@@ -1852,7 +1868,8 @@ function renderPersistentSymmetricalDots() {
             const targetedSlot = slotElementsArray[dedicatedIndex];
 
             if (targetedSlot) {
-                const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
+                const rawAvatar = user.avatar || 'avatar-m1';
+                const resolvedUserAvatar = premium3dAssets[rawAvatar] || rawAvatar;
                 targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
                 targetedSlot.classList.add('is-active'); 
             }
