@@ -1685,6 +1685,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
+const STANDBY_DELAY = 60000; // 1 minute in milliseconds
 
 let standbyTimer;
 let shuffleInterval;
