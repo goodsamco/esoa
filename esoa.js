@@ -1684,13 +1684,13 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (MANUAL DISMISS ENGINE)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
 
 let standbyTimer;
 let shuffleInterval;
 let clockUpdateInterval;
 let isStandbyEnabled = false;
-let isManuallyTriggered = false; // Tracks if standby was entered via button click
+let isManuallyTriggered = false; 
 let slotElementsArray = [];
 let lastRenderedMinutes = "";
 
@@ -1705,24 +1705,30 @@ function getDeterministicSlotIndex(uid, totalSlots) {
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
-    // 1. Create and append the Top Right Manual Trigger Button
+    // 1. Setup Corner Hover Detection Zone & Button Icon Container
+    const boundaryBox = document.createElement('div');
+    boundaryBox.className = 'standby-trigger-boundary-box';
+    
     const triggerBtn = document.createElement('button');
     triggerBtn.className = 'standby-manual-trigger-btn';
-    triggerBtn.innerText = 'Standby Mode';
+    // Clean SVG power icon for a refined aesthetic look
+    triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
+    
     triggerBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Avoid triggering dismiss immediately
-        startStandbyMode(true); // Force manual trigger flag
+        e.stopPropagation();
+        startStandbyMode(true);
     });
-    document.body.appendChild(triggerBtn);
+    
+    boundaryBox.appendChild(triggerBtn);
+    document.body.appendChild(boundaryBox);
 
-    // 2. Create the main Standby Screen Layer Overlay
+    // 2. Setup Screen Space Layer Structure Overlay
     const overlay = document.createElement('div');
     overlay.id = 'standby-overlay';
     overlay.innerHTML = `
         <div class="standby-clock-container">
-            <div id="standby-period" class="standby-period-indicator">Morning</div>
             <div class="standby-time-display">
-                <span id="standby-hours">00</span>:<span id="standby-minutes" class="standby-digit-minutes">00</span>
+                <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span></span><span id="standby-ampm" class="standby-am-pm-side">AM</span>
             </div>
             <div id="standby-date" class="standby-date-display"></div>
         </div>
@@ -1733,7 +1739,6 @@ function initStandbySystem() {
     `;
     document.body.appendChild(overlay);
 
-    // Handle full-screen layer tap/click for overlay dismissal
     overlay.addEventListener('click', () => {
         if (isStandbyEnabled) {
             cancelStandbyMode();
@@ -1743,11 +1748,11 @@ function initStandbySystem() {
     renderPersistentSymmetricalDots();
 }
 
-// Live 12-Hour Clock Engine with Leading-Zeros and Blur Minute Transitions
+// Fixed-Center 12-Hour Clock Loop Matrix Engine
 function startStandbyClock() {
-    const periodDisplay = document.getElementById('standby-period');
     const hoursDisplay = document.getElementById('standby-hours');
     const minutesDisplay = document.getElementById('standby-minutes');
+    const ampmDisplay = document.getElementById('standby-ampm');
     const dateDisplay = document.getElementById('standby-date');
 
     function updateTimeAndDate() {
@@ -1756,19 +1761,18 @@ function startStandbyClock() {
         let hours = now.getHours();
         let minutes = now.getMinutes();
         
-        // 12-hour specific structural parameters
-        const periodText = hours >= 12 ? 'Evening' : 'Morning';
+        const ampmStr = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
         hours = hours ? hours : 12; 
         
-        // Forcing standard double digit paddings for balanced center alignments
+        // Pad single digits to ensure centering stability
         const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
         const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
         
-        if (periodDisplay) periodDisplay.textContent = periodText;
         if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
+        if (ampmDisplay) ampmDisplay.textContent = ampmStr;
         
-        // Manage transitioning blur classes if numbers differ
+        // Execute smooth blurred font translation shifts on structural minute updates
         if (minutesDisplay) {
             if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
                 minutesDisplay.classList.add('is-shifting');
@@ -1782,10 +1786,10 @@ function startStandbyClock() {
         }
         lastRenderedMinutes = processedMinutesStr;
 
-        // Custom Date Output: Saturday, July 20 2026
+        // Structured date outputs: MONDAY, JUNE 22 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
-        dateString = dateString.replace(/,([^,]*)$/, '$1');
+        dateString = dateString.replace(/,([^,]*)$/, '$1'); // Clears separating typography commas
 
         if (dateDisplay) {
             dateDisplay.textContent = dateString;
@@ -1793,7 +1797,7 @@ function startStandbyClock() {
     }
 
     clearInterval(clockUpdateInterval);
-    lastRenderedMinutes = ""; // Reset trace states
+    lastRenderedMinutes = ""; 
     updateTimeAndDate();
     clockUpdateInterval = setInterval(updateTimeAndDate, 1000);
 }
@@ -1830,8 +1834,6 @@ function cancelStandbyMode() {
 
 function resetStandbyTimeout() {
     clearTimeout(standbyTimer);
-    
-    // If entered via the Top-Right button, skip moving/typing wake inputs entirely
     if (isStandbyEnabled && isManuallyTriggered) return;
 
     if (isStandbyEnabled) {
@@ -1840,10 +1842,8 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(() => startStandbyMode(false), STANDBY_DELAY);
 }
 
-// Continuous Inactivity Watch Loops
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, () => {
-        // Enforce full lock: wake inputs are completely ignored if activated manually
         if (isStandbyEnabled && isManuallyTriggered) return;
         resetStandbyTimeout();
     }, { passive: true });
@@ -1944,7 +1944,6 @@ function slideAmbientPositions() {
     });
 }
 
-// Instantiate fully prepared resources right on basic payload launch loops
 document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
