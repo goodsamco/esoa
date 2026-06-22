@@ -17,6 +17,21 @@
             --success: #00e676;
         }
 
+        /* Container Geometry with perfect uniform, even padding all over */
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 45px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
         /* Category Header Chevron indicator styles */
         .category-header {
             display: flex;
@@ -111,46 +126,56 @@
             opacity: 0.8;
         }
 
-        /* Elevated & Height-Extended Floating Control Dock retaining exact 35px pill rounding */
+        /* Fixed Geometry: Mathematical nested radiuses & identical 16px inner breathing room */
         .bottom-floating-control-strip {
             position: fixed;
-            bottom: 160px; /* Elevated much higher to grant maximum screen clearance */
+            bottom: 160px;
             left: 50%;
             transform: translateX(-50%);
-            width: 100%;
+            width: calc(100% - 32px);
             max-width: 400px;
-            height: 88px; /* Increased container height room for notes */
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(13, 13, 13, 0.85);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            border-radius: 45px; /* Restored exact rounded corners footprint */
+            border-radius: 44px;
             display: flex;
             align-items: center;
-            padding: 0 16px;
+            padding: 16px;
             box-sizing: border-box;
-            gap: 10px;
+            gap: 12px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            /* Native OS Spring curves */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        left 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        border-radius 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                        background-color 0.2s ease;
         }
 
         .search-inner-wrapper {
             flex-grow: 1;
             position: relative;
+            display: flex;
+            align-items: center;
         }
 
         .search-inner-wrapper input {
             width: 100%;
-            padding: 12px 14px; /* Increased interior padding depth for content visibility */
+            height: 44px;
+            padding: 0 16px;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            border-radius: 20px;
+            border-radius: 22px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             box-sizing: border-box;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s ease;
         }
 
         .search-inner-wrapper input:focus {
@@ -168,7 +193,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .action-control-btn:hover, 
@@ -176,7 +202,58 @@
             background: var(--primary) !important;
             border-color: var(--primary) !important;
             color: #000 !important;
-            transform: translateY(-2px);
+            transform: scale(1.05);
+        }
+
+        /* Collapsed Circular Action Icon State */
+        .bottom-floating-control-strip.collapsed-search {
+            max-width: 56px;
+            height: 56px;
+            left: 24px;
+            bottom: 40px;
+            transform: none;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        /* Subtle, native, clean hover accent expansion replacing the shake */
+        .bottom-floating-control-strip.collapsed-search:hover {
+            transform: scale(1.04);
+            background: rgba(20, 20, 20, 0.95);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper {
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper input {
+            padding: 0;
+            width: 0;
+            height: 0;
+            border: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .action-control-btn {
+            display: none !important;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 20px;
+            background: currentColor;
+            color: var(--primary);
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
         }
 
         /* Custom Dropdown Field Mechanics Setup */
@@ -283,7 +360,7 @@
             color: #aaaaaa;
             font-weight: 400;
             word-break: break-word;
-            white-space: pre-wrap; /* Maintains spacing for clean formatting */
+            white-space: pre-wrap;
         }
 
         /* Context Actions layout injection for inline row modifications */
@@ -390,6 +467,7 @@
         </div>
     </div>
 
+    <!-- Symmetrical geometry framework loads by default -->
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
             <input type="text" id="registrySearch" placeholder="Search guides, protocols, notes..." oninput="filterRegistryRealtime()">
@@ -409,7 +487,8 @@
                 <label>REGISTRY DOMAIN</label>
                 <div class="custom-select-wrapper">
                     <select id="modalTypeSelector">
-                        <option value="cf4_guides">CF4 Form Reference Manual</option>                    </select>
+                        <option value="cf4_guides">CF4 Form Reference Manual</option>
+                    </select>
                 </div>
             </div> 
             <div class="input-group">
@@ -442,7 +521,7 @@
         </div>
     </div>
 
-    <script type="module" src="esoa.js"></script>
+<script type="module" src="esoa.js"></script>
     <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -545,7 +624,6 @@ if (userId && db) {
     });
 }
 
-// Inject Status Modal Setup Controller
 (() => {
     const avatarNode = document.getElementById('userDisplayAvatar');
     if (!avatarNode) return;
@@ -783,7 +861,7 @@ window.openInlineEdit = function(rowElement) {
     
     const titleVal = rowElement.getAttribute('data-title');
     document.getElementById('newRecordKey').value = titleVal;
-    document.getElementById('newRecordKey').disabled = false; // Enabled to allow text title adjustment edits
+    document.getElementById('newRecordKey').disabled = false;
     
     const descVal = rowElement.getAttribute('data-val');
     document.getElementById('newRecordValue').value = descVal; 
@@ -811,7 +889,6 @@ window.pushRecordToDatabase = async function() {
 
     if (!key || !val) return alert("Please specify all required data attributes.");
 
-    // If an entry is edited and its title changed, drop the previous structural entry path node
     if (activeEditRow) {
         const oldKey = activeEditRow.getAttribute('data-title');
         if (oldKey !== key) {
@@ -935,6 +1012,69 @@ window.resetViewRegistry = function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeRegistryData();
+
+    const searchStrip = document.querySelector('.bottom-floating-control-strip');
+    const searchInput = document.getElementById('registrySearch');
+    let inactivityTimer = null;
+
+    function handleExpand() {
+        if (searchStrip.classList.contains('collapsed-search')) {
+            searchStrip.classList.remove('collapsed-search');
+            setTimeout(() => searchInput.focus(), 120);
+        }
+    }
+
+    function handleCollapse() {
+        // Prevent collapsing if an operation mode or open editing screen is engaged
+        const activeModal = document.querySelector('.modal-overlay.active');
+        if (layoutMovableActive || activeModal) return;
+
+        // Reset tracking states, clear queries, and return UI back to small pill
+        searchInput.value = '';
+        window.filterRegistryRealtime();
+        searchStrip.classList.add('collapsed-search');
+    }
+
+    // 31-Second Standby Expand Logic
+    function resetInactivityCountdown() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            if (searchStrip.classList.contains('collapsed-search')) {
+                handleExpand();
+            }
+        }, 31000);
+    }
+
+    if (searchStrip && searchInput) {
+        // Expand instantly on click if currently collapsed
+        searchStrip.addEventListener('click', (e) => {
+            if (searchStrip.classList.contains('collapsed-search')) {
+                e.stopPropagation();
+                handleExpand();
+            }
+        });
+
+        // Global viewport manager for tracking click-away events
+        document.addEventListener('click', (e) => {
+            const activeModal = document.querySelector('.modal-overlay.active');
+            
+            // Do absolutely nothing if interaction occurs within the modal or inside the control panel itself
+            if (searchStrip.contains(e.target) || (activeModal && activeModal.contains(e.target))) {
+                return;
+            }
+            
+            // Safe to wipe queries and compress layout 
+            handleCollapse();
+        });
+
+        // Intercept global interactions to keep timer counting down
+        const inputTriggers = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+        inputTriggers.forEach(evtName => {
+            document.addEventListener(evtName, resetInactivityCountdown, { passive: true });
+        });
+
+        resetInactivityCountdown();
+    }
 });
     </script>
 </body>
