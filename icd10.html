@@ -17,6 +17,21 @@
             --success: #00e676;
         }
 
+        /* Container Geometry with perfect uniform, even padding all over */
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 45px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
         /* Category Header Chevron indicator styles */
         .category-header {
             display: flex;
@@ -111,46 +126,56 @@
             opacity: 0.8;
         }
 
-        /* Elevated & Height-Extended Floating Control Dock retaining exact 35px pill rounding */
+        /* Fixed Geometry: Mathematical nested radiuses & identical 16px inner breathing room */
         .bottom-floating-control-strip {
             position: fixed;
-            bottom: 160px; /* Elevated much higher to grant maximum screen clearance */
+            bottom: 160px;
             left: 50%;
             transform: translateX(-50%);
-            width: 100%;
+            width: calc(100% - 32px);
             max-width: 400px;
-            height: 88px; /* Increased container height room for notes */
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(13, 13, 13, 0.85);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            border-radius: 35px; /* Restored exact rounded corners footprint */
+            border-radius: 44px;
             display: flex;
             align-items: center;
-            padding: 0 16px;
+            padding: 16px;
             box-sizing: border-box;
-            gap: 10px;
+            gap: 12px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            /* Native OS Spring curves */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        left 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        border-radius 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                        background-color 0.2s ease;
         }
 
         .search-inner-wrapper {
             flex-grow: 1;
             position: relative;
+            display: flex;
+            align-items: center;
         }
 
         .search-inner-wrapper input {
             width: 100%;
-            padding: 12px 14px; /* Increased interior padding depth for content visibility */
+            height: 44px;
+            padding: 0 16px;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            border-radius: 20px;
+            border-radius: 22px;
             font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             box-sizing: border-box;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s ease;
         }
 
         .search-inner-wrapper input:focus {
@@ -162,13 +187,14 @@
             height: 44px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass);
-            border-radius: 50%; /* Restored exact circular roundness */
+            border-radius: 50%;
             color: var(--primary) !important;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .action-control-btn:hover, 
@@ -176,7 +202,58 @@
             background: var(--primary) !important;
             border-color: var(--primary) !important;
             color: #000 !important;
-            transform: translateY(-2px);
+            transform: scale(1.05);
+        }
+
+        /* Collapsed Circular Action Icon State */
+        .bottom-floating-control-strip.collapsed-search {
+            max-width: 56px;
+            height: 56px;
+            left: 24px;
+            bottom: 40px;
+            transform: none;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        /* Subtle, native, clean hover accent expansion replacing the shake */
+        .bottom-floating-control-strip.collapsed-search:hover {
+            transform: scale(1.04);
+            background: rgba(20, 20, 20, 0.95);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper {
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper input {
+            padding: 0;
+            width: 0;
+            height: 0;
+            border: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .action-control-btn {
+            display: none !important;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 20px;
+            background: currentColor;
+            color: var(--primary);
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
         }
 
         /* Custom Dropdown Field Mechanics Setup */
@@ -248,25 +325,12 @@
             line-height: 1.4;
         }
 
-        /* Structural row alignment placeholders ensuring stable geometry across mode toggles */
+        /* Direct adaptive typography setups with explicit structural rules */
         .item-row {
             display: flex;
-            align-items: flex-start;
-            text-align: left;
             margin: 8px 0;
-            padding: 6px;
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid transparent; /* Structural placeholder matching edit state dimensions */
-            transition: background 0.2s, border-color 0.2s;
+            padding: 4px 0;
         } 
-
-        .item-row .text-content {
-            display: flex;
-            align-items: flex-start;
-            text-align: left;
-            flex-grow: 1;
-        }
 
         .item-row.hidden-overflow-item {
             display: none;
@@ -289,7 +353,6 @@
             flex-shrink: 0;
             min-width: 90px;
             text-transform: uppercase;
-            text-align: left;
         }
 
         .item-row .item-desc-text {
@@ -298,8 +361,6 @@
             font-weight: 400;
             word-break: break-word;
             white-space: pre-wrap;
-            text-align: left;
-            flex-grow: 1;
         }
 
         /* Context Actions layout injection for inline row modifications */
@@ -310,7 +371,6 @@
             z-index: 10;
             margin-left: auto;
             padding-left: 10px;
-            flex-shrink: 0;
         }
 
         .context-action-node {
@@ -339,12 +399,11 @@
             border-color: #ff4444;
         }
 
-        /* Stable geometric alignment preservation during active administrative states */
+        /* Movable Layout Reordering & Administrative active states */
         .edit-mode-active .item-row {
             cursor: grab !important;
             border: 1px dashed var(--primary) !important;
             background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
         }
 
         .edit-mode-active .item-row .row-context-actions {
@@ -356,14 +415,13 @@
             background: var(--glass);
             transform: scale(0.98);
         }
-    </style>
+     </style>
 </head>
 <body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
 
-        <div class="peer-wrapper-row">
+    <div class="peer-wrapper-row">
         <button class="scroll-nav-btn prev" title="Scroll Left"><i data-lucide="chevron-left"></i></button>
-        <div class="peer-active-hub" id="peerActiveHub">
-            </div>
+        <div class="peer-active-hub" id="peerActiveHub"></div>
         <button class="scroll-nav-btn next" title="Scroll Right"><i data-lucide="chevron-right"></i></button>
     </div>
 
@@ -375,9 +433,8 @@
         <button class="top-btn" title="CF4 Form" onclick="window.location.href='cf4.html'"><i data-lucide="credit-card"></i></button>
     </div>
 
- <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+    <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
     <span id="userDisplayName" class="name-string">Name</span>
-
 
     <div class="chat-docking-panel" id="chatDock">
         <div class="chat-header-bar">
@@ -397,12 +454,12 @@
         <div id="highlighter"></div>
 
         <div class="search-priority-view" id="prioritySearchView">
-            <h3>Top Code Matches</h3>
+            <h3>Top Guide Matches</h3>
             <div id="searchResultTargetGroup"></div>
         </div>
 
         <div class="category-header" onclick="toggleCategoryAccordion('icd10-wrapper', this)">
-            <h2>ICD10 References</h2>
+            <h2>ICD10 Codes</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
         <div class="section-group-wrapper" id="icd10-wrapper">
@@ -410,7 +467,7 @@
         </div>
 
         <div class="category-header" onclick="toggleCategoryAccordion('zipcode-wrapper', this)">
-            <h2>Zipcodes Reference</h2>
+            <h2>Zip Codes</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
         <div class="section-group-wrapper" id="zipcode-wrapper">
@@ -418,7 +475,7 @@
         </div>
 
         <div class="category-header" onclick="toggleCategoryAccordion('member-wrapper', this)">
-            <h2>Member Categories</h2>
+            <h2>Membership</h2>
             <i data-lucide="chevron-down" class="chevron-icon"></i>
         </div>
         <div class="section-group-wrapper" id="member-wrapper">
@@ -428,9 +485,9 @@
 
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search codes, classifications, notes..." oninput="filterRegistryRealtime()">
+            <input type="text" id="registrySearch" placeholder="Search guides, protocols, notes..." oninput="filterRegistryRealtime()">
         </div>
-        <button class="action-control-btn" title="Add Reference" onclick="toggleModal('addRecordModal', true)">
+        <button class="action-control-btn" title="Add New Item" onclick="toggleModal('addRecordModal', true)">
             <i data-lucide="plus"></i>
         </button>
         <button class="action-control-btn" id="sortToggleTrigger" title="Rearrange Cards" onclick="toggleMovableLayout()">
@@ -445,21 +502,21 @@
                 <label>REGISTRY DOMAIN</label>
                 <div class="custom-select-wrapper">
                     <select id="modalTypeSelector">
-                        <option value="icd10_codes" selected>ICD10 Code Registry</option>
-                        <option value="zipcodes">Zipcodes Reference</option>
-                        <option value="member_categories">Member Categories</option>
+                        <option value="icd10_codes">ICD10 Case Rates</option>
+                        <option value="zip_codes">Philippine Zip Codes</option>
+                        <option value="membership_data">PhilHealth Member Notes</option>
                     </select>
                 </div>
             </div> 
             <div class="input-group">
-                 <label id="primaryFieldLabel">Code / Key</label>
-                 <input id="newRecordKey" type="text" autocomplete="off">
+                 <label id="primaryFieldLabel">Title Header</label>
+                 <input id="newRecordKey" type="text">
              </div>
             <div class="input-group">
-                 <label id="secondaryFieldLabel">Description / Class Details</label>
+                 <label id="secondaryFieldLabel">Detailed Protocol Description</label>
                  <textarea id="newRecordValue"></textarea>
              </div>
-            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()">SAVE REFERENCE</div>
+            <div class="modal-copy-zone" id="modalSaveBtn" onclick="pushRecordToDatabase()" style="background: var(--primary); color: #000; text-align: center;">SAVE REFERENCE ENTRY</div>
             <button class="modal-close-btn" onclick="toggleModal('addRecordModal', false)">Dismiss</button>
         </div>
     </div>
@@ -475,8 +532,8 @@
                  <label>CASE RATE (PHIC)</label>
                  <input id="caseRate" type="number" oninput="if(typeof calcSr === 'function') calcSr()">
              </div>
-            <div class="modal-result"><div id="finalDiscount" style="color: var(--primary); text-align: center; font-weight:700;">0.00</div></div>
-            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()">COPY CALCULATION</div>
+            <div class="modal-result" style="border-color: var(--primary);"><div id="finalDiscount" style="color: var(--primary); text-align: center;">0.00</div></div>
+            <div class="modal-copy-zone" id="modalCopyBtn" onclick="if(typeof copyModalValue === 'function') copyModalValue()" style="background: var(--primary); color: #000; text-align: center;">COPY CALCULATION</div>
             <button class="modal-close-btn" onclick="toggleModal('srModal', false)">Dismiss</button>
         </div>
     </div>
@@ -495,73 +552,35 @@ let userDocRef;
 let localProfileNoteCache = "";
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-const userId = localStorage.getItem("userId") || "dev_fallback_user";
+const userId = localStorage.getItem("userId");
 
-// Fixed Comprehensive Local Reference Registry Datasets
 const baseDataset = {
     icd10_codes: [
-        { title: "J06.9", desc: "UPPER RESPIRATORY TRACT INFECTION" },
-        { title: "M06.99", desc: "ARTHRITIS" },
-        { title: "I10.1", desc: "HYPERTENSION STAGE II" },
-        { title: "I10.9", desc: "ESSENTIAL HYPERTENSION" },
-        { title: "K29.9", desc: "GASTRITIS" },
-        { title: "G44.2", desc: "TENSION HEADACHE" },
-        { title: "H81.1", desc: "BENIGN PAROXYSMAL VERTIGO" },
-        { title: "K29.1", desc: "ACUTE GASTRITIS" },
-        { title: "K27.9", desc: "PEPTIC ULCER" },
-        { title: "H60.3", desc: "EXTERNAL INFECTIVE OTITIS" },
-        { title: "J11.1", desc: "INFLUENZA" },
-        { title: "E11.9", desc: "DIABETES MELLITUS" },
-        { title: "B34.9", desc: "VIRAL INFECTION" },
-        { title: "BO1.9", desc: "VARICELLA" },
-        { title: "S01.9", desc: "OPEN WOUND OF HEAD" },
-        { title: "L03.9", desc: "CELLULITIS" },
-        { title: "L03.2", desc: "CELLULITIS OF FACE" },
-        { title: "J20.9", desc: "ACUTE BRONCHITIS" },
-        { title: "T78.4", desc: "HYPERSENSITIVITY REACTION" },
-        { title: "T79.3", desc: "POST-TRAUMATIC WOUND INFECTION" },
-        { title: "J45.90", desc: "BRONCHIAL ASTHMA IN ACUTE EXACERBATION" },
-        { title: "O21.9", desc: "VOMITING OF PREGNANCY" },
-        { title: "B34.1", desc: "ECHOVIRUS INFECTION NOS" },
-        { title: "J45.0", desc: "ALLERGIC BRONCHITIS" },
-        { title: "H66.9", desc: "OTITIS MEDIA" },
-        { title: "J03.9", desc: "ACUTE TONSILLITIS" },
-        { title: "K30", desc: "DYSPEPSIA" },
-        { title: "M00.99", desc: "PYOGENIC ARTHRITIS" },
-        { title: "A97.1", desc: "DENGUE WITTULUNAN - 9403H WARNING SIGNS" },
-        { title: "K11.2", desc: "SIALOADENITIS" },
-        { title: "M19.99", desc: "ARTHROSIS" },
-        { title: "G43.9", desc: "MIGRAINE" },
-        { title: "K21.9", desc: "GASTRO-OESOPHAGEAL REFLUX DISEASE WITHOUT OESOPHAGITIS" }
+        { title: "A09", desc: "GASTROENTERITIS AND COLITIS OF INFECTIOUS ORIGIN (R: 9,000 / P: 6,300)" },
+        { title: "J18.9", desc: "PNEUMONIA, UNSPECIFIED ORGANISM (R: 15,000 / P: 10,500)" },
+        { title: "I10", desc: "ESSENTIAL (PRIMARY) HYPERTENSION (R: 9,000 / P: 6,300)" },
+        { title: "E11.9", desc: "TYPE 2 DIABETES MELLITUS WITHOUT COMPLICATIONS (R: 12,600)" },
+        { title: "N39.0", desc: "URINARY TRACT INFECTION, SITE NOT SPECIFIED (R: 11,000)" },
+        { title: "J45.9", desc: "ASTHMA, UNSPECIFIED (R: 9,000 / P: 6,300)" },
+        { title: "A01.0", desc: "TYPHOID FEVER (R: 14,000 / P: 9,800)" }
     ],
-    zipcodes: [
-        { title: "ARAKAN", desc: "9417" },
-        { title: "ALEOSAN", desc: "9415" },
-        { title: "PIGKAWAYAN", desc: "9400" },
-        { title: "MIDSAYAP", desc: "9410" },
-        { title: "PRES ROXAS", desc: "9405" },
-        { title: "KIDAPAWAN", desc: "9400" },
-        { title: "ANTIPAS", desc: "9414" },
-        { title: "MATALAM", desc: "9406" },
-        { title: "MAKILALA", desc: "9401" },
-        { title: "M'LANG", desc: "9402" },
-        { title: "KABACAN", desc: "9407" },
-        { title: "CARMEN", desc: "9408" },
-        { title: "LIBUNGAN", desc: "9411" },
-        { title: "MAGEPT", desc: "9404110098112460" }
+    zip_codes: [
+        { title: "MLANG", desc: "9402, COTABATO (REGION XII)" },
+        { title: "ANTIPAS", desc: "9414, COTABATO (REGION XII)" },
+        { title: "KIDAPAWAN", desc: "9400, COTABATO CITY CAPITAL (REGION XII)" },
+        { title: "MAKILALA", desc: "9401, COTABATO (REGION XII)" },
+        { title: "TULUNAN", desc: "9403, COTABATO (REGION XII)" },
+        { title: "MATALAM", desc: "9406, COTABATO (REGION XII)" },
+        { title: "PRES ROXAS", desc: "9405, COTABATO (REGION XII)" }
     ],
-    member_categories: [
-        { title: "POS INCAPABLE", desc: "INDIGENT" },
-        { title: "NTHS", desc: "INDIGENT" },
-        { title: "LISTAHAN", desc: "INDIGENT" },
-        { title: "DIRECT CONTRIBUTOR", desc: "INDIVIDUAL PAYING" },
-        { title: "INDIRECT CONTRIBUTOR", desc: "INDIGENT" },
-        { title: "SELF EARNING", desc: "INDIVIDUAL PAYING" },
-        { title: "INFORMAL SECTOR", desc: "INDIVIDUAL PAYING" },
-        { title: "SPONSORED LGU", desc: "EMPLOYED GOVERNMENT" }
+    membership_data: [
+        { title: "MDR REQ", desc: "MEMBER DATA RECORD REQUIRED FOR ALL DEPENDENTS UNDER 21 YRS OLD" },
+        { title: "PMRF", desc: "PHILHEALTH MEMBER REGISTRATION FORM FOR UPDATING CIVIL STATUS" },
+        { title: "CONTRIB", desc: "MINIMUM 9 MONTHS CONTRIBUTION WITHIN 12 MONTHS PRIOR TO ADMISSION" },
+        { title: "COMP_SEC", desc: "EMPLOYED SECTOR REQUIRES CERTIFICATE OF PREMIUM CONTRIBUTION WITH SECTOR CODE" },
+        { title: "INDIGENT", desc: "SPONSORED OR DSWD SECTOR HAS AUTOMATIC POINT OF SERVICE VALIDATION" }
     ]
-}; 
-
+};
 const premium3dAssets = {
     'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
     'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
@@ -585,7 +604,6 @@ try {
     console.warn("RTDB environment connection local fallback initiated.");
 }
 
-// Strictly Self-Centric Account Verification and Presence Setup
 if (userId && db) {
     userDocRef = doc(db, "accounts", userId);
     onSnapshot(userDocRef, (snapshot) => {
@@ -639,7 +657,6 @@ if (userId && db) {
     });
 }
 
-// Personal Status Field Control Injection Mechanics
 (() => {
     const avatarNode = document.getElementById('userDisplayAvatar');
     if (!avatarNode) return;
@@ -696,7 +713,11 @@ if (userId && db) {
 })();
 
 function pullParsedAccentColor() {
-    let customAccent = localStorage.getItem('btnValue') || localStorage.getItem('accentColor') || localStorage.getItem('customAccent');
+    let customAccent =
+        localStorage.getItem('btnValue') ||
+        localStorage.getItem('accentColor') ||
+        localStorage.getItem('customAccent');
+
     if (customAccent) {
         document.documentElement.style.setProperty('--primary', customAccent);
     }
@@ -709,10 +730,10 @@ window.toggleCategoryAccordion = function(wrapperId, headerElement) {
     
     if (wrapper.classList.contains('collapsed')) {
         wrapper.classList.remove('collapsed');
-        if(chevron) chevron.style.transform = "rotate(0deg)";
+        chevron.style.transform = "rotate(0deg)";
     } else {
         wrapper.classList.add('collapsed');
-        if(chevron) chevron.style.transform = "rotate(-90deg)";
+        chevron.style.transform = "rotate(-90deg)";
     }
 };
 
@@ -739,33 +760,33 @@ window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
 
 async function initializeRegistryData() {
     pullParsedAccentColor();
-    setupDomainSection('icd10_codes', 'icd10-section-group');
-    setupDomainSection('zipcodes', 'zipcode-section-group');
-    setupDomainSection('member_categories', 'member-section-group');
+    await bindSegmentGroupData('icd10_codes', 'icd10-section-group');
+    await bindSegmentGroupData('zip_codes', 'zipcode-section-group');
+    await bindSegmentGroupData('membership_data', 'member-section-group');
 }
 
-async function setupDomainSection(domainKey, elementId) {
-    const targetContainer = document.getElementById(elementId);
+async function bindSegmentGroupData(firebaseRoute, domContainerId) {
+    const targetContainer = document.getElementById(domContainerId);
     if (!targetContainer) return;
     targetContainer.innerHTML = '';
 
     let activeList = [];
     try {
         if (rtdb) {
-            const snapshot = await get(child(ref(rtdb), `clinical_references/${domainKey}`));
+            const snapshot = await get(child(ref(rtdb), `clinical_references/${firebaseRoute}`));
             if (snapshot.exists()) {
                 const dataObj = snapshot.val();
                 activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
             }
         }
-    } catch (e) { console.warn("Database storage fetch fallback."); }
+    } catch (e) { console.warn("Database storage fetch fault error mapping."); }
 
     if (activeList.length === 0) {
-        activeList = baseDataset[domainKey];
+        activeList = baseDataset[firebaseRoute] || [];
     }
 
     activeList.forEach((item, index) => {
-        appendRowToDOM(targetContainer, item.title, item.desc, index >= 5, domainKey);
+        appendRowToDOM(targetContainer, item.title, item.desc, index >= 5);
     });
 
     if (activeList.length > 5) {
@@ -773,18 +794,17 @@ async function setupDomainSection(domainKey, elementId) {
         expandBtn.className = 'expand-list-action-trigger';
         expandBtn.setAttribute('data-expanded', 'false');
         expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-        expandBtn.onclick = function() { toggleSectionListExpansion(this, elementId); };
+        expandBtn.onclick = function() { toggleSectionListExpansion(this, domContainerId); };
         targetContainer.appendChild(expandBtn);
     }
     if (window.lucide) window.lucide.createIcons();
 }
 
-function appendRowToDOM(container, key, val, isOverflowItem, domain) {
+function appendRowToDOM(container, key, val, isOverflowItem) {
     const rowDiv = document.createElement('div');
     rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
     rowDiv.setAttribute('data-title', key);
     rowDiv.setAttribute('data-val', val);
-    rowDiv.setAttribute('data-domain', domain);
     rowDiv.onclick = function() { handleSelectiveCopy(this); }; 
     
     rowDiv.innerHTML = `
@@ -816,7 +836,7 @@ window.filterRegistryRealtime = function() {
         fineTuneResetElements('icd10-section-group');
         fineTuneResetElements('zipcode-section-group');
         fineTuneResetElements('member-section-group');
-        return;
+        return;            
     }
 
     container.classList.add('searching-active');
@@ -836,8 +856,8 @@ window.filterRegistryRealtime = function() {
     });
 };
 
-function fineTuneResetElements(elementId) {
-    const target = document.getElementById(elementId);
+function fineTuneResetElements(targetId) {
+    const target = document.getElementById(targetId);
     if (!target) return; 
     
     const rows = target.querySelectorAll('.item-row');
@@ -877,7 +897,7 @@ window.handleSelectiveCopy = function(element) {
 window.openInlineEdit = function(rowElement) {
     activeEditRow = rowElement; 
     
-    document.getElementById('modalDisplayTitle').textContent = "EDIT REFERENCE";
+    document.getElementById('modalDisplayTitle').textContent = "EDIT ENTRY MANUALLY";
     document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
     
     const titleVal = rowElement.getAttribute('data-title');
@@ -892,13 +912,17 @@ window.openInlineEdit = function(rowElement) {
 
 window.deleteInlineRow = async function(rowElement) {
     if(confirm("Are you certain you want to destroy this reference record?")) {
+        const parentId = rowElement.parentNode.id;
+        let route = "icd10_codes";
+        if (parentId === 'zipcode-section-group') route = "zip_codes";
+        if (parentId === 'member-section-group') route = "membership_data";
+
         const key = rowElement.getAttribute('data-title');
-        const domain = rowElement.getAttribute('data-domain') || 'icd10_codes';
         const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
         try {
-            if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), null);
-        } catch(e) { console.warn("Database deletion request drop."); } 
+            if (rtdb) await set(ref(rtdb, `clinical_references/${route}/${sanitizedKey}`), null);
+        } catch(e) { console.warn("Database communication deletion dropped."); } 
         
         rowElement.remove();
         window.resetViewRegistry();
@@ -908,23 +932,34 @@ window.deleteInlineRow = async function(rowElement) {
 window.pushRecordToDatabase = async function() {
     const key = document.getElementById('newRecordKey').value.trim();
     const val = document.getElementById('newRecordValue').value.trim();
-    const domain = activeEditRow ? activeEditRow.getAttribute('data-domain') : document.getElementById('modalTypeSelector').value;
 
     if (!key || !val) return alert("Please specify all required data attributes.");
+
+    let route = document.getElementById('modalTypeSelector').value;
+    let targetNodeId = "icd10-section-group";
+    if (route === "zip_codes") targetNodeId = "zipcode-section-group";
+    if (route === "membership_data") targetNodeId = "member-section-group";
+
+    if (activeEditRow) {
+        const parentId = activeEditRow.parentNode.id;
+        if (parentId === 'icd10-section-group') route = "icd10_codes";
+        if (parentId === 'zipcode-section-group') route = "zip_codes";
+        if (parentId === 'member-section-group') route = "membership_data";
+
+        const oldKey = activeEditRow.getAttribute('data-title');
+        if (oldKey !== key) {
+            const sanitizedOldKey = oldKey.replace(/[.#$\[\]]/g, "_");
+            try {
+                if (rtdb) await set(ref(rtdb, `clinical_references/${route}/${sanitizedOldKey}`), null);
+            } catch(e) { console.warn("Pruning legacy key path failed."); }
+        }
+    }
 
     const referencePayload = { title: key, description: val, syncedAt: Date.now() };
     const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
-    if (activeEditRow) {
-        const oldKey = activeEditRow.getAttribute('data-title');
-        if (oldKey !== key) {
-            const oldSanitizedKey = oldKey.replace(/[.#$\[\]]/g, "_");
-            try { if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${oldSanitizedKey}`), null); } catch(e){}
-        }
-    }
-
     try {
-        if (rtdb) await set(ref(rtdb, `clinical_references/${domain}/${sanitizedKey}`), referencePayload);
+        if (rtdb) await set(ref(rtdb, `clinical_references/${route}/${sanitizedKey}`), referencePayload);
     } catch (err) { console.warn("Database connection runtime dropped."); }
 
     if (activeEditRow) {
@@ -933,14 +968,10 @@ window.pushRecordToDatabase = async function() {
         activeEditRow.querySelector('.item-title-prefix').textContent = key;
         activeEditRow.querySelector('.item-desc-text').textContent = val;
     } else {
-        let elementId = 'icd10-section-group';
-        if (domain === 'zipcodes') elementId = 'zipcode-section-group';
-        if (domain === 'member_categories') elementId = 'member-section-group';
-        
-        const targetNode = document.getElementById(elementId);
+        const targetNode = document.getElementById(targetNodeId);
         if (targetNode) {
             const currentCount = targetNode.querySelectorAll('.item-row').length;
-            appendRowToDOM(targetNode, key, val, currentCount >= 5, domain);
+            appendRowToDOM(targetNode, key, val, currentCount >= 5);
         }
     }
 
@@ -975,26 +1006,25 @@ function bindDragDropSequence(element) {
     element.addEventListener('dragend', () => element.classList.remove('dragging'));
 }
 
-['icd10-section-group', 'zipcode-section-group', 'member-section-group'].forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-        element.addEventListener('dragover', e => {
-            if (!layoutMovableActive) return;
-            e.preventDefault();
-            const activeDragging = document.querySelector('.dragging');
-            if (activeDragging) {
-                const boundingElement = getDragLocationSpace(element, e.clientY);
-                if (boundingElement == null) {
-                    const expandActionLink = element.querySelector('.expand-list-action-trigger');
-                    if (expandActionLink) element.insertBefore(activeDragging, expandActionLink);
-                    else element.appendChild(activeDragging);
-                } else {
-                    element.insertBefore(activeDragging, boundingElement);
-                }
+const initializeSortingListeners = (groupId) => {
+    const zone = document.getElementById(groupId);
+    if (!zone) return;
+    zone.addEventListener('dragover', e => {
+        if (!layoutMovableActive) return;
+        e.preventDefault();
+        const activeDragging = document.querySelector('.dragging');
+        if (activeDragging && activeDragging.parentNode === zone) {
+            const boundingElement = getDragLocationSpace(zone, e.clientY);
+            if (boundingElement == null) {
+                const expandActionLink = zone.querySelector('.expand-list-action-trigger');
+                if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
+                else zone.appendChild(activeDragging);
+            } else {
+                zone.insertBefore(activeDragging, boundingElement);
             }
-        });
-    }
-});
+        }
+    });
+};
 
 function getDragLocationSpace(container, yPoint) {
     const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
@@ -1004,7 +1034,7 @@ function getDragLocationSpace(container, yPoint) {
         if (separation < 0 && separation > closest.offset) {
             return { offset: separation, element: child };
         } else {
-            return closest; 
+            return closest;                
         }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
@@ -1045,6 +1075,72 @@ window.resetViewRegistry = function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeRegistryData();
+    initializeSortingListeners('icd10-section-group');
+    initializeSortingListeners('zipcode-section-group');
+    initializeSortingListeners('member-section-group');
+
+    const searchStrip = document.querySelector('.bottom-floating-control-strip');
+    const searchInput = document.getElementById('registrySearch');
+    let inactivityTimer = null;
+
+    function handleExpand() {
+        if (searchStrip.classList.contains('collapsed-search')) {
+            searchStrip.classList.remove('collapsed-search');
+            setTimeout(() => searchInput.focus(), 120);
+        }
+    }
+
+    function handleCollapse() {
+        // Prevent collapsing if sorting mode or editing popup windows are engaged
+        const activeModal = document.querySelector('.modal-overlay.active');
+        if (layoutMovableActive || activeModal) return;
+
+        // Reset search field and contract container cleanly
+        searchInput.value = '';
+        window.filterRegistryRealtime();
+        searchStrip.classList.add('collapsed-search');
+    }
+
+    // 31-Second Standby Expand Logic Tracker
+    function resetInactivityCountdown() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            if (searchStrip.classList.contains('collapsed-search')) {
+                handleExpand();
+            }
+        }, 31000);
+    }
+
+    if (searchStrip && searchInput) {
+        // Expand instantly on click if currently collapsed
+        searchStrip.addEventListener('click', (e) => {
+            if (searchStrip.classList.contains('collapsed-search')) {
+                e.stopPropagation();
+                handleExpand();
+            }
+        });
+
+        // Global viewport manager for tracking click-away events
+        document.addEventListener('click', (e) => {
+            const activeModal = document.querySelector('.modal-overlay.active');
+            
+            // Do absolutely nothing if interaction occurs within the modal or inside the control panel itself
+            if (searchStrip.contains(e.target) || (activeModal && activeModal.contains(e.target))) {
+                return;
+            }
+            
+            // Clear filters and contract layout safely
+            handleCollapse();
+        });
+
+        // Intercept global interactions to keep timer counting down
+        const inputTriggers = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+        inputTriggers.forEach(evtName => {
+            document.addEventListener(evtName, resetInactivityCountdown, { passive: true });
+        });
+
+        resetInactivityCountdown();
+    }
 });
     </script>
 </body>
