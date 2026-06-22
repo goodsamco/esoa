@@ -1,0 +1,565 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSOA - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #38bdf8;
+            --text-main: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-image 0.5s cubic-bezier(0.4, 0, 0.2, 1), font-family 0.4s ease;
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            padding: 20px 10px;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid var(--border-glass);
+            position: relative;
+ z-index: 10;
+            box-sizing: border-box;
+            transition: border-color 0.5s ease;
+        }
+        h2 {
+            font-size: 1.1rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 800;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .input-group label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 800;
+            margin-left: 2px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 14px;
+            color: white;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+        }
+        input:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: rgba(0,0,0,0.5);
+        }
+        .btn-submit {
+            width: 100%;
+            height: 52px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 35px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.03);
+        }
+        .msg {
+            margin-top: 20px;
+            font-size: 0.82rem;
+            min-height: 20px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .link-text {
+            display: inline-block;
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 0.82rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .link-text:hover {
+            color: var(--primary);
+        }
+        .hidden {
+            display: none;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-glass);
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loginSection">
+        <h2>ACCOUNT LOGIN</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>USERNAME</label>
+                <input type="text" id="logUser" required autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="logPass" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-submit">LOG IN</button>
+        </form>
+        <div class="msg" id="logMsg"></div>
+        <div style="text-align: center;">
+            <a id="toForgotBtn" class="link-text">Forgot Credentials / Password?</a><br>
+            <a href="register.html" class="link-text">No account? Register here</a>
+        </div>
+    </div>
+
+    <div id="forgotSection" class="hidden">
+        <h2>ACCOUNT RECOVERY</h2>
+        <form id="forgotForm">
+            <div class="input-group">
+                <label>WHAT DO YOU NEED TO DO?</label>
+                <select id="updateType">
+                    <option value="password">Forgot Password (Reset)</option>
+                    <option value="name">Change Full Name (Requires Pass Verification)</option>
+                    <option value="username">Change Username (Requires Pass Verification)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>USERNAME</label>
+                <div style="display: flex; align-items: center; gap: 10px; position: relative; width: 100%;">
+                    <div id="userProfilePic" style="width: 0px; height: 50px; border-radius: 12px; background-size: cover; background-position: center; border: 1px solid var(--border-glass); opacity: 0; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.4s ease; transform: scale(0.8); flex-shrink: 0; overflow: hidden;"></div>
+                    <input type="text" id="recUser" required autocomplete="username" style="flex-grow: 1; transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;">
+                </div>
+            </div>
+
+            <div class="input-group hidden" id="groupVerifyPass">
+                <label>CURRENT PASSWORD (IDENTITY VERIFICATION)</label>
+                <input type="password" id="recPass" disabled>
+            </div>
+            
+            <hr>
+
+            <div class="input-group field-group" id="groupNewPass">
+                <label>NEW PASSWORD</label>
+                <input type="password" id="newPass" required>
+            </div>
+            <div class="input-group field-group hidden" id="groupNewName">
+                <label>NEW FULL NAME</label>
+                <input type="text" id="newName" disabled>
+            </div>
+            <div class="input-group field-group hidden" id="groupNewUser">
+                <label>NEW USERNAME</label>
+                <input type="text" id="newUser" disabled>
+            </div>
+
+            <button type="submit" class="btn-submit">SUBMIT REQUEST</button>
+        </form>
+        <div class="msg" id="forgotMsg"></div>
+        <div style="text-align: center;">
+            <a id="toLoginBtn" class="link-text">Back to Login</a>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    // MIGRATION: Added Standard Firebase Auth Imports
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app); // MIGRATION: Initializing authentication instance
+
+    const loginSection = document.getElementById('loginSection');
+    const forgotSection = document.getElementById('forgotSection');
+    const updateType = document.getElementById('updateType');
+    const profilePic = document.getElementById('userProfilePic');
+
+    const defaults = {
+        bg: '#0b0f1a',
+        primary: '#38bdf8',
+        font: "'Inter', sans-serif",
+        glass: 'rgba(56, 189, 248, 0.15)',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80'
+    };
+
+    const premium3dAssets = {
+        'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
+        'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+        'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+        'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'
+    };
+
+    // Form Navigation
+    document.getElementById('toForgotBtn').addEventListener('click', () => {
+        loginSection.classList.add('hidden');
+        forgotSection.classList.remove('hidden');
+    });
+    document.getElementById('toLoginBtn').addEventListener('click', () => {
+        forgotSection.classList.add('hidden');
+        loginSection.classList.remove('hidden');
+    });
+
+    function hexToRgb(hex) {
+        let c;
+        if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+            c = hex.substring(1).split('');
+            if (c.length == 3) { c = [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+            c = '0x' + c.join('');
+            return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',');
+        }
+        return "56,189,248";
+    }
+
+    function hslToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function resetToDefaultTheme() {
+        if (document.body.style.backgroundImage !== "none" || document.body.style.backgroundColor !== defaults.bg) {
+            document.body.style.backgroundImage = "none";
+            document.body.style.backgroundColor = defaults.bg;
+            document.body.style.fontFamily = defaults.font;
+            document.documentElement.style.setProperty('--primary', defaults.primary);
+            document.documentElement.style.setProperty('--glass', defaults.glass);
+        }
+        profilePic.style.width = "0px";
+        profilePic.style.opacity = "0";
+        profilePic.style.transform = "scale(0.8)";
+    }
+
+    async function loadUserThemeDynamic(inputUsername) {
+        const usernameClean = inputUsername.trim().toLowerCase();
+        if (!usernameClean) {
+            resetToDefaultTheme();
+            return;
+        }
+
+        try {
+            const q = query(collection(db, "accounts"), where("username", "==", usernameClean));
+            const querySnap = await getDocs(q);
+
+            if (!querySnap.empty) {
+                const userData = querySnap.docs[0].data();
+                
+                const targetPic = userData.profilePic || defaults.avatar;
+                profilePic.style.backgroundImage = `url('${targetPic}')`;
+                profilePic.style.width = "50px"; 
+                profilePic.style.opacity = "1";
+                profilePic.style.transform = "scale(1)";
+
+                if (userData.fontFamily) {
+                    document.body.style.fontFamily = userData.fontFamily;
+                }
+
+                if (userData.bgMode === "image") {
+                    const mappedImg = premium3dAssets[userData.bgValue] || userData.bgValue;
+                    document.body.style.backgroundImage = `url('${mappedImg}')`;
+                } else if (userData.bgValue) {
+                    document.body.style.backgroundImage = "none";
+                    document.body.style.backgroundColor = userData.bgValue;
+                }
+
+                let translatedHex = defaults.primary;
+                if (userData.btnMode === "color" && userData.btnValue) {
+                    if (userData.btnValue.includes('hsl')) {
+                        const match = userData.btnValue.match(/\d+/g);
+                        if (match && match.length >= 3) {
+                            translatedHex = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
+                        }
+                    } else {
+                        translatedHex = userData.btnValue;
+                    }
+                }
+                
+                document.documentElement.style.setProperty('--primary', translatedHex);
+                const rgbValues = hexToRgb(translatedHex);
+                document.documentElement.style.setProperty('--glass', `rgba(${rgbValues}, 0.15)`);
+            } else {
+                resetToDefaultTheme();
+            }
+        } catch (e) {
+            console.log("Style population error tracking:", e);
+            resetToDefaultTheme();
+        }
+    }
+
+    document.getElementById('logUser').addEventListener('blur', (e) => loadUserThemeDynamic(e.target.value));
+    document.getElementById('logUser').addEventListener('input', (e) => {
+        if (!e.target.value.trim()) resetToDefaultTheme();
+    });
+    document.getElementById('recUser').addEventListener('blur', (e) => loadUserThemeDynamic(e.target.value));
+    document.getElementById('recUser').addEventListener('input', (e) => {
+        if (!e.target.value.trim()) resetToDefaultTheme();
+    });
+
+    updateType.addEventListener('change', (e) => {
+        const value = e.target.value;
+        
+        document.querySelectorAll('.field-group').forEach(group => group.classList.add('hidden'));
+        document.getElementById('newPass').disabled = true;
+        document.getElementById('newName').disabled = true;
+        document.getElementById('newUser').disabled = true;
+        document.getElementById('newPass').required = false;
+        document.getElementById('newName').required = false;
+        document.getElementById('newUser').required = false;
+
+        if (value === 'password') {
+            document.getElementById('groupVerifyPass').classList.add('hidden');
+            document.getElementById('recPass').disabled = true;
+            document.getElementById('recPass').required = false;
+
+            document.getElementById('groupNewPass').classList.remove('hidden');
+            document.getElementById('newPass').disabled = false;
+            document.getElementById('newPass').required = true;
+        } else {
+            document.getElementById('groupVerifyPass').classList.remove('hidden');
+            document.getElementById('recPass').disabled = false;
+            document.getElementById('recPass').required = true;
+
+            if (value === 'name') {
+                document.getElementById('groupNewName').classList.remove('hidden');
+                document.getElementById('newName').disabled = false;
+                document.getElementById('newName').required = true;
+            } else if (value === 'username') {
+                document.getElementById('groupNewUser').classList.remove('hidden');
+                document.getElementById('newUser').disabled = false;
+                document.getElementById('newUser').required = true;
+            }
+        }
+    });
+
+    // MIGRATION: Secured Login Processing with Firebase Authentication 
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const usernameField = document.getElementById('logUser');
+        const passwordField = document.getElementById('logPass');
+        const username = usernameField.value.trim().toLowerCase();
+        const password = passwordField.value;
+        const msg = document.getElementById('logMsg');
+
+        try {
+            // Step 1: Look up user document to map the raw username to their unique account email address
+            const q = query(collection(db, "accounts"), where("username", "==", username));
+            const querySnap = await getDocs(q);
+
+            if (querySnap.empty) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Invalid username or password.";
+                return;
+            }
+
+            const userDoc = querySnap.docs[0];
+            const userData = userDoc.data();
+
+            if (!userData.email) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Account structural error: Missing linked email configuration.";
+                return;
+            }
+
+            // Step 2: Use modern Firebase Authentication wrapper to handle password tokens natively
+            const userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
+            const user = userCredential.user;
+
+            // Success configuration path handling
+            usernameField.value = "";
+            passwordField.value = "";
+            resetToDefaultTheme();
+
+            if (userData.role === "admin") {
+                msg.style.color = "#ffee00";
+                msg.innerText = "Welcome back Admin. Loading panel...";
+                setTimeout(() => window.location.href = "admin.html", 1000);
+            } else {
+                if (userData.status === "pending") {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "Your account is awaiting Admin approval.";
+                } else {
+                    msg.style.color = "#ffee00";
+                    msg.innerText = "Login successful! Loading options...";
+                    setTimeout(() => window.location.href = "esoa.html", 1000);
+                }
+            }
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            // Map common firebase authentication code errors cleanly
+            if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+                msg.innerText = "Invalid username or password.";
+            } else {
+                msg.innerText = "Authentication error: " + err.message;
+            }
+        }
+    });
+
+    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const recUserField = document.getElementById('recUser');
+        const recUser = recUserField.value.trim().toLowerCase();
+        const typeSelected = updateType.value;
+        const msg = document.getElementById('forgotMsg');
+
+        try {
+            let userDoc = null;
+
+            const q = query(collection(db, "accounts"), where("username", "==", recUser));
+            const querySnap = await getDocs(q);
+            if (querySnap.empty) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Username not found in database records.";
+                return;
+            }
+            userDoc = querySnap.docs[0];
+            const userData = userDoc.data();
+
+            if (typeSelected !== "password") {
+                const recPass = document.getElementById('recPass').value;
+                try {
+                    await signInWithEmailAndPassword(auth, userData.email, recPass);
+                } catch(error) {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "Verification failed. Invalid current password.";
+                    return;
+                }
+            }
+
+            const userId = userDoc.id;
+            let requestedValue = "";
+
+            if (typeSelected === "password") {
+                requestedValue = document.getElementById('newPass').value;
+            } else if (typeSelected === "name") {
+                requestedValue = document.getElementById('newName').value.trim();
+            } else if (typeSelected === "username") {
+                requestedValue = document.getElementById('newUser').value.trim().toLowerCase();
+                
+                const uniqueCheck = query(collection(db, "accounts"), where("username", "==", requestedValue));
+                const uniqueSnap = await getDocs(uniqueCheck);
+                if (!uniqueSnap.empty) {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "The proposed new username is already taken.";
+                    return;
+                }
+            }
+
+            if (!requestedValue) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Please input the new value data field.";
+                return;
+            }
+
+            await addDoc(collection(db, "update_requests"), {
+                accountId: userId,
+                currentUsername: recUser,
+                requestType: typeSelected,
+                newValue: requestedValue,
+                status: "pending",
+                timestamp: new Date().toISOString()
+            });
+
+            msg.style.color = "#ffee00";
+            msg.innerText = "Request logged! Redirecting to login view...";
+            
+            document.getElementById('forgotForm').reset();
+            resetToDefaultTheme();
+            
+            updateType.value = "password";
+            updateType.dispatchEvent(new Event('change'));
+
+            setTimeout(() => {
+                forgotSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+                msg.innerText = "";
+            }, 3000);
+
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Submission error: " + err.message;
+        }
+    });
+</script>
+</body>
+</html>
