@@ -1684,14 +1684,15 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (12H DOCK READY ENGINE)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (MANUAL DISMISS ENGINE)\n   ========================================================================== */
 
 let standbyTimer;
 let shuffleInterval;
 let clockUpdateInterval;
-const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
+let isManuallyTriggered = false; // Tracks if standby was entered via button click
 let slotElementsArray = [];
+let lastRenderedMinutes = "";
 
 function getDeterministicSlotIndex(uid, totalSlots) {
     let hash = 0;
@@ -1701,16 +1702,27 @@ function getDeterministicSlotIndex(uid, totalSlots) {
     return Math.abs(hash) % totalSlots;
 }
 
-// Pre-assembles overlay structures immediately so transition execution is smooth and instantaneous
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
+    // 1. Create and append the Top Right Manual Trigger Button
+    const triggerBtn = document.createElement('button');
+    triggerBtn.className = 'standby-manual-trigger-btn';
+    triggerBtn.innerText = 'Standby Mode';
+    triggerBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Avoid triggering dismiss immediately
+        startStandbyMode(true); // Force manual trigger flag
+    });
+    document.body.appendChild(triggerBtn);
+
+    // 2. Create the main Standby Screen Layer Overlay
     const overlay = document.createElement('div');
     overlay.id = 'standby-overlay';
     overlay.innerHTML = `
         <div class="standby-clock-container">
+            <div id="standby-period" class="standby-period-indicator">Morning</div>
             <div class="standby-time-display">
-                <span id="standby-time">12:00</span><span id="standby-ampm" class="standby-am-pm">AM</span>
+                <span id="standby-hours">00</span>:<span id="standby-minutes" class="standby-digit-minutes">00</span>
             </div>
             <div id="standby-date" class="standby-date-display"></div>
         </div>
@@ -1720,15 +1732,22 @@ function initStandbySystem() {
         </div>
     `;
     document.body.appendChild(overlay);
+
+    // Handle full-screen layer tap/click for overlay dismissal
+    overlay.addEventListener('click', () => {
+        if (isStandbyEnabled) {
+            cancelStandbyMode();
+        }
+    });
     
-    // Warm up concentric dots layer structures quietly behind the scenes
     renderPersistentSymmetricalDots();
 }
 
-// Real-Time 12-Hour Clock Loop
+// Live 12-Hour Clock Engine with Leading-Zeros and Blur Minute Transitions
 function startStandbyClock() {
-    const timeDisplay = document.getElementById('standby-time');
-    const ampmDisplay = document.getElementById('standby-ampm');
+    const periodDisplay = document.getElementById('standby-period');
+    const hoursDisplay = document.getElementById('standby-hours');
+    const minutesDisplay = document.getElementById('standby-minutes');
     const dateDisplay = document.getElementById('standby-date');
 
     function updateTimeAndDate() {
@@ -1736,20 +1755,37 @@ function startStandbyClock() {
         
         let hours = now.getHours();
         let minutes = now.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
         
-        // Convert to standard 12-hour format
+        // 12-hour specific structural parameters
+        const periodText = hours >= 12 ? 'Evening' : 'Morning';
         hours = hours % 12;
-        hours = hours ? hours : 12; // The hour '0' should be '12'
-        minutes = minutes < 10 ? '0' + minutes : minutes;
+        hours = hours ? hours : 12; 
         
-        if (timeDisplay) timeDisplay.textContent = `${hours}:${minutes}`;
-        if (ampmDisplay) ampmDisplay.textContent = ampm;
+        // Forcing standard double digit paddings for balanced center alignments
+        const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
+        const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
+        
+        if (periodDisplay) periodDisplay.textContent = periodText;
+        if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
+        
+        // Manage transitioning blur classes if numbers differ
+        if (minutesDisplay) {
+            if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
+                minutesDisplay.classList.add('is-shifting');
+                setTimeout(() => {
+                    minutesDisplay.textContent = processedMinutesStr;
+                    minutesDisplay.classList.remove('is-shifting');
+                }, 300);
+            } else {
+                minutesDisplay.textContent = processedMinutesStr;
+            }
+        }
+        lastRenderedMinutes = processedMinutesStr;
 
-        // Structured date parsing format: Saturday, July 20 2026
+        // Custom Date Output: Saturday, July 20 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
-        dateString = dateString.replace(/,([^,]*)$/, '$1'); // Clears layout comma separators smoothly
+        dateString = dateString.replace(/,([^,]*)$/, '$1');
 
         if (dateDisplay) {
             dateDisplay.textContent = dateString;
@@ -1757,13 +1793,15 @@ function startStandbyClock() {
     }
 
     clearInterval(clockUpdateInterval);
+    lastRenderedMinutes = ""; // Reset trace states
     updateTimeAndDate();
     clockUpdateInterval = setInterval(updateTimeAndDate, 1000);
 }
 
-function startStandbyMode() {
+function startStandbyMode(forcedManually = false) {
     if (isStandbyEnabled) return;
     isStandbyEnabled = true;
+    isManuallyTriggered = forcedManually;
 
     const centerProfile = document.getElementById('standby-center-node');
     if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
@@ -1773,8 +1811,6 @@ function startStandbyMode() {
 
     document.body.classList.add('standby-active');
     startStandbyClock();
-
-    // Re-trigger Realtime Presence Sync check instantly upon entry
     syncActiveStandbyPresence();
 
     clearInterval(shuffleInterval);
@@ -1785,6 +1821,7 @@ function startStandbyMode() {
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
+    isManuallyTriggered = false;
     document.body.classList.remove('standby-active');
     clearInterval(shuffleInterval);
     clearInterval(clockUpdateInterval);
@@ -1793,14 +1830,23 @@ function cancelStandbyMode() {
 
 function resetStandbyTimeout() {
     clearTimeout(standbyTimer);
+    
+    // If entered via the Top-Right button, skip moving/typing wake inputs entirely
+    if (isStandbyEnabled && isManuallyTriggered) return;
+
     if (isStandbyEnabled) {
         cancelStandbyMode();
     }
-    standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
+    standbyTimer = setTimeout(() => startStandbyMode(false), STANDBY_DELAY);
 }
 
+// Continuous Inactivity Watch Loops
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-    window.addEventListener(evt, resetStandbyTimeout, { passive: true });
+    window.addEventListener(evt, () => {
+        // Enforce full lock: wake inputs are completely ignored if activated manually
+        if (isStandbyEnabled && isManuallyTriggered) return;
+        resetStandbyTimeout();
+    }, { passive: true });
 });
 
 function renderPersistentSymmetricalDots() {
@@ -1898,6 +1944,7 @@ function slideAmbientPositions() {
     });
 }
 
+// Instantiate fully prepared resources right on basic payload launch loops
 document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
