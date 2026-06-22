@@ -1661,34 +1661,50 @@ body.standby-active .standby-center-profile {
 */
 
 /* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (WITH SYSTEM CLOCK & DATE)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY AMBIENT MODE (HORIZON LEVELING + SEPARATED 12H ROUNDED CLOCK)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY AMBIENT MODE (MANUAL TRIGGER BUTTON & BLUR MINUTE TRANSITIONS)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY AMBIENT MODE (COLON-CENTERED 12H CLOCK + HIDDEN HOVER ICON)\n   ========================================================================== */
 
-/* Top Right Manual Standby Activation Trigger Button Placement */
-.standby-manual-trigger-btn {
+/* Stealth Corner Boundary Box for easy hover selection */
+.standby-trigger-boundary-box {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--glass);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-main);
-    padding: 8px 14px;
-    font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 20px;
-    cursor: pointer;
-    z-index: 9999;
-    opacity: 0.4;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: opacity 0.3s ease, background 0.3s ease, transform 0.2s ease;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    z-index: 999999;
 }
 
+/* Small, minimal circled button concealed until hovered over the boundary area */
+.standby-manual-trigger-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0; /* Fully hidden natively */
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.4s ease, background 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 0;
+}
+
+/* Reveal when hovering over the top-right zone */
+.standby-trigger-boundary-box:hover .standby-manual-trigger-btn {
+    opacity: 0.6;
+    pointer-events: auto;
+}
 .standby-manual-trigger-btn:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.04);
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.08);
 }
 
 #standby-overlay {
@@ -1714,12 +1730,12 @@ body.standby-active #standby-overlay {
     -webkit-backdrop-filter: blur(35px);
 }
 
-body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
+body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) {
     filter: blur(5px);
     transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Apple-Style Clock Layout Component Wrapper */
+/* Colon Centered Grid Architecture */
 .standby-clock-container {
     position: absolute;
     top: 12%;
@@ -1729,16 +1745,9 @@ body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
     z-index: 100000;
     user-select: none;
     width: 100%;
-}
-
-.standby-period-indicator {
-    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--primary);
-    opacity: 0.8;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .standby-time-display {
@@ -1751,12 +1760,35 @@ body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
     font-variant-numeric: tabular-nums;
     -webkit-font-feature-settings: "tnum";
     font-feature-settings: "tnum";
-    display: inline-flex;
+    position: relative;
+    display: flex;
     align-items: center;
     justify-content: center;
+    /* Extra spacing on the right ensures the off-side AM/PM token has dedicated room */
+    padding-right: 65px; 
 }
 
-/* Smooth motion text blur modifier class hook triggered on interval shifts */
+/* Keeps hours tracking completely to the left side of center */
+.standby-hours-box {
+    text-align: right;
+    width: 110px;
+    display: inline-block;
+}
+
+/* The exact center axis */
+.standby-colon-separator {
+    width: 30px;
+    text-align: center;
+    display: inline-block;
+}
+
+/* Keeps minutes tracking completely to the right side of center */
+.standby-minutes-box {
+    text-align: left;
+    width: 110px;
+    display: inline-block;
+}
+
 .standby-digit-minutes {
     display: inline-block;
     transition: filter 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
@@ -1766,6 +1798,18 @@ body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
     opacity: 0.3;
 }
 
+/* Off-side AM/PM positioned to the far right side of the screen context */
+.standby-am-pm-side {
+    position: absolute;
+    right: 0;
+    bottom: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
+}
+
 .standby-date-display {
     font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 16px;
@@ -1773,10 +1817,11 @@ body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
     color: var(--primary);
     opacity: 0.6;
     letter-spacing: 0.5px;
-    margin-top: 12px;
+    margin-top: 14px;
+    text-transform: uppercase;
 }
 
-/* Master Space Stage Center Pivot Point */
+/* Constellation Stage Component Layers */
 .standby-stage {
     position: absolute;
     top: 60%;
@@ -1789,7 +1834,6 @@ body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
     align-items: center;
 }
 
-/* Center Core Profile */
 .standby-center-profile {
     position: absolute;
     width: 84px;
@@ -1810,7 +1854,6 @@ body.standby-active .standby-center-profile {
     opacity: 1;
 }
 
-/* Master Orbit Ring Group */
 .standby-orbit-ring {
     position: absolute;
     width: 0;
@@ -1820,7 +1863,6 @@ body.standby-active .standby-center-profile {
     animation: standbyClockwiseRotation 120s linear infinite;
 }
 
-/* Node Slot Anchors - Glide Positions */
 .standby-node-slot {
     position: absolute;
     width: 0;
@@ -1832,7 +1874,6 @@ body.standby-active .standby-center-profile {
     transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Horizon Leveling System */
 .standby-ambient-dot {
     position: absolute;
     top: 50%;
@@ -1851,7 +1892,6 @@ body.standby-active .standby-center-profile {
                 box-shadow 0.4s ease;
 }
 
-/* Active Peer Bubble Morph State */
 .standby-node-slot.is-active .standby-ambient-dot {
     width: 50px;   
     height: 50px;
