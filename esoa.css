@@ -1766,7 +1766,8 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 }
 */
 .standby-time-display {
-    font-family: "Inter", sans-serif;
+   /* font-family: "Inter", sans-serif; */
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 84px;
     font-weight: 900;
     line-height: 1;
