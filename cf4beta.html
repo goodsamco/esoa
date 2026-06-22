@@ -521,7 +521,7 @@
         </div>
     </div>
 
-    <script type="module" src="esoa.js"></script>
+<script type="module" src="esoa.js"></script>
     <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1015,7 +1015,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const searchStrip = document.querySelector('.bottom-floating-control-strip');
     const searchInput = document.getElementById('registrySearch');
-    let firstInteractionHandled = false;
     let inactivityTimer = null;
 
     function handleExpand() {
@@ -1026,19 +1025,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleCollapse() {
-        if (searchInput.value.trim() === '') {
-            searchStrip.classList.add('collapsed-search');
-        }
+        // Prevent collapsing if an operation mode or open editing screen is engaged
+        const activeModal = document.querySelector('.modal-overlay.active');
+        if (layoutMovableActive || activeModal) return;
+
+        // Reset tracking states, clear queries, and return UI back to small pill
+        searchInput.value = '';
+        window.filterRegistryRealtime();
+        searchStrip.classList.add('collapsed-search');
     }
 
-    // 31-Second User Activity / Standby Expansion Monitor
+    // 31-Second Standby Expand Logic
     function resetInactivityCountdown() {
         clearTimeout(inactivityTimer);
         inactivityTimer = setTimeout(() => {
-            // Force expand panel after exactly 31 seconds of zero interaction
             if (searchStrip.classList.contains('collapsed-search')) {
                 handleExpand();
-                firstInteractionHandled = false;
             }
         }, 31000);
     }
@@ -1049,38 +1051,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (searchStrip.classList.contains('collapsed-search')) {
                 e.stopPropagation();
                 handleExpand();
-                firstInteractionHandled = true;
             }
         });
 
-        // Instant collapse tracking on focus loss
-        searchInput.addEventListener('blur', () => {
-            if (firstInteractionHandled) {
-                handleCollapse();
-            }
-        });
-
-        // First click/interaction intercept setup across viewport
+        // Global viewport manager for tracking click-away events
         document.addEventListener('click', (e) => {
-            if (!firstInteractionHandled) {
-                if (!searchStrip.contains(e.target)) {
-                    handleCollapse();
-                }
-                firstInteractionHandled = true;
-            } else {
-                if (!searchStrip.contains(e.target)) {
-                    handleCollapse();
-                }
+            const activeModal = document.querySelector('.modal-overlay.active');
+            
+            // Do absolutely nothing if interaction occurs within the modal or inside the control panel itself
+            if (searchStrip.contains(e.target) || (activeModal && activeModal.contains(e.target))) {
+                return;
             }
+            
+            // Safe to wipe queries and compress layout 
+            handleCollapse();
         });
 
-        // Global event interceptors for counting inactivity windows
+        // Intercept global interactions to keep timer counting down
         const inputTriggers = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
         inputTriggers.forEach(evtName => {
             document.addEventListener(evtName, resetInactivityCountdown, { passive: true });
         });
 
-        // Start countdown immediately on load
         resetInactivityCountdown();
     }
 });
