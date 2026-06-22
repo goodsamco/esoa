@@ -111,20 +111,20 @@
             opacity: 0.8;
         }
 
-        /* Floating Control Dock perfectly stacked above the profile layout */
+        /* Elevated & Height-Extended Floating Control Dock retaining exact 35px pill rounding */
         .bottom-floating-control-strip {
             position: fixed;
-            bottom: 110px; 
+            bottom: 160px; /* Elevated much higher to grant maximum screen clearance */
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
             max-width: 400px;
-            height: 70px;
+            height: 88px; /* Increased container height room for notes */
             background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            border-radius: 35px;
+            border-radius: 45px; /* Restored exact rounded corners footprint */
             display: flex;
             align-items: center;
             padding: 0 16px;
@@ -132,6 +132,7 @@
             gap: 10px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .search-inner-wrapper {
@@ -141,7 +142,7 @@
 
         .search-inner-wrapper input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 12px 14px; /* Increased interior padding depth for content visibility */
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
@@ -338,6 +339,51 @@
             background: var(--glass);
             transform: scale(0.98);
         }
+
+        /* Collapsed Inactivity View Styles */
+        .bottom-floating-control-strip.collapsed-search {
+            max-width: 54px;
+            height: 54px;
+            left: 24px;
+            bottom: 160px;
+            transform: none;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper input {
+            padding: 0;
+            width: 0;
+            height: 0;
+            border: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .action-control-btn {
+            display: none !important;
+        }
+
+        .bottom-floating-control-strip.collapsed-search .search-inner-wrapper::before {
+            content: '';
+            display: block;
+            width: 18px;
+            height: 18px;
+            background: currentColor;
+            color: var(--primary);
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+        }
     </style>
 </head>
 <body onmouseleave="if(typeof resetMagnet === 'function') resetMagnet()">
@@ -444,7 +490,7 @@
 
     <script type="module" src="esoa.js"></script>
     <script type="module">
-       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -458,7 +504,6 @@ let localProfileNoteCache = "";
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const userId = localStorage.getItem("userId");
 
-// CF4 Standardized Medical fallback dataset structure mapping
 const baseDataset = {
     cf4_guides: [
         { title: "PERTINENT SIGN", desc: "CHEST PAIN, DYSPNEA, DIAPHORESIS, COUGH, FEVER, VOMITING" },
@@ -784,7 +829,7 @@ window.openInlineEdit = function(rowElement) {
     
     const titleVal = rowElement.getAttribute('data-title');
     document.getElementById('newRecordKey').value = titleVal;
-    document.getElementById('newRecordKey').disabled = true; 
+    document.getElementById('newRecordKey').disabled = false; // Enabled to allow text title adjustment edits
     
     const descVal = rowElement.getAttribute('data-val');
     document.getElementById('newRecordValue').value = descVal; 
@@ -812,6 +857,17 @@ window.pushRecordToDatabase = async function() {
 
     if (!key || !val) return alert("Please specify all required data attributes.");
 
+    // If an entry is edited and its title changed, drop the previous structural entry path node
+    if (activeEditRow) {
+        const oldKey = activeEditRow.getAttribute('data-title');
+        if (oldKey !== key) {
+            const sanitizedOldKey = oldKey.replace(/[.#$\[\]]/g, "_");
+            try {
+                if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedOldKey}`), null);
+            } catch(e) { console.warn("Pruning legacy key path failed."); }
+        }
+    }
+
     const referencePayload = { title: key, description: val, syncedAt: Date.now() };
     const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
@@ -820,7 +876,9 @@ window.pushRecordToDatabase = async function() {
     } catch (err) { console.warn("Database connection runtime dropped."); }
 
     if (activeEditRow) {
+        activeEditRow.setAttribute('data-title', key);
         activeEditRow.setAttribute('data-val', val);
+        activeEditRow.querySelector('.item-title-prefix').textContent = key;
         activeEditRow.querySelector('.item-desc-text').textContent = val;
     } else {
         const targetNode = document.getElementById('cf4-section-group');
@@ -923,6 +981,40 @@ window.resetViewRegistry = function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeRegistryData();
+
+    // 10-Second Inactivity Collapse Search Engine Logic Integration
+    let inactivityTimer;
+    const searchStrip = document.querySelector('.bottom-floating-control-strip');
+    const searchInput = document.getElementById('registrySearch');
+
+    function resetInactivityCountdown() {
+        clearTimeout(inactivityTimer);
+        if (searchStrip && !searchStrip.classList.contains('collapsed-search')) {
+            inactivityTimer = setTimeout(() => {
+                if (searchInput && document.activeElement !== searchInput && searchInput.value.trim() === '') {
+                    searchStrip.classList.add('collapsed-search');
+                }
+            }, 10000);
+        }
+    }
+
+    if (searchStrip && searchInput) {
+        ['mousemove', 'mousedown', 'keydown', 'touchstart', 'input'].forEach(evt => {
+            document.addEventListener(evt, resetInactivityCountdown);
+        });
+
+        searchStrip.addEventListener('click', (e) => {
+            if (searchStrip.classList.contains('collapsed-search')) {
+                e.stopPropagation();
+                searchStrip.classList.remove('collapsed-search');
+                setTimeout(() => searchInput.focus(), 120);
+                resetInactivityCountdown();
+            }
+        });
+
+        searchInput.addEventListener('blur', resetInactivityCountdown);
+        resetInactivityCountdown();
+    }
 });
     </script>
 </body>
