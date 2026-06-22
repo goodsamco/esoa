@@ -1711,7 +1711,6 @@ function initStandbySystem() {
     
     const triggerBtn = document.createElement('button');
     triggerBtn.className = 'standby-manual-trigger-btn';
-    // Clean SVG power icon for a refined aesthetic look
     triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
     
     triggerBtn.addEventListener('click', (e) => {
@@ -1728,7 +1727,7 @@ function initStandbySystem() {
     overlay.innerHTML = `
         <div class="standby-clock-container">
             <div class="standby-time-display">
-                <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span></span><span id="standby-ampm" class="standby-am-pm-side">AM</span>
+                <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span><span id="standby-ampm" class="standby-am-pm-side">AM</span></span>
             </div>
             <div id="standby-date" class="standby-date-display"></div>
         </div>
@@ -1789,7 +1788,7 @@ function startStandbyClock() {
         // Structured date outputs: MONDAY, JUNE 22 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
-        dateString = dateString.replace(/,([^,]*)$/, '$1'); // Clears separating typography commas
+        dateString = dateString.replace(/,([^,]*)$/, '$1');
 
         if (dateDisplay) {
             dateDisplay.textContent = dateString;
