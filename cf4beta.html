@@ -17,12 +17,12 @@
             --success: #00e676;
         }
 
-        /* Container Geometry Fixes with equal uniform padding */
+        /* Container Geometry with perfect uniform, even padding all over */
         .container {
             position: relative;
             width: 100%;
             max-width: 400px;
-            border-radius: 24px;
+            border-radius: 45px;
             border: 1px solid rgba(0, 0, 0, 0.1);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             background: rgba(0, 0, 0, 0.45);
@@ -126,7 +126,7 @@
             opacity: 0.8;
         }
 
-        /* Standardized Panel Metrics with equal 24px layout rounding footprint */
+        /* Restored Panel Metrics with 35px pill rounding and bouncy spring transitions */
         .bottom-floating-control-strip {
             position: fixed;
             bottom: 160px;
@@ -139,7 +139,7 @@
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            border-radius: 24px;
+            border-radius: 35px;
             display: flex;
             align-items: center;
             padding: 0 16px;
@@ -147,7 +147,8 @@
             gap: 10px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Custom spring-like cubic-bezier curve for high fidelity elastic morphing */
+            transition: all 0.5s cubic-bezier(0.68, -0.6, 0.32, 1.6);
         }
 
         .search-inner-wrapper {
@@ -161,7 +162,7 @@
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            border-radius: 16px;
+            border-radius: 20px;
             font-family: 'Inter', sans-serif;
             font-size: 0.85rem;
             box-sizing: border-box;
@@ -195,7 +196,7 @@
             transform: translateY(-2px);
         }
 
-        /* Collapsed Position Alligned down below opposite to profile (Bottom-Left) */
+        /* Collapsed State Positioned down below oppositely aligned with the profile space (Bottom-Left) */
         .bottom-floating-control-strip.collapsed-search {
             max-width: 54px;
             height: 54px;
@@ -207,6 +208,19 @@
             justify-content: center;
             cursor: pointer;
             background: rgba(0, 0, 0, 0.75);
+        }
+
+        /* Micro-interaction hover shake effect specifically for the icon state */
+        .bottom-floating-control-strip.collapsed-search:hover {
+            animation: microShakeIcon 0.4s ease-in-out infinite alternate;
+        }
+
+        @keyframes microShakeIcon {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-1.5px, 0.5px) rotate(-3deg); }
+            50% { transform: translate(1px, -1px) rotate(2deg); }
+            75% { transform: translate(-0.5px, -0.5px) rotate(-1deg); }
+            100% { transform: translate(1.5px, 1px) rotate(3deg); }
         }
 
         .bottom-floating-control-strip.collapsed-search .search-inner-wrapper {
@@ -452,7 +466,8 @@
         </div>
     </div>
 
-    <div class="bottom-floating-control-strip collapsed-search">
+    <!-- Panel loaded open without .collapsed-search selector class -->
+    <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
             <input type="text" id="registrySearch" placeholder="Search guides, protocols, notes..." oninput="filterRegistryRealtime()">
         </div>
@@ -997,33 +1012,71 @@ window.resetViewRegistry = function() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeRegistryData();
 
-    // Instant Collapse/Expand Management Logic
+    // High Fidelity Custom Spring Instant Morph Control Block
     const searchStrip = document.querySelector('.bottom-floating-control-strip');
     const searchInput = document.getElementById('registrySearch');
+    let firstInteractionHandled = false;
+
+    function handleExpand() {
+        if (searchStrip.classList.contains('collapsed-search')) {
+            searchStrip.classList.remove('collapsed-search');
+            setTimeout(() => searchInput.focus(), 120);
+        }
+    }
+
+    function handleCollapse() {
+        if (searchInput.value.trim() === '') {
+            searchStrip.classList.add('collapsed-search');
+        }
+    }
 
     if (searchStrip && searchInput) {
-        // Expand when panel clicked
+        // Expand instantly on click if currently collapsed
         searchStrip.addEventListener('click', (e) => {
             if (searchStrip.classList.contains('collapsed-search')) {
                 e.stopPropagation();
-                searchStrip.classList.remove('collapsed-search');
-                setTimeout(() => searchInput.focus(), 120);
+                handleExpand();
+                firstInteractionHandled = true;
             }
         });
 
-        // Instant collapse logic when cursor focus leaves input field
+        // Instant collapse tracking on focus loss
         searchInput.addEventListener('blur', () => {
-            if (searchInput.value.trim() === '') {
-                searchStrip.classList.add('collapsed-search');
+            if (firstInteractionHandled) {
+                handleCollapse();
             }
         });
 
-        // Instant collapse when clicking outside the panel layout area entirely
+        // First click/interaction intercept setup across viewport
         document.addEventListener('click', (e) => {
-            if (!searchStrip.contains(e.target) && searchInput.value.trim() === '') {
-                searchStrip.classList.add('collapsed-search');
+            if (!firstInteractionHandled) {
+                // If the click is anywhere outside the panel, collapse it on the very first event
+                if (!searchStrip.contains(e.target)) {
+                    handleCollapse();
+                }
+                firstInteractionHandled = true;
+            } else {
+                if (!searchStrip.contains(e.target)) {
+                    handleCollapse();
+                }
             }
         });
+
+        // Class Mutation Observer watching for Standby Mode transitions
+        const standbyObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    if (document.body.classList.contains('standby-mode') || document.documentElement.classList.contains('standby-mode')) {
+                        // Whenever standby starts elsewhere, expand the panel and reset selection triggers
+                        searchStrip.classList.remove('collapsed-search');
+                        firstInteractionHandled = false; 
+                    }
+                }
+            });
+        });
+
+        standbyObserver.observe(document.body, { attributes: true });
+        standbyObserver.observe(document.documentElement, { attributes: true });
     }
 });
     </script>
