@@ -1767,8 +1767,8 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 */
 .standby-time-display {
     font-family: "Big Shoulders Display", sans-serif;
-    font-size: 84px;
-    font-weight: 700;
+    font-size: 100px;
+    font-weight: 900;
     line-height: 0.75;
     color: var(--primary);
 
