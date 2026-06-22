@@ -17,20 +17,19 @@
             --success: #00e676;
         }
 
-        /* Standardized Layout Container with accurate padding and corner rounding */
+        /* Container Geometry Fixes with equal uniform padding */
         .container {
             position: relative;
             width: 100%;
             max-width: 400px;
-            border-radius: 24px; 
+            border-radius: 24px;
             border: 1px solid rgba(0, 0, 0, 0.1);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 24px; 
+            padding: 24px;
             box-sizing: border-box;
-            margin: 0 auto;
         }
 
         /* Category Header Chevron indicator styles */
@@ -127,26 +126,27 @@
             opacity: 0.8;
         }
 
-        /* Floating Control Dock - Aligned perfectly bottom-left near profile workspace footprint */
+        /* Standardized Panel Metrics with equal 24px layout rounding footprint */
         .bottom-floating-control-strip {
             position: fixed;
-            bottom: 45px; 
-            left: 25px; 
-            width: auto;
+            bottom: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
             max-width: 400px;
-            height: 48px; 
-            background: rgba(0, 0, 0, 0.45); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            height: 88px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass);
-            border-radius: 24px; 
+            border-radius: 24px;
             display: flex;
             align-items: center;
-            padding: 0 12px; 
+            padding: 0 16px;
             box-sizing: border-box;
-            gap: 8px;
+            gap: 10px;
             z-index: 3100;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -157,11 +157,11 @@
 
         .search-inner-wrapper input {
             width: 100%;
-            padding: 8px 12px; 
+            padding: 12px 14px;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--glass);
             color: var(--text-main);
-            border-radius: 16px; 
+            border-radius: 16px;
             font-family: 'Inter', sans-serif;
             font-size: 0.85rem;
             box-sizing: border-box;
@@ -174,8 +174,8 @@
         }
 
         .action-control-btn {
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass);
             border-radius: 50%;
@@ -185,12 +185,6 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            flex-shrink: 0;
-        }
-
-        .action-control-btn svg {
-            width: 16px;
-            height: 16px;
         }
 
         .action-control-btn:hover, 
@@ -201,17 +195,18 @@
             transform: translateY(-2px);
         }
 
-        /* Collapsed Inactivity View Styles aligned directly near the bottom-left profile alignment */
+        /* Collapsed Position Alligned down below opposite to profile (Bottom-Left) */
         .bottom-floating-control-strip.collapsed-search {
-            width: 48px;
-            height: 48px;
-            left: 25px;
-            bottom: 45px;
+            max-width: 54px;
+            height: 54px;
+            left: 24px;
+            bottom: 40px;
             transform: none;
             border-radius: 50%;
             padding: 0;
             justify-content: center;
             cursor: pointer;
+            background: rgba(0, 0, 0, 0.75);
         }
 
         .bottom-floating-control-strip.collapsed-search .search-inner-wrapper {
@@ -350,7 +345,7 @@
             color: #aaaaaa;
             font-weight: 400;
             word-break: break-word;
-            white-space: pre-wrap; 
+            white-space: pre-wrap;
         }
 
         /* Context Actions layout injection for inline row modifications */
@@ -457,10 +452,9 @@
         </div>
     </div>
 
-    <!-- Floating Dock positioned accurately down bottom left inside profile alignment parameters -->
-    <div class="bottom-floating-control-strip">
+    <div class="bottom-floating-control-strip collapsed-search">
         <div class="search-inner-wrapper">
-            <input type="text" id="registrySearch" placeholder="Search guides..." oninput="filterRegistryRealtime()">
+            <input type="text" id="registrySearch" placeholder="Search guides, protocols, notes..." oninput="filterRegistryRealtime()">
         </div>
         <button class="action-control-btn" title="Add Guide" onclick="toggleModal('addRecordModal', true)">
             <i data-lucide="plus"></i>
@@ -558,7 +552,7 @@ try {
     db = getFirestore(app);
     rtdb = getDatabase(app);
 } catch(e) {
-    console.warn("RTDB fallback connection initiated.");
+    console.warn("RTDB environment connection local fallback initiated.");
 }
 
 if (userId && db) {
@@ -614,7 +608,6 @@ if (userId && db) {
     });
 }
 
-// Inject Status Modal Setup Controller
 (() => {
     const avatarNode = document.getElementById('userDisplayAvatar');
     if (!avatarNode) return;
@@ -731,7 +724,7 @@ async function initializeRegistryData() {
                 activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
             }
         }
-    } catch (e) { console.warn("Database storage fetch fault."); }
+    } catch (e) { console.warn("Database storage fetch fault error mapping."); }
 
     if (activeList.length === 0) {
         activeList = baseDataset.cf4_guides;
@@ -861,13 +854,13 @@ window.openInlineEdit = function(rowElement) {
 };
 
 window.deleteInlineRow = async function(rowElement) {
-    if(confirm("Are you certain you want to delete this reference guide record?")) {
+    if(confirm("Are you certain you want to destroy this reference guide record?")) {
         const key = rowElement.getAttribute('data-title');
         const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
 
         try {
             if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`), null);
-        } catch(e) { console.warn("Deletion dropped."); } 
+        } catch(e) { console.warn("Database communication deletion dropped."); } 
         
         rowElement.remove();
         window.resetViewRegistry();
@@ -878,7 +871,7 @@ window.pushRecordToDatabase = async function() {
     const key = document.getElementById('newRecordKey').value.trim();
     const val = document.getElementById('newRecordValue').value.trim();
 
-    if (!key || !val) return alert("Please specify all data fields.");
+    if (!key || !val) return alert("Please specify all required data attributes.");
 
     if (activeEditRow) {
         const oldKey = activeEditRow.getAttribute('data-title');
@@ -886,7 +879,7 @@ window.pushRecordToDatabase = async function() {
             const sanitizedOldKey = oldKey.replace(/[.#$\[\]]/g, "_");
             try {
                 if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedOldKey}`), null);
-            } catch(e) { console.warn("Pruning key path failed."); }
+            } catch(e) { console.warn("Pruning legacy key path failed."); }
         }
     }
 
@@ -895,7 +888,7 @@ window.pushRecordToDatabase = async function() {
 
     try {
         if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`), referencePayload);
-    } catch (err) { console.warn("Database connection dropped."); }
+    } catch (err) { console.warn("Database connection runtime dropped."); }
 
     if (activeEditRow) {
         activeEditRow.setAttribute('data-title', key);
@@ -1004,39 +997,33 @@ window.resetViewRegistry = function() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeRegistryData();
 
-    // 10-Second Inactivity Collapse Logic - Monitored Strictly on Search Dock Panel Elements
-    let inactivityTimer;
+    // Instant Collapse/Expand Management Logic
     const searchStrip = document.querySelector('.bottom-floating-control-strip');
     const searchInput = document.getElementById('registrySearch');
 
-    function resetInactivityCountdown() {
-        clearTimeout(inactivityTimer);
-        if (searchStrip && !searchStrip.classList.contains('collapsed-search')) {
-            inactivityTimer = setTimeout(() => {
-                if (searchInput && document.activeElement !== searchInput && searchInput.value.trim() === '') {
-                    searchStrip.classList.add('collapsed-search');
-                }
-            }, 10000);
-        }
-    }
-
     if (searchStrip && searchInput) {
-        // Only trigger timer resets from actions directly inside the search panel zone
-        ['mousemove', 'mousedown', 'keydown', 'touchstart', 'input'].forEach(evt => {
-            searchStrip.addEventListener(evt, resetInactivityCountdown);
-        });
-
+        // Expand when panel clicked
         searchStrip.addEventListener('click', (e) => {
             if (searchStrip.classList.contains('collapsed-search')) {
                 e.stopPropagation();
                 searchStrip.classList.remove('collapsed-search');
                 setTimeout(() => searchInput.focus(), 120);
-                resetInactivityCountdown();
             }
         });
 
-        searchInput.addEventListener('blur', resetInactivityCountdown);
-        resetInactivityCountdown();
+        // Instant collapse logic when cursor focus leaves input field
+        searchInput.addEventListener('blur', () => {
+            if (searchInput.value.trim() === '') {
+                searchStrip.classList.add('collapsed-search');
+            }
+        });
+
+        // Instant collapse when clicking outside the panel layout area entirely
+        document.addEventListener('click', (e) => {
+            if (!searchStrip.contains(e.target) && searchInput.value.trim() === '') {
+                searchStrip.classList.add('collapsed-search');
+            }
+        });
     }
 });
     </script>
