@@ -1766,24 +1766,24 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 }
 */
 .standby-time-display {
-    font-family: "Oswald", sans-serif;
+    font-family: "Spline Sans", sans-serif;
     font-size: 84px;
     font-weight: 700;
     line-height: 1;
     color: var(--primary);
-    letter-spacing: 1px;
+
     font-variant-numeric: tabular-nums;
     -webkit-font-feature-settings: "tnum";
     font-feature-settings: "tnum";
+
     display: flex;
     align-items: baseline;
     justify-content: center;
 
-    /* Elongate horizontally */
-    transform: scaleX(1.3);
+    /* Vertically elongate */
+    transform: scaleY(1.25);
     transform-origin: center;
 }
-
 /* Keeps hours tracking completely balanced to the left side of the colon */
 .standby-hours-box {
     text-align: right;
