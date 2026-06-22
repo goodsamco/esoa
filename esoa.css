@@ -1779,11 +1779,6 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     display: flex;
     align-items: baseline;
     justify-content: center;
-
-    /* Make the text taller */
-    transform: scaleY(1.3);
-    transform-origin: center;
-
     letter-spacing: -2px;
 }
 
