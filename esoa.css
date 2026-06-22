@@ -1767,7 +1767,7 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 */
 .standby-time-display {
     font-family: "Big Shoulders Display", sans-serif;
-    font-size: 100px;
+    font-size: 200px;
     font-weight: 900;
     line-height: 0.75;
     color: var(--primary);
@@ -1785,7 +1785,7 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 /* Keeps hours tracking completely balanced to the left side of the colon */
 .standby-hours-box {
     text-align: right;
-    width: 120px;
+    width: 160px;
     display: inline-block;
 }
 
@@ -1799,7 +1799,7 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 /* Keeps minutes tracking completely balanced to the right side of the colon */
 .standby-minutes-box {
     text-align: left;
-    width: 120px;
+    width: 160px;
     display: inline-flex;
     align-items: baseline;
 }
