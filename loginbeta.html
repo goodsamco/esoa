@@ -51,7 +51,7 @@
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
             border: 1px solid var(--border-glass);
             position: relative;
- z-index: 10;
+            z-index: 10;
             box-sizing: border-box;
             transition: border-color 0.5s ease;
         }
@@ -228,7 +228,6 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    // MIGRATION: Added Standard Firebase Auth Imports
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -244,7 +243,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app); // MIGRATION: Initializing authentication instance
+    const auth = getAuth(app);
 
     const loginSection = document.getElementById('loginSection');
     const forgotSection = document.getElementById('forgotSection');
@@ -325,7 +324,7 @@
             if (!querySnap.empty) {
                 const userData = querySnap.docs[0].data();
                 
-                const targetPic = userData.profilePic || defaults.avatar;
+                const targetPic = userData.avatarUrl || defaults.avatar;
                 profilePic.style.backgroundImage = `url('${targetPic}')`;
                 profilePic.style.width = "50px"; 
                 profilePic.style.opacity = "1";
@@ -412,7 +411,7 @@
         }
     });
 
-    // MIGRATION: Secured Login Processing with Firebase Authentication 
+    // Form Submissions
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const usernameField = document.getElementById('logUser');
@@ -422,7 +421,6 @@
         const msg = document.getElementById('logMsg');
 
         try {
-            // Step 1: Look up user document to map the raw username to their unique account email address
             const q = query(collection(db, "accounts"), where("username", "==", username));
             const querySnap = await getDocs(q);
 
@@ -441,11 +439,8 @@
                 return;
             }
 
-            // Step 2: Use modern Firebase Authentication wrapper to handle password tokens natively
-            const userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
-            const user = userCredential.user;
+            await signInWithEmailAndPassword(auth, userData.email, password);
 
-            // Success configuration path handling
             usernameField.value = "";
             passwordField.value = "";
             resetToDefaultTheme();
@@ -466,7 +461,6 @@
             }
         } catch (err) {
             msg.style.color = "#ef4444";
-            // Map common firebase authentication code errors cleanly
             if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
                 msg.innerText = "Invalid username or password.";
             } else {
@@ -543,6 +537,7 @@
             msg.style.color = "#ffee00";
             msg.innerText = "Request logged! Redirecting to login view...";
             
+            // SUCCESS STATE: Complete Form Reset and Fallback
             document.getElementById('forgotForm').reset();
             resetToDefaultTheme();
             
