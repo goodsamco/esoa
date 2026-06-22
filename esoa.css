@@ -1662,6 +1662,34 @@ body.standby-active .standby-center-profile {
 
 /* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (WITH SYSTEM CLOCK & DATE)\n   ========================================================================== */
 /* ==========================================================================\n   10. STANDBY AMBIENT MODE (HORIZON LEVELING + SEPARATED 12H ROUNDED CLOCK)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY AMBIENT MODE (MANUAL TRIGGER BUTTON & BLUR MINUTE TRANSITIONS)\n   ========================================================================== */
+
+/* Top Right Manual Standby Activation Trigger Button Placement */
+.standby-manual-trigger-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 8px 14px;
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 9999;
+    opacity: 0.4;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.3s ease, background 0.3s ease, transform 0.2s ease;
+}
+
+.standby-manual-trigger-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.04);
+}
 
 #standby-overlay {
     position: fixed;
@@ -1686,15 +1714,15 @@ body.standby-active #standby-overlay {
     -webkit-backdrop-filter: blur(35px);
 }
 
-body.standby-active > :not(#standby-overlay) {
+body.standby-active > :not(#standby-overlay):not(.standby-manual-trigger-btn) {
     filter: blur(5px);
     transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Placed Higher and Free from Orbit Congestion */
+/* Apple-Style Clock Layout Component Wrapper */
 .standby-clock-container {
     position: absolute;
-    top: 12%; /* Safely elevated above the orbit field */
+    top: 12%;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
@@ -1703,10 +1731,20 @@ body.standby-active > :not(#standby-overlay) {
     width: 100%;
 }
 
+.standby-period-indicator {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
 .standby-time-display {
     font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 84px;
-    font-weight: 800; /* Ultra Bold with soft rounded edges */
+    font-weight: 800;
     line-height: 1.0;
     color: var(--primary);
     letter-spacing: -1px;
@@ -1714,16 +1752,18 @@ body.standby-active > :not(#standby-overlay) {
     -webkit-font-feature-settings: "tnum";
     font-feature-settings: "tnum";
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: center;
 }
 
-.standby-am-pm {
-    font-size: 20px;
-    font-weight: 700;
-    margin-left: 6px;
-    text-transform: uppercase;
-    opacity: 0.8;
+/* Smooth motion text blur modifier class hook triggered on interval shifts */
+.standby-digit-minutes {
+    display: inline-block;
+    transition: filter 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+}
+.standby-digit-minutes.is-shifting {
+    filter: blur(8px);
+    opacity: 0.3;
 }
 
 .standby-date-display {
@@ -1733,14 +1773,13 @@ body.standby-active > :not(#standby-overlay) {
     color: var(--primary);
     opacity: 0.6;
     letter-spacing: 0.5px;
-    margin-top: 10px;
-    text-transform: uppercase;
+    margin-top: 12px;
 }
 
 /* Master Space Stage Center Pivot Point */
 .standby-stage {
     position: absolute;
-    top: 60%; /* Pushed slightly downward for balanced spatial harmony */
+    top: 60%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 0;
@@ -1793,7 +1832,7 @@ body.standby-active .standby-center-profile {
     transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* FIXED HORIZON LEVELING SYSTEM: Counter-Rotates flawlessly via fixed top/left parameters */
+/* Horizon Leveling System */
 .standby-ambient-dot {
     position: absolute;
     top: 50%;
@@ -1804,11 +1843,8 @@ body.standby-active .standby-center-profile {
     background-color: var(--primary);
     opacity: 0.25;
     box-shadow: 0 0 8px var(--primary);
-    
-    /* Counteracts parent orbit angle explicitly from its true center */
     transform: translate(-50%, -50%) rotate(360deg);
     animation: standbyCounterClockwiseRotation 120s linear infinite;
-
     transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
                 opacity 0.4s ease,
@@ -1827,7 +1863,6 @@ body.standby-active .standby-center-profile {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Core System Keyframe Clocks */
 @keyframes standbyClockwiseRotation {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
