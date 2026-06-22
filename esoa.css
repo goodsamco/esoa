@@ -1779,10 +1779,6 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     align-items: baseline;
     justify-content: center;
 
-    /* EXTREMELY tall and condensed */
-    transform: scaleX(0.65) scaleY(2);
-    line-height: 0.7;
-
     letter-spacing: 1px;
 }
 
