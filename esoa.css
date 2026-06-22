@@ -1776,6 +1776,10 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     -webkit-font-feature-settings: "tnum";
     font-feature-settings: "tnum";
 
+    /* Make the text taller */
+    transform: scaleY(1.3);
+    transform-origin: center;
+
     display: flex;
     align-items: baseline;
     justify-content: center;
