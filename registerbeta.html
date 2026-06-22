@@ -231,7 +231,9 @@
     }
 
     regUser.addEventListener('input', (e) => {
-        const username = e.target.value.trim().toLowerCase();
+        // Sanitize input: strip spaces, convert to lowercase
+        let username = e.target.value.replace(/\s+/g, '').toLowerCase();
+        e.target.value = username;
         
         if (!username) {
             clearIcons();
@@ -248,9 +250,15 @@
     document.getElementById('regForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('regName').value.trim();
-        const username = regUser.value.trim().toLowerCase();
+        const username = regUser.value.replace(/\s+/g, '').toLowerCase();
         const password = regPass.value;
         const msg = document.getElementById('regMsg');
+
+        if (!username || username.length < 2) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Please provide a valid username.";
+            return;
+        }
 
         if (!isUsernameValid) {
             msg.style.color = "#ef4444";
@@ -284,9 +292,9 @@
         } catch (err) {
             msg.style.color = "#ef4444";
             if (err.code === "auth/weak-password") {
-                msg.innerText = "Password structural vulnerability: Should be at least 6 characters.";
-            } else if (err.code === "auth/email-already-in-use") {
-                msg.innerText = "The requested username profile identity is already taken.";
+                msg.innerText = "Password vulnerability: Should be at least 6 characters.";
+            } else if (err.code === "auth/email-already-in-use" || err.code === "auth/invalid-email") {
+                msg.innerText = "The requested username contains invalid characters or is taken.";
             } else {
                 msg.innerText = "Error: " + err.message;
             }
