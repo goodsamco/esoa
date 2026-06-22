@@ -126,7 +126,7 @@
             opacity: 0.8;
         }
 
-        /* Restored Panel Metrics with 35px pill rounding and bouncy spring transitions */
+        /* Restored Panel Metrics with 35px pill rounding and subtle Apple spring transitions */
         .bottom-floating-control-strip {
             position: fixed;
             bottom: 160px;
@@ -147,8 +147,14 @@
             gap: 10px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-            /* Custom spring-like cubic-bezier curve for high fidelity elastic morphing */
-            transition: all 0.5s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+            /* Subtle, clean deceleration spring used across modern iOS interfaces */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        height 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        left 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        border-radius 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .search-inner-wrapper {
@@ -217,10 +223,10 @@
 
         @keyframes microShakeIcon {
             0% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(-1.5px, 0.5px) rotate(-3deg); }
-            50% { transform: translate(1px, -1px) rotate(2deg); }
-            75% { transform: translate(-0.5px, -0.5px) rotate(-1deg); }
-            100% { transform: translate(1.5px, 1px) rotate(3deg); }
+            25% { transform: translate(-1px, 0.5px) rotate(-2deg); }
+            50% { transform: translate(0.5px, -0.5px) rotate(1.5deg); }
+            75% { transform: translate(-0.5px, -0.5px) rotate(-0.5deg); }
+            100% { transform: translate(1px, 0.5px) rotate(2deg); }
         }
 
         .bottom-floating-control-strip.collapsed-search .search-inner-wrapper {
@@ -238,6 +244,7 @@
             border: none;
             opacity: 0;
             pointer-events: none;
+            transition: opacity 0.2s;
         }
 
         .bottom-floating-control-strip.collapsed-search .action-control-btn {
@@ -1012,10 +1019,10 @@ window.resetViewRegistry = function() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeRegistryData();
 
-    // High Fidelity Custom Spring Instant Morph Control Block
     const searchStrip = document.querySelector('.bottom-floating-control-strip');
     const searchInput = document.getElementById('registrySearch');
     let firstInteractionHandled = false;
+    let inactivityTimer = null;
 
     function handleExpand() {
         if (searchStrip.classList.contains('collapsed-search')) {
@@ -1028,6 +1035,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchInput.value.trim() === '') {
             searchStrip.classList.add('collapsed-search');
         }
+    }
+
+    // 31-Second User Activity / Standby Expansion Monitor
+    function resetInactivityCountdown() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            // Force expand panel after exactly 31 seconds of zero interaction
+            if (searchStrip.classList.contains('collapsed-search')) {
+                handleExpand();
+                firstInteractionHandled = false;
+            }
+        }, 31000);
     }
 
     if (searchStrip && searchInput) {
@@ -1050,7 +1069,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // First click/interaction intercept setup across viewport
         document.addEventListener('click', (e) => {
             if (!firstInteractionHandled) {
-                // If the click is anywhere outside the panel, collapse it on the very first event
                 if (!searchStrip.contains(e.target)) {
                     handleCollapse();
                 }
@@ -1062,21 +1080,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Class Mutation Observer watching for Standby Mode transitions
-        const standbyObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    if (document.body.classList.contains('standby-mode') || document.documentElement.classList.contains('standby-mode')) {
-                        // Whenever standby starts elsewhere, expand the panel and reset selection triggers
-                        searchStrip.classList.remove('collapsed-search');
-                        firstInteractionHandled = false; 
-                    }
-                }
-            });
+        // Global event interceptors for counting inactivity windows
+        const inputTriggers = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+        inputTriggers.forEach(evtName => {
+            document.addEventListener(evtName, resetInactivityCountdown, { passive: true });
         });
 
-        standbyObserver.observe(document.body, { attributes: true });
-        standbyObserver.observe(document.documentElement, { attributes: true });
+        // Start countdown immediately on load
+        resetInactivityCountdown();
     }
 });
     </script>
