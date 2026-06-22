@@ -1688,7 +1688,7 @@ body.standby-active .standby-center-profile {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    opacity: 0; /* Fully hidden natively */
+    opacity: 0;
     pointer-events: none;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -1735,7 +1735,7 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Colon Centered Grid Architecture */
+/* Colon Centered Grid Architecture Layout */
 .standby-clock-container {
     position: absolute;
     top: 12%;
@@ -1760,33 +1760,31 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     font-variant-numeric: tabular-nums;
     -webkit-font-feature-settings: "tnum";
     font-feature-settings: "tnum";
-    position: relative;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
-    /* Extra spacing on the right ensures the off-side AM/PM token has dedicated room */
-    padding-right: 65px; 
 }
 
-/* Keeps hours tracking completely to the left side of center */
+/* Keeps hours tracking completely balanced to the left side of the colon */
 .standby-hours-box {
     text-align: right;
-    width: 110px;
+    width: 120px;
     display: inline-block;
 }
 
-/* The exact center axis */
+/* The exact mathematical center axis of the display viewport layout */
 .standby-colon-separator {
-    width: 30px;
+    width: 32px;
     text-align: center;
     display: inline-block;
 }
 
-/* Keeps minutes tracking completely to the right side of center */
+/* Keeps minutes tracking completely balanced to the right side of the colon */
 .standby-minutes-box {
     text-align: left;
-    width: 110px;
-    display: inline-block;
+    width: 120px;
+    display: inline-flex;
+    align-items: baseline;
 }
 
 .standby-digit-minutes {
@@ -1798,24 +1796,23 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     opacity: 0.3;
 }
 
-/* Off-side AM/PM positioned to the far right side of the screen context */
+/* Placed tight directly following the minute numbers string line container */
 .standby-am-pm-side {
-    position: absolute;
-    right: 0;
-    bottom: 8px;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     text-transform: uppercase;
     opacity: 0.7;
     letter-spacing: 0.5px;
+    margin-left: 8px; /* Just the right amount of organic spacing */
 }
 
+/* Normal weight date presentation layer text */
 .standby-date-display {
     font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 400; /* Regular / Normal thickness weight profile */
     color: var(--primary);
-    opacity: 0.6;
+    opacity: 0.65;
     letter-spacing: 0.5px;
     margin-top: 14px;
     text-transform: uppercase;
