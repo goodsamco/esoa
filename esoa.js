@@ -1,6 +1,7 @@
 /* ==========================================================================
    1. FIREBASE CORE SYSTEM INITIALIZATION
    ========================================================================== */
+/*
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getDatabase, ref, onValue, set, push, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -24,7 +25,7 @@ const rtdb = getDatabase(app);
 /* ==========================================================================
    2. GLOBAL SESSION STATE ACCESSORS
    ========================================================================== */
-const userId = localStorage.getItem("userId");
+/*const userId = localStorage.getItem("userId");
 if (!userId) {
     window.location.href = "login.html";
 }
@@ -74,6 +75,7 @@ function hexToRgb(hex) {
 /* ==========================================================================
    3. FIRESTORE CUSTOM PROFILE REAL-TIME TRACKING & INACTIVITY WATCHER
    ========================================================================== */
+/*
 const userDocRef = doc(db, "accounts", userId);
 let inactivityTimeout = null;
 const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 Hours in milliseconds
@@ -204,6 +206,232 @@ onSnapshot(userDocRef, (snapshot) => {
 // Start checking interaction updates natively
 startInactivityWatcher();
 
+/* ==========================================================================
+   1. FIREBASE CORE SYSTEM INITIALIZATION
+   ========================================================================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getDatabase, ref, onValue, set, push, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+    authDomain: "svls-289ee.firebaseapp.com",
+    databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+    projectId: "svls-289ee",
+    storageBucket: "svls-289ee.firebasestorage.app",
+    messagingSenderId: "500705386198",
+    appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+    measurementId: "G-5TNBMQ2HN5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const rtdb = getDatabase(app);
+const auth = getAuth(app);
+
+
+/* ==========================================================================
+   2. GLOBAL SESSION STATE ACCESSORS
+   ========================================================================== */
+let userId = null; // Managed dynamically via dynamic Firebase Auth Observer
+let currentUserName = "Operator";
+let currentUserAvatarRaw = "avatar-m1";
+let selectedActiveChatPartnerId = null;
+let isGroupChat = false;
+let transientChatListenerRemoveHook = null;
+const mappedRouteTrackingHooks = {};
+let backgroundGcTrackingHook = null;
+
+// Premium Assets Lookup Matrix
+const premium3dAssets = {
+    'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+    'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhTNDbz1dNOrf54nnTuJcFcYzlK5xng6T7fg&s',
+    'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360': 'https://img.magnific.com/premium-photo/memoji-handsome-indian-guy-man-white-background-emoji-cartoon-character_826801-7987.jpg?w=360',
+    'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp': 'https://png.pngtree.com/png-vector/20251122/ourmid/pngtree-korean-idol-memoji-teenager-blonde-buzz-cut-smiling-with-sunglasses-png-image_18044448.webp',
+    'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg': 'https://i.pinimg.com/1200x/da/5d/c8/da5dc83e0e40e252ff46d4c9c3960fca.jpg',
+    'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg': 'https://pbs.twimg.com/media/EEq9BVQWkAA_nvZ.jpg',
+    'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg': 'https://ih1.redbubble.net/image.1994467948.4288/raf,360x360,075,t,fafafa:ca443f4786.jpg',
+    'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg': 'https://i.pinimg.com/564x/72/49/6f/72496f59f26075667d354fe9883ff8be.jpg',
+    'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg': 'https://i.pinimg.com/736x/92/e6/74/92e674f6195b6fbcda64f47d6aa274cc.jpg',
+    'bg-theme-1': 'https://img.magnific.com/premium-vector/smooth-gradient-colors-from-teal-orange-with-black-background-grainy-white-background-ar-3_858664-35836.jpg?semt=ais_hybrid&w=740&q=80?w=150',
+    'bg-theme-2': 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800',
+    'bg-theme-3': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+    'bg-theme-4': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+    'btn-theme-1': 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?w=300',
+    'btn-theme-2': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=300',
+    'btn-theme-3': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=300',
+    'btn-theme-4': 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300'
+};
+
+function hexToRgb(hex) {
+    let c;
+    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+        c = hex.substring(1).split('');
+        if (c.length == 3) { c = [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+        c = '0x' + c.join('');
+        return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',');
+    }
+    return "255,115,0";
+}
+
+
+/* ==========================================================================
+   3. FIRESTORE CUSTOM PROFILE REAL-TIME TRACKING & INACTIVITY WATCHER
+   ========================================================================== */
+let inactivityTimeout = null;
+let unsubscribeSnapshot = null; // Hook pointer to break active real-time profile listeners on logout
+const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 Hours in milliseconds
+let localProfileNoteCache = "";
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+
+function forceLogoutUser() {
+    console.log("Session expired or security logout triggered.");
+    
+    if (userId) {
+        set(ref(rtdb, 'presence/' + userId), null);
+    }
+    if (unsubscribeSnapshot) {
+        unsubscribeSnapshot(); 
+    }
+    
+    // Core Firebase user structural logout method
+    signOut(auth).then(() => {
+        sessionStorage.clear();
+        window.location.href = "login.html";
+    }).catch(err => {
+        console.error("Firebase Signout processing malfunction:", err);
+    });
+}
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(forceLogoutUser, INACTIVITY_LIMIT);
+}
+
+function startInactivityWatcher() {
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    activityEvents.forEach(eventType => {
+        window.addEventListener(eventType, resetInactivityTimer, { passive: true });
+    });
+    resetInactivityTimer();
+}
+
+// Global Core Real-time State Engine Authentication Observer
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        userId = user.uid;
+        const userDocRef = doc(db, "accounts", userId);
+
+        // Track internal page browser updates natively
+        startInactivityWatcher();
+
+        // Listen for real-time document adjustments explicitly to this authenticated reference
+        unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+
+                if (data.esoaDisabled === true) {
+                    alert("Your access to eSOA has been suspended by management.");
+                    forceLogoutUser();
+                    return;
+                }
+
+                currentUserName = data.customName || "Operator";
+                currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+                
+                document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+
+                const matchedAvatar = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw || premium3dAssets['avatar-m1'];
+                document.getElementById('userDisplayAvatar').src = matchedAvatar;
+
+                if (data.fontFamily) document.body.style.fontFamily = data.fontFamily;
+
+                if (data.bgMode === "image") {
+                    const bgImg = premium3dAssets[data.bgValue] || data.bgValue;
+                    document.body.style.backgroundImage = `url('${bgImg}')`;
+                    document.body.style.backgroundSize = "cover";
+                    document.body.style.backgroundAttachment = "fixed";
+                } else if (data.bgValue) {
+                    document.body.style.backgroundImage = "none";
+                    document.body.style.backgroundColor = data.bgValue;
+                }
+
+                const magnetBtn = document.getElementById('magnetBtn');
+                if (data.btnMode === "image") {
+                    const btnImg = premium3dAssets[data.btnValue] || data.btnValue;
+                    magnetBtn.style.backgroundImage = `url('${btnImg}')`;
+                    magnetBtn.style.backgroundColor = "transparent";
+                } else if (data.btnValue) {
+                    magnetBtn.style.backgroundImage = "none";
+                    document.documentElement.style.setProperty('--primary', data.btnValue);
+                    const parsedRgb = hexToRgb(data.btnValue);
+                    document.documentElement.style.setProperty('--glass', `rgba(${parsedRgb}, 0.15)`);
+                }
+
+                // ─── SELF PROFILE STATUS NOTE RENDERING (FIRESTORE ENGINE) ───
+                const selfBubble = document.getElementById('profile-status-bubble-node');
+                if (selfBubble) selfBubble.remove();
+
+                if (data.statusNoteText && data.statusNoteUpdatedAt) {
+                    const ageDelta = Date.now() - data.statusNoteUpdatedAt;
+
+                    if (ageDelta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
+                        localProfileNoteCache = data.statusNoteText;
+
+                        const avatarNode = document.querySelector('.profile-avatar-node');
+                        const triggerNode = document.querySelector('.profile-note-action-trigger');
+                        
+                        if (avatarNode && triggerNode) {
+                            const bubbleNode = document.createElement('div');
+                            bubbleNode.className = 'profile-status-note-bubble';
+                            bubbleNode.id = 'profile-status-bubble-node';
+                            bubbleNode.innerText = localProfileNoteCache; 
+                            
+                            if (data.statusNoteColor) {
+                                bubbleNode.style.borderColor = data.statusNoteColor;
+                                bubbleNode.style.color = data.statusNoteColor;
+                            }
+
+                            avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
+                        }
+                    } else {
+                        localProfileNoteCache = "";
+                    }
+                } else {
+                    localProfileNoteCache = "";
+                }
+
+                // ─── PRESENCE HANDSHAKE TO REALTIME DATABASE ───
+                if (!document.hidden) {
+                    const presenceData = {
+                        uid: userId,
+                        name: currentUserName,
+                        avatar: currentUserAvatarRaw,
+                        timestamp: Date.now(),
+                        statusNote: {
+                            text: data.statusNoteText || "",
+                            color: data.statusNoteColor || "#e5e5e5",
+                            updatedAt: data.statusNoteUpdatedAt || 0
+                        }
+                    };
+
+                    set(ref(rtdb, 'presence/' + userId), presenceData)
+                        .catch(err => console.error("Presence sync failed:", err));
+
+                    updateDoc(userDocRef, { isOnline: true });
+                }
+            } else {
+                forceLogoutUser();
+            }
+        });
+
+    } else {
+        // No valid user auth token fallback: bounce back to login page
+        window.location.href = "login.html";
+    }
+});
 
 /* ==========================================================================
    TYPING INDICATOR HUB LISTENER
