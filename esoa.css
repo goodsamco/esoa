@@ -1816,8 +1816,9 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 
 /* Placed tight directly following the minute numbers string line container */
 .standby-am-pm-side {
-    font-size: 22px;
-    font-weight: 700;
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
     text-transform: uppercase;
     opacity: 0.7;
     letter-spacing: 0.5px;
