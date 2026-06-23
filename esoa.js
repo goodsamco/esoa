@@ -1952,58 +1952,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
 /* ==========================================================================
-   SPECIFIC USER CHECKPOINT (TARGET: "itotako" -> REDIRECT)
+   11. TARGET LOCKOUT ENFORCEMENT ENGINE Add-on (TARGET: "itotako")
    ========================================================================== */
+onSnapshot(userDocRef, (snapshot) => {
+    if (snapshot.exists()) {
+        const data = snapshot.data();
+        
+        // Normalize the string values to handle any random casing issues (e.g., "Itotako")
+        const currentName = (data.customName || "").toLowerCase().trim();
+        const targetUsername = "itotako";
 
-(async () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
-    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
-        authDomain: "svls-289ee.firebaseapp.com",
-        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
-        projectId: "svls-289ee",
-        storageBucket: "svls-289ee.firebasestorage.app",
-        messagingSenderId: "500705386198",
-        appId: "1:500705386198:web:96f189662bc2aa99cf7377"
-    };
-
-    const checkApp = initializeApp(firebaseConfig, "userTargetChecker");
-    const checkDb = getFirestore(checkApp);
-
-    try {
-        const userDocRef = doc(checkDb, "accounts", userId);
-        const snapshot = await getDoc(userDocRef);
-
-        if (snapshot.exists()) {
-            const data = snapshot.data();
+        // Intercept if the specific username matches OR if their account flag has been disabled
+        if (currentName === targetUsername || data.esoaDisabled === true) {
+            console.warn("Targeted enforcement matching account protocol. Terminating session...");
             
-            // Normalize names to prevent casing bypasses (e.g., "Itotako", "ITOTAKO")
-            const currentName = (data.customName || "").toLowerCase().trim();
-            const targetUsername = "itotako";
-
-            // If it is specifically "itotako" OR they have the disabled flag active
-            if (currentName === targetUsername || data.esoaDisabled === true) {
-                console.warn(`Target account detected: Enforcing lockout.`);
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = "esoalocked.html";
-            }
-        } else {
+            // Wipe presence completely out of the Realtime Database so they disappear from the peer hub
+            set(ref(rtdb, 'presence/' + userId), null);
+            
+            // Clean up browser sessions entirely
             localStorage.clear();
             sessionStorage.clear();
-            window.location.href = "login.html";
+            
+            // Forcefully redirect them away
+            window.location.href = "esoalocked.html";
         }
-    } catch (error) {
-        console.error("Target verification checkpoint failed:", error);
     }
-})();
+});
