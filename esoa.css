@@ -1789,29 +1789,12 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     display: inline-block;
 }
 
-/* The exact mathematical center axis of the display viewport layout 
+/* The exact mathematical center axis of the display viewport layout */
 .standby-colon-separator {
     width: 32px;
     text-align: center;
     display: inline-block;
-}
-
-/* The exact mathematical center axis of the display viewport layout */
-.standby-colon-separator {
-    width: 32px;
-    display: inline-flex;
-    justify-content: center; /* Centers the circle horizontally within the 32px width */
-    align-items: center;     /* Centers the circle vertically */
-    vertical-align: middle;
-}
-
-/* Creates the perfect circle separator */
-.standby-colon-separator::before {
-    content: "";
-    width: 8px;              /* Adjust the size of the circle here */
-    height: 8px;             /* Must match the width */
-    background-color: currentColor; /* Inherits the current text color */
-    border-radius: 50%;      /* Makes it a perfect circle */
+    border-radius: 50%; 
 }
 
 /* Keeps minutes tracking completely balanced to the right side of the colon */
