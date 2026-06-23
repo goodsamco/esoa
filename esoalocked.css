@@ -1,0 +1,1930 @@
+/* ==========================================================================
+   1. DESIGN TOKENS & SYSTEM VARIABLES
+   ========================================================================== 
+:root {
+    --bg: #1a0f0b;
+    --surface: #140700;
+    --primary: #ff7300;
+    --success: #f97316;
+    --text-main: #fff7ed;
+    --glass: rgba(78, 78, 78, 0.15);
+    --modal-bg: rgba(20, 7, 0, 0.98);
+}
+*/
+
+:root {
+    --bg: #111111;
+    --surface: #1b1b1b;
+    --primary: #e5e5e5;
+    --success: #fbff00;
+    --text-main: #fafafa;
+    --glass: rgba(255, 255, 255, 0.08);
+    --modal-bg: rgba(17, 17, 17, 0.98);
+}
+/* ==========================================================================
+   2. BASE SYSTEM RESET & SCROLLBAR CONFIGURATION
+   ========================================================================== */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    margin: 0;
+    /* Generous breathing room for centered top layouts */
+    padding: 260px 10px 25vh 10px; 
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease;
+}
+
+/* Flash effect triggered during copy actions */
+body.copy-flash {
+    background-color: var(--primary);
+}
+
+/* Webkit Scrollbar overrides */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+
+/* ==========================================================================
+   3. PEER PRESENCE DISPLAY & HUB
+   VISUALLY MATCHES .container
+   ========================================================================== */
+
+.peer-wrapper-row {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 100%;
+    max-width: 400px;
+
+    height: 130px;
+
+    display: flex;
+    align-items: center;
+
+    border-radius: 24px;
+    border: 1px solid rgba(58, 58, 58, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    box-sizing: border-box;
+
+    z-index: 3100;
+
+    /* allow nav buttons outside */
+    overflow: visible;
+}
+
+/* ==========================================================================
+   HUB
+   ========================================================================== */
+
+.peer-active-hub {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    white-space: nowrap;
+
+    scroll-behavior: smooth;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    border-radius: 24px;
+
+    padding: 0;
+    margin: 0;
+}
+
+.peer-wrapper:first-child {
+    margin-left: 12px;
+}
+
+.peer-active-hub::-webkit-scrollbar {
+    display: none;
+}
+
+/* ==========================================================================
+   NAV BUTTONS
+   ========================================================================== */
+
+.scroll-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 115, 0, 0.08);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(78, 78, 78, 0.15);
+
+    color: var(--primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    z-index: 3200;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: all 0.25s ease;
+}
+
+/* Half inside / half outside */
+.scroll-nav-btn.prev {
+    left: -18px;
+}
+
+.scroll-nav-btn.next {
+    right: -18px;
+}
+
+.peer-wrapper-row:hover .scroll-nav-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scroll-nav-btn:hover {
+    background: rgba(255, 230, 209, 0.18);
+    border-color: rgba(66, 66, 66, 0.35);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.scroll-nav-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.5;
+}
+
+/* ==========================================================================
+   PEER WRAPPER
+   ========================================================================== */
+
+.peer-wrapper {
+    position: relative;
+
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 78px;
+    height: 115px;
+
+    transition:
+        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.peer-wrapper.is-offline {
+    filter: grayscale(100%);
+    transform: scale(0.82);
+}
+
+/* ==========================================================================
+   AVATARS
+   ========================================================================== */
+
+.peer-avatar-bubble,
+.group-chat-bubble {
+    width: 70px;
+    height: 70px;
+
+    border-radius: 50%;
+    object-fit: cover;
+
+    flex-shrink: 0;
+}
+
+.peer-avatar-bubble {
+    border: 2px solid #666;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.peer-avatar-bubble:hover {
+    border-color: var(--primary);
+    transform: scale(1.06);
+}
+
+.group-chat-bubble {
+    background: var(--primary);
+    color: #000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid var(--primary);
+
+    transition: all .2s ease;
+}
+
+.group-chat-bubble:hover {
+    transform: scale(1.06);
+    background: #fff;
+    border-color: #fff;
+}
+
+/* ==========================================================================
+   NOTIFICATION DOT
+   ==========================================================================
+
+.peer-notif-dot {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+
+    width: 12px;
+    height: 12px;
+
+    background: var(--primary);
+    border: 2px solid var(--surface);
+
+    border-radius: 50%;
+
+    display: none;
+
+    box-shadow: 0 0 8px var(--primary);
+}
+
+.peer-wrapper.has-unread .peer-notif-dot {
+    display: block;
+}
+*/
+.peer-notif-dot {
+    position: absolute;
+
+    top: 6px;
+    right: 2px;
+
+    width: 14px;
+    height: 14px;
+
+    background: var(--primary);
+    border: 2px solid var(--surface);
+
+    border-radius: 50%;
+
+    display: none;
+
+    z-index: 99999;
+
+    box-shadow:
+        0 0 8px var(--primary),
+        0 0 16px color-mix(in srgb, var(--primary) 70%, transparent);
+
+    pointer-events: none;
+}
+
+.peer-wrapper.has-unread .peer-notif-dot {
+    display: block !important;
+}
+/* ==========================================================================
+   USER NAME
+   ========================================================================== */
+
+.peer-name-hover {
+    margin-top: 6px;
+
+    width: 100%;
+
+    font-size: 0.65rem;
+    font-weight: 700;
+
+    color: white;
+
+    text-align: center;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   4. NAVIGATION CONTROL BARS
+   ========================================================================== */
+/* Shifted layout coordinate down slightly to compensate for the smaller container above */
+.top-nav {
+    position: fixed;
+    top: 165px; /* Safely clears the new 130px container bounds beautifully */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    z-index: 3000;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 6px 18px; 
+    border-radius: 32px; 
+    border: 1px solid var(--glass);
+}
+
+/* Perfect Circle Operational Buttons */
+.top-btn {
+    width: 38px;
+    height: 38px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    border-radius: 50%; 
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.top-btn:hover {
+    background: var(--primary);
+    color: #000;
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   5. PERSONAL PROFILE FLOATING TARGETS
+   ========================================================================== */
+/* Isolated Bottom-Right Profile Node (Containerless layout) */
+.profile-avatar-node {
+    position: fixed;
+    bottom: 45px;
+    right: 25px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: radial-gradient(circle, #2e3b4e 0%, #1e293b 100%);
+    border: 2px solid var(--primary);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    /* Directly layered over background content spaces */
+    z-index: 2500; 
+}
+
+.profile-avatar-node:hover {
+    transform: scale(1.05);
+}
+
+.name-string {
+    position: fixed;
+    bottom: 22px;
+    right: 25px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    /* Balanced perfectly underneath the avatar width */
+    width: 48px; 
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    z-index: 2500;
+    pointer-events: none;
+}
+
+
+/* ==========================================================================
+   6. REAL-TIME SESSION CHAT PANEL DOCK
+   ========================================================================== */
+/* ==========================================================================
+   CHAT DOCKING PANEL
+   ========================================================================== */
+
+.chat-docking-panel {
+    position: fixed;
+
+    bottom: 26vh;
+    right: 20px;
+
+    width: 340px;
+    height: 440px;
+
+    display: none;
+    flex-direction: column;
+
+    z-index: 3500;
+
+    overflow: hidden;
+
+    /* Match Sections 3 & 8 */
+    background: rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(0, 0, 0, 0.1);
+
+    border-radius: 24px;
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================================
+   CHAT HEADER
+   ========================================================================== */
+
+.chat-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 14px 16px;
+
+    background: rgba(255, 255, 255, 0.03);
+
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.chat-header-bar span {
+    font-size: 0.8rem;
+    font-weight: 800;
+
+    color: var(--primary);
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Close button consistency */
+.chat-close-trigger {
+    width: 32px;
+    height: 32px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(116, 116, 116, 0.05);
+
+    border: 1px solid rgba(78, 78, 78, 0.15);
+
+    color: var(--primary);
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all 0.2s ease;
+}
+
+.chat-close-trigger:hover {
+    background: var(--primary);
+    color: #000;
+    transform: scale(1.05);
+}
+
+.chat-scroller-view {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+
+/* ==========================================================================
+   7. CHAT MESSAGE COMPONENT OBJECTS & REACTION SYSTEM
+   ========================================================================== */
+.msg-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+    position: relative;
+}
+
+.msg-wrapper.incoming {
+    align-self: flex-start;
+}
+
+.msg-wrapper.outgoing {            
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.msg-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.msg-wrapper.outgoing .msg-meta-row {
+    flex-direction: row-reverse;
+}
+
+.msg-gc-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--primary);
+}
+
+.msg-author-tag {
+    font-size: 0.65rem;
+    color: #aaa;
+    font-weight: 700;
+}
+
+.msg-time-tag {
+    font-size: 0.6rem;
+    color: #666;
+    font-weight: 400;
+}
+
+.msg-bubble {
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    word-wrap: break-word;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.msg-bubble.incoming {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.msg-bubble.outgoing {
+    background: var(--primary);
+    color: #000;
+    font-weight: 600;
+}
+
+/* =========================================================
+   REACTIONS CONTAINER (VISUALLY HIDDEN BUT STRUCTURE KEPT)
+   ========================================================= */
+
+.msg-reaction-container {
+    display: flex;
+    gap: 4px;
+    margin-top: -4px;
+    z-index: 10;
+
+    /* invisible container */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+
+    align-items: center;
+}
+
+/* =========================================================
+   REACTION PILL (INDIVIDUAL REACTION ITEM)
+   ========================================================= */
+
+.reaction-pill {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+
+    /* keep it minimal */
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.reaction-pill:hover {
+    transform: scale(1.1);
+}
+
+/* =========================================================
+   USER VOTED STATE (SUBTLE HIGHLIGHT ONLY)
+   ========================================================= */
+
+.reaction-pill.user-voted {
+    background: rgba(168, 168, 168, 0.12);
+    padding: 0 2px;
+    border-radius: 4px;
+}
+
+/* =========================================================
+   REACTION COUNT TEXT
+   ========================================================= */
+
+.reaction-count {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* =========================================================
+   FLOATING REACTION PICKER (POPOVER)
+   ========================================================= */
+
+.reaction-picker-tray {
+    position: absolute;
+
+    /* keep visible but lightweight */
+    background: rgba(22, 20, 20, 0.35);
+    border: 1px solid rgba(32, 32, 32, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    padding: 4px 8px;
+    border-radius: 20px;
+
+    display: flex;
+    gap: 6px;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+
+    z-index: 4000;
+
+    top: -35px;
+}
+
+/* position based on message side */
+.msg-wrapper.incoming .reaction-picker-tray {
+    left: 0;
+}
+
+.msg-wrapper.outgoing .reaction-picker-tray {
+    right: 0;
+}
+
+/* =========================================================
+   REACTION OPTIONS (EMOJIS)
+   ========================================================= */
+
+.reaction-option {
+    cursor: pointer;
+    font-size: 1.1rem;
+
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.reaction-option:hover {
+    transform: scale(1.25);
+    filter: brightness(1.2);
+}
+
+.chat-input-row {
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+   background: rgba(255, 255, 255, 0.03);
+}
+
+.chat-input-row input {
+    flex: 1;
+    background: #000;
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    border-radius: 8px;
+    color: white;
+    padding: 8px;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.chat-input-row input:focus {
+    border-color: var(--primary);
+}
+
+.chat-input-row button {
+    background: var(--primary);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   8. CORE LAYOUT CONTAINERS & GRID LINES
+   ========================================================================== */
+.container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    /* MATCH SECTION 3 */
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Dynamic Selection Tracking Mask */
+#highlighter {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    border: 2px solid var(--primary);
+    background-color: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    z-index: 1;
+    opacity: 0;
+}
+
+h2 {
+    font-size: 0.7rem;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 30px 0 10px 10px;
+    opacity: 0.6;
+}
+
+.item-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    margin: 4px 0;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.item-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.text-content {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.text-active {
+    color: var(--primary);
+    text-shadow: 0 0 12px var(--primary);
+}
+
+.add-btn-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(116, 116, 116, 0.05);
+    border: 1px dashed var(--primary);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 10px 0 20px 10px;
+    transition: all 0.2s ease;
+}
+
+.add-btn-circle:hover {
+    background: var(--primary);
+    color: #000;
+    transform: scale(1.1);
+}
+
+
+/* ==========================================================================
+   9. MAGNETIC COPY ZONE LAYERS (BOTTOM INTERACTIVE PANEL)
+   ========================================================================== */
+/* Broadened & Flattened Copy Button */
+.bottom-zone {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 25vh;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.btn-main-copy {
+    width: 160px;
+    height: 70px;
+    border: none;
+    border-radius: 35px;
+    font-weight: 800;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+
+    background-color: var(--primary);
+    color: #000;
+
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+
+    /* 🔥 glow now follows button color */
+    filter: drop-shadow(0 0 12px var(--primary));
+}
+
+.bottom-zone:hover .btn-main-copy:not(.success-state) {
+    width: 250px;
+    height: 120px;
+}
+
+/*.btn-main-copy.success-state {
+    background-image: none !important;
+    background-color: #fbff00;
+    color: #000;
+    text-shadow: none;
+    border-radius: 35px;
+    box-shadow: 0 0 30px rgba(255, 212, 0, 0.9);
+    transform: scale(1.05);
+}
+}*/
+
+.btn-main-copy.success-state {
+    background: #fbff00 !important;
+    background-image: none !important;
+    color: #000 !important;
+
+    opacity: 1 !important;
+    filter: none !important;
+
+    animation: flashFade 0.9s ease-out forwards;
+}
+
+@keyframes flashFade {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 255, 0, 0);
+    }
+
+    20% {
+        transform: scale(1.12);
+        box-shadow:
+            0 0 15px rgba(255, 255, 0, 1),
+            0 0 40px rgba(255, 230, 0, 0.9),
+            0 0 100px rgba(255, 200, 0, 0.8);
+    }
+
+    60% {
+        transform: scale(1.05);
+        box-shadow:
+            0 0 25px rgba(255, 230, 0, 0.4),
+            0 0 60px rgba(255, 200, 0, 0.2);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 255, 0, 0);
+    }
+}
+
+/* ==========================================================================
+   10. SYSTEM MODAL BOX OVERLAYS
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 4000;
+    
+    /* 1. Use a fixed blur instead of animating it */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0);
+
+    /* 2. Animate opacity and background color only */
+    opacity: 0;
+    transition: 
+        opacity 0.22s ease, 
+        background-color 0.22s ease;
+}
+
+/* Use a separate utility class or handle display state in tandem with JS */
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 400px;
+    padding: 30px 24px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.04);
+    
+    /* Removed individual backdrop-filter to prevent double processing stacking contexts */
+    
+    border: 1px solid rgba(78, 78, 78, 0.15);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+    max-height: 80vh;
+    overflow-y: auto;
+    
+    /* 3. Keep performance properties entirely isolated */
+    opacity: 0;
+    transform: scale(0.92) translateY(15px);
+    will-change: transform, opacity; /* Hints GPU to separate this layer */
+    
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active .modal-content {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+   
+}.list-item {
+    padding: 16px;
+    margin: 8px 0;
+    border-radius: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s;
+    color: var(--text-main);
+    background: rgba(82, 82, 82, 0.02);
+    border: 1px solid rgba(116, 116, 116, 0.05);
+}
+
+.list-item:hover {
+    background-color: rgba(255,255,255,0.04);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 0.65rem;
+    color: var(--primary);
+    margin-left: 10px;
+    font-weight: 800;
+}
+
+.modal-content input {
+    width: 100%;
+    background: #000;
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    padding: 16px;
+    margin-top: 5px;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.3rem;
+    box-sizing: border-box;
+    text-align: center;
+    font-weight: 700;
+    outline: none;
+}
+
+.modal-content input:focus {
+    border-color: var(--primary);
+}
+
+.modal-result {
+    margin: 25px 0;
+    padding: 20px;
+    background-color: rgba(255,255,255,0.04);
+    border-radius: 20px;
+    border: 1px dashed var(--primary);
+}
+
+#finalDiscount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.modal-copy-zone {
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background: var(--primary);
+    color: #000;
+    border-radius: 16px;
+    font-weight: 800;
+    transition: 0.2s;
+}
+
+.modal-copy-zone.success-state {
+    background: var(--primary);
+    color: #fff;
+}
+
+.modal-close-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   11. KEYFRAME ANIMATION COMPONENT STYLES
+   ========================================================================== */
+@keyframes idleFloat {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(0, -5px); }
+}
+
+.btn-main-copy.idle {
+    animation: idleFloat 3.5s ease-in-out infinite;
+}
+
+
+
+
+
+
+/* ==========================================================================
+   HUB TYPING INDICATOR
+   MATCHES PEER-NAME-HOVER WITHOUT SHIFTING LAYOUT
+   ========================================================================== */
+/*
+.peer-name-hover {
+    margin-top: 6px;
+
+    width: 100%;
+
+    font-size: 0.65rem;
+    font-weight: 700;
+
+    color: white;
+
+    text-align: center;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+*/
+
+/* typing dots */
+.typing-dot {
+    width: 10px;
+    height: 10px;
+   color: var(--primary);
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: currentColor;
+
+    display: inline-block;
+
+    opacity: 0.35;
+
+    animation: typingPulse 1.2s infinite ease-in-out;
+}
+
+
+.typing-dot:nth-child(2) {
+    animation-delay: .2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: .4s;
+}
+
+
+@keyframes typingPulse {
+
+    0%, 60%, 100% {
+        opacity: .35;
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+}
+
+
+
+
+/* ==========================================================================
+   12. REACTION TRAY EXTENSIONS (EDIT & DELETE INLINE CONTROLS)
+   ========================================================================== */
+
+/* Custom operational tools added alongside the reaction picker option row */
+.reaction-picker-tray .msg-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    user-select: none;
+}
+
+.reaction-picker-tray .edit-btn {
+    color: #409eff;
+}
+
+.reaction-picker-tray .edit-btn:hover {
+    background-color: rgba(64, 158, 255, 0.15);
+    color: #66b1ff;
+}
+
+.reaction-picker-tray .delete-btn {
+    color: #f56c6c;
+}
+
+.reaction-picker-tray .delete-btn:hover {
+    background-color: rgba(245, 108, 108, 0.15);
+    color: #feb2b2;
+}
+
+/* Clear vertical divider dividing reactions from action buttons */
+.reaction-picker-tray .msg-action-btn:first-of-type {
+    margin-left: 8px !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    padding-left: 10px;
+}
+
+/* --- DM Metadata Layout Adjustments --- */
+.msg-wrapper.outgoing .dm-meta {
+    justify-content: flex-end;
+    margin-top: 4px;
+    margin-right: 4px;
+}
+
+.msg-wrapper.incoming .dm-meta {
+    justify-content: flex-start;
+    margin-top: 4px;
+    margin-left: 4px;
+}
+/* --- Soft-Deleted Message Bubble Modification Layouts --- */
+.msg-bubble.msg-deleted-state {
+    background: transparent !important;
+    border: 1px dashed rgba(255, 255, 255, 0.35) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-style: italic !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    cursor: default !important;
+    pointer-events: none; /* Block selection/clicking behaviors */
+}
+
+/* --- Global Layout Alignment for DM Metadata Header Rows --- */
+.msg-wrapper.outgoing .msg-meta-row:not(.dm-meta) {
+    justify-content: flex-end;
+    margin-bottom: 4px;
+}
+.msg-wrapper.incoming .msg-meta-row:not(.dm-meta) {
+    justify-content: flex-start;
+    margin-bottom: 4px;
+}
+
+/* --- Inline Reaction Plus Trigger Custom Adjustments --- */
+.expansion-trigger-node {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+    font-size: 0.78rem;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+.expansion-trigger-node:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-style: solid !important;
+}
+
+
+/* ==========================================================================
+   13.REPLY LAYOUT ARCHITECTURES (MESSENGER STYLINGS)
+   ========================================================================== */
+
+/* Ghost Preview In Scroller List Layer */
+.msg-ghost-reply-preview {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 2px solid rgba(255, 255, 255, 0.25);
+    padding: 4px 10px;
+    margin-bottom: -2px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    max-width: 85%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-wrapper.outgoing .msg-ghost-reply-preview {
+    align-self: flex-end;
+    border-left: none;
+    border-right: 2px solid var(--primary);
+}
+
+/* Staging Bar Injected Above Input Field Row */
+#chatReplyTrackIndicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(20, 20, 20, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 14px;
+}
+
+.reply-track-contents span {
+    font-size: 0.65rem;
+    color: var(--primary);
+    text-transform: uppercase;
+}
+
+.reply-track-contents p {
+    margin: 2px 0 0 0;
+    font-size: 0.78rem;
+    color: #ccc;
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#chatReplyTrackIndicator button {
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+#chatReplyTrackIndicator button:hover {
+    color: #fff;
+}
+
+/* Operational Tray Action Buttons Layout */
+.reaction-picker-tray .reply-btn {
+    color: #a855f7;
+}
+.reaction-picker-tray .reply-btn:hover {
+    background-color: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+}
+
+/* Divider separator placement rules */
+.reaction-picker-tray .tray-plus-trigger {
+    cursor: pointer;
+    padding-right: 6px;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+.reaction-picker-tray .msg-action-btn:first-of-type {
+    margin-left: 4px !important;
+}
+
+/* --- Floating Native Emoji Matrix Grid --- */
+.native-emoji-matrix-panel {
+    position: absolute;
+    bottom: 42px;
+    left: 10px;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    z-index: 8000;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    animation: fadeInTray 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.matrix-emoji-node {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.1s ease, transform 0.1s ease;
+}
+
+.matrix-emoji-node:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: scale(1.15);
+}
+
+.matrix-emoji-node:active {
+    transform: scale(0.95);
+}
+
+/* Ensure outgoing message wrappers place the panel appropriately */
+.msg-wrapper.outgoing .native-emoji-matrix-panel {
+    left: auto;
+    right: 10px;
+}
+
+
+/* ==========================================================================
+   14.ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES (WRAPPING)
+   ========================================================================== */
+
+/* Sits close on top of individual peer avatar bubbles and wraps text downward 
+.peer-status-note {
+    position: absolute;
+    top: -6px; 
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); 
+    backdrop-filter: blur(12px) saturate(180%); 
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    font-size: 0.48rem; 
+    letter-spacing: 0.3px;
+    font-weight: 800;
+    padding: 3px 6px;
+    border-radius: 8px;
+    width: 50px; 
+    white-space: normal;
+    word-break: break-word;
+    border: 0.5px solid rgba(255, 255, 255, 0.08); 
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    z-index: 3300;
+    pointer-events: none;
+    text-align: center;
+    text-transform: none;
+}
+*/
+
+/* Sits close on top of individual peer avatar bubbles and wraps text downward */
+.peer-status-note {
+    position: absolute;
+    top: -6px; 
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); /* Translucent background */
+    backdrop-filter: blur(12px) saturate(180%); /* Glassmorphism blur engine */
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    font-size: 0.48rem; 
+    letter-spacing: 0.3px;
+    font-weight: 800;
+    padding: 3px 6px;
+    border-radius: 8px; /* Smoother rounded radius */
+    width: 50px; /* Locked width to force downward stacking */
+    white-space: normal;
+    word-break: break-word;
+    border: 0.5px solid currentColor; /* Automatically mirrors the exact dynamic text color variable */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    z-index: 3300;
+    pointer-events: none;
+    text-align: center;
+    text-transform: none; /* Allows any typed casing (mix, lower, upper) */
+}
+
+/* Shared baseline settings for thought trail bubbles - matching identical background/glass/border aesthetics */
+.peer-status-note::before,
+.peer-status-note::after {
+    content: '';
+    position: absolute;
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 0.5px solid currentColor; /* Forces child trail bubbles to inherit the same text color from the parent */
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+/* Top Trail Bubble: Attached directly at the far bottom-left corner */
+.peer-status-note::before {
+    width: 6px;
+    height: 6px;
+    bottom: -4px;
+    left: 0px; /* Outermost point on the left side */
+}
+
+/* Bottom Trail Bubble: Steps further down and inward towards the right */
+.peer-status-note::after {
+    width: 4px;
+    height: 4px;
+    bottom: -8px;
+    left: 5px; /* Shifted inward towards the right/inner core */
+}
+
+/* Sits close on top of your own bottom-right profile avatar node and wraps downward */
+.profile-status-note-bubble {
+    position: fixed;
+    bottom: 118px; /* Stacked up cleanly on top of your avatar */
+    right: 25px;
+    width: 48px; /* Perfectly inline with profile avatar width boundaries */
+    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); /* Translucent background */
+    backdrop-filter: blur(12px) saturate(180%); /* Glassmorphism blur engine */
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    color: var(--text-main);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 4px;
+    border-radius: 10px; /* Smoother rounded radius */
+    white-space: normal;
+    word-break: break-word;
+    border: 0.5px solid rgba(255, 255, 255, 0.08); /* Thinner hairline border */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 2505;
+    text-align: center;
+    text-transform: none; /* Allows any typed casing (mix, lower, upper) */
+}
+
+/* Plus (+) trigger node placed persistently on top of your profile avatar head line */
+.profile-note-action-trigger {
+    position: fixed;
+    bottom: 96px; /* Positioned directly touching the head of your 48px profile avatar */
+    right: 39px;  /* Centered perfectly over your 48px avatar width line */
+    background: var(--primary);
+    color: #000000;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    z-index: 2510;
+    opacity: 1; /* Forced fully visible and persistent on load */
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Subtle feedback accent scale up when interacting directly with the trigger */
+.profile-note-action-trigger:hover {
+    transform: scale(1.15);
+}
+
+/* Character counter preview element indicator inside your single-themed layout */
+.modal-char-counter {
+    font-size: 0.7rem;
+    color: var(--primary);
+    text-align: right;
+    margin-top: 6px;
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+/* ==========================================================================\n   STANDBY MODE (APPLE-STYLE) \n   ==========================================================================
+15.
+/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (SYMMETRICAL SLIDING CIRCLES)\n   ========================================================================== 
+
+#standby-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 10, 0.25);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: backdrop-filter 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+                opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+body.standby-active #standby-overlay {
+    opacity: 1;
+    pointer-events: auto;
+    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(35px);
+}
+
+body.standby-active > :not(#standby-overlay) {
+    filter: blur(5px);
+    transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+
+.standby-stage {
+    position: relative;
+    width: 0;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.standby-center-profile {
+    position: absolute;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+    z-index: 50;
+    transform: translate(-50%, -50%) scale(0.3);
+    left: 50%;
+    top: 50%;
+    opacity: 0;
+    transition: transform 0.9s cubic-bezier(0.34, 1.6, 0.64, 1), opacity 0.5s ease;
+}
+
+body.standby-active .standby-center-profile {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+
+.standby-orbit-ring {
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: 50%;
+    top: 50%;
+    animation: standbyClockwiseRotation 120s linear infinite;
+}
+
+
+.standby-node-slot {
+    position: absolute;
+    width: 0;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translate(var(--tx), var(--ty));
+    transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+
+.standby-ambient-dot {
+    position: absolute;
+    width: var(--dot-size, 6px);
+    height: var(--dot-size, 6px);
+    border-radius: 50%;
+    background-color: var(--primary);
+    opacity: 0.25;
+    box-shadow: 0 0 8px var(--primary);/
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--base-rotation, 0deg)));
+    transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
+                height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
+                opacity 0.4s ease,
+                box-shadow 0.4s ease,
+                transform 0.1s linear;
+}
+
+.standby-node-slot.is-active .standby-ambient-dot {
+    width: 50px;   
+    height: 50px;
+    opacity: 1;
+    background-image: var(--avatar-img);
+    background-size: cover;
+    background-position: center;
+    border: 2px solid var(--primary);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes standbyClockwiseRotation {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+*/
+
+/* ==========================================================================\n   STANDBY AMBIENT CONSTELLATION LAYER (WITH SYSTEM CLOCK & DATE)\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY AMBIENT MODE (COLON-CENTERED 12H CLOCK + HIDDEN HOVER ICON)\n   ========================================================================== */
+
+/* Stealth Corner Boundary Box for easy hover selection */
+.standby-trigger-boundary-box {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    z-index: 999999;
+}
+
+/* Small, minimal circled button concealed until hovered over the boundary area */
+.standby-manual-trigger-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.4s ease, background 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 0;
+}
+
+/* Reveal when hovering over the top-right zone */
+.standby-trigger-boundary-box:hover .standby-manual-trigger-btn {
+    opacity: 0.6;
+    pointer-events: auto;
+}
+.standby-manual-trigger-btn:hover {
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.08);
+}
+
+#standby-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 10, 0.35);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: backdrop-filter 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+                opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+body.standby-active #standby-overlay {
+    opacity: 1;
+    pointer-events: auto;
+    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(35px);
+}
+
+body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) {
+    filter: blur(5px);
+    transition: filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Colon Centered Grid Architecture Layout */
+.standby-clock-container {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 100000;
+    user-select: none;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+/*
+.standby-time-display {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 84px;
+    font-weight: 800;
+    line-height: 1.0;
+    color: var(--primary);
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-feature-settings: "tnum";
+    font-feature-settings: "tnum";
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+}
+*/
+.standby-time-display {
+    font-family: "Big Shoulders Display", sans-serif;
+    font-size: 200px;
+    font-weight: 900;
+    line-height: 0.75;
+    color: var(--primary);
+
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+
+    letter-spacing: 1px;
+}
+
+/* Keeps hours tracking completely balanced to the left side of the colon */
+.standby-hours-box {
+    text-align: right;
+    width: 160px;
+    display: inline-block;
+}
+
+/* The exact mathematical center axis of the display viewport layout */
+.standby-colon-separator {
+    width: 32px;
+    text-align: center;
+    display: inline-block;
+    border-radius: 50%; 
+}
+
+/* Keeps minutes tracking completely balanced to the right side of the colon */
+.standby-minutes-box {
+    text-align: left;
+    width: 160px;
+    display: inline-flex;
+    align-items: baseline;
+}
+
+.standby-digit-minutes {
+    display: inline-block;
+    transition: filter 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+}
+.standby-digit-minutes.is-shifting {
+    filter: blur(8px);
+    opacity: 0.3;
+}
+
+/* Placed tight directly following the minute numbers string line container */
+.standby-am-pm-side {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    text-transform: uppercase;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
+    margin-left: 4px; /* Just the right amount of organic spacing */
+}
+
+/* Normal weight date presentation layer text */
+.standby-date-display {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    font-weight: 400; /* Regular / Normal thickness weight profile */
+    color: var(--primary);
+    opacity: 0.65;
+    letter-spacing: 0.5px;
+    margin-top: 14px;
+    text-transform: uppercase;
+}
+
+/* Constellation Stage Component Layers */
+.standby-stage {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.standby-center-profile {
+    position: absolute;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+    z-index: 50;
+    transform: translate(-50%, -50%) scale(0.3);
+    left: 50%;
+    top: 50%;
+    opacity: 0;
+    transition: transform 0.9s cubic-bezier(0.34, 1.6, 0.64, 1), opacity 0.5s ease;
+}
+
+body.standby-active .standby-center-profile {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.standby-orbit-ring {
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: 50%;
+    top: 50%;
+    animation: standbyClockwiseRotation 120s linear infinite;
+}
+
+.standby-node-slot {
+    position: absolute;
+    width: 0;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translate(var(--tx), var(--ty));
+    transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.standby-ambient-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--dot-size, 6px);
+    height: var(--dot-size, 6px);
+    border-radius: 50%;
+    background-color: var(--primary);
+    opacity: 0.25;
+    box-shadow: 0 0 8px var(--primary);
+    transform: translate(-50%, -50%) rotate(360deg);
+    animation: standbyCounterClockwiseRotation 120s linear infinite;
+    transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
+                height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
+                opacity 0.4s ease,
+                box-shadow 0.4s ease;
+}
+
+.standby-node-slot.is-active .standby-ambient-dot {
+    width: 50px;   
+    height: 50px;
+    opacity: 1;
+    background-image: var(--avatar-img);
+    background-size: cover;
+    background-position: center;
+    border: 2px solid var(--primary);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes standbyClockwiseRotation {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes standbyCounterClockwiseRotation {
+    from { transform: translate(-50%, -50%) rotate(360deg); }
+    to { transform: translate(-50%, -50%) rotate(0deg); }
+}
