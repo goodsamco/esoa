@@ -222,16 +222,6 @@ body.copy-flash {
    ========================================================================== */
 
 .peer-avatar-bubble,
-.group-chat-bubble {
-    width: 70px;
-    height: 70px;
-
-    border-radius: 50%;
-    object-fit: cover;
-
-    flex-shrink: 0;
-}
-
 .peer-avatar-bubble {
     border: 2px solid #666;
     cursor: pointer;
