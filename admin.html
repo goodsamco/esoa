@@ -1,381 +1,304 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eSOA — Control Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>eSOA - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0b0f1a;
-            --surface: rgba(255, 255, 255, 0.03);
-            --primary: #38bdf8;
-            --text-main: #f1f5f9;
-            --text-muted: #64748b;
-            --glass: rgba(255, 255, 255, 0.06);
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --success: #10b981;
+            --bg: #1a0f0b;
+            --surface: #140700;
+            --surface-card: rgba(255, 115, 0, 0.04);
+            --primary: #ff7300;
+            --success: #f97316;
             --danger: #ef4444;
-            --warning: #f59e0b;
+            --text-main: #fff7ed;
+            --text-muted: #a16207;
+            --glass: rgba(255, 115, 0, 0.15);
+            --border-glass: rgba(255, 115, 0, 0.1);
+            --default-avatar: url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&q=80');
         }
-        
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #331a10;
+            border-radius: 10px;
+        }
 
         body {
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 15px;
-            box-sizing: border-box;
+            padding: 40px 10px;
+            display: flex;
+            justify-content: center;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            box-sizing: border-box;
         }
 
-        .dashboard-header {
+        .container {
             width: 100%;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            max-width: 600px;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 115, 0, 0.1);
         }
 
-        .dashboard-header h1 {
+        h2 {
             font-size: 1.1rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            text-transform: uppercase;
-            color: var(--text-main);
-            margin: 0;
-        }
-
-        .dashboard-header h1 span {
             color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 800;
         }
 
-        /* Narrow Screen Mobile Navigation Tabs */
-        .tab-navigation {
+        /* Tabs Navigation */
+        .tabs {
             display: flex;
-            background: rgba(0, 0, 0, 0.4);
+            gap: 6px;
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            border-radius: 14px;
             border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 15px;
-            gap: 4px;
         }
 
         .tab-btn {
-            flex: 1;
-            background: none;
+            background: transparent;
             border: none;
-            color: var(--text-muted);
-            padding: 10px 5px;
-            font-size: 0.75rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-radius: 8px;
+            color: #8a7a73;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
+            border-radius: 10px;
             transition: all 0.2s ease;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            flex: 1;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
         }
 
         .tab-btn.active {
-            background: var(--surface);
+            background: rgba(255, 115, 0, 0.15);
             color: var(--primary);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 115, 0, 0.2);
         }
 
-        .main-content {
-            flex-grow: 1;
-            position: relative;
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chat-monitor-viewport {
             display: flex;
             flex-direction: column;
+            gap: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
 
-        .panel-card {
-            background: var(--surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+        /* User Identity List Cards */
+        .user-card {
+            background: var(--surface-card);
             border: 1px solid var(--border-glass);
-            border-radius: 20px;
             padding: 16px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 140px);
-            box-sizing: border-box;
-        }
-
-        .panel-card h2 {
-            font-size: 0.9rem;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-glass);
-            padding-bottom: 12px;
-            color: var(--primary);
+            border-radius: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .scrollable-area {
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        /* Card Entries */
-        .request-item, .user-row-card {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .badge {
-            font-size: 0.6rem;
-            font-weight: 800;
-            padding: 4px 8px;
-            border-radius: 20px;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
-        .badge-reg { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
-        .badge-mod { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-
-        .meta-title { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
-        .meta-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
-        
-        .value-comparison {
-            background: rgba(0,0,0,0.25);
-            padding: 6px 10px;
-            border-radius: 6px;
-            margin-top: 8px;
-            font-size: 0.78rem;
-            font-family: monospace;
-            word-break: break-all;
-        }
-
-        .action-container {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        /* Buttons Core Framework */
-        .btn {
-            border: none;
-            padding: 8px 12px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            border-radius: 30px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            transition: all 0.2s ease;
-        }
-
-        .btn-approve { background: var(--success); color: #000; flex: 1; }
-        .btn-reject { background: var(--danger); color: #fff; flex: 1; }
-        .btn-disable { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-        .btn-refresh { background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); }
-        .btn-logout { background: var(--danger); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.65rem; }
-        .btn-send { background: var(--primary); color: #000; border-radius: 50%; width: 42px; height: 42px; padding: 0; display: flex; align-items: center; justify-content: center; shrink: 0; }
-
-        /* Mobile Responsive Comprehensive Chat Monitor */
-        .chat-window {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .chat-feed {
-            flex-grow: 1;
-            overflow-y: auto;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .chat-msg {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 0.82rem;
-            line-height: 1.4;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-msg.incoming {
-            background: rgba(255,255,255,0.04);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .chat-msg.outgoing {
-            background: var(--primary);
-            color: #0b0f1a;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .chat-msg .author {
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 3px;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-        }
-
-        .chat-msg.outgoing .author {
-            color: rgba(11, 15, 26, 0.7);
-        }
-
-        .chat-msg .time {
-            font-size: 0.58rem;
-            opacity: 0.5;
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        .chat-input-form {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .chat-input-form input {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--border-glass);
-            padding: 12px 16px;
-            border-radius: 24px;
-            color: #fff;
-            outline: none;
-            font-size: 0.85rem;
-        }
-
-        .chat-input-form input:focus {
-            border-color: var(--primary);
-        }
-
-        /* User Operational Row Layout Layout */
-        .user-meta-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .user-identity {
+        .identity-block {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
         }
 
-        .user-avatar-indicator {
-            width: 36px;
-            height: 36px;
+        .avatar-node {
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             background-size: cover;
             background-position: center;
-            border: 1px solid var(--border-glass);
-            background-color: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 115, 0, 0.2);
             flex-shrink: 0;
+            background-image: var(--default-avatar);
         }
 
-        .user-actions-row {
+        .user-info {
+            text-align: left;
+        }
+
+        .user-info .name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
             display: flex;
-            gap: 6px;
-            width: 100%;
+            align-items: center;
+            gap: 8px;
         }
 
-        .user-actions-row .btn {
+        .user-info .username {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 800;
+        }
+
+        .status-badge.active {
+            background: rgba(249, 115, 22, 0.15);
+            color: #fdba74;
+        }
+
+        .status-badge.offline {
+            background: rgba(255, 255, 255, 0.05);
+            color: #78716c;
+        }
+
+        /* Control UI Actions */
+        .btn {
+            color: #000;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .btn-approve {
+            background: var(--primary);
+        }
+
+        .btn-disable {
+            background: #b45309;
+            color: #fff;
+        }
+
+        .btn-enable {
+            background: #c2410c;
+            color: #fff;
+        }
+
+        /* Chat Log Monitor Component Layouts */
+        .chat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .chat-details {
             flex: 1;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .hidden { display: none !important; }
+        .chat-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #d97706;
+        }
+
+        .chat-msg {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            line-height: 1.4;
+            word-break: break-word;
+            text-align: left;
+        }
+
+        .chat-time {
+            font-size: 0.7rem;
+            color: #78350f;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #78716c;
+            padding: 40px 0;
+            font-size: 0.9rem;
+        }
+
+        .logout-link {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: #78716c;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .logout-link:hover {
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
 
-    <header class="dashboard-header">
-        <h1>eSOA <span>// Engine</span></h1>
-        <button class="btn btn-logout" id="btnLogOut">LOG OUT</button>
-    </header>
+<div class="container">
+    <h2>Management Dashboard</h2>
+    
+    <div class="tabs">
+        <button class="tab-btn active" id="btn-approvals">Approvals</button>
+        <button class="tab-btn" id="btn-activity">Active & Access Control</button>
+        <button class="tab-btn" id="btn-chats">Chat Monitor</button>
+    </div>
 
-    <!-- Narrow View Mobile Navigation Matrix -->
-    <nav class="tab-navigation">
-        <button class="tab-btn active" onclick="switchTab('approvals-tab')">
-            Approvals <span id="navCountBadge" style="color:var(--warning)">0</span>
-        </button>
-        <button class="tab-btn" onclick="switchTab('users-tab')">Users</button>
-        <button class="tab-btn" onclick="switchTab('chat-tab')">Monitor</button>
-    </nav>
+    <div id="approvals" class="tab-content active">
+        <div id="userList" class="chat-monitor-viewport">Loading registrations...</div>
+    </div>
 
-    <main class="main-content">
-        
-        <!-- Tab 1: Combined Approvals Section -->
-        <section id="approvals-tab" class="panel-card">
-            <h2>Approval Streams <span id="countApprovals" class="badge badge-reg">0 Pending</span></h2>
-            <div class="scrollable-area" id="approvalsContainer"></div>
-        </section>
+    <div id="activity" class="tab-content">
+        <div id="activeUserList" class="chat-monitor-viewport">Loading accounts...</div>
+    </div>
 
-        <!-- Tab 2: Users Directory with Separate Mutation Controls -->
-        <section id="users-tab" class="panel-card hidden">
-            <h2>Registrants Ledger</h2>
-            <div class="scrollable-area" id="usersContainer"></div>
-        </section>
+    <div id="chats" class="tab-content">
+        <div id="chatLogsList" class="chat-monitor-viewport">Loading live conversations...</div>
+    </div>
+</div>
 
-        <!-- Tab 3: Interactive Visual Monitor Interface -->
-        <section id="chat-tab" class="panel-card hidden">
-            <h2>Chat Feed Terminal</h2>
-            <div class="chat-window">
-                <div class="chat-feed" id="chatFeedBox"></div>
-                <form class="chat-input-form" id="chatInputForm">
-                    <input type="text" id="chatField" placeholder="Send admin override text..." required autocomplete="off">
-                    <button type="submit" class="btn btn-send">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                    </button>
-                </form>
-            </div>
-        </section>
-
-    </main>
+<a href="login.html" class="logout-link" onclick="localStorage.clear()">Log out Management</a>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-        getFirestore, collection, getDocs, doc, query, where, 
-        addDoc, updateDoc, deleteDoc, onSnapshot, orderBy, limit, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -390,234 +313,233 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const rtdb = getDatabase(app);
 
-    // Navigation Tab Switching Engine Logic
-    window.switchTab = function(tabId) {
-        document.querySelectorAll('.panel-card').forEach(card => card.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        
-        document.getElementById(tabId).classList.remove('hidden');
-        event.currentTarget.classList.add('active');
-
-        if(tabId === 'chat-tab') {
-            const feedBox = document.getElementById('chatFeedBox');
-            feedBox.scrollTop = feedBox.scrollHeight;
-        }
-    }
-
-    // Role verification handler
-    const currentRole = localStorage.getItem("userRole");
-    if (currentRole !== "admin") {
+    if (localStorage.getItem("userRole") !== "admin") {
         window.location.href = "login.html";
     }
 
-    document.getElementById('btnLogOut').addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = "login.html";
-    });
+    // Stores multi-property object blocks for full profile identification resolution
+    const cachedUserDirectory = {};
 
-    // Unified Approvals Tracker Engine
-    function startRealtimeApprovalsEcosystem() {
-        let pendingRegList = [];
-        let pendingUpdateList = [];
-
-        const qReg = query(collection(db, "accounts"), where("status", "==", "pending"));
-        onSnapshot(qReg, (snap) => {
-            pendingRegList = snap.docs.map(doc => ({ id: doc.id, type: 'registration', ...doc.data() }));
-            renderCombinedApprovals(pendingRegList, pendingUpdateList);
-        });
-
-        const qUpdate = query(collection(db, "update_requests"), where("status", "==", "pending"));
-        onSnapshot(qUpdate, (snap) => {
-            pendingUpdateList = snap.docs.map(doc => ({ id: doc.id, type: 'update', ...doc.data() }));
-            renderCombinedApprovals(pendingRegList, pendingUpdateList);
+    // --- POPULATE AND SYNC ACCOUNT IDENTITIES ---
+    function syncUserDirectory() {
+        const q = query(collection(db, "accounts"));
+        onSnapshot(q, (snapshot) => {
+            snapshot.forEach(uDoc => {
+                const data = uDoc.data();
+                cachedUserDirectory[uDoc.id] = {
+                    displayName: data.customName || data.name || `@${data.username}`,
+                    avatarUrl: data.avatarUrl || ""
+                };
+            });
         });
     }
+    syncUserDirectory();
 
-    function renderCombinedApprovals(regArray, updateArray) {
-        const target = document.getElementById('approvalsContainer');
-        const countBadge = document.getElementById('countApprovals');
-        const navBadge = document.getElementById('navCountBadge');
-        target.innerHTML = '';
-        
-        const combined = [...regArray, ...updateArray];
-        countBadge.innerText = `${combined.length} Pending`;
-        navBadge.innerText = combined.length;
-
-        if(combined.length === 0) {
-            target.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding-top:40px; font-size:0.8rem;">Queue clear. No elements pending.</div>`;
-            return;
-        }
-
-        combined.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'request-item';
-
-            if(item.type === 'registration') {
-                card.innerHTML = `
-                    <div class="item-header">
-                        <span class="badge badge-reg">Registration</span>
-                        <div style="font-size:0.7rem; color:var(--text-muted);">..${item.id.substring(0,6)}</div>
-                    </div>
-                    <div class="meta-title">${item.name || 'Anonymous Node'}</div>
-                    <div class="meta-sub">User: <strong>@${item.username}</strong></div>
-                    <div class="action-container">
-                        <button class="btn btn-approve" onclick="resolveRegistration('${item.id}', true)">Accept</button>
-                        <button class="btn btn-reject" onclick="resolveRegistration('${item.id}', false)">Deny</button>
-                    </div>
-                `;
-            } else {
-                card.innerHTML = `
-                    <div class="item-header">
-                        <span class="badge badge-mod">Modification</span>
-                        <div style="font-size:0.7rem; color:var(--text-muted);">..${item.id.substring(0,6)}</div>
-                    </div>
-                    <div class="meta-title">@${item.currentUsername}</div>
-                    <div class="meta-sub">Field: <span style="color:var(--warning); font-weight:600;">${item.requestType.toUpperCase()}</span></div>
-                    <div class="value-comparison">${item.newValue}</div>
-                    <div class="action-container">
-                        <button class="btn btn-approve" onclick="resolveDataModification('${item.id}', '${item.accountId}', '${item.requestType}', '${item.newValue}', true)">Commit</button>
-                        <button class="btn btn-reject" onclick="resolveDataModification('${item.id}', null, null, null, false)">Drop</button>
-                    </div>
-                `;
-            }
-            target.appendChild(card);
-        });
+    // Helper to extract proper image property string blocks seamlessly
+    function resolveAvatarStyle(urlStr) {
+        if (!urlStr) return "";
+        return `style="background-image: url('${urlStr}')"`;
     }
 
-    window.resolveRegistration = async (docId, approved) => {
+    // --- TAB 1: PENDING APPROVALS ---
+    async function loadPendingUsers() {
+        const container = document.getElementById('userList');
+        container.innerHTML = "";
         try {
-            if(approved) {
-                await updateDoc(doc(db, "accounts", docId), { status: "approved" });
-            } else {
-                await deleteDoc(doc(db, "accounts", docId));
-            }
-        } catch(e) { console.error("Error setting access level:", e); }
-    };
+            const q = query(collection(db, "accounts"), where("status", "==", "pending"));
+            const snapshot = await getDocs(q);
 
-    window.resolveDataModification = async (requestId, accountId, type, newValue, approved) => {
-        try {
-            if(approved) {
-                const userRef = doc(db, "accounts", accountId);
-                if(type === 'password') await updateDoc(userRef, { password: newValue });
-                if(type === 'name') await updateDoc(userRef, { name: newValue });
-                if(type === 'username') await updateDoc(userRef, { username: newValue });
-                
-                await updateDoc(doc(db, "update_requests", requestId), { status: "approved" });
-            } else {
-                await updateDoc(doc(db, "update_requests", requestId), { status: "rejected" });
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No accounts requiring attention right now.</div>`;
+                return;
             }
-        } catch(e) { console.error("Error modification handling:", e); }
-    };
 
-    // User Directory Engine + Split Separate Mutation Triggers
-    function startUsersSyncEngine() {
-        const target = document.getElementById('usersContainer');
-        const q = query(collection(db, "accounts"), orderBy("username", "asc"));
-        
-        onSnapshot(q, (snap) => {
-            target.innerHTML = '';
-            snap.forEach(docSnap => {
-                const data = docSnap.data();
-                if(data.role === 'admin') return; 
-                
+            snapshot.forEach((userDoc) => {
+                const data = userDoc.data();
+                const avatarStyle = resolveAvatarStyle(data.avatarUrl);
+
                 const card = document.createElement('div');
-                card.className = 'user-row-card';
-                
-                const fallbackAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100';
-                const avatar = data.profilePic || data.avatarUrl || fallbackAvatar;
-
+                card.className = "user-card";
                 card.innerHTML = `
-                    <div class="user-meta-wrapper">
-                        <div class="user-identity">
-                            <div class="user-avatar-indicator" style="background-image: url('${avatar}')"></div>
-                            <div>
-                                <div class="meta-title">${data.name || 'No Verified Name'}</div>
-                                <div class="meta-sub">@${data.username} | <span style="color:${data.status === 'approved' ? 'var(--success)' : 'var(--danger)'}">${data.status}</span></div>
-                            </div>
-                        </div>
-                        <div class="user-actions-row">
-                            <button class="btn btn-disable" onclick="dispatchDisableStatus('${docSnap.id}', '${data.status}')">
-                                ${data.status === 'disabled' ? '🟢 Enable' : '🔴 Disable'}
-                            </button>
-                            <button class="btn btn-refresh" onclick="dispatchSilentRefresh('${docSnap.id}')">
-                                🔄 Refresh
-                            </button>
+                    <div class="identity-block">
+                        <div class="avatar-node" ${avatarStyle}></div>
+                        <div class="user-info">
+                            <div class="name">${data.name || data.customName}</div>
+                            <div class="username">@${data.username}</div>
                         </div>
                     </div>
+                    <button class="btn btn-approve" data-id="${userDoc.id}">APPROVE</button>
                 `;
-                target.appendChild(card);
+                container.appendChild(card);
             });
-        });
-    }
 
-    // Split Button Actions Handlers
-    window.dispatchDisableStatus = async (userId, currentStatus) => {
-        try {
-            const nextStatus = currentStatus === 'disabled' ? 'approved' : 'disabled';
-            await updateDoc(doc(db, "accounts", userId), { status: nextStatus });
-        } catch(e) { console.error("Error processing user state mutation:", e); }
-    };
-
-    window.dispatchSilentRefresh = async (userId) => {
-        try {
-            await updateDoc(doc(db, "accounts", userId), {
-                refreshSignal: new Date().getTime()
-            });
-        } catch(e) { console.error("Failed to route remote workspace handshake execution path:", e); }
-    };
-
-    // Real-Time Chat Monitor Messaging Stream Interface
-    function connectGroupChatFeed() {
-        const feedBox = document.getElementById('chatFeedBox');
-        const form = document.getElementById('chatInputForm');
-        const input = document.getElementById('chatField');
-
-        const qChat = query(collection(db, "messages"), orderBy("timestamp", "asc"), limit(40));
-        
-        onSnapshot(qChat, (snap) => {
-            feedBox.innerHTML = '';
-            snap.forEach(msgDoc => {
-                const item = msgDoc.data();
-                const node = document.createElement('div');
-                
-                const isAdminMsg = (item.role === 'admin' || item.name === 'Admin' || item.senderId === localStorage.getItem("userId"));
-                node.className = `chat-msg ${isAdminMsg ? 'outgoing' : 'incoming'}`;
-                
-                const timeString = item.timestamp ? new Date(item.timestamp.toMillis()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
-
-                node.innerHTML = `
-                    <div class="author">${item.name || 'Anonymous'}</div>
-                    <div style="word-break: break-word;">${item.text || item.message || ''}</div>
-                    <div class="time">${timeString}</div>
-                `;
-                feedBox.appendChild(node);
-            });
-            feedBox.scrollTop = feedBox.scrollHeight;
-        });
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const textValue = input.value.trim();
-            if(!textValue) return;
-
-            try {
-                await addDoc(collection(db, "messages"), {
-                    senderId: localStorage.getItem("userId") || "system_admin",
-                    name: localStorage.getItem("userName") || "Admin System",
-                    role: "admin",
-                    text: textValue,
-                    timestamp: serverTimestamp()
+            document.querySelectorAll('#userList .btn-approve').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    await updateDoc(doc(db, "accounts", id), { status: "approved" });
+                    loadPendingUsers();
                 });
-                input.value = '';
-            } catch(err) { console.error("Chat dispatch error:", err); }
+            });
+        } catch (err) {
+            container.innerHTML = `<div class="empty-state" style="color:var(--danger)">Error loading profiles.</div>`;
+        }
+    }
+
+    // --- TAB 2: ACTIVE STATUS & ACCESS CONTROL ---
+    function listenToUserActivity() {
+        const container = document.getElementById('activeUserList');
+        const q = query(collection(db, "accounts"), where("status", "!=", "pending"));
+
+        onSnapshot(q, (snapshot) => {
+            container.innerHTML = "";
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="empty-state">No verified accounts found.</div>`;
+                return;
+            }
+
+            snapshot.forEach((userDoc) => {
+                const data = userDoc.data();
+                const isOnline = data.isOnline === true; 
+                const isEsoaDisabled = data.esoaDisabled === true;
+                const avatarStyle = resolveAvatarStyle(data.avatarUrl);
+
+                const card = document.createElement('div');
+                card.className = "user-card";
+                card.innerHTML = `
+                    <div class="identity-block">
+                        <div class="avatar-node" ${avatarStyle}></div>
+                        <div class="user-info">
+                            <div class="name">
+                                ${data.customName || data.name} 
+                                <span class="status-badge ${isOnline ? 'active' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                            </div>
+                            <div class="username">@${data.username} ${isEsoaDisabled ? '<span style="color:var(--danger); font-size:0.75rem;">(eSOA Disabled)</span>' : ''}</div>
+                        </div>
+                    </div>
+                    <button class="btn ${isEsoaDisabled ? 'btn-enable' : 'btn-disable'}" data-id="${userDoc.id}" data-disabled="${isEsoaDisabled}">
+                        ${isEsoaDisabled ? 'Enable eSOA' : 'Disable eSOA'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+
+            container.querySelectorAll('#activeUserList .btn-disable, #activeUserList .btn-enable').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const currentDisabledStatus = e.target.getAttribute('data-disabled') === 'true';
+                    await updateDoc(doc(db, "accounts", id), { 
+                        esoaDisabled: !currentDisabledStatus 
+                    });
+                });
+            });
         });
     }
 
-    // Run Processing Threads
-    startRealtimeApprovalsEcosystem();
-    startUsersSyncEngine();
-    connectGroupChatFeed();
+    // --- TAB 3: REALTIME DATABASE CHAT MONITOR ---
+    function listenToRTDBChats() {
+        const container = document.getElementById('chatLogsList');
+        const sessionsRef = ref(rtdb);
+
+        onValue(sessionsRef, (snapshot) => {
+            container.innerHTML = "";
+            const masterData = snapshot.val() || {};
+            const rawAggregatedMessages = [];
+
+            // 1. Parse Group Chat Feed Data
+            if (masterData.group_chat && masterData.group_chat.messages) {
+                Object.keys(masterData.group_chat.messages).forEach(mId => {
+                    const item = masterData.group_chat.messages[mId];
+                    const cacheProfile = cachedUserDirectory[item.sender] || { displayName: item.senderName || item.sender || "Unknown", avatarUrl: "" };
+
+                    rawAggregatedMessages.push({
+                        senderName: cacheProfile.displayName,
+                        senderAvatar: cacheProfile.avatarUrl,
+                        receiverName: "👥 BARANGAY GROUP CHAT",
+                        text: item.text,
+                        timestamp: item.timestamp || 0
+                    });
+                });
+            }
+
+            // 2. Parse Private Session Room Node Keys Dynamically
+            if (masterData.sessions) {
+                Object.keys(masterData.sessions).forEach(sessionKey => {
+                    const track = masterData.sessions[sessionKey];
+                    Object.keys(track).forEach(mId => {
+                        const item = track[mId];
+                        if (!item.text) return; 
+
+                        const impliedIds = sessionKey.split('_');
+                        
+                        // Look up sender data profile object
+                        const senderProfile = cachedUserDirectory[item.sender] || { displayName: "User (" + item.sender.substring(0,5) + ")", avatarUrl: "" };
+                        
+                        // Extract alternative partner target participant key explicitly
+                        const destinationId = impliedIds.find(id => id !== item.sender) || "Receiver Partner";
+                        const receiverProfile = cachedUserDirectory[destinationId] || { displayName: "User (" + destinationId.substring(0,5) + ")", avatarUrl: "" };
+
+                        rawAggregatedMessages.push({
+                            senderName: senderProfile.displayName,
+                            senderAvatar: senderProfile.avatarUrl,
+                            receiverName: `👤 ${receiverProfile.displayName}`,
+                            text: item.text,
+                            timestamp: item.timestamp || 0
+                        });
+                    });
+                });
+            }
+
+            if (rawAggregatedMessages.length === 0) {
+                container.innerHTML = `<div class="empty-state">No chat records detected over database feeds.</div>`;
+                return;
+            }
+
+            // Arrange chronological timeline ordering (newest first)
+            rawAggregatedMessages.sort((x, y) => y.timestamp - x.timestamp);
+
+            // Output elements cleanly with image string support enabled
+            rawAggregatedMessages.forEach(msg => {
+                const formattedTime = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                const avatarStyle = resolveAvatarStyle(msg.senderAvatar);
+
+                const card = document.createElement('div');
+                card.className = "chat-card";
+                card.innerHTML = `
+                    <div class="avatar-node" ${avatarStyle}></div>
+                    <div class="chat-details">
+                        <div class="chat-meta">
+                            <span><strong>${msg.senderName}</strong> ➡️ <em>${msg.receiverName}</em></span>
+                            <span class="chat-time">${formattedTime}</span>
+                        </div>
+                        <div class="chat-msg">${msg.text}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+    }
+
+    // Switch View Layout Tabs Functional Context
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                
+        document.getElementById(tabId).classList.add('active');
+        document.getElementById('btn-' + tabId).classList.add('active');
+    };
+
+    document.getElementById('btn-approvals').onclick = () => window.switchTab('approvals');
+    document.getElementById('btn-activity').onclick = () => window.switchTab('activity');
+    document.getElementById('btn-chats').onclick = () => window.switchTab('chats');
+
+    window.onload = () => {
+        loadPendingUsers();
+        listenToUserActivity();
+        listenToRTDBChats();
+    };
 </script>
 </body>
-</html>
+            </html>
+            
