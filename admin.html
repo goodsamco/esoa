@@ -18,7 +18,7 @@
             --warning: #f59e0b;
         }
         
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
@@ -27,41 +27,77 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 30px;
+            padding: 15px;
             box-sizing: border-box;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .dashboard-header {
-            max-width: 1400px;
-            margin: 0 auto 30px auto;
+            width: 100%;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .dashboard-header h1 {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             font-weight: 800;
             letter-spacing: -0.03em;
             text-transform: uppercase;
             color: var(--text-main);
+            margin: 0;
         }
 
         .dashboard-header h1 span {
             color: var(--primary);
         }
 
-        .grid-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            max-width: 1400px;
-            margin: 0 auto;
+        /* Narrow Screen Mobile Navigation Tabs */
+        .tab-navigation {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 15px;
+            gap: 4px;
         }
 
-        @media (max-width: 1024px) {
-            .grid-layout { grid-template-columns: 1fr; }
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 5px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .panel-card {
@@ -70,23 +106,23 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-glass);
             border-radius: 20px;
-            padding: 25px;
+            padding: 16px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
-            height: 600px;
+            height: calc(100vh - 140px);
             box-sizing: border-box;
         }
 
         .panel-card h2 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 800;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             margin-top: 0;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 1px solid var(--border-glass);
-            padding-bottom: 15px;
+            padding-bottom: 12px;
             color: var(--primary);
             display: flex;
             justify-content: space-between;
@@ -96,35 +132,28 @@
         .scrollable-area {
             flex-grow: 1;
             overflow-y: auto;
-            padding-right: 5px;
         }
 
-        /* Lists & Request Cards Styles */
+        /* Card Entries */
         .request-item, .user-row-card {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border-glass);
             border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 15px;
-            transition: all 0.2s ease;
-        }
-
-        .request-item:hover, .user-row-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(0, 0, 0, 0.3);
+            padding: 14px;
+            margin-bottom: 12px;
         }
 
         .item-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .badge {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 800;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 20px;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -133,29 +162,30 @@
         .badge-reg { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
         .badge-mod { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
 
-        .meta-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
-        .meta-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        .meta-title { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+        .meta-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
         
         .value-comparison {
-            background: rgba(0,0,0,0.2);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 0.82rem;
+            background: rgba(0,0,0,0.25);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 0.78rem;
             font-family: monospace;
+            word-break: break-all;
         }
 
         .action-container {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
         }
 
-        /* Buttons Core UI Framework */
+        /* Buttons Core Framework */
         .btn {
             border: none;
-            padding: 10px 16px;
-            font-size: 0.75rem;
+            padding: 8px 12px;
+            font-size: 0.7rem;
             font-weight: 800;
             border-radius: 30px;
             cursor: pointer;
@@ -164,12 +194,14 @@
             transition: all 0.2s ease;
         }
 
-        .btn-approve { background: var(--success); color: #000; }
-        .btn-reject { background: var(--danger); color: #fff; }
-        .btn-sync { background: var(--primary); color: #000; display: inline-flex; align-items: center; gap: 6px; }
-        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-approve { background: var(--success); color: #000; flex: 1; }
+        .btn-reject { background: var(--danger); color: #fff; flex: 1; }
+        .btn-disable { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-refresh { background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .btn-logout { background: var(--danger); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.65rem; }
+        .btn-send { background: var(--primary); color: #000; border-radius: 50%; width: 42px; height: 42px; padding: 0; display: flex; align-items: center; justify-content: center; shrink: 0; }
 
-        /* Integrated Chat Visual Framework */
+        /* Mobile Responsive Comprehensive Chat Monitor */
         .chat-window {
             display: flex;
             flex-direction: column;
@@ -179,133 +211,159 @@
         .chat-feed {
             flex-grow: 1;
             overflow-y: auto;
-            background: rgba(0,0,0,0.15);
+            background: rgba(0,0,0,0.2);
             border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .chat-msg {
-            max-width: 75%;
-            padding: 12px 16px;
+            max-width: 85%;
+            padding: 10px 14px;
             border-radius: 16px;
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             line-height: 1.4;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-msg.incoming {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.04);
             align-self: flex-start;
             border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .chat-msg.outgoing {
             background: var(--primary);
-            color: #000;
+            color: #0b0f1a;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
-            font-weight: 600;
         }
 
         .chat-msg .author {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             font-weight: 800;
             color: var(--primary);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
 
         .chat-msg.outgoing .author {
-            color: rgba(0,0,0,0.6);
+            color: rgba(11, 15, 26, 0.7);
         }
 
         .chat-msg .time {
-            font-size: 0.6rem;
-            opacity: 0.6;
+            font-size: 0.58rem;
+            opacity: 0.5;
             text-align: right;
             margin-top: 4px;
         }
 
         .chat-input-form {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            align-items: center;
         }
 
         .chat-input-form input {
             flex-grow: 1;
             background: rgba(0,0,0,0.4);
             border: 1px solid var(--border-glass);
-            padding: 14px;
-            border-radius: 30px;
+            padding: 12px 16px;
+            border-radius: 24px;
             color: #fff;
             outline: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .chat-input-form input:focus {
             border-color: var(--primary);
         }
 
-        /* User Grid Operations Row Layout */
+        /* User Operational Row Layout Layout */
         .user-meta-wrapper {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .user-identity {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .user-avatar-indicator {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-size: cover;
             background-position: center;
             border: 1px solid var(--border-glass);
             background-color: rgba(255,255,255,0.1);
+            flex-shrink: 0;
         }
 
-        .hidden { display: none; }
+        .user-actions-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .user-actions-row .btn {
+            flex: 1;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <header class="dashboard-header">
-        <h1>eSOA <span>// System Control Engine</span></h1>
-        <button class="btn btn-reject" id="btnLogOut">LOG OUT</button>
+        <h1>eSOA <span>// Engine</span></h1>
+        <button class="btn btn-logout" id="btnLogOut">LOG OUT</button>
     </header>
 
-    <main class="grid-layout">
+    <!-- Narrow View Mobile Navigation Matrix -->
+    <nav class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('approvals-tab')">
+            Approvals <span id="navCountBadge" style="color:var(--warning)">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('users-tab')">Users</button>
+        <button class="tab-btn" onclick="switchTab('chat-tab')">Monitor</button>
+    </nav>
+
+    <main class="main-content">
         
-        <section class="panel-card">
-            <h2>Approval Queue <span id="countApprovals" class="badge badge-reg">0 Pending</span></h2>
-            <div class="scrollable-area" id="approvalsContainer">
-                </div>
+        <!-- Tab 1: Combined Approvals Section -->
+        <section id="approvals-tab" class="panel-card">
+            <h2>Approval Streams <span id="countApprovals" class="badge badge-reg">0 Pending</span></h2>
+            <div class="scrollable-area" id="approvalsContainer"></div>
         </section>
 
-        <section class="panel-card">
-            <h2>Active Registrants Directory</h2>
-            <div class="scrollable-area" id="usersContainer">
-                </div>
+        <!-- Tab 2: Users Directory with Separate Mutation Controls -->
+        <section id="users-tab" class="panel-card hidden">
+            <h2>Registrants Ledger</h2>
+            <div class="scrollable-area" id="usersContainer"></div>
         </section>
 
-        <section class="panel-card" style="grid-column: 1 / -1; height: 500px;">
-            <h2>Group Chat</h2>
+        <!-- Tab 3: Interactive Visual Monitor Interface -->
+        <section id="chat-tab" class="panel-card hidden">
+            <h2>Chat Feed Terminal</h2>
             <div class="chat-window">
-                <div class="chat-feed" id="chatFeedBox">
-                    </div>
+                <div class="chat-feed" id="chatFeedBox"></div>
                 <form class="chat-input-form" id="chatInputForm">
-                    <input type="text" id="chatField" placeholder="Broadcast master admin message to group matrix..." required autocomplete="off">
-                    <button type="submit" class="btn btn-sync">Send</button>
+                    <input type="text" id="chatField" placeholder="Send admin override text..." required autocomplete="off">
+                    <button type="submit" class="btn btn-send">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
                 </form>
             </div>
         </section>
@@ -333,7 +391,21 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Secure Gate verification routine
+    // Navigation Tab Switching Engine Logic
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.panel-card').forEach(card => card.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.remove('hidden');
+        event.currentTarget.classList.add('active');
+
+        if(tabId === 'chat-tab') {
+            const feedBox = document.getElementById('chatFeedBox');
+            feedBox.scrollTop = feedBox.scrollHeight;
+        }
+    }
+
+    // Role verification handler
     const currentRole = localStorage.getItem("userRole");
     if (currentRole !== "admin") {
         window.location.href = "login.html";
@@ -344,21 +416,17 @@
         window.location.href = "login.html";
     });
 
-    // Unified Approvals State Tracker Engine
+    // Unified Approvals Tracker Engine
     function startRealtimeApprovalsEcosystem() {
-        const container = document.getElementById('approvalsContainer');
-        
         let pendingRegList = [];
         let pendingUpdateList = [];
 
-        // Track Registrations (accounts document with code: status == pending)
         const qReg = query(collection(db, "accounts"), where("status", "==", "pending"));
         onSnapshot(qReg, (snap) => {
             pendingRegList = snap.docs.map(doc => ({ id: doc.id, type: 'registration', ...doc.data() }));
             renderCombinedApprovals(pendingRegList, pendingUpdateList);
         });
 
-        // Track Modifications Ledger
         const qUpdate = query(collection(db, "update_requests"), where("status", "==", "pending"));
         onSnapshot(qUpdate, (snap) => {
             pendingUpdateList = snap.docs.map(doc => ({ id: doc.id, type: 'update', ...doc.data() }));
@@ -369,13 +437,15 @@
     function renderCombinedApprovals(regArray, updateArray) {
         const target = document.getElementById('approvalsContainer');
         const countBadge = document.getElementById('countApprovals');
+        const navBadge = document.getElementById('navCountBadge');
         target.innerHTML = '';
         
         const combined = [...regArray, ...updateArray];
-        countBadge.innerText = `${combined.length} Actionable`;
+        countBadge.innerText = `${combined.length} Pending`;
+        navBadge.innerText = combined.length;
 
         if(combined.length === 0) {
-            target.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding-top:40px; font-size:0.9rem;">Queue clear. No pending items found.</div>`;
+            target.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding-top:40px; font-size:0.8rem;">Queue clear. No elements pending.</div>`;
             return;
         }
 
@@ -386,28 +456,28 @@
             if(item.type === 'registration') {
                 card.innerHTML = `
                     <div class="item-header">
-                        <span class="badge badge-reg">New Registration</span>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">ID: ${item.id.substring(0,6)}...</div>
+                        <span class="badge badge-reg">Registration</span>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">..${item.id.substring(0,6)}</div>
                     </div>
-                    <div class="meta-title">${item.name || 'Anonymous User'}</div>
-                    <div class="meta-sub">Requested Username: <strong>${item.username}</strong></div>
+                    <div class="meta-title">${item.name || 'Anonymous Node'}</div>
+                    <div class="meta-sub">User: <strong>@${item.username}</strong></div>
                     <div class="action-container">
-                        <button class="btn btn-approve" onclick="resolveRegistration('${item.id}', true)">Accept Access</button>
+                        <button class="btn btn-approve" onclick="resolveRegistration('${item.id}', true)">Accept</button>
                         <button class="btn btn-reject" onclick="resolveRegistration('${item.id}', false)">Deny</button>
                     </div>
                 `;
             } else {
                 card.innerHTML = `
                     <div class="item-header">
-                        <span class="badge badge-mod">Modification Request</span>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">Req ID: ${item.id.substring(0,6)}...</div>
+                        <span class="badge badge-mod">Modification</span>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">..${item.id.substring(0,6)}</div>
                     </div>
-                    <div class="meta-title">Account Holder: @${item.currentUsername}</div>
-                    <div class="meta-sub">Adjustment Mode: <span style="color:var(--warning); font-weight:600;">${item.requestType.toUpperCase()}</span></div>
-                    <div class="value-comparison">Proposed Input: "${item.newValue}"</div>
+                    <div class="meta-title">@${item.currentUsername}</div>
+                    <div class="meta-sub">Field: <span style="color:var(--warning); font-weight:600;">${item.requestType.toUpperCase()}</span></div>
+                    <div class="value-comparison">${item.newValue}</div>
                     <div class="action-container">
-                        <button class="btn btn-approve" onclick="resolveDataModification('${item.id}', '${item.accountId}', '${item.requestType}', '${item.newValue}', true)">Commit Change</button>
-                        <button class="btn btn-reject" onclick="resolveDataModification('${item.id}', null, null, null, false)">Discard</button>
+                        <button class="btn btn-approve" onclick="resolveDataModification('${item.id}', '${item.accountId}', '${item.requestType}', '${item.newValue}', true)">Commit</button>
+                        <button class="btn btn-reject" onclick="resolveDataModification('${item.id}', null, null, null, false)">Drop</button>
                     </div>
                 `;
             }
@@ -415,7 +485,6 @@
         });
     }
 
-    // Core Global Scope Resolution Handlers for Event Attributes injection
     window.resolveRegistration = async (docId, approved) => {
         try {
             if(approved) {
@@ -438,10 +507,10 @@
             } else {
                 await updateDoc(doc(db, "update_requests", requestId), { status: "rejected" });
             }
-        } catch(e) { console.error("Error setting verification modification:", e); }
+        } catch(e) { console.error("Error modification handling:", e); }
     };
 
-    // User Directory Realtime Thread + Remote Sync Trigger Hook
+    // User Directory Engine + Split Separate Mutation Triggers
     function startUsersSyncEngine() {
         const target = document.getElementById('usersContainer');
         const q = query(collection(db, "accounts"), orderBy("username", "asc"));
@@ -450,7 +519,7 @@
             target.innerHTML = '';
             snap.forEach(docSnap => {
                 const data = docSnap.data();
-                if(data.role === 'admin') return; // Skip administration nodes
+                if(data.role === 'admin') return; 
                 
                 const card = document.createElement('div');
                 card.className = 'user-row-card';
@@ -464,12 +533,17 @@
                             <div class="user-avatar-indicator" style="background-image: url('${avatar}')"></div>
                             <div>
                                 <div class="meta-title">${data.name || 'No Verified Name'}</div>
-                                <div class="meta-sub">@${data.username} | Status: <span style="color:${data.status === 'approved' ? 'var(--success)' : 'var(--danger)'}">${data.status}</span></div>
+                                <div class="meta-sub">@${data.username} | <span style="color:${data.status === 'approved' ? 'var(--success)' : 'var(--danger)'}">${data.status}</span></div>
                             </div>
                         </div>
-                        <button class="btn btn-sync" onclick="dispatchSilentRefresh('${docSnap.id}')">
-                            🔄 Silent Refresh
-                        </button>
+                        <div class="user-actions-row">
+                            <button class="btn btn-disable" onclick="dispatchDisableStatus('${docSnap.id}', '${data.status}')">
+                                ${data.status === 'disabled' ? '🟢 Enable' : '🔴 Disable'}
+                            </button>
+                            <button class="btn btn-refresh" onclick="dispatchSilentRefresh('${docSnap.id}')">
+                                🔄 Refresh
+                            </button>
+                        </div>
                     </div>
                 `;
                 target.appendChild(card);
@@ -477,26 +551,29 @@
         });
     }
 
-    // DISPATCH BACKGROUND REFRESH TARGET SIGNAL
-    window.dispatchSilentRefresh = async (userId) => {
+    // Split Button Actions Handlers
+    window.dispatchDisableStatus = async (userId, currentStatus) => {
         try {
-            const userRef = doc(db, "accounts", userId);
-            await updateDoc(userRef, {
-                refreshSignal: new Date().getTime() // Inject epoch timestamp trigger array element
-            });
-        } catch(e) {
-            console.error("Failed to route remote device handshake execution path:", e);
-        }
+            const nextStatus = currentStatus === 'disabled' ? 'approved' : 'disabled';
+            await updateDoc(doc(db, "accounts", userId), { status: nextStatus });
+        } catch(e) { console.error("Error processing user state mutation:", e); }
     };
 
-// Fully Functional "Group Chat" System Monitoring Matrix
+    window.dispatchSilentRefresh = async (userId) => {
+        try {
+            await updateDoc(doc(db, "accounts", userId), {
+                refreshSignal: new Date().getTime()
+            });
+        } catch(e) { console.error("Failed to route remote workspace handshake execution path:", e); }
+    };
+
+    // Real-Time Chat Monitor Messaging Stream Interface
     function connectGroupChatFeed() {
         const feedBox = document.getElementById('chatFeedBox');
         const form = document.getElementById('chatInputForm');
         const input = document.getElementById('chatField');
 
-        // Streams standard centralized platform messages
-        const qChat = query(collection(db, "messages"), orderBy("timestamp", "asc"), limit(60));
+        const qChat = query(collection(db, "messages"), orderBy("timestamp", "asc"), limit(40));
         
         onSnapshot(qChat, (snap) => {
             feedBox.innerHTML = '';
@@ -504,15 +581,14 @@
                 const item = msgDoc.data();
                 const node = document.createElement('div');
                 
-                // Identify incoming vs administration generated messages
                 const isAdminMsg = (item.role === 'admin' || item.name === 'Admin' || item.senderId === localStorage.getItem("userId"));
                 node.className = `chat-msg ${isAdminMsg ? 'outgoing' : 'incoming'}`;
                 
                 const timeString = item.timestamp ? new Date(item.timestamp.toMillis()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
 
                 node.innerHTML = `
-                    <div class="author">${item.name || 'System User'}</div>
-                    <div>${item.text || item.message || ''}</div>
+                    <div class="author">${item.name || 'Anonymous'}</div>
+                    <div style="word-break: break-word;">${item.text || item.message || ''}</div>
                     <div class="time">${timeString}</div>
                 `;
                 feedBox.appendChild(node);
@@ -534,13 +610,11 @@
                     timestamp: serverTimestamp()
                 });
                 input.value = '';
-            } catch(err) {
-                console.error("Chat dispatch structural network fault:", err);
-            }
+            } catch(err) { console.error("Chat dispatch error:", err); }
         });
     }
 
-    // Master System Thread Activation
+    // Run Processing Threads
     startRealtimeApprovalsEcosystem();
     startUsersSyncEngine();
     connectGroupChatFeed();
