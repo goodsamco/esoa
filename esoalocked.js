@@ -176,7 +176,7 @@ onSnapshot(userDocRef, (snapshot) => {
             localProfileNoteCache = "";
         }
 
-        // ─── PRESENCE HANDSHAKE TO REALTIME DATABASE ───
+        // ─── PRESENCE HANDSHAKE TO REALTIME DATABASE (FIXED FOR STABLE SYNC) ───
         if (!document.hidden) {
             const presenceData = {
                 uid: userId,
@@ -210,7 +210,7 @@ startInactivityWatcher();
 const typingHooks = {};
 const typingUIFallbackTimeouts = {}; 
 
-let typingTimeout; // Fixed missing declaration from code block
+let typingTimeout;
 
 function bindTypingIndicator(partnerId, displayName) {
     if (typingHooks[partnerId]) return;
@@ -1075,12 +1075,7 @@ document.addEventListener('visibilitychange', () => {
         set(ref(rtdb, 'presence/' + userId), null);
         updateDoc(doc(db, "accounts", userId), { isOnline: false });
     } else {
-        set(ref(rtdb, 'presence/' + userId), {
-            uid: userId,
-            name: currentUserName,
-            avatar: currentUserAvatarRaw,
-            timestamp: Date.now()
-        });
+        // Fetch current snapshot state data securely to re-sync profile presence state on visibility reset
         updateDoc(doc(db, "accounts", userId), { isOnline: true });
     }
 });
