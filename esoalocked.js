@@ -33,10 +33,8 @@ if (!userId) {
 let currentUserName = "Operator";
 let currentUserAvatarRaw = "avatar-m1";
 let selectedActiveChatPartnerId = null;
-let isGroupChat = false;
 let transientChatListenerRemoveHook = null;
 const mappedRouteTrackingHooks = {};
-let backgroundGcTrackingHook = null;
 
 // Premium Assets Lookup Matrix
 const premium3dAssets = {
@@ -212,6 +210,8 @@ startInactivityWatcher();
 const typingHooks = {};
 const typingUIFallbackTimeouts = {}; 
 
+let typingTimeout; // Fixed missing declaration from code block
+
 function bindTypingIndicator(partnerId, displayName) {
     if (typingHooks[partnerId]) return;
 
@@ -264,30 +264,6 @@ function bindTypingIndicator(partnerId, displayName) {
    ========================================================================== */
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
-
-const gcWrapper = document.createElement('div');
-gcWrapper.className = 'peer-wrapper';
-gcWrapper.id = 'gc-hub-node';
-
-const gcBubble = document.createElement('div');
-gcBubble.className = 'group-chat-bubble';
-gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
-gcBubble.onclick = () => initGroupChatChannel();
-
-const gcDotNode = document.createElement('div');
-gcDotNode.className = 'peer-notif-dot';
-gcDotNode.id = 'gc-notif-dot';
-
-const gcNameTag = document.createElement('div');
-gcNameTag.className = 'peer-name-hover';
-gcNameTag.innerText = "GC";
-
-gcWrapper.appendChild(gcBubble);
-gcWrapper.appendChild(gcDotNode);
-gcWrapper.appendChild(gcNameTag);
-hub.appendChild(gcWrapper);
-
-bindBackgroundGcListener();
 
 // --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
 (() => {
@@ -369,7 +345,7 @@ onValue(presenceRef, (snapshot) => {
     const users = snapshot.val() || {};
     const NOW = Date.now();
 
-    const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
+    const existingNodes = hub.querySelectorAll('.peer-wrapper');
     existingNodes.forEach(node => {
         const nodeUid = node.id.replace('peer-node-', '');
 
@@ -452,280 +428,8 @@ onValue(presenceRef, (snapshot) => {
         window.lucide.createIcons();
     }
 });
-/* ==========================================================================
-   4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - PERSISTENT
-   ========================================================================== 
-const hub = document.getElementById('peerActiveHub');
-hub.innerHTML = '';
 
-const gcWrapper = document.createElement('div');
-gcWrapper.className = 'peer-wrapper';
-gcWrapper.id = 'gc-hub-node';
 
-const gcBubble = document.createElement('div');
-gcBubble.className = 'group-chat-bubble';
-gcBubble.innerHTML = '<i data-lucide="users" style="width:18px;height:18px;"></i>';
-gcBubble.onclick = () => initGroupChatChannel();
-
-const gcDotNode = document.createElement('div');
-gcDotNode.className = 'peer-notif-dot';
-gcDotNode.id = 'gc-notif-dot';
-
-const gcNameTag = document.createElement('div');
-gcNameTag.className = 'peer-name-hover';
-gcNameTag.innerText = "GC";
-
-gcWrapper.appendChild(gcBubble);
-gcWrapper.appendChild(gcDotNode);
-gcWrapper.appendChild(gcNameTag);
-hub.appendChild(gcWrapper);
-
-bindBackgroundGcListener();
-
-// --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-let localProfileNoteCache = "";
-
-// Dynamic layout generation for the status note modal window context
-(() => {
-    const avatarNode = document.querySelector('.profile-avatar-node');
-    if (!avatarNode) return;
-
-    // Append the tiny plus action element on top of your profile avatar
-    const actionTrigger = document.createElement('div');
-    actionTrigger.className = 'profile-note-action-trigger';
-    actionTrigger.innerText = '＋';
-    avatarNode.parentNode.insertBefore(actionTrigger, avatarNode);
-
-    // Create custom structural modal elements natively inside the document context
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'modal-overlay';
-    modalOverlay.id = 'status-note-custom-modal';
-    
-    modalOverlay.innerHTML = `
-        <div class="modal-content">
-            <div class="input-group">
-                <label>UPDATE STATUS NOTE</label>
-                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
-                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
-            </div>
-            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
-            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
-        </div>
-    `;
-    document.body.appendChild(modalOverlay);
-
-    const modalInputField = document.getElementById('status-modal-field');
-    const modalCharCounter = document.getElementById('status-modal-counter');
-    const modalSaveBtn = document.getElementById('status-modal-save-btn');
-    const modalCloseBtn = document.getElementById('status-modal-close-btn');
-
-    // Display modal workflow triggers safely
-    actionTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        modalInputField.value = localProfileNoteCache;
-        modalCharCounter.innerText = `${localProfileNoteCache.length} / 10`;
-        modalOverlay.classList.add('active');
-        setTimeout(() => modalInputField.focus(), 50);
-    });
-
-    // Realtime constraint counter adjustments tracking keystrokes up to 10 max
-    modalInputField.addEventListener('input', () => {
-        if (modalInputField.value.length > 10) {
-            modalInputField.value = modalInputField.value.substring(0, 10);
-        }
-        modalCharCounter.innerText = `${modalInputField.value.length} / 10`;
-    });
-
-    // Close functionality tracking
-    const closeModal = () => modalOverlay.classList.remove('active');
-    modalCloseBtn.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-
-    // Submit transactions directly to RTDB under the current user node layout to guarantee persistence
-    modalSaveBtn.addEventListener('click', () => {
-        const cleanInput = modalInputField.value.trim().substring(0, 10);
-        const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
-        
-        // Dynamic look-up of local theme color definitions to pack alongside data packets
-        const activeLayoutColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
-        
-        if (cleanInput === "") {
-            // If user cleared the input, remove it from DB cleanly
-            set(userNoteRef, null).then(() => closeModal());
-        } else {
-            set(userNoteRef, {
-                text: cleanInput,
-                color: activeLayoutColor,
-                updatedAt: Date.now()
-            })
-            .then(() => {
-                closeModal();
-            })
-            .catch(err => console.error("Could not sync status changes accurately:", err));
-        }
-    });
-})();
-
-const presenceRef = ref(rtdb, 'presence');
-onValue(presenceRef, (snapshot) => {
-    const users = snapshot.val() || {};
-    const NOW = Date.now();
-
-    // Clear personal status bubble before processing iterations to prevent duplicates
-    const selfBubble = document.getElementById('profile-status-bubble-node');
-    if (selfBubble) selfBubble.remove();
-
-    // Mark absent users offline
-    const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
-    existingNodes.forEach(node => {
-        const nodeUid = node.id.replace('peer-node-', '');
-
-        if (!users[nodeUid] || nodeUid === userId) {
-            node.classList.add('is-offline');
-            node.style.order = "1";
-        }
-    });
-
-    // Realtime peer synchronization
-    Object.keys(users).forEach(uid => {
-        const peer = users[uid];
-        if (!peer || !peer.uid) return;
-
-        // --- SELF PROFILE RENDERING SYSTEM (PERSISTENT & 12HR RETENTION) ---
-        if (uid === userId) {
-            if (peer.statusNote && peer.statusNote.updatedAt) {
-                const ageDelta = NOW - peer.statusNote.updatedAt;
-                
-                // If past 12 hours, treat it as expired and clear local cache
-                if (ageDelta >= TWELVE_HOURS_MS) {
-                    localProfileNoteCache = "";
-                    // Optional: Clean up expired note from database automatically
-                    const userNoteRef = ref(rtdb, `presence/${userId}/statusNote`);
-                    set(userNoteRef, null);
-                    return;
-                }
-
-                localProfileNoteCache = peer.statusNote.text || "";
-
-                if (localProfileNoteCache.trim() !== "") {
-                    const avatarNode = document.querySelector('.profile-avatar-node');
-                    const triggerNode = document.querySelector('.profile-note-action-trigger');
-                    if (avatarNode && triggerNode) {
-                        const bubbleNode = document.createElement('div');
-                        bubbleNode.className = 'profile-status-note-bubble';
-                        bubbleNode.id = 'profile-status-bubble-node';
-                        bubbleNode.innerText = localProfileNoteCache; 
-                        
-                        if (peer.statusNote.color) {
-                            bubbleNode.style.borderColor = peer.statusNote.color;
-                            bubbleNode.style.color = peer.statusNote.color;
-                        }
-
-                        // Appends on top of the trigger node, stacking directly above your profile view
-                        avatarNode.parentNode.insertBefore(bubbleNode, triggerNode);
-                    }
-                }
-            } else {
-                localProfileNoteCache = "";
-            }
-            return; 
-        }
-
-        const singleWordLabel =
-            peer.name
-                ? peer.name.split(' ')[0]
-                : "Operator";
-
-        const cleanAvatarSrc =
-            premium3dAssets[peer.avatar] ||
-            peer.avatar ||
-            premium3dAssets['avatar-m1'];
-
-        let peerContainer =
-            document.getElementById(`peer-node-${peer.uid}`);
-
-        if (!peerContainer) {
-            peerContainer = document.createElement('div');
-            peerContainer.className = 'peer-wrapper';
-            peerContainer.id = `peer-node-${peer.uid}`;
-
-            const imgNode = document.createElement('img');
-            imgNode.className = 'peer-avatar-bubble';
-            imgNode.src = cleanAvatarSrc;
-            imgNode.onclick = () =>
-                initTransientChatChannel(
-                    peer.uid,
-                    singleWordLabel
-                );
-
-            const dotNode = document.createElement('div');
-            dotNode.className = 'peer-notif-dot';
-
-            const nameTag = document.createElement('div');
-            nameTag.className = 'peer-name-hover';
-            nameTag.innerText = singleWordLabel;
-            nameTag.dataset.typing = "false";
-
-            peerContainer.appendChild(imgNode);
-            peerContainer.appendChild(dotNode);
-            peerContainer.appendChild(nameTag);
-
-            hub.appendChild(peerContainer);
-
-            bindBackgroundNotifListener(peer.uid);
-
-            // Typing indicator
-            bindTypingIndicator(
-                peer.uid,
-                singleWordLabel
-            );
-
-        } else {
-            const img =
-                peerContainer.querySelector('.peer-avatar-bubble');
-
-            if (img) {
-                img.src = cleanAvatarSrc;
-            }
-
-            const tag =
-                peerContainer.querySelector('.peer-name-hover');
-
-            if (tag && tag.dataset.typing !== "true") {
-                tag.innerText = singleWordLabel;
-            }
-        }
-
-        // --- INJECT PEER NOTES UPSTAIRS (TOP PLACEMENT - 12HR LIMIT) ---
-        const oldNote = peerContainer.querySelector('.peer-status-note');
-        if (oldNote) oldNote.remove();
-
-        if (peer.statusNote && peer.statusNote.updatedAt) {
-            const timeElapsed = NOW - peer.statusNote.updatedAt;
-
-            if (timeElapsed < TWELVE_HOURS_MS && peer.statusNote.text.trim() !== "") {
-                const noteNode = document.createElement('div');
-                noteNode.className = 'peer-status-note';
-                noteNode.innerText = peer.statusNote.text; 
-                
-                if (peer.statusNote.color) {
-                    noteNode.style.color = peer.statusNote.color;
-                    noteNode.style.borderColor = peer.statusNote.color;
-                }
-
-                peerContainer.appendChild(noteNode);
-            }
-        }
-
-        peerContainer.classList.remove('is-offline');
-        peerContainer.style.order = "0";
-    });
-
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
-});
 /* ==========================================================================
    5. BACKGROUND CHAT NOTIFICATION HOOKS
    ========================================================================== */
@@ -768,43 +472,6 @@ function bindBackgroundNotifListener(partnerId) {
     });
 }
 
-function bindBackgroundGcListener() {
-    if (backgroundGcTrackingHook) return;
-    const gcRouteRef = ref(rtdb, `group_chat/messages`);
-
-    let initialSyncComplete = false;
-    onValue(gcRouteRef, () => { initialSyncComplete = true; }, { onlyOnce: true });
-
-    backgroundGcTrackingHook = onChildAdded(gcRouteRef, (childSnap) => {
-        if (!initialSyncComplete) return;
-        if (childSnap.exists()) {
-            const msg = childSnap.val();
-            if (msg.sender !== userId && selectedActiveChatPartnerId !== "BARANGAY_GC") {
-                const gcContainer = document.getElementById('gc-hub-node');
-                if (gcContainer) gcContainer.classList.add('has-unread');
-            }
-        }
-    });
-
-    onValue(gcRouteRef, (snapshot) => {
-        if (!initialSyncComplete) return;
-        if (snapshot.exists() && selectedActiveChatPartnerId !== "BARANGAY_GC") {
-            const messages = snapshot.val();
-            Object.keys(messages).forEach(mId => {
-                const m = messages[mId];
-                if (m.reactions) {
-                    Object.keys(m.reactions).forEach(uId => {
-                        if (uId !== userId) {
-                            const gcContainer = document.getElementById('gc-hub-node');
-                            if (gcContainer) gcContainer.classList.add('has-unread');
-                        }
-                    });
-                }
-            });
-        }
-    });
-}
-
 
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
@@ -839,30 +506,7 @@ function resolveUserRealName(uid, fallbackDataName) {
     return "User " + uid.substring(0, 5);
 }
 
-function initGroupChatChannel() {
-    isGroupChat = true;
-    selectedActiveChatPartnerId = "BARANGAY_GC";
-    document.getElementById('chatTargetName').innerText = `Group Chat`;
-    document.getElementById('chatScroller').innerHTML = '';
-    document.getElementById('chatDock').style.display = 'flex';
-    clearActiveReplyRow();
-
-    const gcContainer = document.getElementById('gc-hub-node');
-    if (gcContainer) gcContainer.classList.remove('has-unread');
-
-    cleanupTransientListeners();
-
-    const chatRouteRef = ref(rtdb, `group_chat/messages`);
-    transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
-        if (childSnap.exists()) {
-            const msg = childSnap.val();
-            appendBubbleToScroller(msg, childSnap.key, msg.sender === userId ? 'outgoing' : 'incoming');
-        }
-    });
-}
-
 function initTransientChatChannel(partnerId, partnerName) {
-    isGroupChat = false;
     selectedActiveChatPartnerId = partnerId;
     clearActiveReplyRow();
     
@@ -912,18 +556,11 @@ window.sendChatPayload = function () {
         timestamp: Date.now()
     };
 
-    if (isGroupChat) {
-        payload.senderName = currentUserName;
-        payload.senderAvatar = currentUserAvatarRaw;
-    }
-
     if (activeReplyPayload) {
         payload.repliedTo = activeReplyPayload;
     }
 
-    let chatRouteRef = isGroupChat 
-        ? ref(rtdb, `group_chat/messages`) 
-        : ref(rtdb, `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}`);
+    let chatRouteRef = ref(rtdb, `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}`);
 
     const newMsgRef = push(chatRouteRef);
     set(newMsgRef, payload);
@@ -931,10 +568,8 @@ window.sendChatPayload = function () {
     input.value = '';
     clearActiveReplyRow();
 
-    if (!isGroupChat) {
-        const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
-        set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
-    }
+    const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
+    set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
 };
 
 function appendBubbleToScroller(msg, msgId, direction) {
@@ -946,25 +581,7 @@ function appendBubbleToScroller(msg, msgId, direction) {
     const metaRow = document.createElement('div');
     metaRow.className = 'msg-meta-row';
 
-    if (isGroupChat) {
-        const avatarSrc = premium3dAssets[msg.senderAvatar] || msg.senderAvatar || premium3dAssets['avatar-m1'];
-        const avatarNode = document.createElement('img');
-        avatarNode.className = 'msg-gc-avatar';
-        avatarNode.src = avatarSrc;
-
-        const authorTag = document.createElement('div');
-        authorTag.className = 'msg-author-tag';
-        authorTag.innerText = resolveUserRealName(msg.sender, msg.senderName);
-
-        const timeTag = document.createElement('div');
-        timeTag.className = 'msg-time-tag';
-        timeTag.innerText = formatMessageTimestamp(msg.timestamp);
-
-        metaRow.appendChild(avatarNode);
-        metaRow.appendChild(authorTag);
-        metaRow.appendChild(timeTag);
-        wrapper.appendChild(metaRow);
-    } else if (msg.timestamp) {
+    if (msg.timestamp) {
         const timeTag = document.createElement('div');
         timeTag.className = 'msg-time-tag';
         timeTag.innerText = formatMessageTimestamp(msg.timestamp);
@@ -1003,7 +620,7 @@ function appendBubbleToScroller(msg, msgId, direction) {
     view.appendChild(wrapper);
     view.scrollTop = view.scrollHeight;
 
-    let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+    let msgPath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
     onValue(ref(rtdb, msgPath), (snapshot) => {
         if (!snapshot.exists()) {
             wrapper.remove();
@@ -1090,7 +707,7 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
             const currentText = wrapper.querySelector('.msg-bubble').innerText;
             const newText = prompt("Modify message:", currentText);
             if (newText !== null && newText.trim() !== "") {
-                let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+                let msgPath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
                 set(ref(rtdb, `${msgPath}/text`), newText.trim());
                 set(ref(rtdb, `${msgPath}/edited`), true);
             }
@@ -1103,7 +720,7 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
             if (confirm("Delete message contents?")) {
-                let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+                let msgPath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
                 set(ref(rtdb, msgPath), {
                     sender: userId,
                     text: "Message deleted",
@@ -1121,7 +738,6 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     wrapper.appendChild(tray);
 }
 
-// 🔥 Updated: Spawns the native emoji panel with auto-close click handler
 function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     const activePanel = document.getElementById(`emoji-panel-${msgId}`);
     if (activePanel) {
@@ -1154,7 +770,6 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
 
     wrapper.appendChild(panel);
 
-    // 🔥 Added: Global window click detection listener to dismiss panel on click-away
     const closePanelHandler = (event) => {
         if (!panel.contains(event.target) && !tray.contains(event.target)) {
             panel.remove();
@@ -1162,7 +777,6 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
         }
     };
     
-    // Defer execution slightly to prevent immediate intercept of the current activation click event
     setTimeout(() => {
         document.addEventListener('click', closePanelHandler);
     }, 0);
@@ -1202,9 +816,7 @@ window.clearActiveReplyRow = function() {
 };
 
 function submitReaction(msgId, emoji) {
-    let path = isGroupChat 
-        ? `group_chat/messages/${msgId}/reactions/${userId}`
-        : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
+    let path = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}/reactions/${userId}`;
 
     const rxRef = ref(rtdb, path);
     onValue(rxRef, (snapshot) => {
@@ -1217,9 +829,7 @@ function submitReaction(msgId, emoji) {
 }
 
 function syncReactionsDisplay(msgId, fallbackName) {
-    let basePath = isGroupChat 
-        ? `group_chat/messages/${msgId}`
-        : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+    let basePath = `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
 
     onValue(ref(rtdb, basePath), (msgSnapshot) => {
         const container = document.getElementById(`rx-container-${msgId}`);
@@ -1256,11 +866,8 @@ function syncReactionsDisplay(msgId, fallbackName) {
             pill.className = `reaction-pill ${summary[emo].userVoted ? 'user-voted' : ''}`;
             pill.title = summary[emo].voters.join(', ');
 
-            if (isGroupChat) {
-                pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
-            } else {
-                pill.innerHTML = `<span>${emo}</span>`;
-            }                                                                                    
+            pill.innerHTML = `<span>${emo}</span>`;
+                                                                                                
             pill.onclick = (e) => {
                 e.stopPropagation();
                 submitReaction(msgId, emo);
@@ -1273,7 +880,7 @@ function syncReactionsDisplay(msgId, fallbackName) {
 }
 
 window.closeChatSession = function () {
-    if (!isGroupChat && selectedActiveChatPartnerId) {
+    if (selectedActiveChatPartnerId) {
         const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
         set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
     }
@@ -1282,6 +889,8 @@ window.closeChatSession = function () {
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
+
+
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== */
@@ -1305,7 +914,6 @@ window.addEventListener('DOMContentLoaded', () => {
     container = document.getElementById('mainContainer');
     magnetBtn = document.getElementById('magnetBtn');
 
-    // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
     const hubContainer = document.getElementById('peerActiveHub');
     const prevBtn = document.querySelector('.scroll-nav-btn.prev');
     const nextBtn = document.querySelector('.scroll-nav-btn.next');
@@ -1321,7 +929,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // PRESERVED: 100% of your original structural timing and copy lifecycles
     setTimeout(() => updateFocus(0), 100);
     allRows.forEach((row, idx) => { 
         row.addEventListener('click', () => executeCopy(row, row.getAttribute('data-val'), idx)); 
@@ -1373,6 +980,7 @@ window.openList = function (cat) {
     });
     window.toggleModal('listModal', true);
 };
+
 
 /* ==========================================================================
    8. HIGHLIGHTER, MAGNETIC ENGINE & INTERACTION ANIMATIONS
@@ -1489,203 +1097,9 @@ window.addEventListener('click', () => {
 });
 
 
-/* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
-10. 
-
-let standbyTimer;
-let shuffleInterval;
-const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
-let isStandbyEnabled = false;
-let slotElementsArray = [];
-
-function getDeterministicSlotIndex(uid, totalSlots) {
-    let hash = 0;
-    for (let i = 0; i < uid.length; i++) {
-        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash) % totalSlots;
-}
-
-function initStandbySystem() {
-    if (document.getElementById('standby-overlay')) return;
-    
-    const overlay = document.createElement('div');
-    overlay.id = 'standby-overlay';
-    overlay.innerHTML = `
-        <div class="standby-stage">
-            <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
-            <div id="standby-orbit-ring" class="standby-orbit-ring"></div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    
-    syncHorizonCounterRotation();
-}
-
-function startStandbyMode() {
-    if (isStandbyEnabled) return;
-    isStandbyEnabled = true;
-
-    const centerProfile = document.getElementById('standby-center-node');
-    if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
-        centerProfile.src = currentUserAvatarRaw;
-    }
-
-    document.body.classList.add('standby-active');
-    renderPersistentSymmetricalDots();
-
-    // Trigger desynchronized 5s fluid gliding layout transitions
-    clearInterval(shuffleInterval);
-    shuffleInterval = setInterval(slideAmbientPositions, 5000);
-    slideAmbientPositions();
-}
-
-function cancelStandbyMode() {
-    if (!isStandbyEnabled) return;
-    isStandbyEnabled = false;
-    document.body.classList.remove('standby-active');
-    clearInterval(shuffleInterval);
-    resetStandbyTimeout();
-}
-
-function resetStandbyTimeout() {
-    clearTimeout(standbyTimer);
-    if (isStandbyEnabled) {
-        cancelStandbyMode();
-    }
-    standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
-}
-
-['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-    window.addEventListener(evt, resetStandbyTimeout, { passive: true });
-});
-
-function renderPersistentSymmetricalDots() {
-    const ringContainer = document.getElementById('standby-orbit-ring');
-    if (!ringContainer || typeof rtdb === 'undefined') return;
-
-    ringContainer.innerHTML = ''; 
-    slotElementsArray = [];
-
-    // Concentric Symmetrical Rings structure arrangement
-    const LAYERS = [
-        { count: 8,  radius: 88,  dotSize: 4  }, // Close layer -> Completely round, Small size
-        { count: 12, radius: 130, dotSize: 7  }, // Middle layer -> Medium size
-        { count: 16, radius: 175, dotSize: 11 }, // Distant layer -> Completely round, Big size
-        { count: 20, radius: 220, dotSize: 15 }  // Outermost layer -> Biggest size
-    ];
-
-    const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
-
-    LAYERS.forEach((layer) => {
-        for (let i = 0; i < layer.count; i++) {
-            const angle = (i / layer.count) * 2 * Math.PI;
-            
-            // Store pristine basic layout configurations directly inside target elements
-            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
-            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
-
-            const slotNode = document.createElement('div');
-            slotNode.className = 'standby-node-slot';
-            slotNode.dataset.baseAngle = angle;
-            slotNode.dataset.nativeRadius = layer.radius;
-            
-            slotNode.style.setProperty('--tx', tx);
-            slotNode.style.setProperty('--ty', ty);
-
-            const innerDot = document.createElement('div');
-            innerDot.className = 'standby-ambient-dot';
-            innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
-
-            slotNode.appendChild(innerDot);
-            ringContainer.appendChild(slotNode);
-            slotElementsArray.push(slotNode);
-        }
-    });
-
-    // Realtime Firebase Presence Integration Engine
-    const standbyPresenceRef = ref(rtdb, 'presence/');
-    onValue(standbyPresenceRef, (snapshot) => {
-        if (!isStandbyEnabled) return;
-
-        const activeUsersData = snapshot.val() || {};
-        const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
-
-        slotElementsArray.forEach(slot => {
-            slot.classList.remove('is-active');
-            slot.style.removeProperty('--avatar-img');
-        });
-
-        onlineRemotes.forEach((user) => {
-            if (!user.uid) return;
-
-            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
-            const targetedSlot = slotElementsArray[dedicatedIndex];
-
-            if (targetedSlot) {
-                const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
-                targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-                targetedSlot.classList.add('is-active'); // Pops smoothly into its spot
-            }
-        });
-    });
-}
-
-// Slidably shifts coordinates smoothly on a 5-second interval time wrapper
-function slideAmbientPositions() {
-    if (!isStandbyEnabled) return;
-
-    slotElementsArray.forEach((slot, index) => {
-        const baseAngle = parseFloat(slot.dataset.baseAngle);
-        const nativeRadius = parseInt(slot.dataset.nativeRadius);
-
-        // Desynchronized organic layout micro-deviations (keeps the circles perfectly round, but shifts their drift values asynchronously)
-        const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
-        const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
-
-        const targetAngle = baseAngle + angleShift;
-        const targetRadius = nativeRadius + radiusShift;
-
-        const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
-        const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
-
-        // Setting custom properties overrides coordinates smoothly via CSS transition rules without popping
-        slot.style.setProperty('--tx', newTx);
-        slot.style.setProperty('--ty', newTy);
-    });
-}
-
-function syncHorizonCounterRotation() {
-    const ring = document.getElementById('standby-orbit-ring');
-    
-    function loop() {
-        if (isStandbyEnabled && ring) {
-            const computedStyle = window.getComputedStyle(ring);
-            const matrix = computedStyle.transform;
-            
-            if (matrix && matrix !== 'none') {
-                const values = matrix.split('(')[1].split(')')[0].split(',');
-                const a = parseFloat(values[0]);
-                const b = parseFloat(values[1]);
-                let angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
-                if (angle < 0) angle += 360;
-                
-                ring.style.setProperty('--base-rotation', `${angle}deg`);
-            }
-        }
-        requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initStandbySystem();
-    resetStandbyTimeout();
-});
-*/
-
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
+/* ==========================================================================
+   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)
+   ========================================================================== */
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
 let standbyTimer;
@@ -1707,7 +1121,6 @@ function getDeterministicSlotIndex(uid, totalSlots) {
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
-    // 1. Setup Corner Hover Detection Zone & Button Icon Container
     const boundaryBox = document.createElement('div');
     boundaryBox.className = 'standby-trigger-boundary-box';
     
@@ -1723,7 +1136,6 @@ function initStandbySystem() {
     boundaryBox.appendChild(triggerBtn);
     document.body.appendChild(boundaryBox);
 
-    // 2. Setup Screen Space Layer Structure Overlay
     const overlay = document.createElement('div');
     overlay.id = 'standby-overlay';
     overlay.innerHTML = `
@@ -1749,7 +1161,6 @@ function initStandbySystem() {
     renderPersistentSymmetricalDots();
 }
 
-// Fixed-Center 12-Hour Clock Loop Matrix Engine
 function startStandbyClock() {
     const hoursDisplay = document.getElementById('standby-hours');
     const minutesDisplay = document.getElementById('standby-minutes');
@@ -1766,14 +1177,12 @@ function startStandbyClock() {
         hours = hours % 12;
         hours = hours ? hours : 12; 
         
-        // Pad single digits to ensure centering stability
         const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
         const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
         
         if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
         if (ampmDisplay) ampmDisplay.textContent = ampmStr;
         
-        // Execute smooth blurred font translation shifts on structural minute updates
         if (minutesDisplay) {
             if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
                 minutesDisplay.classList.add('is-shifting');
@@ -1787,7 +1196,6 @@ function startStandbyClock() {
         }
         lastRenderedMinutes = processedMinutesStr;
 
-        // Structured date outputs: MONDAY, JUNE 22 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
         dateString = dateString.replace(/,([^,]*)$/, '$1');
