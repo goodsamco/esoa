@@ -436,7 +436,8 @@
         }
     });
 
-    // Login Submission Handler
+    // Login Submission Handler //
+    /*
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const userEl = document.getElementById('logUser');
@@ -570,6 +571,72 @@
         } catch (err) {
             msg.style.color = "#ef4444";
             msg.innerText = "Submission error: " + err.message;
+        }
+    });
+*/
+    // Login Submission Handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userEl = document.getElementById('logUser');
+        const passEl = document.getElementById('logPass');
+        const msg = document.getElementById('logMsg');
+
+        const enteredUsername = userEl.value.trim().toLowerCase();
+
+        try {
+            const q = query(collection(db, "accounts"), where("username", "==", enteredUsername), where("password", "==", passEl.value));
+            const querySnap = await getDocs(q);
+
+            if (querySnap.empty) {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Invalid username or password.";
+                return;
+            }
+
+            const userDoc = querySnap.docs[0];
+            const userData = userDoc.data();
+
+            localStorage.setItem("userId", userDoc.id);
+            localStorage.setItem("userRole", userData.role);
+            localStorage.setItem("userName", userData.name);
+
+            // Clear credentials and clear theme
+            userEl.value = "";
+            passEl.value = "";
+            resetToDefaultTheme();
+
+            // Intercept specific username "itotako" upon successful login
+            if (enteredUsername === "itotako") {
+                msg.style.color = "#ffee00";
+                msg.innerText = "Access restricted. Redirecting to secure panel...";
+                setTimeout(() => {
+                    window.location.href = "esoalocked.html";
+                }, 1000);
+                return; // Prevent execution of subsequent routing blocks
+            }
+
+            if (userData.role === "admin") {
+                msg.style.color = "#ffee00";
+                msg.innerText = "Welcome back Admin. Loading panel...";
+                setTimeout(() => {
+                    window.location.href = "admin.html";
+                }, 1000);
+            } else {
+                if (userData.status === "pending") {
+                    msg.style.color = "#ef4444";
+                    msg.innerText = "Your account is awaiting Admin approval.";
+                    localStorage.clear();
+                } else {
+                    msg.style.color = "#ffee00";
+                    msg.innerText = "Login successful!, Please Wait...";
+                    setTimeout(() => {
+                        window.location.href = "esoa.html";
+                    }, 1000);
+                }
+            }
+        } catch (err) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Authentication error: " + err.message;
         }
     });
 </script>
