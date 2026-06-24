@@ -1020,7 +1020,7 @@ function appendBubbleToScroller(msg, msgId, direction) {
     const bbl = document.createElement('div');
     bbl.className = `msg-bubble ${direction}`;
     bbl.innerText = msg.text;
-
+/*
     if (msg.isDeleted) bbl.classList.add('msg-deleted-state');
 
     bbl.onclick = (e) => {
@@ -1064,6 +1064,63 @@ function appendBubbleToScroller(msg, msgId, direction) {
 
     syncReactionsDisplay(msgId, msg.senderName);
 }
+*/
+
+   if (msg.isDeleted) bbl.classList.add('msg-deleted-state');
+
+    // --- FIX: Create a dedicated element for the body text ---
+    // This ensures updates don't wipe out the header/username if they share the bubble.
+    const msgBody = document.createElement('span');
+    msgBody.className = 'msg-body-text';
+    msgBody.innerText = msg.text;
+    bbl.appendChild(msgBody);
+
+    bbl.onclick = (e) => {
+        e.stopPropagation();
+        if (bbl.classList.contains('msg-deleted-state')) return;
+        toggleReactionPicker(msgId, wrapper, msg);
+    };
+
+    wrapper.appendChild(bbl);
+
+    const rxContainer = document.createElement('div');
+    rxContainer.className = 'msg-reaction-container';
+    rxContainer.id = `rx-container-${msgId}`;
+    rxContainer.style.display = 'none';
+    wrapper.appendChild(rxContainer);
+
+    view.appendChild(wrapper);
+    view.scrollTop = view.scrollHeight;
+
+    let msgPath = isGroupChat ? `group_chat/messages/${msgId}` : `sessions/${userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`}/${msgId}`;
+    
+    onValue(ref(rtdb, msgPath), (snapshot) => {
+        if (!snapshot.exists()) {
+            wrapper.remove();
+            return;
+        }
+        const updatedMsg = snapshot.val();
+        
+        // --- FIX: Target only the body text, preserving username/identity ---
+        msgBody.innerText = updatedMsg.text;
+        
+        if (updatedMsg.isDeleted) {
+            bbl.classList.add('msg-deleted-state');
+            msgBody.style.fontStyle = 'italic'; // Style the text container instead of the whole bubble
+            if (wrapper.querySelector('.msg-ghost-reply-preview')) {
+                wrapper.querySelector('.msg-ghost-reply-preview').remove();
+            }
+        } else if (updatedMsg.edited) {
+            msgBody.style.fontStyle = 'italic';
+        } else {
+            msgBody.style.fontStyle = 'normal';
+        }
+    });
+
+    syncReactionsDisplay(msgId, msg.senderName);
+}
+
+/* Ends here */
 
 function toggleReactionPicker(msgId, wrapper, originalMsg) {
     const activeTray = document.getElementById(`tray-${msgId}`);
