@@ -713,7 +713,7 @@ body.copy-flash {
     transform: scale(1.25);
     filter: brightness(1.2);
 }
-
+/*
 .chat-input-row {
     padding: 10px;
     display: flex;
@@ -735,6 +735,37 @@ body.copy-flash {
 .chat-input-row input:focus {
     border-color: var(--primary);
 }
+*/
+.chat-input-row {
+    padding: 10px;
+    display: flex;
+    align-items: flex-end; /* Anchors the button to the bottom */
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.chat-input-row textarea {
+    flex: 1;
+    background: #000;
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    border-radius: 8px;
+    color: white;
+    padding: 8px;
+    font-size: 0.85rem;
+    outline: none;
+    
+    /* Auto-grow fixes */
+    resize: none;         /* Hides manual resizer handle */
+    height: 34px;         /* Match your original input height */
+    max-height: 150px;    /* Caps the growth so it doesn't take over the screen */
+    font-family: inherit; /* Inherits your app's main font family */
+    overflow-y: auto;     /* Shows a scrollbar only if text hits max-height */
+}
+
+.chat-input-row textarea:focus {
+    border-color: var(--primary);
+}
+/*Till here*/
 
 .chat-input-row button {
     background: var(--primary);
