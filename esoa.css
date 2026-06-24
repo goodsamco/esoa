@@ -1960,7 +1960,7 @@ body.standby-active .standby-center-profile {
  till here */
 
 /* ==========================================================================
-   10. STANDBY AMBIENT MODE (PERSISTENT ROTATION + STRUCTURAL CONTAMINATION)
+   10. STANDBY AMBIENT MODE (COLON-CENTERED 12H CLOCK + HIDDEN HOVER ICON)
    ========================================================================== */
 
 /* Stealth Corner Boundary Box for easy hover selection */
@@ -2158,7 +2158,6 @@ body.standby-active .standby-center-profile {
     height: 0;
     left: 50%;
     top: 50%;
-    /* Symmetrical system defaults entirely to fluid CSS transformation loops */
     animation: standbyClockwiseRotation 120s linear infinite;
 }
 
@@ -2170,14 +2169,14 @@ body.standby-active .standby-center-profile {
     justify-content: center;
     align-items: center;
     transform: translate(var(--tx), var(--ty));
-    /* Long transition time provides a deep elastic structural recovery */
+    /* Fluid elastic transitions for normal rotational tracking movements */
     transition: transform 4.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Long lasting spatial warp variables triggered on user dynamic updates */
+/* Radical displacement on active user changes with elastic transition */
 .standby-node-slot.is-disrupted {
-    transform: translate(calc(var(--tx) * 1.18), calc(var(--ty) * 1.18)) scale(1.25);
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform: translate(calc(var(--tx) * 1.22), calc(var(--ty) * 1.22)) scale(1.3);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .standby-ambient-dot {
@@ -2199,16 +2198,16 @@ body.standby-active .standby-center-profile {
                 box-shadow 1.2s ease;
 }
 
-/* Infected Color state variants */
+/* Infection Color Bleed Variant */
 .standby-node-slot.is-infected .standby-ambient-dot {
     background-color: var(--peer-color) !important;
-    box-shadow: 0 0 12px var(--peer-color) !important;
-    opacity: 0.65;
-    width: calc(var(--dot-size) * 1.5);
-    height: calc(var(--dot-size) * 1.5);
+    box-shadow: 0 0 14px var(--peer-color) !important;
+    opacity: 0.7;
+    width: calc(var(--dot-size) * 1.6);
+    height: calc(var(--dot-size) * 1.6);
 }
 
-/* Peer Active Core Node State */
+/* Active Peer Target Node State */
 .standby-node-slot.is-active .standby-ambient-dot {
     width: 50px;   
     height: 50px;
