@@ -258,7 +258,6 @@ function bindTypingIndicator(partnerId, displayName) {
     });
 }
 
-
 /* ==========================================================================
    4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - FIRESTORE INTEGRATED
    ========================================================================== */
@@ -351,8 +350,6 @@ onValue(presenceRef, (snapshot) => {
     const existingNodes = hub.querySelectorAll('.peer-wrapper:not(#gc-hub-node)');
     existingNodes.forEach(node => {
         const nodeUid = node.id.replace('peer-node-', '');
-
-        // REMOVED: Do not forcefully label your own profile element as offline here
         if (!users[nodeUid]) {
             node.classList.add('is-offline');
             node.style.order = "1";
@@ -360,29 +357,31 @@ onValue(presenceRef, (snapshot) => {
     });
 
     Object.keys(users).forEach(uid => {
-        // ALLOW YOUR OWN UID TO RENDER SO PROFILE PERSISTS
         const peer = users[uid];
-        if (!peer || !peer.uid) return;
+        if (!peer) return;
+        
+        // FIX: Fallback to the database record key if peer.uid doesn't exist natively
+        const currentUid = peer.uid || uid;
 
         const singleWordLabel = peer.name ? peer.name.split(' ')[0] : "Operator";
         const cleanAvatarSrc = premium3dAssets[peer.avatar] || peer.avatar || premium3dAssets['avatar-m1'];
 
-        let peerContainer = document.getElementById(`peer-node-${peer.uid}`);
+        let peerContainer = document.getElementById(`peer-node-${currentUid}`);
 
         if (!peerContainer) {
             peerContainer = document.createElement('div');
             peerContainer.className = 'peer-wrapper';
-            peerContainer.id = `peer-node-${peer.uid}`;
+            peerContainer.id = `peer-node-${currentUid}`;
 
             const imgNode = document.createElement('img');
             imgNode.className = 'peer-avatar-bubble';
             imgNode.src = cleanAvatarSrc;
             
-            // Prevent opening a chat channel if the profile clicked belongs to you
-            if (peer.uid !== userId) {
-                imgNode.onclick = () => initTransientChatChannel(peer.uid, singleWordLabel);
+            // If it's your own profile node, don't bind chat listeners
+            if (currentUid !== userId) {
+                imgNode.onclick = () => initTransientChatChannel(currentUid, singleWordLabel);
             } else {
-                peerContainer.classList.add('my-own-profile-node'); // Target class if styling needed
+                peerContainer.classList.add('my-own-profile-node');
             }
 
             const dotNode = document.createElement('div');
@@ -398,9 +397,9 @@ onValue(presenceRef, (snapshot) => {
             peerContainer.appendChild(nameTag);
             hub.appendChild(peerContainer);
 
-            if (peer.uid !== userId) {
-                bindBackgroundNotifListener(peer.uid);
-                bindTypingIndicator(peer.uid, singleWordLabel);
+            if (currentUid !== userId) {
+                bindBackgroundNotifListener(currentUid);
+                bindTypingIndicator(currentUid, singleWordLabel);
             }
         } else {
             const img = peerContainer.querySelector('.peer-avatar-bubble');
@@ -433,8 +432,8 @@ onValue(presenceRef, (snapshot) => {
 
         peerContainer.classList.remove('is-offline');
         
-        // Push your profile to the end/bottom using layout orders if desired
-        if (peer.uid === userId) {
+        // Push your node cleanly to the bottom layout using flex/grid order 2
+        if (currentUid === userId) {
             peerContainer.style.order = "2"; 
         } else {
             peerContainer.style.order = "0";
