@@ -1627,38 +1627,32 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     display: flex;
     flex-direction: column;
     align-items: center;
+    border: 2px dashed transparent;
+    padding: 20px;
+    border-radius: 16px;
+    transition: border-color 0.4s ease, background 0.4s ease;
 }
-/*
-.standby-time-display {
-    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
-    font-size: 84px;
-    font-weight: 800;
-    line-height: 1.0;
-    color: var(--primary);
-    letter-spacing: -1px;
-    font-variant-numeric: tabular-nums;
-    -webkit-font-feature-settings: "tnum";
-    font-feature-settings: "tnum";
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
+
+/* Edit Mode Layout Visualizer Window Frame Context */
+.standby-clock-container.edit-mode-active {
+    border-color: var(--primary);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
 }
-*/
+
 .standby-time-display {
     font-family: "Big Shoulders Display", sans-serif;
     font-size: 200px;
     font-weight: 900;
     line-height: 0.75;
     color: var(--primary);
-
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
-
     display: flex;
     align-items: baseline;
     justify-content: center;
-
     letter-spacing: 1px;
+    transition: font-size 0.2s cubic-bezier(0.25, 1, 0.5, 1), font-family 0.3s ease;
 }
 
 /* Keeps hours tracking completely balanced to the left side of the colon */
@@ -1666,6 +1660,7 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     text-align: right;
     width: 160px;
     display: inline-block;
+    transition: width 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* The exact mathematical center axis of the display viewport layout */
@@ -1682,6 +1677,7 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     width: 160px;
     display: inline-flex;
     align-items: baseline;
+    transition: width 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .standby-digit-minutes {
@@ -1701,19 +1697,79 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     text-transform: uppercase;
     opacity: 0.7;
     letter-spacing: 0.5px;
-    margin-left: 4px; /* Just the right amount of organic spacing */
+    margin-left: 4px;
 }
 
 /* Normal weight date presentation layer text */
 .standby-date-display {
     font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 16px;
-    font-weight: 400; /* Regular / Normal thickness weight profile */
+    font-weight: 400;
     color: var(--primary);
     opacity: 0.65;
     letter-spacing: 0.5px;
     margin-top: 14px;
     text-transform: uppercase;
+}
+
+/* Smooth Drag Corner-Handle Component Details */
+.standby-resize-drag-handle {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    border-right: 3px solid var(--primary);
+    border-bottom: 3px solid var(--primary);
+    cursor: se-resize;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.standby-clock-container.edit-mode-active .standby-resize-drag-handle {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Custom Customization Style Tray Panels */
+.standby-font-selector-tray {
+    margin-top: 15px;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.4s ease;
+}
+
+.standby-clock-container.edit-mode-active .standby-font-selector-tray {
+    opacity: 1;
+    max-height: 50px;
+}
+
+.standby-tray-action {
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--primary);
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.standby-tray-action:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.04);
+}
+
+/* Layout morph configurations for the manual button trigger states */
+.standby-manual-trigger-btn.ctrl-editing-state {
+    opacity: 1 !important;
+    background: var(--primary) !important;
+    color: #000 !important;
+    box-shadow: 0 0 14px var(--primary);
 }
 
 /* Constellation Stage Component Layers */
@@ -1806,105 +1862,4 @@ body.standby-active .standby-center-profile {
 @keyframes standbyCounterClockwiseRotation {
     from { transform: translate(-50%, -50%) rotate(360deg); }
     to { transform: translate(-50%, -50%) rotate(0deg); }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Custom Interaction & Core Handle Customization Styling Rules */
-.standby-clock-container {
-    border: 2px dashed transparent;
-    padding: 20px;
-    border-radius: 16px;
-    transition: border-color 0.4s ease, background 0.4s ease;
-}
-
-/* Edit Mode Layout Visualizer Window Frame Context */
-.standby-clock-container.edit-mode-active {
-    border-color: var(--primary);
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-}
-
-/* Smooth Drag Corner-Handle Component Details */
-.standby-resize-drag-handle {
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    width: 16px;
-    height: 16px;
-    border-right: 3px solid var(--primary);
-    border-bottom: 3px solid var(--primary);
-    cursor: se-resize;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.standby-clock-container.edit-mode-active .standby-resize-drag-handle {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* Custom Customization Style Tray Panels */
-.standby-font-selector-tray {
-    margin-top: 15px;
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.3s ease, max-height 0.4s ease;
-}
-
-.standby-clock-container.edit-mode-active .standby-font-selector-tray {
-    opacity: 1;
-    max-height: 50px;
-}
-
-.standby-tray-action {
-    background: var(--glass);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: var(--primary);
-    padding: 6px 16px;
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: 20px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: background 0.3s, transform 0.2s;
-}
-
-.standby-tray-action:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.04);
-}
-
-/* Layout morph configurations for the manual button trigger states */
-.standby-manual-trigger-btn.ctrl-editing-state {
-    opacity: 1 !important;
-    background: var(--primary) !important;
-    color: #000 !important;
-    box-shadow: 0 0 14px var(--primary);
-}
-
-/* Timing Translation Engine: Ensures custom sizes change with morph physics animations */
-.standby-time-display {
-    transition: font-size 0.2s cubic-bezier(0.25, 1, 0.5, 1), font-family 0.3s ease;
-}
-.standby-hours-box, .standby-minutes-box {
-    transition: width 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
