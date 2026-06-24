@@ -1987,5 +1987,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
 });
-*/
 
