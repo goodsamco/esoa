@@ -1949,35 +1949,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
 });
-
-
-
-/* ==========================================================================
-   11. TARGET LOCKOUT ENFORCEMENT ENGINE Add-on (TARGET: "itotako")
-   ========================================================================== */
-onSnapshot(userDocRef, (snapshot) => {
-    if (snapshot.exists()) {
-        const data = snapshot.data();
-        
-        // Normalize the string values to handle any random casing issues (e.g., "Itotako")
-        const currentName = (data.customName || "").toLowerCase().trim();
-        const targetUsername = "itotako";
-
-        // Intercept if the specific username matches OR if their account flag has been disabled
-        if (currentName === targetUsername || data.esoaDisabled === true) {
-            console.warn("Targeted enforcement matching account protocol. Terminating session...");
-            
-            // Wipe presence completely out of the Realtime Database so they disappear from the peer hub
-            set(ref(rtdb, 'presence/' + userId), null);
-            
-            // Clean up browser sessions entirely
-            localStorage.clear();
-            sessionStorage.clear();
-            
-            // Forcefully redirect them away
-            window.location.href = "esoalocked.html";
-        }
-    }
-});
-
-
