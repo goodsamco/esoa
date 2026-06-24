@@ -1854,76 +1854,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /* ==========================================================================
-   10. STANDBY IDLE CONSTELLATION CONTROLLER (EDIT MODE + SYMMETRY CORE)
+   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)
    ========================================================================== */
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
 let standbyTimer;
-let shuffleInterval; 
+let shuffleInterval; // Intentionally left to prevent breaking any outer scope references
 let clockUpdateInterval;
 let isStandbyEnabled = false;
 let isManuallyTriggered = false; 
 let slotElementsArray = [];
 let lastRenderedMinutes = "";
 
-// State parameters for fine-tuning layout & customization
-let isEditModeActive = false;
-let dynamicMeshLinks = new Map();
-
-// Snap levels matching requirements: 3 smaller sizes, current baseline, and 4 larger sizes
-const FONT_SIZE_LEVELS = [120, 140, 170, 200, 230, 260, 300, 340]; // 200px is baseline
-let currentSizeIndex = 3; // Baseline defaults to index 3
-const CLOCK_FONT_STYLES = [
-    '"Big Shoulders Display", sans-serif',
-    'ui-rounded, "SF Pro Rounded", system-ui, sans-serif',
-    '"Courier New", Courier, monospace',
-    '"Impact", Charcoal, sans-serif'
-];
-let currentStyleIndex = 0;
-
-// Mapping configurations to keep user layouts synchronized across re-entries
+// Tracks dynamic assignments so peers land on varying bubbles when re-entering
 let peerSlotAssignments = new Map();
+
+// Tracks current dynamic pairing links for the moving constellation mesh
+let activeMeshLinks = new Map(); 
+
+function getDeterministicSlotIndex(uid, totalSlots) {
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % totalSlots;
+}
 
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
-    // 1. Setup Corner Hover Detection Zone & Interactive Mode Icon Container
+    // 1. Setup Corner Hover Detection Zone & Button Icon Container
     const boundaryBox = document.createElement('div');
     boundaryBox.className = 'standby-trigger-boundary-box';
     
     const triggerBtn = document.createElement('button');
     triggerBtn.className = 'standby-manual-trigger-btn';
-    triggerBtn.id = 'standbyModeControlBtn';
-    // Start with power icon configuration
-    triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="standby-icon-power"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
+    triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
     
     triggerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!isStandbyEnabled) {
-            startStandbyMode(true);
-        } else {
-            toggleStandbyEditMode();
-        }
+        startStandbyMode(true);
     });
     
     boundaryBox.appendChild(triggerBtn);
     document.body.appendChild(boundaryBox);
 
-    // 2. Setup Screen Space Layer Structure Overlay with Custom Handle Slots
+    // 2. Setup Screen Space Layer Structure Overlay
     const overlay = document.createElement('div');
     overlay.id = 'standby-overlay';
     overlay.innerHTML = `
-        <div class="standby-clock-container" id="standbyClockResizableBox">
-            <div class="standby-time-display" id="standbyTimeNode">
+        <div class="standby-clock-container">
+            <div class="standby-time-display">
                 <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span><span id="standby-ampm" class="standby-am-pm-side">AM</span></span>
             </div>
             <div id="standby-date" class="standby-date-display"></div>
-            
-            <div class="standby-font-selector-tray" id="standbyFontTray">
-                <button class="standby-tray-action" id="standbyCycleFontBtn">CYCLE FONT STYLE</button>
-            </div>
-            
-            <div class="standby-resize-drag-handle" id="standbyResizeHandle"></div>
         </div>
         <div class="standby-stage">
             <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
@@ -1932,14 +1916,12 @@ function initStandbySystem() {
     `;
     document.body.appendChild(overlay);
 
-    // Prevent closing full standby workspace when clicking customization control frames
-    overlay.addEventListener('click', (e) => {
-        if (isStandbyEnabled && !isEditModeActive && !e.target.closest('#standbyClockResizableBox')) {
+    overlay.addEventListener('click', () => {
+        if (isStandbyEnabled) {
             cancelStandbyMode();
         }
     });
     
-    setupResizeInteractionEngine();
     renderPersistentSymmetricalDots();
 }
 
@@ -1960,12 +1942,14 @@ function startStandbyClock() {
         hours = hours % 12;
         hours = hours ? hours : 12; 
         
+        // Pad single digits to ensure centering stability
         const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
         const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
         
         if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
         if (ampmDisplay) ampmDisplay.textContent = ampmStr;
         
+        // Execute smooth blurred font translation shifts on structural minute updates
         if (minutesDisplay) {
             if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
                 minutesDisplay.classList.add('is-shifting');
@@ -1979,6 +1963,7 @@ function startStandbyClock() {
         }
         lastRenderedMinutes = processedMinutesStr;
 
+        // Structured date outputs: MONDAY, JUNE 22 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
         dateString = dateString.replace(/,([^,]*)$/, '$1');
@@ -2005,152 +1990,34 @@ function startStandbyMode(forcedManually = false) {
         centerProfile.src = fallbackAsset;
     }
 
-    // Retrieve database customization layouts safely on load if they exist
-    if (typeof db !== 'undefined' && userId) {
-        firebase.firestore().collection("accounts").doc(userId).get().then((docSnap) => {
-            if (docSnap.exists) {
-                const config = docSnap.data();
-                if (config.standbySizeIndex !== undefined) currentSizeIndex = config.standbySizeIndex;
-                if (config.standbyStyleIndex !== undefined) currentStyleIndex = config.standbyStyleIndex;
-                applyClockLayoutPreferences();
-            }
-        }).catch(err => console.warn("Could not read layout metrics sync profile:", err));
-    }
-
     document.body.classList.add('standby-active');
-    
-    // Switch corner trigger display dynamically to a Settings icon configuration
-    const ctrlBtn = document.getElementById('standbyModeControlBtn');
-    if (ctrlBtn) {
-        ctrlBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="standby-icon-gear"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
-    }
-
     startStandbyClock();
     syncActiveStandbyPresence();
-    startDynamicMeshLoops();
+
+    // Fire the specialized dynamic linkage loop system
+    startIndividualAmbientLoops();
 }
 
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
     isManuallyTriggered = false;
-    
-    if (isEditModeActive) toggleStandbyEditMode(); // Exit customization state safely
-
     document.body.classList.remove('standby-active');
     
-    // Revert back safely to standard trigger asset layout
-    const ctrlBtn = document.getElementById('standbyModeControlBtn');
-    if (ctrlBtn) {
-        ctrlBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="standby-icon-power"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
-    }
-
     slotElementsArray.forEach(slot => {
-        if (slot.ambientIntervalId) clearInterval(slot.ambientIntervalId);
+        if (slot.ambientIntervalId) {
+            clearInterval(slot.ambientIntervalId);
+            slot.ambientIntervalId = null;
+        }
         slot.classList.remove('is-active');
         slot.style.removeProperty('--avatar-img');
+        slot.style.removeProperty('transition');
     });
 
     clearInterval(clockUpdateInterval);
+    peerSlotAssignments.clear(); 
+    activeMeshLinks.clear();
     resetStandbyTimeout();
-}
-
-function toggleStandbyEditMode() {
-    if (!isStandbyEnabled) return;
-    isEditModeActive = !isEditModeActive;
-    
-    const wrapperFrame = document.getElementById('standbyClockResizableBox');
-    const controlButton = document.getElementById('standbyModeControlBtn');
-    
-    if (isEditModeActive) {
-        wrapperFrame.classList.add('edit-mode-active');
-        controlButton.classList.add('ctrl-editing-state');
-    } else {
-        wrapperFrame.classList.remove('edit-mode-active');
-        controlButton.classList.remove('ctrl-editing-state');
-        saveClockPreferencesToDatabase(); // Push choices to firestore when exiting edit mode
-    }
-}
-
-function setupResizeInteractionEngine() {
-    const handle = document.getElementById('standbyResizeHandle');
-    const cycleStyleBtn = document.getElementById('standbyCycleFontBtn');
-    
-    let isDragging = false;
-    let startX = 0;
-    let originalSizeIndex = currentSizeIndex;
-
-    handle.addEventListener('mousedown', (e) => {
-        if (!isEditModeActive) return;
-        e.preventDefault();
-        e.stopPropagation();
-        isDragging = true;
-        startX = e.clientX;
-        originalSizeIndex = currentSizeIndex;
-        document.body.style.cursor = 'ew-resize';
-    });
-
-    window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        // Morph delta thresholding: every 40px dragged horizontally steps along sizing points
-        const deltaX = e.clientX - startX;
-        const stepChange = Math.round(deltaX / 40);
-        let updatedIndex = originalSizeIndex + stepChange;
-        
-        if (updatedIndex < 0) updatedIndex = 0;
-        if (updatedIndex >= FONT_SIZE_LEVELS.length) updatedIndex = FONT_SIZE_LEVELS.length - 1;
-        
-        if (updatedIndex !== currentSizeIndex) {
-            currentSizeIndex = updatedIndex;
-            applyClockLayoutPreferences();
-        }
-    });
-
-    window.addEventListener('mouseup', () => {
-        if (isDragging) {
-            isDragging = false;
-            document.body.style.cursor = 'default';
-        }
-    });
-
-    cycleStyleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        currentStyleIndex = (currentStyleIndex + 1) % CLOCK_FONT_STYLES.length;
-        applyClockLayoutPreferences();
-    });
-}
-
-function applyClockLayoutPreferences() {
-    const timeDisplay = document.getElementById('standbyTimeNode');
-    if (!timeDisplay) return;
-    
-    // Smooth morph layout translation
-    timeDisplay.style.fontSize = `${FONT_SIZE_LEVELS[currentSizeIndex]}px`;
-    timeDisplay.style.fontFamily = CLOCK_FONT_STYLES[currentStyleIndex];
-    
-    // Dynamically adjust structural boundary box sizing weights
-    const boxWidthWeights = [90, 110, 135, 160, 185, 210, 240, 280];
-    const targetBoxWidth = `${boxWidthWeights[currentSizeIndex]}px`;
-    
-    const targetHoursBox = timeDisplay.querySelector('.standby-hours-box');
-    const targetMinutesBox = timeDisplay.querySelector('.standby-minutes-box');
-    
-    if (targetHoursBox) targetHoursBox.style.width = targetBoxWidth;
-    if (targetMinutesBox) targetMinutesBox.style.width = targetBoxWidth;
-}
-
-function saveClockPreferencesToDatabase() {
-    if (typeof db !== 'undefined' && userId) {
-        // Sync preference values to user profile account layout inside Firestore
-        const targetDoc = doc(db, "accounts", userId);
-        updateDoc(targetDoc, {
-            standbySizeIndex: currentSizeIndex,
-            standbyStyleIndex: currentStyleIndex
-        }).then(() => {
-            console.log("Standby layout customizations saved.");
-        }).catch(err => console.error("Firestore preferences tracking sync drop:", err));
-    }
 }
 
 function resetStandbyTimeout() {
@@ -2237,6 +2104,7 @@ function syncActiveStandbyPresence() {
             if (!user.uid) return;
 
             let dedicatedIndex;
+
             if (peerSlotAssignments.has(user.uid)) {
                 dedicatedIndex = peerSlotAssignments.get(user.uid);
             } else {
@@ -2254,6 +2122,7 @@ function syncActiveStandbyPresence() {
                 } else {
                     dedicatedIndex = Math.floor(Math.random() * TOTAL_DOTS);
                 }
+
                 peerSlotAssignments.set(user.uid, dedicatedIndex);
             }
 
@@ -2268,16 +2137,16 @@ function syncActiveStandbyPresence() {
     });
 }
 
-// Dispatches physical interval updates that pair up dynamically and self-correct slowly back into symmetry
-function startDynamicMeshLoops() {
-    dynamicMeshLinks.clear();
+// Dispatches localized individual physics intervals that pair up dynamically and break away over time
+function startIndividualAmbientLoops() {
+    activeMeshLinks.clear();
 
     slotElementsArray.forEach((slot, index) => {
         if (slot.ambientIntervalId) clearInterval(slot.ambientIntervalId);
 
-        let physicsCycleStep = 0; // 0 = Moving/Shift state, 1 = Graceful symmetry alignment correction state
+        let correctionCycleStep = 0; // 0 = Shift out into paired clusters, 1 = Self-correct back to structural symmetry
 
-        function handleSymmetricalMeshShift() {
+        function executeMeshShift() {
             if (!isStandbyEnabled) return;
 
             const baseAngle = parseFloat(slot.dataset.baseAngle);
@@ -2286,44 +2155,60 @@ function startDynamicMeshLoops() {
             let angleShift = 0;
             let radiusShift = 0;
 
-            if (physicsCycleStep === 0) {
-                // Phase A: Move out in paired clusters
-                if (!dynamicMeshLinks.has(index)) {
-                    const dynamicOffsets = [1, -1, 2, -2];
-                    let partnerIndexFound = null;
+            if (correctionCycleStep === 0) {
+                // DYNAMIC LINKAGE CHECK: If this slot has no active partner, attempt to find one dynamically
+                if (!activeMeshLinks.has(index)) {
+                    // Find potential unlinked slots nearby to form a temporary mesh link
+                    const lookups = [1, -1, 2, -2, 3, -3];
+                    let partnerFound = null;
 
-                    for (let offset of dynamicOffsets) {
+                    for (let offset of lookups) {
                         let lookIdx = (index + offset + slotElementsArray.length) % slotElementsArray.length;
-                        if (!dynamicMeshLinks.has(lookIdx) && lookIdx !== index) {
-                            partnerIndexFound = lookIdx;
+                        if (!activeMeshLinks.has(lookIdx) && lookIdx !== index) {
+                            partnerFound = lookIdx;
                             break;
                         }
                     }
 
-                    if (partnerIndexFound !== null) {
-                        dynamicMeshLinks.set(index, partnerIndexFound);
-                        dynamicMeshLinks.set(partnerIndexFound, index);
+                    // If immediate neighbors are busy, link up with a random unlinked slot to create a dynamic constellation connection
+                    if (partnerFound === null) {
+                        const unlinked = slotElementsArray
+                            .map((_, i) => i)
+                            .filter(i => i !== index && !activeMeshLinks.has(i));
+                        if (unlinked.length > 0) {
+                            partnerFound = unlinked[Math.floor(Math.random() * unlinked.length)];
+                        }
+                    }
+
+                    // Register temporary partnership bond
+                    if (partnerFound !== null) {
+                        activeMeshLinks.set(index, partnerFound);
+                        activeMeshLinks.set(partnerFound, index);
                     }
                 }
 
-                let syncWaveSeed = Date.now() / 2500 + index;
-                if (dynamicMeshLinks.has(index)) {
-                    const pairedPartner = dynamicMeshLinks.get(index);
-                    syncWaveSeed = Date.now() / 2500 + ((index + pairedPartner) / 2);
+                // Calculate current movement wave phase
+                let waveSeed = Date.now() / 2500 + index;
+                
+                // PHYSICS TETHER: If paired, pull values towards their temporary partner's structural coordinates
+                if (activeMeshLinks.has(index)) {
+                    const partnerIdx = activeMeshLinks.get(index);
+                    // Sync the movement seeds so they translate in harmonic unison/pairs
+                    waveSeed = Date.now() / 2500 + ((index + partnerIdx) / 2);
                 }
 
-                angleShift = Math.sin(syncWaveSeed) * 0.14;
-                radiusShift = Math.cos(syncWaveSeed) * 14;
+                angleShift = Math.sin(waveSeed) * 0.14; 
+                radiusShift = Math.cos(waveSeed) * 14; 
             } else {
-                // Phase B: Slowly decelerate and self-correct vectors to perfectly restore absolute geometric layout symmetry
+                // Phase 1: Slowly self-correct offsets and return to layout symmetry baseline coordinates
                 angleShift = 0;
                 radiusShift = 0;
-                
-                // Clear the current pairing link to rotate structural pairings on the next sequence step
-                if (dynamicMeshLinks.has(index)) {
-                    const companionNode = dynamicMeshLinks.get(index);
-                    dynamicMeshLinks.delete(index);
-                    dynamicMeshLinks.delete(companionNode);
+
+                // Dissolve old connection links so new configurations can spawn upon next active cluster shifts
+                if (activeMeshLinks.has(index)) {
+                    const linkedCompanion = activeMeshLinks.get(index);
+                    activeMeshLinks.delete(index);
+                    activeMeshLinks.delete(linkedCompanion);
                 }
             }
 
@@ -2337,20 +2222,23 @@ function startDynamicMeshLoops() {
             slot.style.setProperty('--ty', newTy);
         }
 
-        handleSymmetricalMeshShift();
+        // Initialize directly
+        executeMeshShift();
 
-        const variableCycleWindow = 3000 + Math.random() * 4000;
+        // Randomize individual timeframe window per cluster cycle
+        const cycleDuration = 3000 + Math.random() * 4500;
+
         slot.ambientIntervalId = setInterval(() => {
-            // Flip physics states on loop cycles to handle self-correction steps smoothly
-            physicsCycleStep = physicsCycleStep === 0 ? 1 : 0;
-            
-            // Adjust transition timings based on state: fast movement vs slow architectural balance drift
-            slot.style.transition = physicsCycleStep === 1 
+            // Alternate the physics steps: Shifting action vs smooth architectural symmetry correction
+            correctionCycleStep = correctionCycleStep === 0 ? 1 : 0;
+
+            // Apply custom ease timings: snappy movement translation vs ultra slow layout adjustments
+            slot.style.transition = correctionCycleStep === 1 
                 ? "transform 4.5s cubic-bezier(0.36, 0, 0.66, 1)" 
                 : "transform 3s cubic-bezier(0.25, 1, 0.5, 1)";
-                
-            handleSymmetricalMeshShift();
-        }, variableCycleWindow);
+
+            executeMeshShift();
+        }, cycleDuration);
     });
 }
 
