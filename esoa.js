@@ -1,7 +1,6 @@
 /* ==========================================================================
    1. FIREBASE CORE SYSTEM INITIALIZATION
    ========================================================================== */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getDatabase, ref, onValue, set, push, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -879,7 +878,7 @@ function initTransientChatChannel(partnerId, partnerName) {
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
- /*   const input = document.getElementById('chatMsgInput');
+    const input = document.getElementById('chatMsgInput');
 
     input.oninput = () => {
         const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
@@ -887,44 +886,7 @@ function initTransientChatChannel(partnerId, partnerName) {
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
     };
-    */
-const input = document.getElementById('chatMsgInput');
-let typingTimeout; 
-
-input.oninput = () => {
-    // 1. Your Firebase typing indicator
-    const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
-    set(typingRef, true);
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
-
-    // 2. Auto-grow calculation
-    input.style.height = "auto"; 
-    input.style.height = input.scrollHeight + "px";
-
-    // 3. FIX: Toggle scrollbar dynamically at the 150px threshold
-    if (input.scrollHeight >= 150) {
-        input.style.overflowY = "auto"; // Show scrollbar
-    } else {
-        input.style.overflowY = "hidden"; // Hide scrollbar
-    }
-};
-
-// Reset height and scrollbar when message is sent
-input.onkeydown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault(); 
-        sendChatPayload();
-        
-        // Reset everything back to single-line defaults
-        input.style.height = "auto"; 
-        input.style.overflowY = "hidden"; 
-    }
-};
-
-   /* till here */
-
-   
+    
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
@@ -1020,7 +982,7 @@ function appendBubbleToScroller(msg, msgId, direction) {
     const bbl = document.createElement('div');
     bbl.className = `msg-bubble ${direction}`;
     bbl.innerText = msg.text;
-   
+
     if (msg.isDeleted) bbl.classList.add('msg-deleted-state');
 
     bbl.onclick = (e) => {
@@ -1527,21 +1489,13 @@ window.addEventListener('click', () => {
 
 
 /* ==========================================================================\n   10. STANDBY IDLE ANIMATION CONTROLLER\n   ========================================================================== 
-10. 
+10. */
+/* ==========================================================================\n   10. STANDBY IDLE COORD & MORPH CONTROLLER\n   ========================================================================== */
+/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER\n   ========================================================================== */
 
 let standbyTimer;
-let shuffleInterval;
 const STANDBY_DELAY = 60000; // 1 minute inactivity timeout threshold
 let isStandbyEnabled = false;
-let slotElementsArray = [];
-
-function getDeterministicSlotIndex(uid, totalSlots) {
-    let hash = 0;
-    for (let i = 0; i < uid.length; i++) {
-        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash) % totalSlots;
-}
 
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
@@ -1555,8 +1509,6 @@ function initStandbySystem() {
         </div>
     `;
     document.body.appendChild(overlay);
-    
-    syncHorizonCounterRotation();
 }
 
 function startStandbyMode() {
@@ -1570,18 +1522,12 @@ function startStandbyMode() {
 
     document.body.classList.add('standby-active');
     renderPersistentSymmetricalDots();
-
-    // Trigger desynchronized 5s fluid gliding layout transitions
-    clearInterval(shuffleInterval);
-    shuffleInterval = setInterval(slideAmbientPositions, 5000);
-    slideAmbientPositions();
 }
 
 function cancelStandbyMode() {
     if (!isStandbyEnabled) return;
     isStandbyEnabled = false;
     document.body.classList.remove('standby-active');
-    clearInterval(shuffleInterval);
     resetStandbyTimeout();
 }
 
@@ -1593,6 +1539,7 @@ function resetStandbyTimeout() {
     standbyTimer = setTimeout(startStandbyMode, STANDBY_DELAY);
 }
 
+// Global wake listeners
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
     window.addEventListener(evt, resetStandbyTimeout, { passive: true });
 });
@@ -1601,46 +1548,34 @@ function renderPersistentSymmetricalDots() {
     const ringContainer = document.getElementById('standby-orbit-ring');
     if (!ringContainer || typeof rtdb === 'undefined') return;
 
+    // A beautiful cluster arrangement right next to the profile border
+    const FIXED_DOT_COUNT = 12; 
+    const ORBIT_RADIUS = 85; 
+    const DOT_SIZES = [5, 9, 6, 11, 4, 10, 5, 8, 6, 12, 5, 7]; // Symmetrical layout variance
+
     ringContainer.innerHTML = ''; 
-    slotElementsArray = [];
 
-    // Concentric Symmetrical Rings structure arrangement
-    const LAYERS = [
-        { count: 8,  radius: 88,  dotSize: 4  }, // Close layer -> Completely round, Small size
-        { count: 12, radius: 130, dotSize: 7  }, // Middle layer -> Medium size
-        { count: 16, radius: 175, dotSize: 11 }, // Distant layer -> Completely round, Big size
-        { count: 20, radius: 220, dotSize: 15 }  // Outermost layer -> Biggest size
-    ];
+    const slotElements = [];
+    for (let i = 0; i < FIXED_DOT_COUNT; i++) {
+        const angle = (i / FIXED_DOT_COUNT) * 2 * Math.PI;
+        const tx = `${Math.round(ORBIT_RADIUS * Math.cos(angle))}px`;
+        const ty = `${Math.round(ORBIT_RADIUS * Math.sin(angle))}px`;
 
-    const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
+        const slotNode = document.createElement('div');
+        slotNode.className = 'standby-node-slot';
+        slotNode.style.setProperty('--tx', tx);
+        slotNode.style.setProperty('--ty', ty);
 
-    LAYERS.forEach((layer) => {
-        for (let i = 0; i < layer.count; i++) {
-            const angle = (i / layer.count) * 2 * Math.PI;
-            
-            // Store pristine basic layout configurations directly inside target elements
-            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
-            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
+        const innerDot = document.createElement('div');
+        innerDot.className = 'standby-ambient-dot';
+        innerDot.style.setProperty('--dot-size', `${DOT_SIZES[i % DOT_SIZES.length]}px`);
 
-            const slotNode = document.createElement('div');
-            slotNode.className = 'standby-node-slot';
-            slotNode.dataset.baseAngle = angle;
-            slotNode.dataset.nativeRadius = layer.radius;
-            
-            slotNode.style.setProperty('--tx', tx);
-            slotNode.style.setProperty('--ty', ty);
+        slotNode.appendChild(innerDot);
+        ringContainer.appendChild(slotNode);
+        slotElements.push(slotNode);
+    }
 
-            const innerDot = document.createElement('div');
-            innerDot.className = 'standby-ambient-dot';
-            innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
-
-            slotNode.appendChild(innerDot);
-            ringContainer.appendChild(slotNode);
-            slotElementsArray.push(slotNode);
-        }
-    });
-
-    // Realtime Firebase Presence Integration Engine
+    // Bind real-time data to morph specific dots into profiles
     const standbyPresenceRef = ref(rtdb, 'presence/');
     onValue(standbyPresenceRef, (snapshot) => {
         if (!isStandbyEnabled) return;
@@ -1648,605 +1583,26 @@ function renderPersistentSymmetricalDots() {
         const activeUsersData = snapshot.val() || {};
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
 
-        slotElementsArray.forEach(slot => {
+        // Reset all back to ambient tracking dot states first
+        slotElements.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        onlineRemotes.forEach((user) => {
-            if (!user.uid) return;
+        // Morph active users into the pre-existing slots
+        onlineRemotes.forEach((user, index) => {
+            if (index >= FIXED_DOT_COUNT) return; 
 
-            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
-            const targetedSlot = slotElementsArray[dedicatedIndex];
+            const targetedSlot = slotElements[index];
+            const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
 
-            if (targetedSlot) {
-                const resolvedUserAvatar = user.avatar || 'https://via.placeholder.com/150';
-                targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-                targetedSlot.classList.add('is-active'); // Pops smoothly into its spot
-            }
+            targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
+            targetedSlot.classList.add('is-active');
         });
     });
-}
-
-// Slidably shifts coordinates smoothly on a 5-second interval time wrapper
-function slideAmbientPositions() {
-    if (!isStandbyEnabled) return;
-
-    slotElementsArray.forEach((slot, index) => {
-        const baseAngle = parseFloat(slot.dataset.baseAngle);
-        const nativeRadius = parseInt(slot.dataset.nativeRadius);
-
-        // Desynchronized organic layout micro-deviations (keeps the circles perfectly round, but shifts their drift values asynchronously)
-        const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
-        const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
-
-        const targetAngle = baseAngle + angleShift;
-        const targetRadius = nativeRadius + radiusShift;
-
-        const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
-        const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
-
-        // Setting custom properties overrides coordinates smoothly via CSS transition rules without popping
-        slot.style.setProperty('--tx', newTx);
-        slot.style.setProperty('--ty', newTy);
-    });
-}
-
-function syncHorizonCounterRotation() {
-    const ring = document.getElementById('standby-orbit-ring');
-    
-    function loop() {
-        if (isStandbyEnabled && ring) {
-            const computedStyle = window.getComputedStyle(ring);
-            const matrix = computedStyle.transform;
-            
-            if (matrix && matrix !== 'none') {
-                const values = matrix.split('(')[1].split(')')[0].split(',');
-                const a = parseFloat(values[0]);
-                const b = parseFloat(values[1]);
-                let angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
-                if (angle < 0) angle += 360;
-                
-                ring.style.setProperty('--base-rotation', `${angle}deg`);
-            }
-        }
-        requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
-});
-*/
-
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
-/* come back here ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
-==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
-
-const STANDBY_DELAY = 30000; // 30 sec in milliseconds
-
-
-
-let standbyTimer;
-
-let shuffleInterval;
-
-let clockUpdateInterval;
-
-let isStandbyEnabled = false;
-
-let isManuallyTriggered = false; 
-
-let slotElementsArray = [];
-
-let lastRenderedMinutes = "";
-
-
-
-function getDeterministicSlotIndex(uid, totalSlots) {
-
-    let hash = 0;
-
-    for (let i = 0; i < uid.length; i++) {
-
-        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-
-    }
-
-    return Math.abs(hash) % totalSlots;
-
-}
-
-
-
-function initStandbySystem() {
-
-    if (document.getElementById('standby-overlay')) return;
-
-    
-
-    // 1. Setup Corner Hover Detection Zone & Button Icon Container
-
-    const boundaryBox = document.createElement('div');
-
-    boundaryBox.className = 'standby-trigger-boundary-box';
-
-    
-
-    const triggerBtn = document.createElement('button');
-
-    triggerBtn.className = 'standby-manual-trigger-btn';
-
-    triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
-
-    
-
-    triggerBtn.addEventListener('click', (e) => {
-
-        e.stopPropagation();
-
-        startStandbyMode(true);
-
-    });
-
-    
-
-    boundaryBox.appendChild(triggerBtn);
-
-    document.body.appendChild(boundaryBox);
-
-
-
-    // 2. Setup Screen Space Layer Structure Overlay
-
-    const overlay = document.createElement('div');
-
-    overlay.id = 'standby-overlay';
-
-    overlay.innerHTML = `
-
-        <div class="standby-clock-container">
-
-            <div class="standby-time-display">
-
-                <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span><span id="standby-ampm" class="standby-am-pm-side">AM</span></span>
-
-            </div>
-
-            <div id="standby-date" class="standby-date-display"></div>
-
-        </div>
-
-        <div class="standby-stage">
-
-            <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
-
-            <div id="standby-orbit-ring" class="standby-orbit-ring"></div>
-
-        </div>
-
-    `;
-
-    document.body.appendChild(overlay);
-
-
-
-    overlay.addEventListener('click', () => {
-
-        if (isStandbyEnabled) {
-
-            cancelStandbyMode();
-
-        }
-
-    });
-
-    
-
-    renderPersistentSymmetricalDots();
-
-}
-
-
-
-// Fixed-Center 12-Hour Clock Loop Matrix Engine
-
-function startStandbyClock() {
-
-    const hoursDisplay = document.getElementById('standby-hours');
-
-    const minutesDisplay = document.getElementById('standby-minutes');
-
-    const ampmDisplay = document.getElementById('standby-ampm');
-
-    const dateDisplay = document.getElementById('standby-date');
-
-
-
-    function updateTimeAndDate() {
-
-        const now = new Date();
-
-        
-
-        let hours = now.getHours();
-
-        let minutes = now.getMinutes();
-
-        
-
-        const ampmStr = hours >= 12 ? 'PM' : 'AM';
-
-        hours = hours % 12;
-
-        hours = hours ? hours : 12; 
-
-        
-
-        // Pad single digits to ensure centering stability
-
-        const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
-
-        const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
-
-        
-
-        if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
-
-        if (ampmDisplay) ampmDisplay.textContent = ampmStr;
-
-        
-
-        // Execute smooth blurred font translation shifts on structural minute updates
-
-        if (minutesDisplay) {
-
-            if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
-
-                minutesDisplay.classList.add('is-shifting');
-
-                setTimeout(() => {
-
-                    minutesDisplay.textContent = processedMinutesStr;
-
-                    minutesDisplay.classList.remove('is-shifting');
-
-                }, 300);
-
-            } else {
-
-                minutesDisplay.textContent = processedMinutesStr;
-
-            }
-
-        }
-
-        lastRenderedMinutes = processedMinutesStr;
-
-
-
-        // Structured date outputs: MONDAY, JUNE 22 2026
-
-        const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
-
-        let dateString = now.toLocaleDateString('en-US', options);
-
-        dateString = dateString.replace(/,([^,]*)$/, '$1');
-
-
-
-        if (dateDisplay) {
-
-            dateDisplay.textContent = dateString;
-
-        }
-
-    }
-
-
-
-    clearInterval(clockUpdateInterval);
-
-    lastRenderedMinutes = ""; 
-
-    updateTimeAndDate();
-
-    clockUpdateInterval = setInterval(updateTimeAndDate, 1000);
-
-}
-
-
-
-function startStandbyMode(forcedManually = false) {
-
-    if (isStandbyEnabled) return;
-
-    isStandbyEnabled = true;
-
-    isManuallyTriggered = forcedManually;
-
-
-
-    const centerProfile = document.getElementById('standby-center-node');
-
-    if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
-
-        const fallbackAsset = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
-
-        centerProfile.src = fallbackAsset;
-
-    }
-
-
-
-    document.body.classList.add('standby-active');
-
-    startStandbyClock();
-
-    syncActiveStandbyPresence();
-
-
-
-    clearInterval(shuffleInterval);
-
-    shuffleInterval = setInterval(slideAmbientPositions, 5000);
-
-    slideAmbientPositions();
-
-}
-
-
-
-function cancelStandbyMode() {
-
-    if (!isStandbyEnabled) return;
-
-    isStandbyEnabled = false;
-
-    isManuallyTriggered = false;
-
-    document.body.classList.remove('standby-active');
-
-    clearInterval(shuffleInterval);
-
-    clearInterval(clockUpdateInterval);
-
-    resetStandbyTimeout();
-
-}
-
-
-
-function resetStandbyTimeout() {
-
-    clearTimeout(standbyTimer);
-
-    if (isStandbyEnabled && isManuallyTriggered) return;
-
-
-
-    if (isStandbyEnabled) {
-
-        cancelStandbyMode();
-
-    }
-
-    standbyTimer = setTimeout(() => startStandbyMode(false), STANDBY_DELAY);
-
-}
-
-
-
-['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-
-    window.addEventListener(evt, () => {
-
-        if (isStandbyEnabled && isManuallyTriggered) return;
-
-        resetStandbyTimeout();
-
-    }, { passive: true });
-
-});
-
-
-
-function renderPersistentSymmetricalDots() {
-
-    const ringContainer = document.getElementById('standby-orbit-ring');
-
-    if (!ringContainer) return;
-
-
-
-    ringContainer.innerHTML = ''; 
-
-    slotElementsArray = [];
-
-
-
-    const LAYERS = [
-
-        { count: 8,  radius: 92,  dotSize: 4  }, 
-
-        { count: 12, radius: 140, dotSize: 6  }, 
-
-        { count: 16, radius: 190, dotSize: 10 }, 
-
-        { count: 20, radius: 240, dotSize: 14 }  
-
-    ];
-
-
-
-    const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
-
-
-
-    LAYERS.forEach((layer) => {
-
-        for (let i = 0; i < layer.count; i++) {
-
-            const angle = (i / layer.count) * 2 * Math.PI;
-
-            
-
-            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
-
-            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
-
-
-
-            const slotNode = document.createElement('div');
-
-            slotNode.className = 'standby-node-slot';
-
-            slotNode.dataset.baseAngle = angle;
-
-            slotNode.dataset.nativeRadius = layer.radius;
-
-            
-
-            slotNode.style.setProperty('--tx', tx);
-
-            slotNode.style.setProperty('--ty', ty);
-
-
-
-            const innerDot = document.createElement('div');
-
-            innerDot.className = 'standby-ambient-dot';
-
-            innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
-
-
-
-            slotNode.appendChild(innerDot);
-
-            ringContainer.appendChild(slotNode);
-
-            slotElementsArray.push(slotNode);
-
-        }
-
-    });
-
-}
-
-
-
-function syncActiveStandbyPresence() {
-
-    if (typeof rtdb === 'undefined' || !isStandbyEnabled) return;
-
-
-
-    const standbyPresenceRef = ref(rtdb, 'presence/');
-
-    onValue(standbyPresenceRef, (snapshot) => {
-
-        if (!isStandbyEnabled) return;
-
-
-
-        const activeUsersData = snapshot.val() || {};
-
-        const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
-
-        const TOTAL_DOTS = slotElementsArray.length;
-
-
-
-        slotElementsArray.forEach(slot => {
-
-            slot.classList.remove('is-active');
-
-            slot.style.removeProperty('--avatar-img');
-
-        });
-
-
-
-        onlineRemotes.forEach((user) => {
-
-            if (!user.uid) return;
-
-
-
-            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
-
-            const targetedSlot = slotElementsArray[dedicatedIndex];
-
-
-
-            if (targetedSlot) {
-
-                const rawAvatar = user.avatar || 'avatar-m1';
-
-                const resolvedUserAvatar = premium3dAssets[rawAvatar] || rawAvatar;
-
-                targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
-
-                targetedSlot.classList.add('is-active'); 
-
-            }
-
-        });
-
-    });
-
-}
-
-
-
-function slideAmbientPositions() {
-
-    if (!isStandbyEnabled) return;
-
-
-
-    slotElementsArray.forEach((slot, index) => {
-
-        const baseAngle = parseFloat(slot.dataset.baseAngle);
-
-        const nativeRadius = parseInt(slot.dataset.nativeRadius);
-
-
-
-        const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
-
-        const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
-
-
-
-        const targetAngle = baseAngle + angleShift;
-
-        const targetRadius = nativeRadius + radiusShift;
-
-
-
-        const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
-
-        const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
-
-
-
-        slot.style.setProperty('--tx', newTx);
-
-        slot.style.setProperty('--ty', newTy);
-
-    });
-
-}
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
-
-    initStandbySystem();
-
-    resetStandbyTimeout();
-
 });
