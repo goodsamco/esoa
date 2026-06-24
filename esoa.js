@@ -888,32 +888,43 @@ function initTransientChatChannel(partnerId, partnerName) {
         typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
     };
     */
-
-   const input = document.getElementById('chatMsgInput');
-let typingTimeout; // Ensure this is declared in your scope
+const input = document.getElementById('chatMsgInput');
+let typingTimeout; 
 
 input.oninput = () => {
-    // 1. Your existing Firebase typing indicator logic
+    // 1. Your Firebase typing indicator
     const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
     set(typingRef, true);
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
 
-    // 2. Auto-grow logic
+    // 2. Auto-grow calculation
     input.style.height = "auto"; 
     input.style.height = input.scrollHeight + "px";
-};
 
-// 3. Handle Enter key (Send on Enter, New Line on Shift+Enter)
-input.onkeydown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault(); // Prevents adding a messy new line after sending
-        sendChatPayload();
-        
-        // Optional: Reset height back to normal after sending
-        input.style.height = "auto"; 
+    // 3. FIX: Toggle scrollbar dynamically at the 150px threshold
+    if (input.scrollHeight >= 150) {
+        input.style.overflowY = "auto"; // Show scrollbar
+    } else {
+        input.style.overflowY = "hidden"; // Hide scrollbar
     }
 };
+
+// Reset height and scrollbar when message is sent
+input.onkeydown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); 
+        sendChatPayload();
+        
+        // Reset everything back to single-line defaults
+        input.style.height = "auto"; 
+        input.style.overflowY = "hidden"; 
+    }
+};
+
+   /* till here */
+
+   
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
