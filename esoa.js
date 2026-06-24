@@ -2134,10 +2134,17 @@ function cancelStandbyMode() {
     document.body.classList.remove('standby-active');
     clearInterval(clockUpdateInterval);
     
-    // Wipe runtime classes on system collapse
+    // SAFE CLEANUP: Only remove temporary state classes, do NOT overwrite the entire className string
     slotElementsArray.forEach(slot => {
-        slot.className = 'standby-node-slot';
+        slot.classList.remove('is-active', 'is-infected', 'is-disrupted');
+        slot.style.removeProperty('--avatar-img');
         slot.style.removeProperty('--peer-color');
+        
+        // Clear any remaining disruption timers
+        if (slot.dataset.disruptTimeoutId) {
+            clearTimeout(parseInt(slot.dataset.disruptTimeoutId));
+            slot.removeAttribute('data-disrupt-timeout-id');
+        }
     });
     trackedActivePeers.clear();
     
