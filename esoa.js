@@ -1989,17 +1989,18 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
 /* ==========================================================================
-   10. STANDBY IDLE CONSTELLATION CONTROLLER (DYNAMIC DISRUPTION & COLOR INFECT)
+   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)
    ========================================================================== */
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
 let standbyTimer;
+let shuffleInterval; // Retained to avoid breaking global variable references, unused internally.
 let clockUpdateInterval;
 let isStandbyEnabled = false;
 let isManuallyTriggered = false; 
 let slotElementsArray = [];
 let lastRenderedMinutes = "";
-let trackedActivePeers = new Map(); // Tracks peer status, assignments, and colors
+let trackedActivePeers = new Map(); // Tracks live presence states and mapped color nodes
 
 function getDeterministicSlotIndex(uid, totalSlots) {
     let hash = 0;
@@ -2009,7 +2010,7 @@ function getDeterministicSlotIndex(uid, totalSlots) {
     return Math.abs(hash) % totalSlots;
 }
 
-// Generates a smooth, vibrant color profile unique to each user ID
+// Deterministic unique color generator mapping peer colors
 function getDeterministicColor(uid) {
     let hash = 0;
     for (let i = 0; i < uid.length; i++) {
@@ -2022,6 +2023,7 @@ function getDeterministicColor(uid) {
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
     
+    // 1. Setup Corner Hover Detection Zone & Button Icon Container
     const boundaryBox = document.createElement('div');
     boundaryBox.className = 'standby-trigger-boundary-box';
     
@@ -2037,6 +2039,7 @@ function initStandbySystem() {
     boundaryBox.appendChild(triggerBtn);
     document.body.appendChild(boundaryBox);
 
+    // 2. Setup Screen Space Layer Structure Overlay
     const overlay = document.createElement('div');
     overlay.id = 'standby-overlay';
     overlay.innerHTML = `
@@ -2062,6 +2065,7 @@ function initStandbySystem() {
     renderPersistentSymmetricalDots();
 }
 
+// Fixed-Center 12-Hour Clock Loop Matrix Engine
 function startStandbyClock() {
     const hoursDisplay = document.getElementById('standby-hours');
     const minutesDisplay = document.getElementById('standby-minutes');
@@ -2070,6 +2074,7 @@ function startStandbyClock() {
 
     function updateTimeAndDate() {
         const now = new Date();
+        
         let hours = now.getHours();
         let minutes = now.getMinutes();
         
@@ -2077,12 +2082,14 @@ function startStandbyClock() {
         hours = hours % 12;
         hours = hours ? hours : 12; 
         
+        // Pad single digits to ensure centering stability
         const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
         const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
         
         if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
         if (ampmDisplay) ampmDisplay.textContent = ampmStr;
         
+        // Execute smooth blurred font translation shifts on structural minute updates
         if (minutesDisplay) {
             if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
                 minutesDisplay.classList.add('is-shifting');
@@ -2096,6 +2103,7 @@ function startStandbyClock() {
         }
         lastRenderedMinutes = processedMinutesStr;
 
+        // Structured date outputs: MONDAY, JUNE 22 2026
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
         let dateString = now.toLocaleDateString('en-US', options);
         dateString = dateString.replace(/,([^,]*)$/, '$1');
@@ -2125,6 +2133,9 @@ function startStandbyMode(forcedManually = false) {
     document.body.classList.add('standby-active');
     startStandbyClock();
     syncActiveStandbyPresence();
+
+    // The manual slideAmbientPositions 5-second interval loop is completely deleted.
+    // Structural layout paths now follow pure symmetrical rotation.
 }
 
 function cancelStandbyMode() {
@@ -2134,13 +2145,12 @@ function cancelStandbyMode() {
     document.body.classList.remove('standby-active');
     clearInterval(clockUpdateInterval);
     
-    // SAFE CLEANUP: Only remove temporary state classes, do NOT overwrite the entire className string
+    // Controlled structural cleanup (prevents removing layout rules or button states)
     slotElementsArray.forEach(slot => {
         slot.classList.remove('is-active', 'is-infected', 'is-disrupted');
         slot.style.removeProperty('--avatar-img');
         slot.style.removeProperty('--peer-color');
         
-        // Clear any remaining disruption timers
         if (slot.dataset.disruptTimeoutId) {
             clearTimeout(parseInt(slot.dataset.disruptTimeoutId));
             slot.removeAttribute('data-disrupt-timeout-id');
@@ -2208,31 +2218,29 @@ function renderPersistentSymmetricalDots() {
     });
 }
 
-// Disruption system targeting index neighbors with prolonged lingering effects
+// Triggers an extended lingering warp on targeted indices and their immediate neighbors
 function triggerStructuralDisruption(targetIndex) {
     const TOTAL_DOTS = slotElementsArray.length;
-    // Radial neighboring range inside the layout array
-    const affectedOffsets = [-2, -1, 0, 1, 2];
+    const localizedCluster = [-2, -1, 0, 1, 2];
 
-    affectedOffsets.forEach(offset => {
-        const index = (targetIndex + offset + TOTAL_DOTS) % TOTAL_DOTS;
-        const slot = slotElementsArray[index];
+    localizedCluster.forEach(offset => {
+        const lookupIndex = (targetIndex + offset + TOTAL_DOTS) % TOTAL_DOTS;
+        const slot = slotElementsArray[lookupIndex];
         if (!slot) return;
 
-        // Strip previous timer rules to restart linger lifecycle safely
         if (slot.dataset.disruptTimeoutId) {
             clearTimeout(parseInt(slot.dataset.disruptTimeoutId));
         }
 
         slot.classList.add('is-disrupted');
         
-        // Deep long-lasting structural delay (7.5 seconds)
-        const timeoutId = setTimeout(() => {
+        // Lingers for a prolonged timeline (7.5s) before recovering smoothly
+        const timerId = setTimeout(() => {
             slot.classList.remove('is-disrupted');
             slot.removeAttribute('data-disrupt-timeout-id');
         }, 7500);
 
-        slot.dataset.disruptTimeoutId = timeoutId;
+        slot.dataset.disruptTimeoutId = timerId;
     });
 }
 
@@ -2249,38 +2257,36 @@ function syncActiveStandbyPresence() {
 
         const currentTurnPeers = new Map();
         
-        // Phase 1: Map incoming state configurations
         onlineRemotes.forEach((user) => {
             if (!user.uid) return;
             const targetIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
             currentTurnPeers.set(user.uid, { user, targetIndex });
         });
 
-        // Phase 2: Detect Disconnections & Departures
+        // Disrupt surroundings if a user leaves
         trackedActivePeers.forEach((data, uid) => {
             if (!currentTurnPeers.has(uid)) {
                 triggerStructuralDisruption(data.targetIndex);
             }
         });
 
-        // Phase 3: Detect New Connections & Arrivals
+        // Disrupt surroundings if a user enters
         currentTurnPeers.forEach((data, uid) => {
             if (!trackedActivePeers.has(uid)) {
                 triggerStructuralDisruption(data.targetIndex);
             }
         });
 
-        // Retain current session cache reference
         trackedActivePeers = currentTurnPeers;
 
-        // Reset visual variables before injection
+        // Perform clean local updates without breaking core positioning or layout styles
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active', 'is-infected');
             slot.style.removeProperty('--avatar-img');
             slot.style.removeProperty('--peer-color');
         });
 
-        // Phase 4: Dynamic Rendering & Contamination
+        // Set values and contaminate adjacent surrounding dots
         currentTurnPeers.forEach((data, uid) => {
             const index = data.targetIndex;
             const targetedSlot = slotElementsArray[index];
@@ -2294,12 +2300,11 @@ function syncActiveStandbyPresence() {
                 targetedSlot.style.setProperty('--peer-color', peerColor);
                 targetedSlot.classList.add('is-active'); 
 
-                // Bleed color profiles onto localized sister paths (Infection)
-                const neighbors = [
-                    (index - 1 + TOTAL_DOTS) % TOTAL_DOTS,
-                    (index + 1 + TOTAL_DOTS) % TOTAL_DOTS
-                ];
-                neighbors.forEach(nIndex => {
+                // Infect direct adjacent neighbors with peer color signature
+                const leftNeighbor = (index - 1 + TOTAL_DOTS) % TOTAL_DOTS;
+                const rightNeighbor = (index + 1 + TOTAL_DOTS) % TOTAL_DOTS;
+                
+                [leftNeighbor, rightNeighbor].forEach(nIndex => {
                     const sibling = slotElementsArray[nIndex];
                     if (sibling && !sibling.classList.contains('is-active')) {
                         sibling.style.setProperty('--peer-color', peerColor);
@@ -2310,3 +2315,11 @@ function syncActiveStandbyPresence() {
         });
     });
 }
+
+// Unused placeholder function retained to avoid script loading crashes against historical calls
+function slideAmbientPositions() {}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initStandbySystem();
+    resetStandbyTimeout();
+});
