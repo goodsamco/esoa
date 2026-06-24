@@ -1994,13 +1994,13 @@ document.addEventListener('DOMContentLoaded', () => {
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
 let standbyTimer;
-let shuffleInterval; // Retained to avoid breaking global variable references, unused internally.
+let shuffleInterval; // Retained as historical reference footprint to avoid load breaking
 let clockUpdateInterval;
 let isStandbyEnabled = false;
 let isManuallyTriggered = false; 
 let slotElementsArray = [];
 let lastRenderedMinutes = "";
-let trackedActivePeers = new Map(); // Tracks live presence states and mapped color nodes
+let trackedActivePeers = new Map(); // Retains structural cache mapping individual user profiles
 
 function getDeterministicSlotIndex(uid, totalSlots) {
     let hash = 0;
@@ -2010,7 +2010,7 @@ function getDeterministicSlotIndex(uid, totalSlots) {
     return Math.abs(hash) % totalSlots;
 }
 
-// Deterministic unique color generator mapping peer colors
+// Generate an individual, rich deterministic signature color assigned per unique peer
 function getDeterministicColor(uid) {
     let hash = 0;
     for (let i = 0; i < uid.length; i++) {
@@ -2133,9 +2133,6 @@ function startStandbyMode(forcedManually = false) {
     document.body.classList.add('standby-active');
     startStandbyClock();
     syncActiveStandbyPresence();
-
-    // The manual slideAmbientPositions 5-second interval loop is completely deleted.
-    // Structural layout paths now follow pure symmetrical rotation.
 }
 
 function cancelStandbyMode() {
@@ -2145,7 +2142,7 @@ function cancelStandbyMode() {
     document.body.classList.remove('standby-active');
     clearInterval(clockUpdateInterval);
     
-    // Controlled structural cleanup (prevents removing layout rules or button states)
+    // SAFE CLEANUP: Removes temporary status states without resetting entire layout variables or closing buttons
     slotElementsArray.forEach(slot => {
         slot.classList.remove('is-active', 'is-infected', 'is-disrupted');
         slot.style.removeProperty('--avatar-img');
@@ -2218,7 +2215,7 @@ function renderPersistentSymmetricalDots() {
     });
 }
 
-// Triggers an extended lingering warp on targeted indices and their immediate neighbors
+// Spawns loose physical string contractions stretching indices smoothly outwards on change cycles
 function triggerStructuralDisruption(targetIndex) {
     const TOTAL_DOTS = slotElementsArray.length;
     const localizedCluster = [-2, -1, 0, 1, 2];
@@ -2234,7 +2231,7 @@ function triggerStructuralDisruption(targetIndex) {
 
         slot.classList.add('is-disrupted');
         
-        // Lingers for a prolonged timeline (7.5s) before recovering smoothly
+        // Lingers across a prolonged timeline before elastic structural contraction recovery
         const timerId = setTimeout(() => {
             slot.classList.remove('is-disrupted');
             slot.removeAttribute('data-disrupt-timeout-id');
@@ -2256,21 +2253,20 @@ function syncActiveStandbyPresence() {
         const TOTAL_DOTS = slotElementsArray.length;
 
         const currentTurnPeers = new Map();
-        
         onlineRemotes.forEach((user) => {
             if (!user.uid) return;
             const targetIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
             currentTurnPeers.set(user.uid, { user, targetIndex });
         });
 
-        // Disrupt surroundings if a user leaves
+        // Loop checks: Run physics shift animations on network drop disconnects
         trackedActivePeers.forEach((data, uid) => {
             if (!currentTurnPeers.has(uid)) {
                 triggerStructuralDisruption(data.targetIndex);
             }
         });
 
-        // Disrupt surroundings if a user enters
+        // Loop checks: Run physics shift animations on real-time network arrivals
         currentTurnPeers.forEach((data, uid) => {
             if (!trackedActivePeers.has(uid)) {
                 triggerStructuralDisruption(data.targetIndex);
@@ -2279,14 +2275,14 @@ function syncActiveStandbyPresence() {
 
         trackedActivePeers = currentTurnPeers;
 
-        // Perform clean local updates without breaking core positioning or layout styles
+        // Neutralize active status classes natively before remapping properties
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active', 'is-infected');
             slot.style.removeProperty('--avatar-img');
             slot.style.removeProperty('--peer-color');
         });
 
-        // Set values and contaminate adjacent surrounding dots
+        // Inject active nodes and apply a color bleed/infection to connected surrounding paths
         currentTurnPeers.forEach((data, uid) => {
             const index = data.targetIndex;
             const targetedSlot = slotElementsArray[index];
@@ -2300,7 +2296,7 @@ function syncActiveStandbyPresence() {
                 targetedSlot.style.setProperty('--peer-color', peerColor);
                 targetedSlot.classList.add('is-active'); 
 
-                // Infect direct adjacent neighbors with peer color signature
+                // Bleed color profiles onto the direct left/right neighbors on the constellation ring
                 const leftNeighbor = (index - 1 + TOTAL_DOTS) % TOTAL_DOTS;
                 const rightNeighbor = (index + 1 + TOTAL_DOTS) % TOTAL_DOTS;
                 
@@ -2316,10 +2312,14 @@ function syncActiveStandbyPresence() {
     });
 }
 
-// Unused placeholder function retained to avoid script loading crashes against historical calls
 function slideAmbientPositions() {}
 
-document.addEventListener('DOMContentLoaded', () => {
-    initStandbySystem();
-    resetStandbyTimeout();
-});
+// Initialize and link directly with your system's load event listeners
+(() => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => { initStandbySystem(); resetStandbyTimeout(); });
+    } else {
+        initStandbySystem();
+        resetStandbyTimeout();
+    }
+})();
