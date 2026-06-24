@@ -1723,268 +1723,530 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
 /* come back here ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
+==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
 
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
+
+
 let standbyTimer;
+
 let shuffleInterval;
+
 let clockUpdateInterval;
+
 let isStandbyEnabled = false;
+
 let isManuallyTriggered = false; 
+
 let slotElementsArray = [];
+
 let lastRenderedMinutes = "";
 
+
+
 function getDeterministicSlotIndex(uid, totalSlots) {
+
     let hash = 0;
+
     for (let i = 0; i < uid.length; i++) {
+
         hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+
     }
+
     return Math.abs(hash) % totalSlots;
+
 }
+
+
 
 function initStandbySystem() {
+
     if (document.getElementById('standby-overlay')) return;
+
     
+
     // 1. Setup Corner Hover Detection Zone & Button Icon Container
+
     const boundaryBox = document.createElement('div');
+
     boundaryBox.className = 'standby-trigger-boundary-box';
+
     
+
     const triggerBtn = document.createElement('button');
+
     triggerBtn.className = 'standby-manual-trigger-btn';
+
     triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
+
     
+
     triggerBtn.addEventListener('click', (e) => {
+
         e.stopPropagation();
+
         startStandbyMode(true);
+
     });
+
     
+
     boundaryBox.appendChild(triggerBtn);
+
     document.body.appendChild(boundaryBox);
 
+
+
     // 2. Setup Screen Space Layer Structure Overlay
+
     const overlay = document.createElement('div');
+
     overlay.id = 'standby-overlay';
+
     overlay.innerHTML = `
+
         <div class="standby-clock-container">
+
             <div class="standby-time-display">
+
                 <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span><span id="standby-ampm" class="standby-am-pm-side">AM</span></span>
+
             </div>
+
             <div id="standby-date" class="standby-date-display"></div>
+
         </div>
+
         <div class="standby-stage">
+
             <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
+
             <div id="standby-orbit-ring" class="standby-orbit-ring"></div>
+
         </div>
+
     `;
+
     document.body.appendChild(overlay);
 
+
+
     overlay.addEventListener('click', () => {
+
         if (isStandbyEnabled) {
+
             cancelStandbyMode();
+
         }
+
     });
+
     
+
     renderPersistentSymmetricalDots();
+
 }
+
+
 
 // Fixed-Center 12-Hour Clock Loop Matrix Engine
+
 function startStandbyClock() {
+
     const hoursDisplay = document.getElementById('standby-hours');
+
     const minutesDisplay = document.getElementById('standby-minutes');
+
     const ampmDisplay = document.getElementById('standby-ampm');
+
     const dateDisplay = document.getElementById('standby-date');
 
+
+
     function updateTimeAndDate() {
+
         const now = new Date();
+
         
+
         let hours = now.getHours();
+
         let minutes = now.getMinutes();
+
         
+
         const ampmStr = hours >= 12 ? 'PM' : 'AM';
+
         hours = hours % 12;
+
         hours = hours ? hours : 12; 
+
         
+
         // Pad single digits to ensure centering stability
+
         const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
+
         const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
+
         
+
         if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
+
         if (ampmDisplay) ampmDisplay.textContent = ampmStr;
+
         
+
         // Execute smooth blurred font translation shifts on structural minute updates
+
         if (minutesDisplay) {
+
             if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
+
                 minutesDisplay.classList.add('is-shifting');
+
                 setTimeout(() => {
+
                     minutesDisplay.textContent = processedMinutesStr;
+
                     minutesDisplay.classList.remove('is-shifting');
+
                 }, 300);
+
             } else {
+
                 minutesDisplay.textContent = processedMinutesStr;
+
             }
+
         }
+
         lastRenderedMinutes = processedMinutesStr;
 
+
+
         // Structured date outputs: MONDAY, JUNE 22 2026
+
         const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+
         let dateString = now.toLocaleDateString('en-US', options);
+
         dateString = dateString.replace(/,([^,]*)$/, '$1');
 
+
+
         if (dateDisplay) {
+
             dateDisplay.textContent = dateString;
+
         }
+
     }
 
+
+
     clearInterval(clockUpdateInterval);
+
     lastRenderedMinutes = ""; 
+
     updateTimeAndDate();
+
     clockUpdateInterval = setInterval(updateTimeAndDate, 1000);
+
 }
+
+
 
 function startStandbyMode(forcedManually = false) {
+
     if (isStandbyEnabled) return;
+
     isStandbyEnabled = true;
+
     isManuallyTriggered = forcedManually;
 
+
+
     const centerProfile = document.getElementById('standby-center-node');
+
     if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
+
         const fallbackAsset = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+
         centerProfile.src = fallbackAsset;
+
     }
+
+
 
     document.body.classList.add('standby-active');
+
     startStandbyClock();
+
     syncActiveStandbyPresence();
 
+
+
     clearInterval(shuffleInterval);
+
     shuffleInterval = setInterval(slideAmbientPositions, 5000);
+
     slideAmbientPositions();
+
 }
+
+
 
 function cancelStandbyMode() {
+
     if (!isStandbyEnabled) return;
+
     isStandbyEnabled = false;
+
     isManuallyTriggered = false;
+
     document.body.classList.remove('standby-active');
+
     clearInterval(shuffleInterval);
+
     clearInterval(clockUpdateInterval);
+
     resetStandbyTimeout();
+
 }
+
+
 
 function resetStandbyTimeout() {
+
     clearTimeout(standbyTimer);
+
     if (isStandbyEnabled && isManuallyTriggered) return;
 
+
+
     if (isStandbyEnabled) {
+
         cancelStandbyMode();
+
     }
+
     standbyTimer = setTimeout(() => startStandbyMode(false), STANDBY_DELAY);
+
 }
 
+
+
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+
     window.addEventListener(evt, () => {
+
         if (isStandbyEnabled && isManuallyTriggered) return;
+
         resetStandbyTimeout();
+
     }, { passive: true });
+
 });
 
+
+
 function renderPersistentSymmetricalDots() {
+
     const ringContainer = document.getElementById('standby-orbit-ring');
+
     if (!ringContainer) return;
 
+
+
     ringContainer.innerHTML = ''; 
+
     slotElementsArray = [];
 
+
+
     const LAYERS = [
+
         { count: 8,  radius: 92,  dotSize: 4  }, 
+
         { count: 12, radius: 140, dotSize: 6  }, 
+
         { count: 16, radius: 190, dotSize: 10 }, 
+
         { count: 20, radius: 240, dotSize: 14 }  
+
     ];
+
+
 
     const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
 
+
+
     LAYERS.forEach((layer) => {
+
         for (let i = 0; i < layer.count; i++) {
+
             const angle = (i / layer.count) * 2 * Math.PI;
+
             
+
             const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
+
             const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
 
+
+
             const slotNode = document.createElement('div');
+
             slotNode.className = 'standby-node-slot';
+
             slotNode.dataset.baseAngle = angle;
+
             slotNode.dataset.nativeRadius = layer.radius;
+
             
+
             slotNode.style.setProperty('--tx', tx);
+
             slotNode.style.setProperty('--ty', ty);
 
+
+
             const innerDot = document.createElement('div');
+
             innerDot.className = 'standby-ambient-dot';
+
             innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
 
+
+
             slotNode.appendChild(innerDot);
+
             ringContainer.appendChild(slotNode);
+
             slotElementsArray.push(slotNode);
+
         }
+
     });
+
 }
+
+
 
 function syncActiveStandbyPresence() {
+
     if (typeof rtdb === 'undefined' || !isStandbyEnabled) return;
 
+
+
     const standbyPresenceRef = ref(rtdb, 'presence/');
+
     onValue(standbyPresenceRef, (snapshot) => {
+
         if (!isStandbyEnabled) return;
 
+
+
         const activeUsersData = snapshot.val() || {};
+
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
+
         const TOTAL_DOTS = slotElementsArray.length;
 
+
+
         slotElementsArray.forEach(slot => {
+
             slot.classList.remove('is-active');
+
             slot.style.removeProperty('--avatar-img');
+
         });
+
+
 
         onlineRemotes.forEach((user) => {
+
             if (!user.uid) return;
 
+
+
             const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
+
             const targetedSlot = slotElementsArray[dedicatedIndex];
 
+
+
             if (targetedSlot) {
+
                 const rawAvatar = user.avatar || 'avatar-m1';
+
                 const resolvedUserAvatar = premium3dAssets[rawAvatar] || rawAvatar;
+
                 targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
+
                 targetedSlot.classList.add('is-active'); 
+
             }
+
         });
+
     });
+
 }
+
+
 
 function slideAmbientPositions() {
+
     if (!isStandbyEnabled) return;
 
+
+
     slotElementsArray.forEach((slot, index) => {
+
         const baseAngle = parseFloat(slot.dataset.baseAngle);
+
         const nativeRadius = parseInt(slot.dataset.nativeRadius);
 
+
+
         const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
+
         const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
 
+
+
         const targetAngle = baseAngle + angleShift;
+
         const targetRadius = nativeRadius + radiusShift;
 
+
+
         const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
+
         const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
 
+
+
         slot.style.setProperty('--tx', newTx);
+
         slot.style.setProperty('--ty', newTy);
+
     });
+
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    initStandbySystem();
-    resetStandbyTimeout();
-});
 
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    initStandbySystem();
+
+    resetStandbyTimeout();
+
+});
