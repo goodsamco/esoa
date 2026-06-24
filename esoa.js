@@ -879,7 +879,7 @@ function initTransientChatChannel(partnerId, partnerName) {
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
-    const input = document.getElementById('chatMsgInput');
+ /*   const input = document.getElementById('chatMsgInput');
 
     input.oninput = () => {
         const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
@@ -887,7 +887,33 @@ function initTransientChatChannel(partnerId, partnerName) {
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
     };
-    
+    */
+
+   const input = document.getElementById('chatMsgInput');
+let typingTimeout; // Ensure this is declared in your scope
+
+input.oninput = () => {
+    // 1. Your existing Firebase typing indicator logic
+    const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
+    set(typingRef, true);
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
+
+    // 2. Auto-grow logic
+    input.style.height = "auto"; 
+    input.style.height = input.scrollHeight + "px";
+};
+
+// 3. Handle Enter key (Send on Enter, New Line on Shift+Enter)
+input.onkeydown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Prevents adding a messy new line after sending
+        sendChatPayload();
+        
+        // Optional: Reset height back to normal after sending
+        input.style.height = "auto"; 
+    }
+};
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
         if (childSnap.exists()) {
