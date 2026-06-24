@@ -1494,20 +1494,15 @@ window.addEventListener('click', () => {
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
 let standbyTimer;
-let shuffleInterval;
+let shuffleInterval; // Intentionally left to prevent breaking any outer scope references
 let clockUpdateInterval;
 let isStandbyEnabled = false;
 let isManuallyTriggered = false; 
 let slotElementsArray = [];
 let lastRenderedMinutes = "";
 
-function getDeterministicSlotIndex(uid, totalSlots) {
-    let hash = 0;
-    for (let i = 0; i < uid.length; i++) {
-        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash) % totalSlots;
-}
+// A map to persistently maintain which uid holds which slot index while online
+let peerSlotAssignments = new Map();
 
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
@@ -1623,9 +1618,8 @@ function startStandbyMode(forcedManually = false) {
     startStandbyClock();
     syncActiveStandbyPresence();
 
-    clearInterval(shuffleInterval);
-    shuffleInterval = setInterval(slideAmbientPositions, 5000);
-    slideAmbientPositions();
+    // Start localized asynchronous random position loops for each individual dot string
+    startIndividualAmbientLoops();
 }
 
 function cancelStandbyMode() {
@@ -1633,8 +1627,20 @@ function cancelStandbyMode() {
     isStandbyEnabled = false;
     isManuallyTriggered = false;
     document.body.classList.remove('standby-active');
-    clearInterval(shuffleInterval);
+    
+    // Clear individual animation timer tracks
+    slotElementsArray.forEach(slot => {
+        if (slot.ambientIntervalId) {
+            clearInterval(slot.ambientIntervalId);
+            slot.ambientIntervalId = null;
+        }
+        // Secure layout preservation: remove classes safely
+        slot.classList.remove('is-active');
+        slot.style.removeProperty('--avatar-img');
+    });
+
     clearInterval(clockUpdateInterval);
+    peerSlotAssignments.clear(); // Wipe dynamic allocations to spin a new random layout next setup
     resetStandbyTimeout();
 }
 
@@ -1668,8 +1674,6 @@ function renderPersistentSymmetricalDots() {
         { count: 16, radius: 190, dotSize: 10 }, 
         { count: 20, radius: 240, dotSize: 14 }  
     ];
-
-    const TOTAL_DOTS = LAYERS.reduce((sum, layer) => sum + layer.count, 0);
 
     LAYERS.forEach((layer) => {
         for (let i = 0; i < layer.count; i++) {
@@ -1708,17 +1712,53 @@ function syncActiveStandbyPresence() {
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
         const TOTAL_DOTS = slotElementsArray.length;
 
+        // Reset visual active tags safely before drawing mapping configurations
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
+        // 1. Structural Eviction: Remove any cached assignment details if a user dropped out/went offline
+        const activeRemoteUids = onlineRemotes.map(u => u.uid);
+        for (let [cachedUid, assignedIdx] of peerSlotAssignments.entries()) {
+            if (!activeRemoteUids.includes(cachedUid)) {
+                peerSlotAssignments.delete(cachedUid);
+            }
+        }
+
+        // 2. Map remote profiles dynamically onto varying, randomized slots
         onlineRemotes.forEach((user) => {
             if (!user.uid) return;
 
-            const dedicatedIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
-            const targetedSlot = slotElementsArray[dedicatedIndex];
+            let dedicatedIndex;
 
+            // If user already has an active bubble token allocated, reuse it
+            if (peerSlotAssignments.has(user.uid)) {
+                dedicatedIndex = peerSlotAssignments.get(user.uid);
+            } else {
+                // Otherwise, compile a list of all currently completely unoccupied dot indices
+                const occupiedIndices = Array.from(peerSlotAssignments.values());
+                const availableIndices = [];
+                for (let i = 0; i < TOTAL_DOTS; i++) {
+                    if (!occupiedIndices.includes(i)) {
+                        availableIndices.push(i);
+                    }
+                }
+
+                // Pick an option completely at random from vacancy pool to avoid static bubble repeating
+                if (availableIndices.length > 0) {
+                    const randomChoice = Math.floor(Math.random() * availableIndices.length);
+                    dedicatedIndex = availableIndices[randomChoice];
+                } else {
+                    // Fallback to random choice if completely populated
+                    dedicatedIndex = Math.floor(Math.random() * TOTAL_DOTS);
+                }
+
+                // Lock choice into allocation registry
+                peerSlotAssignments.set(user.uid, dedicatedIndex);
+            }
+
+            const targetedSlot = slotElementsArray[dedicatedIndex];
             if (targetedSlot) {
                 const rawAvatar = user.avatar || 'avatar-m1';
                 const resolvedUserAvatar = premium3dAssets[rawAvatar] || rawAvatar;
@@ -1729,26 +1769,41 @@ function syncActiveStandbyPresence() {
     });
 }
 
-function slideAmbientPositions() {
-    if (!isStandbyEnabled) return;
-
+// Dispatches unique individualized intervals to each single node separately
+function startIndividualAmbientLoops() {
     slotElementsArray.forEach((slot, index) => {
-        const baseAngle = parseFloat(slot.dataset.baseAngle);
-        const nativeRadius = parseInt(slot.dataset.nativeRadius);
+        if (slot.ambientIntervalId) clearInterval(slot.ambientIntervalId);
 
-        const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
-        const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
+        function updateSingleNode() {
+            if (!isStandbyEnabled) return;
+            
+            const baseAngle = parseFloat(slot.dataset.baseAngle);
+            const nativeRadius = parseInt(slot.dataset.nativeRadius);
 
-        const targetAngle = baseAngle + angleShift;
-        const targetRadius = nativeRadius + radiusShift;
+            const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
+            const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
 
-        const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
-        const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
+            const targetAngle = baseAngle + angleShift;
+            const targetRadius = nativeRadius + radiusShift;
 
-        slot.style.setProperty('--tx', newTx);
-        slot.style.setProperty('--ty', newTy);
+            const newTx = `${Math.round(targetRadius * Math.cos(targetAngle))}px`;
+            const newTy = `${Math.round(targetRadius * Math.sin(targetAngle))}px`;
+
+            slot.style.setProperty('--tx', newTx);
+            slot.style.setProperty('--ty', newTy);
+        }
+
+        // Initialize positioning calculation directly
+        updateSingleNode();
+
+        // Randomize individual time interval per dot string stream between 3.5s and 7.5s
+        const randomizedTimeWindow = 3500 + Math.random() * 4000;
+        slot.ambientIntervalId = setInterval(updateSingleNode, randomizedTimeWindow);
     });
 }
+
+// Global uniform placeholder loop retained for historic loading safety
+function slideAmbientPositions() {}
 
 document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
