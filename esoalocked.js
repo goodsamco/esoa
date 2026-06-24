@@ -352,15 +352,15 @@ onValue(presenceRef, (snapshot) => {
     existingNodes.forEach(node => {
         const nodeUid = node.id.replace('peer-node-', '');
 
-        if (!users[nodeUid] || nodeUid === userId) {
+        // REMOVED: Do not forcefully label your own profile element as offline here
+        if (!users[nodeUid]) {
             node.classList.add('is-offline');
             node.style.order = "1";
         }
     });
 
     Object.keys(users).forEach(uid => {
-        if (uid === userId) return;
-
+        // ALLOW YOUR OWN UID TO RENDER SO PROFILE PERSISTS
         const peer = users[uid];
         if (!peer || !peer.uid) return;
 
@@ -377,7 +377,13 @@ onValue(presenceRef, (snapshot) => {
             const imgNode = document.createElement('img');
             imgNode.className = 'peer-avatar-bubble';
             imgNode.src = cleanAvatarSrc;
-            imgNode.onclick = () => initTransientChatChannel(peer.uid, singleWordLabel);
+            
+            // Prevent opening a chat channel if the profile clicked belongs to you
+            if (peer.uid !== userId) {
+                imgNode.onclick = () => initTransientChatChannel(peer.uid, singleWordLabel);
+            } else {
+                peerContainer.classList.add('my-own-profile-node'); // Target class if styling needed
+            }
 
             const dotNode = document.createElement('div');
             dotNode.className = 'peer-notif-dot';
@@ -392,8 +398,10 @@ onValue(presenceRef, (snapshot) => {
             peerContainer.appendChild(nameTag);
             hub.appendChild(peerContainer);
 
-            bindBackgroundNotifListener(peer.uid);
-            bindTypingIndicator(peer.uid, singleWordLabel);
+            if (peer.uid !== userId) {
+                bindBackgroundNotifListener(peer.uid);
+                bindTypingIndicator(peer.uid, singleWordLabel);
+            }
         } else {
             const img = peerContainer.querySelector('.peer-avatar-bubble');
             if (img) img.src = cleanAvatarSrc;
@@ -424,14 +432,19 @@ onValue(presenceRef, (snapshot) => {
         }
 
         peerContainer.classList.remove('is-offline');
-        peerContainer.style.order = "0";
+        
+        // Push your profile to the end/bottom using layout orders if desired
+        if (peer.uid === userId) {
+            peerContainer.style.order = "2"; 
+        } else {
+            peerContainer.style.order = "0";
+        }
     });
 
     if (window.lucide) {
         window.lucide.createIcons();
     }
 });
-
 /* ==========================================================================
    4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - PERSISTENT
    ========================================================================== 
