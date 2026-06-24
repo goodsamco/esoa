@@ -265,23 +265,7 @@ function bindTypingIndicator(partnerId, displayName) {
 const hub = document.getElementById('peerActiveHub');
 hub.innerHTML = '';
 
-const gcWrapper = document.createElement('div');
-gcWrapper.className = 'peer-wrapper';
-gcWrapper.id = 'gc-hub-node';
-
-const gcDotNode = document.createElement('div');
-gcDotNode.className = 'peer-notif-dot';
-gcDotNode.id = 'gc-notif-dot';
-
-const gcNameTag = document.createElement('div');
-gcNameTag.className = 'peer-name-hover';
-gcNameTag.innerText = "GC";
-
-gcWrapper.appendChild(gcBubble);
-gcWrapper.appendChild(gcDotNode);
-gcWrapper.appendChild(gcNameTag);
-hub.appendChild(gcWrapper);
-
+// GC UI rendering removed. Background listener retained to keep functions working.
 bindBackgroundGcListener();
 
 // --- STATUS NOTES CONFIGURATION & PERSISTENCE ---
@@ -447,6 +431,7 @@ onValue(presenceRef, (snapshot) => {
         window.lucide.createIcons();
     }
 });
+
 /* ==========================================================================
    4. PEER HUB & PRESENCE SYNCHRONIZATION (REALTIME DB) - PERSISTENT
    ========================================================================== 
