@@ -747,22 +747,23 @@ body.copy-flash {
 
 .chat-input-row textarea {
     flex: 1;
-    display: block;       /* FIX: Removes the phantom inline text margin below the box */
+    display: block;
     background: #000;
     border: 1px solid rgba(83, 83, 83, 0.2);
     border-radius: 8px;
     color: white;
     padding: 8px;
     font-size: 0.85rem;
-    line-height: 1.2rem;  /* FIX: Forces a reliable text height calculation */
+    line-height: 1.2rem;
     outline: none;
     
     resize: none;
-    height: 34px;         /* Match your exact button height */
-    max-height: 150px;
+    height: 34px;
+    max-height: 150px; /* The stopping point */
     font-family: inherit;
-    overflow-y: auto;
-    box-sizing: border-box; /* FIX: Includes padding and border in the height calculation */
+    box-sizing: border-box;
+
+    overflow-y: hidden; /* FIX: Keep it hidden until JS flips it */
 }
 
 /* Ensure your button matches the textarea's baseline height */
