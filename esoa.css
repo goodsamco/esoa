@@ -739,27 +739,46 @@ body.copy-flash {
 .chat-input-row {
     padding: 10px;
     display: flex;
-    align-items: flex-end; /* Anchors the button to the bottom */
+    /* Aligns the items to the bottom, but nicely centered vertically when it's single-line */
+    align-items: flex-end; 
     gap: 8px;
     background: rgba(255, 255, 255, 0.03);
 }
 
 .chat-input-row textarea {
     flex: 1;
+    display: block;       /* FIX: Removes the phantom inline text margin below the box */
     background: #000;
     border: 1px solid rgba(83, 83, 83, 0.2);
     border-radius: 8px;
     color: white;
     padding: 8px;
     font-size: 0.85rem;
+    line-height: 1.2rem;  /* FIX: Forces a reliable text height calculation */
     outline: none;
     
-    /* Auto-grow fixes */
-    resize: none;         /* Hides manual resizer handle */
-    height: 34px;         /* Match your original input height */
-    max-height: 150px;    /* Caps the growth so it doesn't take over the screen */
-    font-family: inherit; /* Inherits your app's main font family */
-    overflow-y: auto;     /* Shows a scrollbar only if text hits max-height */
+    resize: none;
+    height: 34px;         /* Match your exact button height */
+    max-height: 150px;
+    font-family: inherit;
+    overflow-y: auto;
+    box-sizing: border-box; /* FIX: Includes padding and border in the height calculation */
+}
+
+/* Ensure your button matches the textarea's baseline height */
+.chat-input-row button {
+    height: 34px;         /* Match the textarea's initial height exactly */
+    padding: 0 16px;      /* Side padding only so height handles the vertical sizing */
+    display: flex;
+    align-items: center;  /* Centers "Send" text vertically */
+    border-radius: 8px;   /* Match textarea border radius */
+    box-sizing: border-box;
+    /* Add your green styling below */
+    background-color: #00FF00; 
+    color: black;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
 }
 
 .chat-input-row textarea:focus {
