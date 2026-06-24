@@ -1501,8 +1501,19 @@ let isManuallyTriggered = false;
 let slotElementsArray = [];
 let lastRenderedMinutes = "";
 
-// A map to persistently maintain which uid holds which slot index while online
+// Tracks dynamic assignments so peers land on varying bubbles when re-entering
 let peerSlotAssignments = new Map();
+
+// Tracks current dynamic pairing links for the moving constellation mesh
+let activeMeshLinks = new Map(); 
+
+function getDeterministicSlotIndex(uid, totalSlots) {
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % totalSlots;
+}
 
 function initStandbySystem() {
     if (document.getElementById('standby-overlay')) return;
@@ -1618,7 +1629,7 @@ function startStandbyMode(forcedManually = false) {
     startStandbyClock();
     syncActiveStandbyPresence();
 
-    // Start localized asynchronous random position loops for each individual dot string
+    // Fire the specialized dynamic linkage loop system
     startIndividualAmbientLoops();
 }
 
@@ -1628,19 +1639,18 @@ function cancelStandbyMode() {
     isManuallyTriggered = false;
     document.body.classList.remove('standby-active');
     
-    // Clear individual animation timer tracks
     slotElementsArray.forEach(slot => {
         if (slot.ambientIntervalId) {
             clearInterval(slot.ambientIntervalId);
             slot.ambientIntervalId = null;
         }
-        // Secure layout preservation: remove classes safely
         slot.classList.remove('is-active');
         slot.style.removeProperty('--avatar-img');
     });
 
     clearInterval(clockUpdateInterval);
-    peerSlotAssignments.clear(); // Wipe dynamic allocations to spin a new random layout next setup
+    peerSlotAssignments.clear(); 
+    activeMeshLinks.clear();
     resetStandbyTimeout();
 }
 
@@ -1712,13 +1722,11 @@ function syncActiveStandbyPresence() {
         const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
         const TOTAL_DOTS = slotElementsArray.length;
 
-        // Reset visual active tags safely before drawing mapping configurations
         slotElementsArray.forEach(slot => {
             slot.classList.remove('is-active');
             slot.style.removeProperty('--avatar-img');
         });
 
-        // 1. Structural Eviction: Remove any cached assignment details if a user dropped out/went offline
         const activeRemoteUids = onlineRemotes.map(u => u.uid);
         for (let [cachedUid, assignedIdx] of peerSlotAssignments.entries()) {
             if (!activeRemoteUids.includes(cachedUid)) {
@@ -1726,17 +1734,14 @@ function syncActiveStandbyPresence() {
             }
         }
 
-        // 2. Map remote profiles dynamically onto varying, randomized slots
         onlineRemotes.forEach((user) => {
             if (!user.uid) return;
 
             let dedicatedIndex;
 
-            // If user already has an active bubble token allocated, reuse it
             if (peerSlotAssignments.has(user.uid)) {
                 dedicatedIndex = peerSlotAssignments.get(user.uid);
             } else {
-                // Otherwise, compile a list of all currently completely unoccupied dot indices
                 const occupiedIndices = Array.from(peerSlotAssignments.values());
                 const availableIndices = [];
                 for (let i = 0; i < TOTAL_DOTS; i++) {
@@ -1745,16 +1750,13 @@ function syncActiveStandbyPresence() {
                     }
                 }
 
-                // Pick an option completely at random from vacancy pool to avoid static bubble repeating
                 if (availableIndices.length > 0) {
                     const randomChoice = Math.floor(Math.random() * availableIndices.length);
                     dedicatedIndex = availableIndices[randomChoice];
                 } else {
-                    // Fallback to random choice if completely populated
                     dedicatedIndex = Math.floor(Math.random() * TOTAL_DOTS);
                 }
 
-                // Lock choice into allocation registry
                 peerSlotAssignments.set(user.uid, dedicatedIndex);
             }
 
@@ -1769,19 +1771,62 @@ function syncActiveStandbyPresence() {
     });
 }
 
-// Dispatches unique individualized intervals to each single node separately
+// Dispatches localized individual physics intervals that pair up dynamically and break away over time
 function startIndividualAmbientLoops() {
+    activeMeshLinks.clear();
+
     slotElementsArray.forEach((slot, index) => {
         if (slot.ambientIntervalId) clearInterval(slot.ambientIntervalId);
 
-        function updateSingleNode() {
+        function executeMeshShift() {
             if (!isStandbyEnabled) return;
-            
+
+            // DYNAMIC LINKAGE CHECK: If this slot has no active partner, attempt to find one dynamically
+            if (!activeMeshLinks.has(index)) {
+                // Find potential unlinked slots nearby to form a temporary mesh link
+                const lookups = [1, -1, 2, -2, 3, -3];
+                let partnerFound = null;
+
+                for (let offset of lookups) {
+                    let lookIdx = (index + offset + slotElementsArray.length) % slotElementsArray.length;
+                    if (!activeMeshLinks.has(lookIdx) && lookIdx !== index) {
+                        partnerFound = lookIdx;
+                        break;
+                    }
+                }
+
+                // If immediate neighbors are busy, link up with a random unlinked slot to create a dynamic constellation connection
+                if (partnerFound === null) {
+                    const unlinked = slotElementsArray
+                        .map((_, i) => i)
+                        .filter(i => i !== index && !activeMeshLinks.has(i));
+                    if (unlinked.length > 0) {
+                        partnerFound = unlinked[Math.floor(Math.random() * unlinked.length)];
+                    }
+                }
+
+                // Register temporary partnership bond
+                if (partnerFound !== null) {
+                    activeMeshLinks.set(index, partnerFound);
+                    activeMeshLinks.set(partnerFound, index);
+                }
+            }
+
             const baseAngle = parseFloat(slot.dataset.baseAngle);
             const nativeRadius = parseInt(slot.dataset.nativeRadius);
 
-            const angleShift = (Math.sin(Date.now() / 3000 + index) * 0.12); 
-            const radiusShift = (Math.cos(Date.now() / 2000 + index) * 12); 
+            // Calculate current movement wave phase
+            let waveSeed = Date.now() / 2500 + index;
+            
+            // PHYSICS TETHER: If paired, pull values towards their temporary partner's structural coordinates
+            if (activeMeshLinks.has(index)) {
+                const partnerIdx = activeMeshLinks.get(index);
+                // Sync the movement seeds so they translate in harmonic unison/pairs
+                waveSeed = Date.now() / 2500 + ((index + partnerIdx) / 2);
+            }
+
+            const angleShift = Math.sin(waveSeed) * 0.14; 
+            const radiusShift = Math.cos(waveSeed) * 14; 
 
             const targetAngle = baseAngle + angleShift;
             const targetRadius = nativeRadius + radiusShift;
@@ -1793,16 +1838,24 @@ function startIndividualAmbientLoops() {
             slot.style.setProperty('--ty', newTy);
         }
 
-        // Initialize positioning calculation directly
-        updateSingleNode();
+        // Initialize directly
+        executeMeshShift();
 
-        // Randomize individual time interval per dot string stream between 3.5s and 7.5s
-        const randomizedTimeWindow = 3500 + Math.random() * 4000;
-        slot.ambientIntervalId = setInterval(updateSingleNode, randomizedTimeWindow);
+        // Randomize individual timeframe window per cluster cycle
+        const cycleDuration = 3000 + Math.random() * 4500;
+
+        slot.ambientIntervalId = setInterval(() => {
+            // Dissolve the old partnership when the cycle expires, allowing a new combination next tick!
+            if (activeMeshLinks.has(index)) {
+                const partnerIdx = activeMeshLinks.get(index);
+                activeMeshLinks.delete(index);
+                activeMeshLinks.delete(partnerIdx);
+            }
+            executeMeshShift();
+        }, cycleDuration);
     });
 }
 
-// Global uniform placeholder loop retained for historic loading safety
 function slideAmbientPositions() {}
 
 document.addEventListener('DOMContentLoaded', () => {
