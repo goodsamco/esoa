@@ -53,11 +53,16 @@
         </div>
         
         <div class="chat-scroller-view" id="chatScroller"></div>
-        
+        <!--
         <div class="chat-input-row">
             <input type="text" id="chatMsgInput" placeholder="Aa" onkeydown="if(event.key === 'Enter') sendChatPayload()">
             <button onclick="sendChatPayload()">Send</button>
         </div>
+        -->
+        <div class="chat-input-row">
+    <textarea id="chatMsgInput" rows="1" placeholder="Aa"></textarea>
+    <button onclick="sendChatPayload()">Send</button>
+</div>
     </div>
 
 
