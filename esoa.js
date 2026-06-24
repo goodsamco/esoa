@@ -1722,7 +1722,7 @@ document.addEventListener('DOMContentLoaded', () => {
 */
 
 /* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (WITH ACTIVE CLOCK ENGINE)\n   ========================================================================== */
-/* ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== */
+/* come back here ==========================================================================\n   10. STANDBY IDLE CONSTELLATION CONTROLLER (COLON CENTERING + CORNER EYE)\n   ========================================================================== 
 const STANDBY_DELAY = 30000; // 30 sec in milliseconds
 
 let standbyTimer;
@@ -1986,3 +1986,320 @@ document.addEventListener('DOMContentLoaded', () => {
     initStandbySystem();
     resetStandbyTimeout();
 });
+*/
+
+/* ==========================================================================
+   10. STANDBY IDLE CONSTELLATION CONTROLLER (DYNAMIC DISRUPTION & COLOR INFECT)
+   ========================================================================== */
+const STANDBY_DELAY = 30000; // 30 sec in milliseconds
+
+let standbyTimer;
+let clockUpdateInterval;
+let isStandbyEnabled = false;
+let isManuallyTriggered = false; 
+let slotElementsArray = [];
+let lastRenderedMinutes = "";
+let trackedActivePeers = new Map(); // Tracks peer status, assignments, and colors
+
+function getDeterministicSlotIndex(uid, totalSlots) {
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % totalSlots;
+}
+
+// Generates a smooth, vibrant color profile unique to each user ID
+function getDeterministicColor(uid) {
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 85%, 60%)`;
+}
+
+function initStandbySystem() {
+    if (document.getElementById('standby-overlay')) return;
+    
+    const boundaryBox = document.createElement('div');
+    boundaryBox.className = 'standby-trigger-boundary-box';
+    
+    const triggerBtn = document.createElement('button');
+    triggerBtn.className = 'standby-manual-trigger-btn';
+    triggerBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`;
+    
+    triggerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startStandbyMode(true);
+    });
+    
+    boundaryBox.appendChild(triggerBtn);
+    document.body.appendChild(boundaryBox);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'standby-overlay';
+    overlay.innerHTML = `
+        <div class="standby-clock-container">
+            <div class="standby-time-display">
+                <span class="standby-hours-box"><span id="standby-hours">00</span></span><span class="standby-colon-separator">:</span><span class="standby-minutes-box"><span id="standby-minutes" class="standby-digit-minutes">00</span><span id="standby-ampm" class="standby-am-pm-side">AM</span></span>
+            </div>
+            <div id="standby-date" class="standby-date-display"></div>
+        </div>
+        <div class="standby-stage">
+            <img id="standby-center-node" class="standby-center-profile" src="" alt="Me">
+            <div id="standby-orbit-ring" class="standby-orbit-ring"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', () => {
+        if (isStandbyEnabled) {
+            cancelStandbyMode();
+        }
+    });
+    
+    renderPersistentSymmetricalDots();
+}
+
+function startStandbyClock() {
+    const hoursDisplay = document.getElementById('standby-hours');
+    const minutesDisplay = document.getElementById('standby-minutes');
+    const ampmDisplay = document.getElementById('standby-ampm');
+    const dateDisplay = document.getElementById('standby-date');
+
+    function updateTimeAndDate() {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        
+        const ampmStr = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        
+        const processedHoursStr = hours < 10 ? '0' + hours : '' + hours;
+        const processedMinutesStr = minutes < 10 ? '0' + minutes : '' + minutes;
+        
+        if (hoursDisplay) hoursDisplay.textContent = processedHoursStr;
+        if (ampmDisplay) ampmDisplay.textContent = ampmStr;
+        
+        if (minutesDisplay) {
+            if (lastRenderedMinutes !== processedMinutesStr && lastRenderedMinutes !== "") {
+                minutesDisplay.classList.add('is-shifting');
+                setTimeout(() => {
+                    minutesDisplay.textContent = processedMinutesStr;
+                    minutesDisplay.classList.remove('is-shifting');
+                }, 300);
+            } else {
+                minutesDisplay.textContent = processedMinutesStr;
+            }
+        }
+        lastRenderedMinutes = processedMinutesStr;
+
+        const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+        let dateString = now.toLocaleDateString('en-US', options);
+        dateString = dateString.replace(/,([^,]*)$/, '$1');
+
+        if (dateDisplay) {
+            dateDisplay.textContent = dateString;
+        }
+    }
+
+    clearInterval(clockUpdateInterval);
+    lastRenderedMinutes = ""; 
+    updateTimeAndDate();
+    clockUpdateInterval = setInterval(updateTimeAndDate, 1000);
+}
+
+function startStandbyMode(forcedManually = false) {
+    if (isStandbyEnabled) return;
+    isStandbyEnabled = true;
+    isManuallyTriggered = forcedManually;
+
+    const centerProfile = document.getElementById('standby-center-node');
+    if (centerProfile && typeof currentUserAvatarRaw !== 'undefined') {
+        const fallbackAsset = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+        centerProfile.src = fallbackAsset;
+    }
+
+    document.body.classList.add('standby-active');
+    startStandbyClock();
+    syncActiveStandbyPresence();
+}
+
+function cancelStandbyMode() {
+    if (!isStandbyEnabled) return;
+    isStandbyEnabled = false;
+    isManuallyTriggered = false;
+    document.body.classList.remove('standby-active');
+    clearInterval(clockUpdateInterval);
+    
+    // Wipe runtime classes on system collapse
+    slotElementsArray.forEach(slot => {
+        slot.className = 'standby-node-slot';
+        slot.style.removeProperty('--peer-color');
+    });
+    trackedActivePeers.clear();
+    
+    resetStandbyTimeout();
+}
+
+function resetStandbyTimeout() {
+    clearTimeout(standbyTimer);
+    if (isStandbyEnabled && isManuallyTriggered) return;
+
+    if (isStandbyEnabled) {
+        cancelStandbyMode();
+    }
+    standbyTimer = setTimeout(() => startStandbyMode(false), STANDBY_DELAY);
+}
+
+['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, () => {
+        if (isStandbyEnabled && isManuallyTriggered) return;
+        resetStandbyTimeout();
+    }, { passive: true });
+});
+
+function renderPersistentSymmetricalDots() {
+    const ringContainer = document.getElementById('standby-orbit-ring');
+    if (!ringContainer) return;
+
+    ringContainer.innerHTML = ''; 
+    slotElementsArray = [];
+
+    const LAYERS = [
+        { count: 8,  radius: 92,  dotSize: 4  }, 
+        { count: 12, radius: 140, dotSize: 6  }, 
+        { count: 16, radius: 190, dotSize: 10 }, 
+        { count: 20, radius: 240, dotSize: 14 }  
+    ];
+
+    LAYERS.forEach((layer) => {
+        for (let i = 0; i < layer.count; i++) {
+            const angle = (i / layer.count) * 2 * Math.PI;
+            
+            const tx = `${Math.round(layer.radius * Math.cos(angle))}px`;
+            const ty = `${Math.round(layer.radius * Math.sin(angle))}px`;
+
+            const slotNode = document.createElement('div');
+            slotNode.className = 'standby-node-slot';
+            slotNode.dataset.baseAngle = angle;
+            slotNode.dataset.nativeRadius = layer.radius;
+            
+            slotNode.style.setProperty('--tx', tx);
+            slotNode.style.setProperty('--ty', ty);
+
+            const innerDot = document.createElement('div');
+            innerDot.className = 'standby-ambient-dot';
+            innerDot.style.setProperty('--dot-size', `${layer.dotSize}px`);
+
+            slotNode.appendChild(innerDot);
+            ringContainer.appendChild(slotNode);
+            slotElementsArray.push(slotNode);
+        }
+    });
+}
+
+// Disruption system targeting index neighbors with prolonged lingering effects
+function triggerStructuralDisruption(targetIndex) {
+    const TOTAL_DOTS = slotElementsArray.length;
+    // Radial neighboring range inside the layout array
+    const affectedOffsets = [-2, -1, 0, 1, 2];
+
+    affectedOffsets.forEach(offset => {
+        const index = (targetIndex + offset + TOTAL_DOTS) % TOTAL_DOTS;
+        const slot = slotElementsArray[index];
+        if (!slot) return;
+
+        // Strip previous timer rules to restart linger lifecycle safely
+        if (slot.dataset.disruptTimeoutId) {
+            clearTimeout(parseInt(slot.dataset.disruptTimeoutId));
+        }
+
+        slot.classList.add('is-disrupted');
+        
+        // Deep long-lasting structural delay (7.5 seconds)
+        const timeoutId = setTimeout(() => {
+            slot.classList.remove('is-disrupted');
+            slot.removeAttribute('data-disrupt-timeout-id');
+        }, 7500);
+
+        slot.dataset.disruptTimeoutId = timeoutId;
+    });
+}
+
+function syncActiveStandbyPresence() {
+    if (typeof rtdb === 'undefined' || !isStandbyEnabled) return;
+
+    const standbyPresenceRef = ref(rtdb, 'presence/');
+    onValue(standbyPresenceRef, (snapshot) => {
+        if (!isStandbyEnabled) return;
+
+        const activeUsersData = snapshot.val() || {};
+        const onlineRemotes = Object.values(activeUsersData).filter(u => u.uid !== userId);
+        const TOTAL_DOTS = slotElementsArray.length;
+
+        const currentTurnPeers = new Map();
+        
+        // Phase 1: Map incoming state configurations
+        onlineRemotes.forEach((user) => {
+            if (!user.uid) return;
+            const targetIndex = getDeterministicSlotIndex(user.uid, TOTAL_DOTS);
+            currentTurnPeers.set(user.uid, { user, targetIndex });
+        });
+
+        // Phase 2: Detect Disconnections & Departures
+        trackedActivePeers.forEach((data, uid) => {
+            if (!currentTurnPeers.has(uid)) {
+                triggerStructuralDisruption(data.targetIndex);
+            }
+        });
+
+        // Phase 3: Detect New Connections & Arrivals
+        currentTurnPeers.forEach((data, uid) => {
+            if (!trackedActivePeers.has(uid)) {
+                triggerStructuralDisruption(data.targetIndex);
+            }
+        });
+
+        // Retain current session cache reference
+        trackedActivePeers = currentTurnPeers;
+
+        // Reset visual variables before injection
+        slotElementsArray.forEach(slot => {
+            slot.classList.remove('is-active', 'is-infected');
+            slot.style.removeProperty('--avatar-img');
+            slot.style.removeProperty('--peer-color');
+        });
+
+        // Phase 4: Dynamic Rendering & Contamination
+        currentTurnPeers.forEach((data, uid) => {
+            const index = data.targetIndex;
+            const targetedSlot = slotElementsArray[index];
+            const peerColor = getDeterministicColor(uid);
+
+            if (targetedSlot) {
+                const rawAvatar = data.user.avatar || 'avatar-m1';
+                const resolvedUserAvatar = premium3dAssets[rawAvatar] || rawAvatar;
+                
+                targetedSlot.style.setProperty('--avatar-img', `url('${resolvedUserAvatar}')`);
+                targetedSlot.style.setProperty('--peer-color', peerColor);
+                targetedSlot.classList.add('is-active'); 
+
+                // Bleed color profiles onto localized sister paths (Infection)
+                const neighbors = [
+                    (index - 1 + TOTAL_DOTS) % TOTAL_DOTS,
+                    (index + 1 + TOTAL_DOTS) % TOTAL_DOTS
+                ];
+                neighbors.forEach(nIndex => {
+                    const sibling = slotElementsArray[nIndex];
+                    if (sibling && !sibling.classList.contains('is-active')) {
+                        sibling.style.setProperty('--peer-color', peerColor);
+                        sibling.classList.add('is-infected');
+                    }
+                });
+            }
+        });
+    });
+}
