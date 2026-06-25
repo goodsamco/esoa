@@ -149,7 +149,6 @@
             gap: 12px;
             z-index: 3100;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-            /* Native OS Spring curves */
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
                         width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
                         max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
@@ -222,7 +221,6 @@
             background: rgba(0, 0, 0, 0.85);
         }
 
-        /* Subtle, native, clean hover accent expansion replacing the shake */
         .bottom-floating-control-strip.collapsed-search:hover {
             transform: scale(1.04);
             background: rgba(20, 20, 20, 0.95);
@@ -470,7 +468,6 @@
         </div>
     </div>
 
-    <!-- Symmetrical geometry framework loads by default -->
     <div class="bottom-floating-control-strip">
         <div class="search-inner-wrapper">
             <input type="text" id="registrySearch" placeholder="Search guides, protocols, notes..." oninput="filterRegistryRealtime()">
@@ -524,561 +521,606 @@
         </div>
     </div>
 
-<script type="module" src="esoa.js"></script>
+    <script type="module" src="esoa.js"></script>
     <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-let layoutMovableActive = false;
-let rtdb;
-let db;
-let activeEditRow = null;
-let userDocRef;
-let localProfileNoteCache = "";
+        let layoutMovableActive = false;
+        let rtdb;
+        let db;
+        let activeEditRow = null;
+        let userDocRef;
+        let localProfileNoteCache = "";
 
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-const userId = localStorage.getItem("userId");
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+        const userId = localStorage.getItem("userId");
 
-const baseDataset = {
-    cf4_guides: [
-        { title: "PERTINENT SIGN", desc: "CHEST PAIN, DYSPNEA, DIAPHORESIS, COUGH, FEVER, VOMITING" },
-        { title: "DIAGNOSTIC", desc: "ECG, TROPONIN I, CBC, CHEST X-RAY, URINALYSIS" },
-        { title: "CHIEF COMPLAINT", desc: "SUDDEN ONSET OF DIFFICULTY OF BREATHING ACCOMPANIED BY COUGH" },
-        { title: "ADMIT PROTOCOL", desc: "SECURE IV LINE, START O2 INHALATION AT 2-4 LPM via NASAL CANNULA, MONITOR VITALS" },
-        { title: "DISCHARGE EDCT", desc: "TAKE MEDICATIONS ON TIME, COMPLY WITH LOW SALT AND LOW FAT DIET, DISCHARGE FOLLOW-UP" },
-        { title: "HISTORY P.I.", desc: "PATIENT EXPERIENCED PROGRESSIVE SYMPTOMS 3 DAYS PRIOR TO ADMISSION" },
-        { title: "PHYSICAL EXAM", desc: "CLEAR SENSORIUM, SYMMETRICAL CHEST EXPANSION, NO INTERCOSTAL RETRACTIONS" }
-    ]
-}; 
-const premium3dAssets = {
-    'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
-    'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
-};
-
-try {
-    const firebaseConfig = {
-        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
-        authDomain: "svls-289ee.firebaseapp.com",
-        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
-        projectId: "svls-289ee",
-        storageBucket: "svls-289ee.firebasestorage.app",
-        messagingSenderId: "500705386198",
-        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
-        measurementId: "G-5TNBMQ2HN5"
-    };
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    rtdb = getDatabase(app);
-} catch(e) {
-    console.warn("RTDB environment connection local fallback initiated.");
-}
-
-if (userId && db) {
-    userDocRef = doc(db, "accounts", userId);
-    onSnapshot(userDocRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const data = snapshot.data();
-            const currentUserName = data.customName || "Operator";
-            const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
-            document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
-            document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
-
-            if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
-            if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
-
-            const selfBubble = document.getElementById('profile-status-bubble-node');
-            if (selfBubble) selfBubble.remove();
-
-            if (data.statusNoteText && data.statusNoteUpdatedAt) {
-                const delta = Date.now() - data.statusNoteUpdatedAt;
-                if (delta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
-                    localProfileNoteCache = data.statusNoteText;
-                    const avatar = document.getElementById('userDisplayAvatar');
-                    const trigger = document.querySelector('.profile-note-action-trigger');
-                    if (avatar && trigger) {
-                        const bubble = document.createElement('div');
-                        bubble.className = 'profile-status-note-bubble';
-                        bubble.id = 'profile-status-bubble-node';
-                        bubble.innerText = localProfileNoteCache;
-                        if (data.statusNoteColor) {
-                            bubble.style.borderColor = data.statusNoteColor;
-                            bubble.style.color = data.statusNoteColor;
-                        }
-                        avatar.parentNode.insertBefore(bubble, trigger);
-                    }
-                } else { localProfileNoteCache = ""; }
-            } else { localProfileNoteCache = ""; }
-
-            if (rtdb) {
-                set(ref(rtdb, 'presence/' + userId), {
-                    uid: userId, 
-                    name: currentUserName, 
-                    avatar: currentUserAvatarRaw, 
-                    timestamp: Date.now(),
-                    statusNote: { 
-                        text: data.statusNoteText || "", 
-                        color: data.statusNoteColor || "#e5e5e5", 
-                        updatedAt: data.statusNoteUpdatedAt || 0 
-                    }
-                });
-            }
-        }
-    });
-}
-
-(() => {
-    const avatarNode = document.getElementById('userDisplayAvatar');
-    if (!avatarNode) return;
-
-    const trigger = document.createElement('div');
-    trigger.className = 'profile-note-action-trigger';
-    trigger.innerText = '＋';
-    avatarNode.parentNode.insertBefore(trigger, avatarNode);
-
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.id = 'status-note-custom-modal';
-    overlay.innerHTML = `
-        <div class="modal-content">
-            <div class="input-group">
-                <label>UPDATE STATUS NOTE</label>
-                <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
-                <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
-            </div>
-            <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
-            <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const fld = document.getElementById('status-modal-field');
-    const cnt = document.getElementById('status-modal-counter');
-
-    trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fld.value = localProfileNoteCache;
-        cnt.innerText = `${localProfileNoteCache.length} / 10`;
-        window.toggleModal('status-note-custom-modal', true);
-    });
-
-    fld.addEventListener('input', () => {
-        if (fld.value.length > 10) fld.value = fld.value.substring(0, 10);
-        cnt.innerText = `${fld.value.length} / 10`;
-    });
-
-    document.getElementById('status-modal-close-btn').addEventListener('click', () => window.toggleModal('status-note-custom-modal', false));
-
-    document.getElementById('status-modal-save-btn').addEventListener('click', () => {
-        const text = fld.value.trim().substring(0, 10);
-        const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
-        if (userDocRef) {
-            updateDoc(userDocRef, { 
-                statusNoteText: text || "", 
-                statusNoteColor: text ? color : "", 
-                statusNoteUpdatedAt: text ? Date.now() : null 
-            }).then(() => window.toggleModal('status-note-custom-modal', false));
-        }
-    });
-})();
-
-function pullParsedAccentColor() {
-    let customAccent =
-        localStorage.getItem('btnValue') ||
-        localStorage.getItem('accentColor') ||
-        localStorage.getItem('customAccent');
-
-    if (customAccent) {
-        document.documentElement.style.setProperty('--primary', customAccent);
-    }
-}
-
-window.toggleCategoryAccordion = function(wrapperId, headerElement) {
-    if (layoutMovableActive) return; 
-    const wrapper = document.getElementById(wrapperId);
-    const chevron = headerElement.querySelector('.chevron-icon'); 
-    
-    if (wrapper.classList.contains('collapsed')) {
-        wrapper.classList.remove('collapsed');
-        chevron.style.transform = "rotate(0deg)";
-    } else {
-        wrapper.classList.add('collapsed');
-        chevron.style.transform = "rotate(-90deg)";
-    }
-};
-
-window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
-    const container = document.getElementById(targetGroupId);
-    if (!container) return; 
-    
-    const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
-    const rows = container.querySelectorAll('.item-row'); 
-    
-    if (!isExpanded) {
-        rows.forEach(r => r.classList.remove('hidden-overflow-item'));
-        buttonElement.setAttribute('data-expanded', 'true');
-        buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
-    } else {
-        rows.forEach((r, idx) => {
-            if (idx >= 5) r.classList.add('hidden-overflow-item');
-        });
-        buttonElement.setAttribute('data-expanded', 'false');
-        buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-    }
-    if (window.lucide) window.lucide.createIcons();
-};
-
-async function initializeRegistryData() {
-    pullParsedAccentColor();
-    const targetContainer = document.getElementById('cf4-section-group');
-    if (!targetContainer) return;
-    targetContainer.innerHTML = '';
-
-    let activeList = [];
-    try {
-        if (rtdb) {
-            const snapshot = await get(child(ref(rtdb), "clinical_references/cf4_guides"));
-            if (snapshot.exists()) {
-                const dataObj = snapshot.val();
-                activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
-            }
-        }
-    } catch (e) { console.warn("Database storage fetch fault error mapping."); }
-
-    if (activeList.length === 0) {
-        activeList = baseDataset.cf4_guides;
-    }
-
-    activeList.forEach((item, index) => {
-        appendRowToDOM(targetContainer, item.title, item.desc, index >= 5);
-    });
-
-    if (activeList.length > 5) {
-        const expandBtn = document.createElement('button');
-        expandBtn.className = 'expand-list-action-trigger';
-        expandBtn.setAttribute('data-expanded', 'false');
-        expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-        expandBtn.onclick = function() { toggleSectionListExpansion(this, 'cf4-section-group'); };
-        targetContainer.appendChild(expandBtn);
-    }
-    if (window.lucide) window.lucide.createIcons();
-}
-
-function appendRowToDOM(container, key, val, isOverflowItem) {
-    const rowDiv = document.createElement('div');
-    rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
-    rowDiv.setAttribute('data-title', key);
-    rowDiv.setAttribute('data-val', val);
-    rowDiv.onclick = function() { handleSelectiveCopy(this); }; 
-    
-    rowDiv.innerHTML = `
-        <span class="text-content"><span class="item-title-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
-        <div class="row-context-actions" onclick="event.stopPropagation()">
-            <button class="context-action-node edit-trigger" title="Edit Entry" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-            <button class="context-action-node delete-trigger" title="Delete Entry" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-        </div>
-    `; 
-    
-    const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
-    if (actionTriggerLink) {
-        container.insertBefore(rowDiv, actionTriggerLink);
-    } else {
-        container.appendChild(rowDiv);
-    }
-    bindDragDropSequence(rowDiv);
-}
-
-window.filterRegistryRealtime = function() {
-    const query = document.getElementById('registrySearch').value.toLowerCase().trim();
-    const container = document.getElementById('mainContainer');
-    const searchTargetGroup = document.getElementById('searchResultTargetGroup');
-
-    searchTargetGroup.innerHTML = '';
-
-    if (query === "") {
-        container.classList.remove('searching-active');
-        fineTuneResetElements();
-        return;            
-    }
-
-    container.classList.add('searching-active');
-    const originalRows = container.querySelectorAll('.section-group-inner .item-row');
-
-    originalRows.forEach(row => {
-        const title = row.getAttribute('data-title').toLowerCase();
-        const textVal = row.getAttribute('data-val').toLowerCase();
-
-        if (title.includes(query) || textVal.includes(query)) {
-            const clonedRow = row.cloneNode(true);
-            clonedRow.classList.remove('hidden-overflow-item');
-            clonedRow.style.display = 'flex';
-            clonedRow.onclick = function() { handleSelectiveCopy(this); };
-            searchTargetGroup.appendChild(clonedRow);
-        }
-    });
-};
-
-function fineTuneResetElements() {
-    const target = document.getElementById('cf4-section-group');
-    if (!target) return; 
-    
-    const rows = target.querySelectorAll('.item-row');
-    rows.forEach((row, idx) => {
-        if (idx >= 5) {
-            row.classList.add('hidden-overflow-item');
-        } else {
-            row.classList.remove('hidden-overflow-item');
-        }
-        row.style.display = 'flex';
-    });
-
-    const triggerBtn = target.querySelector('.expand-list-action-trigger');
-    if (triggerBtn) {
-        triggerBtn.setAttribute('data-expanded', 'false');
-        triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
-    }
-    if (window.lucide) window.lucide.createIcons();
-}
-
-window.handleSelectiveCopy = function(element) {
-    if (layoutMovableActive) return;
-    const dataVal = element.getAttribute('data-val');
-
-    navigator.clipboard.writeText(dataVal).then(() => {
-        const textNode = element.querySelector('.item-desc-text');
-        const originalText = textNode.textContent;
-        textNode.textContent = "COPIED VALUE!"; 
-        
-        setTimeout(() => { 
-            textNode.textContent = originalText;
-            window.resetViewRegistry();
-        }, 1000);
-    });
-};
-
-window.openInlineEdit = function(rowElement) {
-    activeEditRow = rowElement; 
-    
-    document.getElementById('modalDisplayTitle').textContent = "EDIT GUIDE ENTRY";
-    document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
-    
-    const titleVal = rowElement.getAttribute('data-title');
-    document.getElementById('newRecordKey').value = titleVal;
-    document.getElementById('newRecordKey').disabled = false;
-    
-    const descVal = rowElement.getAttribute('data-val');
-    document.getElementById('newRecordValue').value = descVal; 
-    
-    window.toggleModal('addRecordModal', true);
-};
-
-window.deleteInlineRow = async function(rowElement) {
-    if(confirm("Are you certain you want to destroy this reference guide record?")) {
-        const key = rowElement.getAttribute('data-title');
-        const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+        const baseDataset = {
+            cf4_guides: [
+                { title: "PERTINENT SIGN", desc: "CHEST PAIN, DYSPNEA, DIAPHORESIS, COUGH, FEVER, VOMITING" },
+                { title: "DIAGNOSTIC", desc: "ECG, TROPONIN I, CBC, CHEST X-RAY, URINALYSIS" },
+                { title: "CHIEF COMPLAINT", desc: "SUDDEN ONSET OF DIFFICULTY OF BREATHING ACCOMPANIED BY COUGH" },
+                { title: "ADMIT PROTOCOL", desc: "SECURE IV LINE, START O2 INHALATION AT 2-4 LPM via NASAL CANNULA, MONITOR VITALS" },
+                { title: "DISCHARGE EDCT", desc: "TAKE MEDICATIONS ON TIME, COMPLY WITH LOW SALT AND LOW FAT DIET, DISCHARGE FOLLOW-UP" },
+                { title: "HISTORY P.I.", desc: "PATIENT EXPERIENCED PROGRESSIVE SYMPTOMS 3 DAYS PRIOR TO ADMISSION" },
+                { title: "PHYSICAL EXAM", desc: "CLEAR SENSORIUM, SYMMETRICAL CHEST EXPANSION, NO INTERCOSTAL RETRACTIONS" }
+            ]
+        }; 
+        const premium3dAssets = {
+            'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+            'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
+        };
 
         try {
-            if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`), null);
-        } catch(e) { console.warn("Database communication deletion dropped."); } 
-        
-        rowElement.remove();
-        window.resetViewRegistry();
-    }
-};
-
-window.pushRecordToDatabase = async function() {
-    const key = document.getElementById('newRecordKey').value.trim();
-    const val = document.getElementById('newRecordValue').value.trim();
-
-    if (!key || !val) return alert("Please specify all required data attributes.");
-
-    if (activeEditRow) {
-        const oldKey = activeEditRow.getAttribute('data-title');
-        if (oldKey !== key) {
-            const sanitizedOldKey = oldKey.replace(/[.#$\[\]]/g, "_");
-            try {
-                if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedOldKey}`), null);
-            } catch(e) { console.warn("Pruning legacy key path failed."); }
+            const firebaseConfig = {
+                apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+                authDomain: "svls-289ee.firebaseapp.com",
+                databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+                projectId: "svls-289ee",
+                storageBucket: "svls-289ee.firebasestorage.app",
+                messagingSenderId: "500705386198",
+                appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+                measurementId: "G-5TNBMQ2HN5"
+            };
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            rtdb = getDatabase(app);
+        } catch(e) {
+            console.warn("RTDB environment connection local fallback initiated.");
         }
-    }
 
-    const referencePayload = { title: key, description: val, syncedAt: Date.now() };
-    const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+        if (userId && db) {
+            userDocRef = doc(db, "accounts", userId);
+            onSnapshot(userDocRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    const currentUserName = data.customName || "Operator";
+                    const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+                    document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+                    document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
 
-    try {
-        if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`), referencePayload);
-    } catch (err) { console.warn("Database connection runtime dropped."); }
+                    if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
+                    if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
 
-    if (activeEditRow) {
-        activeEditRow.setAttribute('data-title', key);
-        activeEditRow.setAttribute('data-val', val);
-        activeEditRow.querySelector('.item-title-prefix').textContent = key;
-        activeEditRow.querySelector('.item-desc-text').textContent = val;
-    } else {
-        const targetNode = document.getElementById('cf4-section-group');
-        if (targetNode) {
-            const currentCount = targetNode.querySelectorAll('.item-row').length;
-            appendRowToDOM(targetNode, key, val, currentCount >= 5);
+                    const selfBubble = document.getElementById('profile-status-bubble-node');
+                    if (selfBubble) selfBubble.remove();
+
+                    if (data.statusNoteText && data.statusNoteUpdatedAt) {
+                        const delta = Date.now() - data.statusNoteUpdatedAt;
+                        if (delta < TWELVE_HOURS_MS && data.statusNoteText.trim() !== "") {
+                            localProfileNoteCache = data.statusNoteText;
+                            const avatar = document.getElementById('userDisplayAvatar');
+                            const trigger = document.querySelector('.profile-note-action-trigger');
+                            if (avatar && trigger) {
+                                const bubble = document.createElement('div');
+                                bubble.className = 'profile-status-note-bubble';
+                                bubble.id = 'profile-status-bubble-node';
+                                bubble.innerText = localProfileNoteCache;
+                                if (data.statusNoteColor) {
+                                    bubble.style.borderColor = data.statusNoteColor;
+                                    bubble.style.color = data.statusNoteColor;
+                                }
+                                avatar.parentNode.insertBefore(bubble, trigger);
+                            }
+                        } else { localProfileNoteCache = ""; }
+                    } else { localProfileNoteCache = ""; }
+
+                    if (rtdb) {
+                        set(ref(rtdb, 'presence/' + userId), {
+                            uid: userId, 
+                            name: currentUserName, 
+                            avatar: currentUserAvatarRaw, 
+                            timestamp: Date.now(),
+                            statusNote: { 
+                                text: data.statusNoteText || "", 
+                                color: data.statusNoteColor || "#e5e5e5", 
+                                updatedAt: data.statusNoteUpdatedAt || 0 
+                            }
+                        });
+                    }
+                }
+            });
         }
-    }
 
-    window.toggleModal('addRecordModal', false);
-    window.resetViewRegistry();
-};
+        (() => {
+            const avatarNode = document.getElementById('userDisplayAvatar');
+            if (!avatarNode) return;
 
-window.toggleMovableLayout = function() {
-    layoutMovableActive = !layoutMovableActive;
-    const container = document.getElementById('mainContainer');
-    const triggerBtn = document.getElementById('sortToggleTrigger');
-    const wrappers = document.querySelectorAll('.section-group-wrapper');
+            const trigger = document.createElement('div');
+            trigger.className = 'profile-note-action-trigger';
+            trigger.innerText = '＋';
+            avatarNode.parentNode.insertBefore(trigger, avatarNode);
 
-    if (layoutMovableActive) {
-        document.getElementById('registrySearch').value = "";
-        container.classList.remove('searching-active');
-        container.classList.add('edit-mode-active');
-        triggerBtn.classList.add('active-mode');
-        wrappers.forEach(w => w.classList.remove('collapsed'));
-    } else {
-        container.classList.remove('edit-mode-active');
-        triggerBtn.classList.remove('active-mode');
-        fineTuneResetElements();
-    }
-};
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.id = 'status-note-custom-modal';
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="input-group">
+                        <label>UPDATE STATUS NOTE</label>
+                        <input type="text" id="status-modal-field" placeholder="..." maxlength="10" autocomplete="off">
+                        <div class="modal-char-counter" id="status-modal-counter">0 / 10</div>
+                    </div>
+                    <div class="modal-copy-zone" id="status-modal-save-btn">SAVE STATUS</div>
+                    <button class="modal-close-btn" id="status-modal-close-btn">CANCEL</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
 
-function bindDragDropSequence(element) {
-    element.setAttribute('draggable', 'true');
-    element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
-    element.addEventListener('dragend', () => element.classList.remove('dragging'));
-}
+            const fld = document.getElementById('status-modal-field');
+            const cnt = document.getElementById('status-modal-counter');
 
-document.getElementById('cf4-section-group').addEventListener('dragover', e => {
-    if (!layoutMovableActive) return;
-    e.preventDefault();
-    const activeDragging = document.querySelector('.dragging');
-    if (activeDragging) {
-        const zone = document.getElementById('cf4-section-group');
-        const boundingElement = getDragLocationSpace(zone, e.clientY);
-        if (boundingElement == null) {
-            const expandActionLink = zone.querySelector('.expand-list-action-trigger');
-            if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
-            else zone.appendChild(activeDragging);
-        } else {
-            zone.insertBefore(activeDragging, boundingElement);
-        }
-    }
-});
-
-function getDragLocationSpace(container, yPoint) {
-    const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
-    return elements.reduce((closest, child) => {
-        const boundary = child.getBoundingClientRect();
-        const separation = yPoint - boundary.top - boundary.height / 2;
-        if (separation < 0 && separation > closest.offset) {
-            return { offset: separation, element: child };
-        } else {
-            return closest;                
-        }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
-window.toggleModal = function(id, isActive) {
-    const overlay = document.getElementById(id);
-    if (overlay) {
-        if (isActive) {
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-        } else {
-            overlay.classList.remove('active');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                document.getElementById('modalDisplayTitle').textContent = "ADD NEW GUIDE ENTRY";
-                document.getElementById('modalTypeSelectorGroup').style.display = 'block';
-                document.getElementById('newRecordKey').disabled = false;
-                document.getElementById('newRecordKey').value = "";
-                document.getElementById('newRecordValue').value = "";
-                activeEditRow = null;
-            }, 220);                
-        }
-    }
-};
-
-window.closeOutside = function(e, id) {
-    if (e.target === document.getElementById(id)) window.toggleModal(id, false);
-};
-
-window.resetViewRegistry = function() {
-    document.getElementById('registrySearch').value = "";
-    window.filterRegistryRealtime();
-    if (layoutMovableActive) window.toggleMovableLayout();
-    fineTuneResetElements();
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeRegistryData();
-
-    const searchStrip = document.querySelector('.bottom-floating-control-strip');
-    const searchInput = document.getElementById('registrySearch');
-    let inactivityTimer = null;
-
-    function handleExpand() {
-        if (searchStrip.classList.contains('collapsed-search')) {
-            searchStrip.classList.remove('collapsed-search');
-            setTimeout(() => searchInput.focus(), 120);
-        }
-    }
-
-    function handleCollapse() {
-        // Prevent collapsing if an operation mode or open editing screen is engaged
-        const activeModal = document.querySelector('.modal-overlay.active');
-        if (layoutMovableActive || activeModal) return;
-
-        // Reset tracking states, clear queries, and return UI back to small pill
-        searchInput.value = '';
-        window.filterRegistryRealtime();
-        searchStrip.classList.add('collapsed-search');
-    }
-
-    // 31-Second Standby Expand Logic
-    function resetInactivityCountdown() {
-        clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => {
-            if (searchStrip.classList.contains('collapsed-search')) {
-                handleExpand();
-            }
-        }, 31000);
-    }
-
-    if (searchStrip && searchInput) {
-        // Expand instantly on click if currently collapsed
-        searchStrip.addEventListener('click', (e) => {
-            if (searchStrip.classList.contains('collapsed-search')) {
+            trigger.addEventListener('click', (e) => {
                 e.stopPropagation();
-                handleExpand();
+                fld.value = localProfileNoteCache;
+                cnt.innerText = `${localProfileNoteCache.length} / 10`;
+                window.toggleModal('status-note-custom-modal', true);
+            });
+
+            fld.addEventListener('input', () => {
+                if (fld.value.length > 10) fld.value = fld.value.substring(0, 10);
+                cnt.innerText = `${fld.value.length} / 10`;
+            });
+
+            document.getElementById('status-modal-close-btn').addEventListener('click', () => window.toggleModal('status-note-custom-modal', false));
+
+            document.getElementById('status-modal-save-btn').addEventListener('click', () => {
+                const text = fld.value.trim().substring(0, 10);
+                const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e5e5e5';
+                if (userDocRef) {
+                    updateDoc(userDocRef, { 
+                        statusNoteText: text || "", 
+                        statusNoteColor: text ? color : "", 
+                        statusNoteUpdatedAt: text ? Date.now() : null 
+                    }).then(() => window.toggleModal('status-note-custom-modal', false));
+                }
+            });
+        })();
+
+        function pullParsedAccentColor() {
+            let customAccent =
+                localStorage.getItem('btnValue') ||
+                localStorage.getItem('accentColor') ||
+                localStorage.getItem('customAccent');
+
+            if (customAccent) {
+                document.documentElement.style.setProperty('--primary', customAccent);
+            }
+        }
+
+        window.toggleCategoryAccordion = function(wrapperId, headerElement) {
+            if (layoutMovableActive) return; 
+            const wrapper = document.getElementById(wrapperId);
+            const chevron = headerElement.querySelector('.chevron-icon'); 
+            
+            if (wrapper.classList.contains('collapsed')) {
+                wrapper.classList.remove('collapsed');
+                chevron.style.transform = "rotate(0deg)";
+            } else {
+                wrapper.classList.add('collapsed');
+                chevron.style.transform = "rotate(-90deg)";
+            }
+        };
+
+        window.toggleSectionListExpansion = function(buttonElement, targetGroupId) {
+            const container = document.getElementById(targetGroupId);
+            if (!container) return; 
+            
+            const isExpanded = buttonElement.getAttribute('data-expanded') === 'true';
+            const rows = container.querySelectorAll('.item-row'); 
+            
+            if (!isExpanded) {
+                rows.forEach(r => r.classList.remove('hidden-overflow-item'));
+                buttonElement.setAttribute('data-expanded', 'true');
+                buttonElement.innerHTML = `Hide <i data-lucide="chevron-up" style="width:14px;height:14px;"></i>`;
+            } else {
+                rows.forEach((r, idx) => {
+                    if (idx >= 5) r.classList.add('hidden-overflow-item');
+                });
+                buttonElement.setAttribute('data-expanded', 'false');
+                buttonElement.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        async function initializeRegistryData() {
+            pullParsedAccentColor();
+            const targetContainer = document.getElementById('cf4-section-group');
+            if (!targetContainer) return;
+            targetContainer.innerHTML = '';
+
+            let activeList = [];
+            let customLayoutOrder = null;
+
+            try {
+                if (rtdb) {
+                    // Fetch global guide records
+                    const snapshot = await get(child(ref(rtdb), "clinical_references/cf4_guides"));
+                    if (snapshot.exists()) {
+                        const dataObj = snapshot.val();
+                        activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
+                    }
+                    
+                    // Fetch customized card layouts saved explicitly for this user profile
+                    if (userId) {
+                        const layoutSnapshot = await get(child(ref(rtdb), `user_layouts/${userId}/cf4_guides`));
+                        if (layoutSnapshot.exists()) {
+                            customLayoutOrder = layoutSnapshot.val();
+                        }
+                    }
+                }
+            } catch (e) { console.warn("Database storage fetch fault error mapping."); }
+
+            if (activeList.length === 0) {
+                activeList = baseDataset.cf4_guides;
+            }
+
+            // If a persistent user sequence map exists, sort items dynamically using that template matrix
+            if (customLayoutOrder && Array.isArray(customLayoutOrder)) {
+                activeList.sort((a, b) => {
+                    let indexA = customLayoutOrder.indexOf(a.title);
+                    let indexB = customLayoutOrder.indexOf(b.title);
+                    if (indexA === -1) indexA = 999;
+                    if (indexB === -1) indexB = 999;
+                    return indexA - indexB;
+                });
+            }
+
+            activeList.forEach((item, index) => {
+                appendRowToDOM(targetContainer, item.title, item.desc, index >= 5);
+            });
+
+            if (activeList.length > 5) {
+                const expandBtn = document.createElement('button');
+                expandBtn.className = 'expand-list-action-trigger';
+                expandBtn.setAttribute('data-expanded', 'false');
+                expandBtn.innerHTML = `Show all (${activeList.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+                expandBtn.onclick = function() { toggleSectionListExpansion(this, 'cf4-section-group'); };
+                targetContainer.appendChild(expandBtn);
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function appendRowToDOM(container, key, val, isOverflowItem) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = `item-row ${isOverflowItem ? 'hidden-overflow-item' : ''}`;
+            rowDiv.setAttribute('data-title', key);
+            rowDiv.setAttribute('data-val', val);
+            rowDiv.onclick = function() { handleSelectiveCopy(this); }; 
+            
+            rowDiv.innerHTML = `
+                <span class="text-content"><span class="item-title-prefix">${key}</span><span class="item-desc-text">${val}</span></span>
+                <div class="row-context-actions" onclick="event.stopPropagation()">
+                    <button class="context-action-node edit-trigger" title="Edit Entry" onclick="openInlineEdit(this.closest('.item-row'))"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+                    <button class="context-action-node delete-trigger" title="Delete Entry" onclick="deleteInlineRow(this.closest('.item-row'))"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                </div>
+            `; 
+            
+            const actionTriggerLink = container.querySelector('.expand-list-action-trigger');
+            if (actionTriggerLink) {
+                container.insertBefore(rowDiv, actionTriggerLink);
+            } else {
+                container.appendChild(rowDiv);
+            }
+            bindDragDropSequence(rowDiv);
+        }
+
+        window.filterRegistryRealtime = function() {
+            const query = document.getElementById('registrySearch').value.toLowerCase().trim();
+            const container = document.getElementById('mainContainer');
+            const searchTargetGroup = document.getElementById('searchResultTargetGroup');
+
+            searchTargetGroup.innerHTML = '';
+
+            if (query === "") {
+                container.classList.remove('searching-active');
+                fineTuneResetElements();
+                return;            
+            }
+
+            container.classList.add('searching-active');
+            const originalRows = container.querySelectorAll('.section-group-inner .item-row');
+
+            originalRows.forEach(row => {
+                const title = row.getAttribute('data-title').toLowerCase();
+                const textVal = row.getAttribute('data-val').toLowerCase();
+
+                if (title.includes(query) || textVal.includes(query)) {
+                    const clonedRow = row.cloneNode(true);
+                    clonedRow.classList.remove('hidden-overflow-item');
+                    clonedRow.style.display = 'flex';
+                    clonedRow.onclick = function() { handleSelectiveCopy(this); };
+                    searchTargetGroup.appendChild(clonedRow);
+                }
+            });
+        };
+
+        function fineTuneResetElements() {
+            const target = document.getElementById('cf4-section-group');
+            if (!target) return; 
+            
+            const rows = target.querySelectorAll('.item-row');
+            rows.forEach((row, idx) => {
+                if (idx >= 5) {
+                    row.classList.add('hidden-overflow-item');
+                } else {
+                    row.classList.remove('hidden-overflow-item');
+                }
+                row.style.display = 'flex';
+            });
+
+            const triggerBtn = target.querySelector('.expand-list-action-trigger');
+            if (triggerBtn) {
+                triggerBtn.setAttribute('data-expanded', 'false');
+                triggerBtn.innerHTML = `Show all (${rows.length}) <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>`;
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        window.handleSelectiveCopy = function(element) {
+            if (layoutMovableActive) return;
+            const dataVal = element.getAttribute('data-val');
+
+            navigator.clipboard.writeText(dataVal).then(() => {
+                const textNode = element.querySelector('.item-desc-text');
+                const originalText = textNode.textContent;
+                textNode.textContent = "COPIED VALUE!"; 
+                
+                setTimeout(() => { 
+                    textNode.textContent = originalText;
+                    window.resetViewRegistry();
+                }, 1000);
+            });
+        };
+
+        window.openInlineEdit = function(rowElement) {
+            activeEditRow = rowElement; 
+            
+            document.getElementById('modalDisplayTitle').textContent = "EDIT GUIDE ENTRY";
+            document.getElementById('modalTypeSelectorGroup').style.display = 'none'; 
+            
+            const titleVal = rowElement.getAttribute('data-title');
+            document.getElementById('newRecordKey').value = titleVal;
+            document.getElementById('newRecordKey').disabled = false;
+            
+            const descVal = rowElement.getAttribute('data-val');
+            document.getElementById('newRecordValue').value = descVal; 
+            
+            window.toggleModal('addRecordModal', true);
+        };
+
+        window.deleteInlineRow = async function(rowElement) {
+            if(confirm("Are you certain you want to destroy this reference guide record?")) {
+                const key = rowElement.getAttribute('data-title');
+                const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+                try {
+                    if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`), null);
+                } catch(e) { console.warn("Database communication deletion dropped."); } 
+                
+                rowElement.remove();
+                
+                // Track remaining keys after removal to maintain consistent arrangement parameters
+                saveCurrentLayoutOrderToDatabase();
+                window.resetViewRegistry();
+            }
+        };
+
+        window.pushRecordToDatabase = async function() {
+            const key = document.getElementById('newRecordKey').value.trim();
+            const val = document.getElementById('newRecordValue').value.trim();
+
+            if (!key || !val) return alert("Please specify all required data attributes.");
+
+            if (activeEditRow) {
+                const oldKey = activeEditRow.getAttribute('data-title');
+                if (oldKey !== key) {
+                    const sanitizedOldKey = oldKey.replace(/[.#$\[\]]/g, "_");
+                    try {
+                        if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedOldKey}`), null);
+                    } catch(e) { console.warn("Pruning legacy key path failed."); }
+                }
+            }
+
+            const referencePayload = { title: key, description: val, syncedAt: Date.now() };
+            const sanitizedKey = key.replace(/[.#$\[\]]/g, "_");
+
+            try {
+                if (rtdb) await set(ref(rtdb, `clinical_references/cf4_guides/${sanitizedKey}`, referencePayload), referencePayload);
+            } catch (err) { console.warn("Database connection runtime dropped."); }
+
+            if (activeEditRow) {
+                activeEditRow.setAttribute('data-title', key);
+                activeEditRow.setAttribute('data-val', val);
+                activeEditRow.querySelector('.item-title-prefix').textContent = key;
+                activeEditRow.querySelector('.item-desc-text').textContent = val;
+            } else {
+                const targetNode = document.getElementById('cf4-section-group');
+                if (targetNode) {
+                    const currentCount = targetNode.querySelectorAll('.item-row').length;
+                    appendRowToDOM(targetNode, key, val, currentCount >= 5);
+                }
+            }
+
+            // Sync structural parameters instantly on any add/update mutations
+            saveCurrentLayoutOrderToDatabase();
+            window.toggleModal('addRecordModal', false);
+            window.resetViewRegistry();
+        };
+
+        // Aggregates array matrix of raw layout paths and pipes it directly into user profile tree structure
+        async function saveCurrentLayoutOrderToDatabase() {
+            if (!userId || !rtdb) return;
+            
+            const rows = document.querySelectorAll('#cf4-section-group .item-row');
+            const layoutOrderArray = [];
+            
+            rows.forEach(row => {
+                const title = row.getAttribute('data-title');
+                if (title) layoutOrderArray.push(title);
+            });
+
+            try {
+                await set(ref(rtdb, `user_layouts/${userId}/cf4_guides`), layoutOrderArray);
+                console.log("Custom user structural card sequence verified and saved to database.");
+            } catch (e) {
+                console.warn("Failed to synchronize layout changes across database reference tracks.", e);
+            }
+        }
+
+        window.toggleMovableLayout = function() {
+            layoutMovableActive = !layoutMovableActive;
+            const container = document.getElementById('mainContainer');
+            const triggerBtn = document.getElementById('sortToggleTrigger');
+            const wrappers = document.querySelectorAll('.section-group-wrapper');
+
+            if (layoutMovableActive) {
+                document.getElementById('registrySearch').value = "";
+                container.classList.remove('searching-active');
+                container.classList.add('edit-mode-active');
+                triggerBtn.classList.add('active-mode');
+                wrappers.forEach(w => w.classList.remove('collapsed'));
+            } else {
+                container.classList.remove('edit-mode-active');
+                triggerBtn.classList.remove('active-mode');
+                // Capture positions and persist across user nodes when exiting mode
+                saveCurrentLayoutOrderToDatabase();
+                fineTuneResetElements();
+            }
+        };
+
+        function bindDragDropSequence(element) {
+            element.setAttribute('draggable', 'true');
+            element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
+            element.addEventListener('dragend', () => {
+                element.removeClassName = 'dragging';
+                element.classList.remove('dragging');
+                if (layoutMovableActive) {
+                    saveCurrentLayoutOrderToDatabase();
+                }
+            });
+        }
+
+        document.getElementById('cf4-section-group').addEventListener('dragover', e => {
+            if (!layoutMovableActive) return;
+            e.preventDefault();
+            const activeDragging = document.querySelector('.dragging');
+            if (activeDragging) {
+                const zone = document.getElementById('cf4-section-group');
+                const boundingElement = getDragLocationSpace(zone, e.clientY);
+                if (boundingElement == null) {
+                    const expandActionLink = zone.querySelector('.expand-list-action-trigger');
+                    if (expandActionLink) zone.insertBefore(activeDragging, expandActionLink);
+                    else zone.appendChild(activeDragging);
+                } else {
+                    zone.insertBefore(activeDragging, boundingElement);
+                }
             }
         });
 
-        // Global viewport manager for tracking click-away events
-        document.addEventListener('click', (e) => {
-            const activeModal = document.querySelector('.modal-overlay.active');
-            
-            // Do absolutely nothing if interaction occurs within the modal or inside the control panel itself
-            if (searchStrip.contains(e.target) || (activeModal && activeModal.contains(e.target))) {
-                return;
+        function getDragLocationSpace(container, yPoint) {
+            const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+            return elements.reduce((closest, child) => {
+                const boundary = child.getBoundingClientRect();
+                const separation = yPoint - boundary.top - boundary.height / 2;
+                if (separation < 0 && separation > closest.offset) {
+                    return { offset: separation, element: child };
+                } else {
+                    return closest;                
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        window.toggleModal = function(id, isActive) {
+            const overlay = document.getElementById(id);
+            if (overlay) {
+                if (isActive) {
+                    overlay.style.display = 'flex';
+                    setTimeout(() => overlay.classList.add('active'), 10);
+                } else {
+                    overlay.classList.remove('active');
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        document.getElementById('modalDisplayTitle').textContent = "ADD NEW GUIDE ENTRY";
+                        document.getElementById('modalTypeSelectorGroup').style.display = 'block';
+                        document.getElementById('newRecordKey').disabled = false;
+                        document.getElementById('newRecordKey').value = "";
+                        document.getElementById('newRecordValue').value = "";
+                        activeEditRow = null;
+                    }, 220);                
+                }
             }
-            
-            // Safe to wipe queries and compress layout 
-            handleCollapse();
-        });
+        };
 
-        // Intercept global interactions to keep timer counting down
-        const inputTriggers = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
-        inputTriggers.forEach(evtName => {
-            document.addEventListener(evtName, resetInactivityCountdown, { passive: true });
-        });
+        window.closeOutside = function(e, id) {
+            if (e.target === document.getElementById(id)) window.toggleModal(id, false);
+        };
 
-        resetInactivityCountdown();
-    }
-});
+        window.resetViewRegistry = function() {
+            document.getElementById('registrySearch').value = "";
+            window.filterRegistryRealtime();
+            if (layoutMovableActive) window.toggleMovableLayout();
+            fineTuneResetElements();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeRegistryData();
+
+            const searchStrip = document.querySelector('.bottom-floating-control-strip');
+            const searchInput = document.getElementById('registrySearch');
+            let inactivityTimer = null;
+
+            function handleExpand() {
+                if (searchStrip.classList.contains('collapsed-search')) {
+                    searchStrip.classList.remove('collapsed-search');
+                    setTimeout(() => searchInput.focus(), 120);
+                }
+            }
+
+            function handleCollapse() {
+                const activeModal = document.querySelector('.modal-overlay.active');
+                if (layoutMovableActive || activeModal) return;
+
+                searchInput.value = '';
+                window.filterRegistryRealtime();
+                searchStrip.classList.add('collapsed-search');
+            }
+
+            function resetInactivityCountdown() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    if (searchStrip.classList.contains('collapsed-search')) {
+                        handleExpand();
+                    }
+                }, 31000);
+            }
+
+            if (searchStrip && searchInput) {
+                searchStrip.addEventListener('click', (e) => {
+                    if (searchStrip.classList.contains('collapsed-search')) {
+                        e.stopPropagation();
+                        handleExpand();
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    const activeModal = document.querySelector('.modal-overlay.active');
+                    if (searchStrip.contains(e.target) || (activeModal && activeModal.contains(e.target))) {
+                        return;
+                    }
+                    handleCollapse();
+                });
+
+                const inputTriggers = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+                inputTriggers.forEach(evtName => {
+                    document.addEventListener(evtName, resetInactivityCountdown, { passive: true });
+                });
+
+                resetInactivityCountdown();
+            }
+        });
     </script>
 </body>
 </html>
