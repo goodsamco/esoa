@@ -1701,8 +1701,8 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 /* Constellation Stage Component Layers */
 .standby-stage {
     position: absolute;
-    /* Default: Safe distance for wider screen desktop monitors */
-    top: 68%; 
+    /* Normal View: Safe space margin pushed down to clear the 200px font zone */
+    top: 72%; 
     left: 50%;
     transform: translate(-50%, -50%);
     width: 0;
@@ -1710,19 +1710,15 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: top 0.5s ease;
+    transition: top 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* NARROW VIEWPORTS: Allow overlap on small screens/mobile so things don't clip */
+/* NARROW VIEWPORTS ONLY: 
+   Preserves full 200px/160px dimensions, brings stage up into tight overlapping alignment 
+*/
 @media (max-width: 768px) {
-    .standby-time-display {
-        font-size: 140px; /* Scaling down the huge font slightly for mobile screens */
-    }
-    .standby-hours-box, .standby-minutes-box {
-        width: 115px; /* Proportional boundary adjustments */
-    }
     .standby-stage {
-        top: 60%; /* Snaps back up into the overlapping/tight layout profile */
+        top: 60%; /* Original placement setting allowing overlap on compact devices */
     }
 }
 
