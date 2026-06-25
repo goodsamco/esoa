@@ -732,6 +732,27 @@ body.copy-flash {
     outline: none;
 }
 
+.chat-input-row textarea {
+    flex: 1;
+    display: block;
+    background: #000;
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    border-radius: 8px;
+    color: white;
+    padding: 8px;
+    font-size: 0.85rem;
+    line-height: 1.2rem;
+    outline: none;
+    
+    resize: none;
+    height: 34px;
+    max-height: 150px; /* The stopping point */
+    font-family: inherit;
+    box-sizing: border-box;
+
+    overflow-y: hidden; /* FIX: Keep it hidden until JS flips it */
+}
+
 .chat-input-row input:focus {
     border-color: var(--primary);
 }
