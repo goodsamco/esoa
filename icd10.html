@@ -774,6 +774,8 @@ async function bindSegmentGroupData(firebaseRoute, domContainerId) {
     targetContainer.innerHTML = '';
 
     let activeList = [];
+    let customLayoutOrder = null;
+
     try {
         if (rtdb) {
             const snapshot = await get(child(ref(rtdb), `clinical_references/${firebaseRoute}`));
@@ -781,11 +783,28 @@ async function bindSegmentGroupData(firebaseRoute, domContainerId) {
                 const dataObj = snapshot.val();
                 activeList = Object.keys(dataObj).map(k => ({ title: dataObj[k].title, desc: dataObj[k].description }));
             }
+
+            if (userId) {
+                const layoutSnapshot = await get(child(ref(rtdb), `user_layouts/${userId}/${firebaseRoute}`));
+                if (layoutSnapshot.exists()) {
+                    customLayoutOrder = layoutSnapshot.val();
+                }
+            }
         }
     } catch (e) { console.warn("Database storage fetch fault error mapping."); }
 
     if (activeList.length === 0) {
         activeList = baseDataset[firebaseRoute] || [];
+    }
+
+    if (customLayoutOrder && Array.isArray(customLayoutOrder)) {
+        activeList.sort((a, b) => {
+            let indexA = customLayoutOrder.indexOf(a.title);
+            let indexB = customLayoutOrder.indexOf(b.title);
+            if (indexA === -1) indexA = 999;
+            if (indexB === -1) indexB = 999;
+            return indexA - indexB;
+        });
     }
 
     activeList.forEach((item, index) => {
@@ -928,6 +947,7 @@ window.deleteInlineRow = async function(rowElement) {
         } catch(e) { console.warn("Database communication deletion dropped."); } 
         
         rowElement.remove();
+        saveSectionLayoutOrder(parentId);
         window.resetViewRegistry();
     }
 };
@@ -948,6 +968,7 @@ window.pushRecordToDatabase = async function() {
         if (parentId === 'icd10-section-group') route = "icd10_codes";
         if (parentId === 'zipcode-section-group') route = "zip_codes";
         if (parentId === 'member-section-group') route = "membership_data";
+        targetNodeId = parentId;
 
         const oldKey = activeEditRow.getAttribute('data-title');
         if (oldKey !== key) {
@@ -978,9 +999,32 @@ window.pushRecordToDatabase = async function() {
         }
     }
 
+    saveSectionLayoutOrder(targetNodeId);
     window.toggleModal('addRecordModal', false);
     window.resetViewRegistry();
 };
+
+async function saveSectionLayoutOrder(domContainerId) {
+    if (!userId || !rtdb) return;
+    
+    let route = "icd10_codes";
+    if (domContainerId === 'zipcode-section-group') route = "zip_codes";
+    if (domContainerId === 'member-section-group') route = "membership_data";
+
+    const rows = document.querySelectorAll(`#${domContainerId} .item-row`);
+    const layoutOrderArray = [];
+    
+    rows.forEach(row => {
+        const title = row.getAttribute('data-title');
+        if (title) layoutOrderArray.push(title);
+    });
+
+    try {
+        await set(ref(rtdb, `user_layouts/${userId}/${route}`), layoutOrderArray);
+    } catch (e) {
+        console.warn("Failed to synchronize layout changes across database reference tracks.", e);
+    }
+}
 
 window.toggleMovableLayout = function() {
     layoutMovableActive = !layoutMovableActive;
@@ -997,6 +1041,11 @@ window.toggleMovableLayout = function() {
     } else {
         container.classList.remove('edit-mode-active');
         triggerBtn.classList.remove('active-mode');
+        
+        saveSectionLayoutOrder('icd10-section-group');
+        saveSectionLayoutOrder('zipcode-section-group');
+        saveSectionLayoutOrder('member-section-group');
+
         fineTuneResetElements('icd10-section-group');
         fineTuneResetElements('zipcode-section-group');
         fineTuneResetElements('member-section-group');
@@ -1006,7 +1055,12 @@ window.toggleMovableLayout = function() {
 function bindDragDropSequence(element) {
     element.setAttribute('draggable', 'true');
     element.addEventListener('dragstart', () => { if(layoutMovableActive) element.classList.add('dragging'); });
-    element.addEventListener('dragend', () => element.classList.remove('dragging'));
+    element.addEventListener('dragend', () => {
+        element.classList.remove('dragging');
+        if (layoutMovableActive && element.parentNode) {
+            saveSectionLayoutOrder(element.parentNode.id);
+        }
+    });
 }
 
 const initializeSortingListeners = (groupId) => {
