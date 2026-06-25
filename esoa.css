@@ -1628,36 +1628,18 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     flex-direction: column;
     align-items: center;
 }
-/*
-.standby-time-display {
-    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
-    font-size: 84px;
-    font-weight: 800;
-    line-height: 1.0;
-    color: var(--primary);
-    letter-spacing: -1px;
-    font-variant-numeric: tabular-nums;
-    -webkit-font-feature-settings: "tnum";
-    font-feature-settings: "tnum";
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-}
-*/
+
 .standby-time-display {
     font-family: "Big Shoulders Display", sans-serif;
     font-size: 200px;
     font-weight: 900;
     line-height: 0.75;
     color: var(--primary);
-
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
-
     display: flex;
     align-items: baseline;
     justify-content: center;
-
     letter-spacing: 1px;
 }
 
@@ -1701,14 +1683,14 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     text-transform: uppercase;
     opacity: 0.7;
     letter-spacing: 0.5px;
-    margin-left: 4px; /* Just the right amount of organic spacing */
+    margin-left: 4px;
 }
 
 /* Normal weight date presentation layer text */
 .standby-date-display {
     font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 16px;
-    font-weight: 400; /* Regular / Normal thickness weight profile */
+    font-weight: 400;
     color: var(--primary);
     opacity: 0.65;
     letter-spacing: 0.5px;
@@ -1719,7 +1701,8 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
 /* Constellation Stage Component Layers */
 .standby-stage {
     position: absolute;
-    top: 60%;
+    /* Default: Safe distance for wider screen desktop monitors */
+    top: 68%; 
     left: 50%;
     transform: translate(-50%, -50%);
     width: 0;
@@ -1727,6 +1710,20 @@ body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) 
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: top 0.5s ease;
+}
+
+/* NARROW VIEWPORTS: Allow overlap on small screens/mobile so things don't clip */
+@media (max-width: 768px) {
+    .standby-time-display {
+        font-size: 140px; /* Scaling down the huge font slightly for mobile screens */
+    }
+    .standby-hours-box, .standby-minutes-box {
+        width: 115px; /* Proportional boundary adjustments */
+    }
+    .standby-stage {
+        top: 60%; /* Snaps back up into the overlapping/tight layout profile */
+    }
 }
 
 .standby-center-profile {
