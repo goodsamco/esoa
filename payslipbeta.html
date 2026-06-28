@@ -823,12 +823,12 @@
             if (day === 15) {
                 let prevMonthDate = new Date(year, monthIdx - 1, 29);
                 let currentTarget = new Date(prevMonthDate);
-                while (currentTarget <= new Date(year, monthIdx, 14)) {
+                while (currentTarget <= new Date(year, monthIdx, 13)) {
                     activeDatesArray.push(new Date(currentTarget));
                     currentTarget.setDate(currentTarget.getDate() + 1);
                 }
             } else {
-                let currentTarget = new Date(year, monthIdx, 13);
+                let currentTarget = new Date(year, monthIdx, 14);
                 while (currentTarget <= new Date(year, monthIdx, 28)) {
                     activeDatesArray.push(new Date(currentTarget));
                     currentTarget.setDate(currentTarget.getDate() + 1);
