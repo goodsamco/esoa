@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAYSLIP ENGINE — SALARY COMPUTER</title>
+    <!-- Inter Font, Lucide Icons & html2pdf -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* ==========================================================================
+           1. CORE DESIGN TOKENS & DYNAMIC COUPLING
+           ========================================================================== */
+        :root {
+            --bg: #0b0f1a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #22c55e;
+            --text-main: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 10px 120px 10px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .engine-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+        }
+
+        .top-nav-deck {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .nav-btn {
+            background: var(--glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+
+        h1 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        /* ==========================================================================
+           2. INTERFACE ELEMENTS & FORM SYSTEM
+           ========================================================================== */
+        .form-block {
+            margin-bottom: 20px;
+        }
+
+        .form-block label {
+            display: block;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        select, input[type="text"], input[type="number"], input[type="time"] {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 14px;
+            color: white;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            font-weight: 600;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Custom Adaptive Calendar Matrix */
+        .calendar-deck {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .calendar-day-node {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day-node:hover {
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .calendar-day-node .day-num {
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .calendar-day-node .day-lbl {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* ==========================================================================
+           3. MATRIX FINANCIAL BREAKDOWN ARCHITECTURE
+           ========================================================================== */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+        }
+
+        .matrix-table th {
+            background: rgba(255,255,255,0.04);
+            text-align: left;
+            padding: 12px 14px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .matrix-table td {
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .matrix-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .net-pay-display-deck {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .net-pay-display-deck.blurred-lock .val-stream {
+            filter: blur(6px);
+            pointer-events: none;
+        }
+
+        .net-pay-display-deck .lbl {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .net-pay-display-deck .val-stream {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin-top: 6px;
+            transition: filter 0.3s ease;
+        }
+
+        .lock-indicator {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        /* Action Buttons */
+        .engine-btn {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--border-glass);
+            color: white;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .engine-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .engine-btn.primary-btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            font-weight: 800;
+        }
+
+        .engine-btn.primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        /* ==========================================================================
+           4. MODAL LAYER ARCHITECTURE
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 7, 12, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 14px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: #111625;
+            border: 1px solid var(--border-glass);
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+            box-sizing: border-box;
+        }
+
+        .realtime-stats-bar {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .realtime-stats-bar .stat-block .lbl {
+            font-size: 0.6rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .realtime-stats-bar .stat-block .val {
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        .nested-row-segment {
+            background: rgba(0,0,0,0.15);
+            border: 1px dashed var(--border-glass);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 14px;
+        }
+
+        /* ==========================================================================
+           5. MONOCHROME PRINT SHEET ENGINE (image_fb8dd5.png & image_fb8dfa.png Alignment)
+           ========================================================================== */
+        #print-render-matrix {
+            display: none;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-render-matrix, #print-render-matrix * {
+                visibility: visible;
+            }
+            #print-render-matrix {
+                position: absolute;
+                left: 0; top: 0; width: 100%;
+                display: block !important;
+            }
+        }
+
+        .print-sheet {
+            width: 8.5in;
+            height: 5.5in; /* Landscape Half-Letter Structural Alignment */
+            padding: 0.3in;
+            box-sizing: border-box;
+            background: #fff;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+
+        .print-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+        .print-table th, .print-table td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            text-transform: uppercase;
+        }
+
+        .print-table th {
+            background: #f0f0f0;
+            font-weight: 800;
+            font-size: 9px;
+        }
+
+        .print-header-banner {
+            text-align: center;
+            font-weight: 800;
+            font-size: 12px;
+            border: 2px solid #000;
+            padding: 6px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .print-sub-section-title {
+            background: #000;
+            color: #fff;
+            font-weight: 800;
+            padding: 3px 6px;
+            font-size: 9px;
+            letter-spacing: 0.05em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="engine-container">
+        <!-- TOP NAVIGATION ROW -->
+        <div class="top-nav-deck">
+            <button class="nav-btn" onclick="window.location.href='payslip.html'" title="RETURN">
+                <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
+            </button>
+            <h1>TIME & PAYSLIP MATRIX</h1>
+            <div style="width:40px;"></div>
+        </div>
+
+        <!-- PAYSLIP TARGET SELECTION -->
+        <div class="form-block">
+            <label>PAYSLIP TIME PERIOD CLOSURE</label>
+            <select id="periodSelector" onchange="processPeriodEngineChange()">
+                <!-- Populated dynamically via controller framework -->
+            </select>
+        </div>
+
+        <div class="form-block">
+            <label>PAYABLE CYCLE COVERAGE WINDOW</label>
+            <input type="text" id="payableRangeDisplay" readonly style="opacity: 0.8; background: rgba(0,0,0,0.2);">
+        </div>
+
+        <!-- CUSTOM ADAPTIVE CALENDAR GRID MODULE -->
+        <div class="form-block">
+            <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
+            <div class="calendar-deck" id="calendarNodeGrid">
+                <!-- Dynamically configured loop elements dependent on cycle logic -->
+            </div>
+        </div>
+
+        <!-- CONTRIBUTION CONTROL PANEL MODULE -->
+        <div class="form-block" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass);">
+            <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTION INPUTS</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <div>
+                    <label style="font-size:0.6rem;">SSS</label>
+                    <input type="number" id="inputSSS" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+                <div>
+                    <label style="font-size:0.6rem;">PHIC</label>
+                    <input type="number" id="inputPHIC" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+                <div>
+                    <label style="font-size:0.6rem;">HDMF</label>
+                    <input type="number" id="inputHDMF" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                <div>
+                    <label style="font-size:0.6rem;">CASH ADVANCES</label>
+                    <input type="number" id="inputAdvances" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+                <div>
+                    <label style="font-size:0.6rem;">OTHERS EARN</label>
+                    <input type="number" id="inputOtherEarn" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+            </div>
+        </div>
+
+        <!-- LIVE EARNINGS COMPILATION DISPLAY BOARD -->
+        <div class="form-block">
+            <label>SALARY DETAILS METRIC BREAKDOWN</label>
+            <table class="matrix-table">
+                <thead>
+                    <tr><th>EARNINGS STREAM</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>BASIC PAY RUN</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
+                    <tr><td>OVERTIME EXTENSION PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
+                    <tr><td>OTHERS (MISC ADDS)</td><td style="text-align: right; color:#fff;" id="breakdownOtherEarn">₱0.00</td></tr>
+                    <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
+                        <td>GROSS PAY VALUE</td><td style="text-align: right; color:var(--primary);" id="breakdownGross">₱0.00</td></tr>
+                </tbody>
+            </table>
+
+            <table class="matrix-table" style="margin-top: 12px;">
+                <thead>
+                    <tr><th>DEDUCTION MATRIX</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>SSS PREMIUM CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownSSS">₱0.00</td></tr>
+                    <tr><td>PHIC STANDARD MEDICAL</td><td style="text-align: right; color:#fff;" id="breakdownPHIC">₱0.00</td></tr>
+                    <tr><td>HDMF HOUSING FUND</td><td style="text-align: right; color:#fff;" id="breakdownHDMF">₱0.00</td></tr>
+                    <tr><td>ABSENCES / LATE STRIKES / UNDERTIME</td><td style="text-align: right; color:#ef4444;" id="breakdownPenalties">₱0.00</td></tr>
+                    <tr><td>CASH ADVANCES ACCOUNTS</td><td style="text-align: right; color:#ef4444;" id="breakdownAdvances">₱0.00</td></tr>
+                    <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
+                        <td>TOTAL COMPASS DEDUCTIONS</td><td style="text-align: right; color:#ef4444;" id="breakdownTotalDed">₱0.00</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DYNAMIC LIQUIDATED NET PAY TARGET DECK -->
+        <div class="net-pay-display-deck" id="netPayWrapperDeck">
+            <div class="lbl">NET DISBURSABLE PAYOUT</div>
+            <div class="val-stream" id="breakdownNet">₱0.00</div>
+            <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">METRIC CYCLE RECORD LOCKED</div>
+        </div>
+
+        <!-- ENGINE ACTION TRANSACTIONS -->
+        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
+            <button class="engine-btn primary-btn" onclick="commitTimelineTransactionToCloud()">
+                <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE OR UPDATE ENGINE TRANSACTIONS
+            </button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button class="engine-btn" onclick="triggerNativePrintPipeline()">
+                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT MATRIX
+                </button>
+                <button class="engine-btn" onclick="triggerPDFExportPipeline()">
+                    <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       6. SYSTEM DATA CAPTURE MODAL SYSTEM
+       ========================================================================== -->
+    <div class="modal-overlay" id="timeConfigModalOverlay">
+        <div class="modal-box">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;" id="modalTargetDateHeader">LOGS TRANSACTION RECORD</h3>
+                <button class="nav-btn" style="width:32px; height:32px;" onclick="closeTimeTransactionModal()">
+                    <i data-lucide="x" style="width:14px;height:14px;"></i>
+                </button>
+            </div>
+
+            <!-- REALTIME DEVIATION MONITOR ENGINE -->
+            <div class="realtime-stats-bar">
+                <div class="stat-block">
+                    <div class="lbl">LATE MINUTES</div>
+                    <div class="val" id="rtLateDisplay" style="color: #ef4444;">0 MINS</div>
+                </div>
+                <div class="stat-block">
+                    <div class="lbl">UNDERTIME MINUTES</div>
+                    <div class="val" id="rtUndertimeDisplay" style="color: #f59e0b;">0 MINS</div>
+                </div>
+            </div>
+
+            <!-- REGULAR INTERACTION RECORD -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-block">
+                    <label>REGULAR TIME IN</label>
+                    <input type="time" id="modalTimeIn1" onchange="runRealtimeMetricsDeductionEngine()">
+                </div>
+                <div class="form-block">
+                    <label>REGULAR TIME OUT</label>
+                    <input type="time" id="modalTimeOut1" onchange="runRealtimeMetricsDeductionEngine()">
+                </div>
+            </div>
+
+            <!-- SECONDARY TIMELINE DECK (MID-DAY INTERRUPT LOOP) -->
+            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 4px; padding: 10px; border-style: solid;" onclick="toggleMidDaySubSection()">
+                <input type="checkbox" id="chkEnableMidDay">
+                <span style="font-size:0.65rem;">ENABLE SECOND SPLIT SCHEDULE SHIFT</span>
+            </div>
+
+            <div class="nested-row-segment" id="midDaySubSectionDeck" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-block">
+                        <label>SPLIT TIME IN (IN2)</label>
+                        <input type="time" id="modalTimeIn2">
+                    </div>
+                    <div class="form-block">
+                        <label>SPLIT TIME OUT (OUT2)</label>
+                        <input type="time" id="modalTimeOut2">
+                    </div>
+                </div>
+                <div class="form-block" style="margin-bottom: 0; margin-top: 6px;">
+                    <label>REASON FOR INTERRUPT SEQUENCE</label>
+                    <input type="text" id="modalSplitReason" placeholder="E.G., MEDICAL EMERGENCY EXCURSION" style="font-size:0.75rem; padding: 10px;">
+                </div>
+            </div>
+
+            <!-- OVERTIME SECTOR DECK -->
+            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px; border-style: solid;" onclick="toggleOvertimeSubSection()">
+                <input type="checkbox" id="chkEnableOT">
+                <span style="font-size:0.65rem;">APPLY RENDERED OVERTIME CREDIT</span>
+            </div>
+
+            <div class="nested-row-segment" id="otSubSectionDeck" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0;">
+                    <div class="form-block" style="margin-bottom: 0;">
+                        <label>OVERTIME IN</label>
+                        <input type="time" id="modalTimeInOT">
+                    </div>
+                    <div class="form-block" style="margin-bottom: 0;">
+                        <label>OVERTIME OUT</label>
+                        <input type="time" id="modalTimeOutOT">
+                    </div>
+                </div>
+            </div>
+
+            <button class="engine-btn primary-btn" style="margin-top: 20px; height: 48px;" onclick="commitModalDayStateToLocalBuffer()">
+                APPLY CHANGES TO MATRIX
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       7. HARD-COPY MONOCHROME PRINT-READY HOOKS CONTAINER
+       ==========================================================================-->   
+  <div id="print-render-matrix">
+        <!-- Structural blueprint derived from image_fb8dd5.png & image_fb8dfa.png content rules -->
+    </div>
+
+    <!-- ==========================================================================
+       8. MOTOR INTEGRATION LOGIC ARCHITECTURE
+       ========================================================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+            authDomain: "svls-289ee.firebaseapp.com",
+            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+            projectId: "svls-289ee",
+            storageBucket: "svls-289ee.firebasestorage.app",
+            messagingSenderId: "500705386198",
+            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+            measurementId: "G-5TNBMQ2HN5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userId = localStorage.getItem("userId");
+        if (!userId) window.location.href = "login.html";
+
+        // Global State Matrices
+        let userProfile = null;
+        let salarySettings = null;
+        let timelineBuffer = {}; // Keyed by YYYY-MM-DD
+        let currentTargetDateString = ""; 
+        let activeDatesArray = [];
+
+        // Operational constants
+        const CURRENT_YEAR = 2026;[cite: 3]
+
+        // Core Architectural Initialization Routing
+        async function bootEngineCore() {
+            try {
+                // Fetch Core Profiles[cite: 3]
+                const accSnap = await getDoc(doc(db, "accounts", userId));[cite: 3]
+                if (accSnap.exists()) userProfile = accSnap.data();[cite: 3]
+
+                const setSnap = await getDoc(doc(db, "salary_settings", userId));[cite: 3]
+                if (setSnap.exists()) {
+                    salarySettings = setSnap.data();
+                } else {
+                    alert("PLEASE SETUP SALARY ENGINE CONFIGURATIONS PROFILE FIRST.");
+                    window.location.href = "settings.html";
+                    return;
+                }
+
+                // Apply Dynamic UI Accents[cite: 3]
+                if (userProfile && userProfile.btnValue) {[cite: 3]
+                    document.documentElement.style.setProperty('--primary', userProfile.btnValue);[cite: 3]
+                }
+                if (userProfile && userProfile.bgValue) {
+                    document.documentElement.style.setProperty('--bg', userProfile.bgValue);
+                }
+
+                buildDropdownTargetIntervals();
+                processPeriodEngineChange();
+                
+                // Fetch any pre-existing cloud configurations
+                const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
+                if (transSnap.exists()) {
+                    const loadedData = transSnap.data();
+                    if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
+                    if (loadedData.inputSSS) document.getElementById('inputSSS').value = loadedData.inputSSS;
+                    if (loadedData.inputPHIC) document.getElementById('inputPHIC').value = loadedData.inputPHIC;
+                    if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
+                    if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
+                    if (loadedData.inputOtherEarn) document.getElementById('inputOtherEarn').value = loadedData.inputOtherEarn;
+                }
+                
+                renderActivePeriodCalendarGrid();
+                recomputeGlobalFinancials();
+
+            } catch (err) {
+                console.error("Critical core setup crash: ", err);
+            }
+        }
+
+        function buildDropdownTargetIntervals() {
+            const selector = document.getElementById('periodSelector');
+            const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            
+            selector.innerHTML = "";
+            months.forEach((m, idx) => {
+                // 15th Closure Rule option
+                let opt15 = document.createElement('option');
+                opt15.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-15`;
+                opt15.innerText = `${m} 15, ${CURRENT_YEAR}`;
+                selector.appendChild(opt15);
+
+                // End of Month Closure Rule option
+                let optEnd = document.createElement('option');
+                let lastDay = new Date(CURRENT_YEAR, idx + 1, 0).getDate();
+                optEnd.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-${lastDay}`;
+                optEnd.innerText = `${m} ${lastDay}, ${CURRENT_YEAR}`;
+                selector.appendChild(optEnd);
+            });
+
+            // Auto-select based on exact 2026 system clock index context
+            selector.value = `2026-06-30`;
+        }
+
+        window.processPeriodEngineChange = function() {
+            const val = document.getElementById('periodSelector').value;
+            const pieces = val.split('-');
+            const year = parseInt(pieces[0]);
+            const monthIdx = parseInt(pieces[1]) - 1;
+            const day = parseInt(pieces[2]);
+
+            activeDatesArray = [];
+
+            if (day === 15) {
+                // 15th Closure Rules: Automatic Coverage is prior 29th of last month to 14th of current month
+                let prevMonthDate = new Date(year, monthIdx - 1, 29);
+                let currentTarget = new Date(prevMonthDate);
+                while (currentTarget <= new Date(year, monthIdx, 14)) {
+                    activeDatesArray.push(new Date(currentTarget));
+                    currentTarget.setDate(currentTarget.getDate() + 1);
+                }
+            } else {
+                // End-Month Closure Rules: Automatic Coverage is 13th to 28th of current month
+                let currentTarget = new Date(year, monthIdx, 13);
+                while (currentTarget <= new Date(year, monthIdx, 28)) {
+                    activeDatesArray.push(new Date(currentTarget));
+                    currentTarget.setDate(currentTarget.getDate() + 1);
+                }
+            }
+
+            const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
+
+            evaluateLockExecutionConstraints(year, monthIdx, day);
+            renderActivePeriodCalendarGrid();
+            recomputeGlobalFinancials();
+        };
+
+        function evaluateLockExecutionConstraints(year, monthIdx, day) {
+            // The net pay component will be blurred but fully enabled during exact matrix date rules:
+            // 28th to 30th/31st OR 13th to 15th
+            const systemClockDay = new Date().getDate(); 
+            let lockActive = true;
+
+            if ((systemClockDay >= 28 && systemClockDay <= 31) || (systemClockDay >= 13 && systemClockDay <= 15)) {
+                lockActive = false;
+            }
+
+            const wrapper = document.getElementById('netPayWrapperDeck');
+            const badge = document.getElementById('lockBadgeDisplay');
+            if (lockActive) {
+                wrapper.classList.add('blurred-lock');
+                badge.style.display = "inline-block";
+            } else {
+                wrapper.classList.remove('blurred-lock');
+                badge.style.display = "none";
+            }
+        }
+
+        function renderActivePeriodCalendarGrid() {
+            const grid = document.getElementById('calendarNodeGrid');
+            grid.innerHTML = "";
+
+            activeDatesArray.forEach(dateObj => {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+
+                const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+
+                const cell = document.createElement('div');
+                cell.className = "calendar-day-node";
+                cell.innerHTML = `
+                    <span class="day-num">${day}</span>
+                    <span class="day-lbl">${dayOfWeekStr}</span>
+                `;
+
+                // Color configuration parsing when localized record matches user requirements
+                if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
+                    cell.style.backgroundColor = userProfile.btnValue || "var(--primary)";
+                    cell.style.color = "#000000";
+                    cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
+                }
+
+                cell.onclick = () => launchTimeTransactionModal(dateKey);
+                grid.appendChild(cell);
+            });
+        }
+
+        // ==========================================================================
+        // CALCULATION MATRIX SUB-ENGINE
+        // ==========================================================================
+        window.runRealtimeMetricsDeductionEngine = function() {
+            const schedIn = salarySettings.timeIn || "08:00";
+            const schedOut = salarySettings.timeOut || "17:00";
+
+            const in1 = document.getElementById('modalTimeIn1').value;
+            const out1 = document.getElementById('modalTimeOut1').value;
+
+            let lateMinutes = 0;
+            let undertimeMinutes = 0;
+
+            if (in1) {
+                const schedInMins = timeStringToMinutes(schedIn);
+                const actualInMins = timeStringToMinutes(in1);
+                // When arrived after schedule time, calculate exact deviation minutes
+                if (actualInMins > schedInMins) {
+                    lateMinutes += (actualInMins - schedInMins);
+                }
+            }
+
+            if (out1) {
+                const schedOutMins = timeStringToMinutes(schedOut);
+                const actualOutMins = timeStringToMinutes(out1);
+                // When departed before schedule timeout, calculate undertime duration
+                if (actualOutMins < schedOutMins) {
+                    undertimeMinutes += (schedOutMins - actualOutMins);
+                }
+            }
+
+            document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
+            document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
+        };
+
+        function timeStringToMinutes(timeStr) {
+            const p = timeStr.split(':');
+            return parseInt(p[0]) * 60 + parseInt(p[1]);
+        }
+
+        window.launchTimeTransactionModal = function(dateKey) {
+            currentTargetDateString = dateKey;
+            document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
+            
+            // Clean interface slate
+            document.getElementById('modalTimeIn1').value = "";
+            document.getElementById('modalTimeOut1').value = "";
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
+            document.getElementById('modalSplitReason').value = "";
+            document.getElementById('modalTimeInOT').value = "";
+            document.getElementById('modalTimeOutOT').value = "";
+            
+            document.getElementById('chkEnableMidDay').checked = false;
+            document.getElementById('chkEnableOT').checked = false;
+            document.getElementById('midDaySubSectionDeck').style.display = "none";
+            document.getElementById('otSubSectionDeck').style.display = "none";
+
+            // Load existing data buffer modifications if present
+            if (timelineBuffer[dateKey]) {
+                const rec = timelineBuffer[dateKey];
+                document.getElementById('modalTimeIn1').value = rec.in1 || "";
+                document.getElementById('modalTimeOut1').value = rec.out1 || "";
+                if (rec.hasMidDay) {
+                    document.getElementById('chkEnableMidDay').checked = true;
+                    document.getElementById('midDaySubSectionDeck').style.display = "block";
+                    document.getElementById('modalTimeIn2').value = rec.in2 || "";
+                    document.getElementById('modalTimeOut2').value = rec.out2 || "";
+                    document.getElementById('modalSplitReason').value = rec.splitReason || "";
+                }
+                if (rec.hasOT) {
+                    document.getElementById('chkEnableOT').checked = true;
+                    document.getElementById('otSubSectionDeck').style.display = "block";
+                    document.getElementById('modalTimeInOT').value = rec.inOT || "";
+                    document.getElementById('modalTimeOutOT').value = rec.outOT || "";
+                }
+            }
+
+            runRealtimeMetricsDeductionEngine();
+            document.getElementById('timeConfigModalOverlay').classList.add('active');
+        };
+
+        window.closeTimeTransactionModal = function() {
+            document.getElementById('timeConfigModalOverlay').classList.remove('active');
+        };
+
+        window.toggleMidDaySubSection = function() {
+            const checked = document.getElementById('chkEnableMidDay').checked;
+            document.getElementById('midDaySubSectionDeck').style.display = checked ? "block" : "none";
+        };
+
+        window.toggleOvertimeSubSection = function() {
+            const checked = document.getElementById('chkEnableOT').checked;
+            document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
+        };
+
+        window.commitModalDayStateToLocalBuffer = function() {
+            const in1 = document.getElementById('modalTimeIn1').value;
+            const out1 = document.getElementById('modalTimeOut1').value;
+
+            if (!in1 || !out1) {
+                alert("CORE TIMELINE IN & OUT VALUES REQUIRED FOR STRUCTURAL ARCHIVING.");
+                return;
+            }
+
+            const hasMidDay = document.getElementById('chkEnableMidDay').checked;
+            const hasOT = document.getElementById('chkEnableOT').checked;
+
+            timelineBuffer[currentTargetDateString] = {
+                filled: true,
+                in1: in1,
+                out1: out1,
+                hasMidDay: hasMidDay,
+                in2: hasMidDay ? document.getElementById('modalTimeIn2').value : "",
+                out2: hasMidDay ? document.getElementById('modalTimeOut2').value : "",
+                splitReason: hasMidDay ? document.getElementById('modalSplitReason').value : "",
+                hasOT: hasOT,
+                inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
+                outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
+            };
+
+            closeTimeTransactionModal();
+            renderActivePeriodCalendarGrid();
+            recomputeGlobalFinancials();
+        };
+
+        window.recomputeGlobalFinancials = function() {
+            const dailyRate = parseFloat(salarySettings.dailyRate) || 0;
+            const hourlyRate = dailyRate / 8;
+            const minuteRate = hourlyRate / 60;
+
+            let totalBasicEarnings = 0;
+            let totalOvertimePay = 0;
+            let totalDeductionPenalties = 0;
+            let actualDaysWorkedCounter = 0;
+
+            const schedInStr = salarySettings.timeIn || "08:00";
+            const schedOutStr = salarySettings.timeOut || "17:00";
+
+            activeDatesArray.forEach(dateObj => {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+
+                if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
+                    actualDaysWorkedCounter++;
+                    totalBasicEarnings += dailyRate;
+
+                    const rec = timelineBuffer[dateKey];
+                    
+                    // Evaluation processing block for standard shifts
+                    let shiftLateMins = 0;
+                    let shiftUndertimeMins = 0;
+
+                    // Late Rules Rule: 7:55 counts as 8:00 start, 8:05 triggers fine calculation
+                    const schedInMins = timeStringToMinutes(schedInStr);
+                    const actInMins = timeStringToMinutes(rec.in1);
+                    if (actInMins > schedInMins) {
+                        shiftLateMins += (actInMins - schedInMins);
+                    }
+
+                    const schedOutMins = timeStringToMinutes(schedOutStr);
+                    const actOutMins = timeStringToMinutes(rec.out1);
+                    if (actOutMins < schedOutMins) {
+                        shiftUndertimeMins += (schedOutMins - actOutMins);
+                    }
+
+                    totalDeductionPenalties += (shiftLateMins + shiftUndertimeMins) * minuteRate;
+
+                    // Overtime Multiplier Engine Block: include if 30 minutes and up rendered
+                    if (rec.hasOT && rec.inOT && rec.outOT) {
+                        const otIn = timeStringToMinutes(rec.inOT);
+                        const otOut = timeStringToMinutes(rec.outOT);
+                        if (otOut > otIn) {
+                            const totalOTMins = otOut - otIn;
+                            if (totalOTMins >= 30) {
+                                totalOvertimePay += totalOTMins * minuteRate;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gather Inputs Dynamic Form Fields
+            const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
+            const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
+            const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
+            const advances = parseFloat(document.getElementById('inputAdvances').value) || 0;
+            const otherEarn = parseFloat(document.getElementById('inputOtherEarn').value) || 0;
+
+            const grossPay = totalBasicEarnings + totalOvertimePay + otherEarn;
+            const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
+            const netPay = grossPay - totalDeductions;
+
+            // Update Dynamic Value Displays
+            document.getElementById('breakdownBasic').innerText = `₱${totalBasicEarnings.toFixed(2)}`;
+            document.getElementById('breakdownOT').innerText = `₱${totalOvertimePay.toFixed(2)}`;
+            document.getElementById('breakdownOtherEarn').innerText = `₱${otherEarn.toFixed(2)}`;
+            document.getElementById('breakdownGross').innerText = `₱${grossPay.toFixed(2)}`;
+
+            document.getElementById('breakdownSSS').innerText = `₱${sss.toFixed(2)}`;
+            document.getElementById('breakdownPHIC').innerText = `₱${phic.toFixed(2)}`;
+            document.getElementById('breakdownHDMF').innerText = `₱${hdmf.toFixed(2)}`;
+            document.getElementById('breakdownPenalties').innerText = `₱${totalDeductionPenalties.toFixed(2)}`;
+            document.getElementById('breakdownAdvances').innerText = `₱${advances.toFixed(2)}`;
+            document.getElementById('breakdownTotalDed').innerText = `₱${totalDeductions.toFixed(2)}`;
+            document.getElementById('breakdownNet').innerText = `₱${netPay.toFixed(2)}`;
+
+            generatePrintMatrixHtmlTemplate({
+                totalBasicEarnings, totalOvertimePay, otherEarn, grossPay,
+                sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
+                actualDaysWorkedCounter
+            });
+        };
+
+        window.commitTimelineTransactionToCloud = async function() {
+            try {
+                const payload = {
+                    timelineBuffer: timelineBuffer,
+                    inputSSS: document.getElementById('inputSSS').value,
+                    inputPHIC: document.getElementById('inputPHIC').value,
+                    inputHDMF: document.getElementById('inputHDMF').value,
+                    inputAdvances: document.getElementById('inputAdvances').value,
+                    inputOtherEarn: document.getElementById('inputOtherEarn').value,
+                    updatedAt: Date.now()
+                };
+
+                await setDoc(doc(db, "salary_transactions", `${userId}_current`), payload, { merge: true });
+                alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
+            } catch (err) {
+                console.error("Cloud storage transaction error: ", err);
+                alert("CLOUD STORAGE SYNC FAILURE.");
+            }
+        };
+
+        // ==========================================================================
+        // HARD-COPY PRINT GENERATOR SYSTEM (Derived from image_fb8dd5.png Architecture)
+        // ==========================================================================
+        function generatePrintMatrixHtmlTemplate(metrics) {
+            const printContainer = document.getElementById('print-render-matrix');
+            const targetPeriodLabel = document.getElementById('periodSelector').options[document.getElementById('periodSelector').selectedIndex].text;
+            const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
+
+            const name = `${salarySettings.lastName || ''}, ${salarySettings.firstName || ''} ${salarySettings.middleInitial || ''}`.toUpperCase();
+            const position = (salarySettings.position || 'EMPLOYEE').toUpperCase();
+            const department = (salarySettings.department || 'GENERAL').toUpperCase();
+            const dailyRate = parseFloat(salarySettings.dailyRate || 0).toFixed(2);
+
+            let timeRowsHtml = "";
+            activeDatesArray.forEach(dateObj => {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'LONG' }).toUpperCase();
+
+                if (timelineBuffer[dateKey]) {
+                    const rec = timelineBuffer[dateKey];
+                    timeRowsHtml += `
+                        <tr>
+                            <td>${month}/${day}/${year}</td>
+                            <td>${dayName}</td>
+                            <td>${rec.in1 || '-'}</td>
+                            <td>${rec.out1 || '-'}</td>
+                            <td>${rec.in2 || '-'}</td>
+                            <td>${rec.out2 || '-'}</td>
+                            <td>${rec.inOT || '-'}</td>
+                            <td>${rec.outOT || '-'}</td>
+                            <td>${rec.splitReason || '-'}</td>
+                        </tr>
+                    `;
+                } else {
+                    timeRowsHtml += `
+                        <tr>
+                            <td>${month}/${day}/${year}</td>
+                            <td>${dayName}</td>
+                            <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            printContainer.innerHTML = `
+                <div class="print-sheet">
+                    <div class="print-header-banner">
+                        M'LANG DIGITAL REVENUE ENGINE COMPILATION SYSTEM
+                        <div style="font-size:8px; font-weight:400; margin-top:2px;">WORK LOG TRANSACTION RECORD INDEX</div>
+                    </div>
+                    
+                    <table class="print-table">
+                        <tr>
+                            <td><strong>EMPLOYEE NAME:</strong> ${name}</td>
+                            <td><strong>PAYABLE DAYS RANGE:</strong> ${dateRangeLabel}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POSITION:</strong> ${position}</td>
+                            <td><strong>DAYS RENDERED:</strong> ${metrics.actualDaysWorkedCounter}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DEPARTMENT:</strong> ${department}</td>
+                            <td><strong>DAILY BASE RATE:</strong> ₱${dailyRate}</td>
+                        </tr>
+                    </table>
+
+                    <div class="print-sub-section-title">DETAILED TIMELINE ENTRIES (image_fb8dfa.png REFERENCE)</div>
+                    <table class="print-table" style="font-size: 8px;">
+                        <thead>
+                            <tr>
+                                <th>DATE</th>
+                                <th>DAY</th>
+                                <th>IN1</th>
+                                <th>OUT1</th>
+                                <th>IN2</th>
+                                <th>OUT2</th>
+                                <th>OT_IN</th>
+                                <th>OT_OUT</th>
+                                <th>REMARKS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${timeRowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div class="print-sub-section-title">PAYSLIP SUMMARY CONFIGURATION (image_fb8dd5.png REFERENCE)</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                        <table class="print-table">
+                            <thead><tr><th colspan="2">EARNINGS</th></tr></thead>
+                            <tr><td>BASIC PAY</td><td style="text-align:right;">₱${metrics.totalBasicEarnings.toFixed(2)}</td></tr>
+                            <tr><td>OVERTIME PAY</td><td style="text-align:right;">₱${metrics.totalOvertimePay.toFixed(2)}</td></tr>
+                            <tr><td>OTHERS</td><td style="text-align:right;">₱${metrics.otherEarn.toFixed(2)}</td></tr>
+                            <tr style="font-weight:800;"><td>GROSS PAY</td><td style="text-align:right;">₱${metrics.grossPay.toFixed(2)}</td></tr>
+                        </table>
+
+                        <table class="print-table">
+                            <thead><tr><th colspan="2">DEDUCTIONS</th></tr></thead>
+                            <tr><td>SSS</td><td style="text-align:right;">₱${metrics.sss.toFixed(2)}</td></tr>
+                            <tr><td>PHIC</td><td style="text-align:right;">₱${metrics.phic.toFixed(2)}</td></tr>
+                            <tr><td>HDMF</td><td style="text-align:right;">₱${metrics.hdmf.toFixed(2)}</td></tr>
+                            <tr><td>LATES/UNDERTIME</td><td style="text-align:right;">₱${metrics.totalDeductionPenalties.toFixed(2)}</td></tr>
+                            <tr><td>CASH ADVANCES</td><td style="text-align:right;">₱${metrics.advances.toFixed(2)}</td></tr>
+                            <tr style="font-weight:800;"><td>TOTAL DEDUCTIONS</td><td style="text-align:right;">₱${metrics.totalDeductions.toFixed(2)}</td></tr>
+                        </table>
+                    </div>
+
+                    <div style="border: 2px solid #000; padding: 6px; font-weight:800; font-size:11px; margin-top:4px; display:flex; justify-content:space-between; text-transform:uppercase;">
+                        <span>NET DISBURSABLE PAYOUT AMOUNT:</span>
+                        <span>₱${metrics.netPay.toFixed(2)}</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; margin-top:25px; padding: 0 20px;">
+                        <div>
+                            <div style="border-bottom: 1px solid #000; width: 180px; text-align:center; font-weight:700;">SYSTEM CLEARING AGENT</div>
+                            <div style="font-size:7px; text-align:center; margin-top:2px;">PREPARED AND VERIFIED BY</div>
+                        </div>
+                        <div>
+                            <div style="border-bottom: 1px solid #000; width: 180px; text-align:center; font-weight:700;">${name}</div>
+                            <div style="font-size:7px; text-align:center; margin-top:2px;">ACKNOWLEDGEMENT RECEIVED BY</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.triggerNativePrintPipeline = function() {
+            window.print();
+        };
+
+        window.triggerPDFExportPipeline = function() {
+            const element = document.getElementById('print-render-matrix');
+            // Temporarily lift visibility context bounds for standard rendering engines
+            element.style.display = 'block';
+            
+            const opt = {
+                margin:       0,
+                filename:     `PAYSLIP_MATRIX_${userId}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, logging: false, useCORS: true },
+                jsPDF:        { unit: 'in', format: [8.5, 5.5], orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = 'none';
+            });
+        };
+
+        window.onload = () => {
+            bootEngineCore();
+            if (window.lucide) window.lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
