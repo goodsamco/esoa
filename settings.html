@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACCOUNT SETTINGS — SALARY COMPUTER</title>
-    <!-- Inter Font & Lucide Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* ==========================================================================
-           1. DESIGN TOKENS & SYSTEM VARIABLES (DYNAMIC GLOBAL THEMING)
+           1. DESIGN TOKENS & SYSTEM VARIABLES (DYNAMIC SYSTEM GLOBAL THEMING)
            ========================================================================== */
         :root {
-            --bg: #0b0f1a;
+            --bg: #0b0f1a; /* Overridden by user's bgValue */
             --surface: rgba(255, 255, 255, 0.03);
-            --primary: #22c55e; /* Default fallback; overridden by user's btnValue */
+            --primary: #22c55e; /* Overridden by user's btnValue */
             --success: #ffee00;
             --text-main: #f1f5f9;
             --glass: rgba(255, 255, 255, 0.08);
@@ -33,6 +32,7 @@
             min-height: 100vh;
             box-sizing: border-box;
             overflow-x: hidden;
+            transition: background-color 0.4s ease;
         }
 
         /* ==========================================================================
@@ -46,7 +46,7 @@
             -webkit-backdrop-filter: blur(25px);
             padding: 25px;
             border-radius: 24px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
             border: 1px solid var(--border-glass);
             position: relative;
             box-sizing: border-box;
@@ -177,7 +177,7 @@
             box-sizing: border-box;
             font-weight: 600;
             outline: none;
-            text-transform: uppercase; /* Force structural user values uppercase */
+            text-transform: uppercase;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
@@ -253,7 +253,7 @@
             font-weight: 800;
         }
 
-        /* Fixed Studio-Aligned Custom Checkbox Structural Deck */
+        /* Custom Checkbox Structural Deck */
         .checkbox-container-row {
             display: flex;
             align-items: center;
@@ -344,7 +344,6 @@
             <div style="width:40px;"></div>
         </div>
 
-        <!-- IDENTITY CARD BLOCK ROUTER -->
         <div class="profile-identity-card">
             <div class="profile-avatar-wrapper">
                 <img id="userDisplayAvatar" src="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg" alt="AVATAR NODE">
@@ -371,7 +370,6 @@
                 <input type="text" id="middleInitial" placeholder="E.G. A" maxlength="2" autocomplete="off">
             </div>
 
-            <!-- OWN ISOLATED FULL-WIDTH ROW FOR DAILY RATE -->
             <div class="daily-rate-isolated-row">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>DAILY RATE VALUE (₱)</label>
@@ -418,12 +416,11 @@
                 </div>
             </div>
 
-            <!-- RESTORED & ALIGNED DOCK LUNCH INTERMISSION CONTROL -->
             <div class="form-group">
                 <label>REST PERIOD INTERMISSION</label>
                 <label class="checkbox-container-row" for="hasLunchBreak">
                     <input type="checkbox" id="hasLunchBreak" checked>
-                    <span>INCLUDE LUNCH BREAK SCHEDULE (12:00 PM — 1:00 PM)</span>
+                    <span>INCLUDE LUNCH BREAK(12-1 PM)</span>
                 </label>
             </div>
 
@@ -431,7 +428,6 @@
         </form>
     </div>
 
-    <!-- FIREBASE ARCHITECTURE CORE LOGIC COUPLING -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -464,18 +460,6 @@
             }
         };
 
-        // Conversion Algorithms matching Studio environment mapping
-        function hslToHex(h, s, l) {
-            l /= 100;
-            const a = s * Math.min(l, 1 - l) / 100;
-            const f = n => {
-                const k = (n + h / 30) % 12;
-                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-                return Math.round(255 * color).toString(16).padStart(2, '0');
-            };
-            return `#${f(0)}${f(8)}${f(4)}`;
-        }
-
         // Pull saved variables out of Account Identity Document nodes
         async function fetchIdentityAndTheme() {
             try {
@@ -494,19 +478,15 @@
                         document.getElementById('userDisplayAvatar').src = accountData.avatarUrl;
                     }
 
-                    // Dynamically set Primary Accent values using stored node properties
-                    let dynamicHex = "#22c55e"; 
-                    if (accountData.btnValue) {
-                        if (accountData.btnValue.includes('hsl')) {
-                            const match = accountData.btnValue.match(/\d+/g);
-                            if (match && match.length >= 3) {
-                                dynamicHex = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
-                            }
-                        } else {
-                            dynamicHex = accountData.btnValue;
-                        }
+                    // RESTORE LAYOUT BACKGROUND VALUE DIRECTLY
+                    if (accountData.bgValue) {
+                        document.documentElement.style.setProperty('--bg', accountData.bgValue);
                     }
-                    document.documentElement.style.setProperty('--primary', dynamicHex);
+
+                    // Dynamically set Primary Accent values using stored node properties
+                    if (accountData.btnValue) {
+                        document.documentElement.style.setProperty('--primary', accountData.btnValue);
+                    }
                 }
 
                 // Populate operational fields from salary metadata configurations
