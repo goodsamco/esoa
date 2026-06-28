@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAYSLIP ENGINE — SALARY COMPUTER</title>
-    <!-- Inter Font, Lucide Icons & html2pdf -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* ==========================================================================
            1. CORE DESIGN TOKENS & DYNAMIC COUPLING
@@ -398,24 +396,27 @@
 
         @media print {
             body * {
-                visibility: hidden;
+                display: none !important;
             }
             #print-render-matrix, #print-render-matrix * {
-                visibility: visible;
+                display: block !important;
+                visibility: visible !important;
             }
             #print-render-matrix {
                 position: absolute;
                 left: 0; top: 0; width: 100%;
-                display: block !important;
+                background: #fff !important;
+                color: #000 !important;
             }
         }
 
         .print-sheet {
-            width: 8.5in;
+            width: 100%;
+            max-width: 8.5in;
             padding: 0.4in;
             box-sizing: border-box;
-            background: #fff;
-            color: #000;
+            background: #fff !important;
+            color: #000 !important;
             font-family: 'Courier New', Courier, monospace;
             font-size: 11px;
             line-height: 1.3;
@@ -428,14 +429,16 @@
         }
 
         .print-table th, .print-table td {
-            border: 1px solid #000;
+            border: 1px solid #000 !important;
             padding: 5px 6px;
             text-transform: uppercase;
             text-align: left;
+            color: #000 !important;
+            background: transparent !important;
         }
 
         .print-table th {
-            background: #e5e5e5;
+            background: #e5e5e5 !important;
             font-weight: 800;
             font-size: 10px;
         }
@@ -444,15 +447,16 @@
             text-align: center;
             font-weight: 800;
             font-size: 14px;
-            border: 2px solid #000;
+            border: 2px solid #000 !important;
             padding: 10px;
             margin-bottom: 12px;
             letter-spacing: 1px;
+            color: #000 !important;
         }
 
         .print-sub-section-title {
-            background: #000;
-            color: #fff;
+            background: #000 !important;
+            color: #fff !important;
             font-weight: 800;
             padding: 5px 6px;
             font-size: 11px;
@@ -467,7 +471,6 @@
 <body>
 
     <div class="engine-container">
-        <!-- TOP NAVIGATION ROW -->
         <div class="top-nav-deck">
             <button class="nav-btn" onclick="window.location.href='esoa.html'" title="RETURN">
                 <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
@@ -476,7 +479,6 @@
             <div style="width:40px;"></div>
         </div>
 
-        <!-- PROFILE META CARD HEADER BLOCK -->
         <div class="profile-badge-deck">
             <div class="profile-meta-row">
                 <span class="lbl">COMPLETE SETTINGS NAME</span>
@@ -500,12 +502,10 @@
             </div>
         </div>
 
-        <!-- PAYSLIP TARGET SELECTION -->
         <div class="form-block">
             <label>PAYSLIP TIME PERIOD CLOSURE</label>
             <select id="periodSelector" onchange="processPeriodEngineChange()">
-                <!-- Populated dynamically via controller framework -->
-            </select>
+                </select>
         </div>
 
         <div class="form-block">
@@ -513,15 +513,12 @@
             <input type="text" id="payableRangeDisplay" readonly style="opacity: 0.8; background: rgba(0,0,0,0.2);">
         </div>
 
-        <!-- CUSTOM ADAPTIVE CALENDAR GRID MODULE -->
         <div class="form-block">
             <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
             <div class="calendar-deck" id="calendarNodeGrid">
-                <!-- Dynamically configured loop elements -->
-            </div>
+                </div>
         </div>
 
-        <!-- CUSTOM ADDITIONAL INCENTIVES MODULE -->
         <div class="form-block" style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass); margin-bottom: 20px;">
             <label style="margin-bottom: 12px; display: block;">EXTRA CYCLE INCENTIVES</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -536,7 +533,6 @@
             </div>
         </div>
 
-        <!-- CONTRIBUTION CONTROL PANEL MODULE -->
         <div class="form-block" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass);">
             <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTION INPUTS</label>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
@@ -565,7 +561,6 @@
             </div>
         </div>
 
-        <!-- LIVE EARNINGS COMPILATION DISPLAY BOARD -->
         <div class="form-block">
             <label>SALARY DETAILS METRIC BREAKDOWN</label>
             <table class="matrix-table">
@@ -598,21 +593,19 @@
             </table>
         </div>
 
-        <!-- DYNAMIC LIQUIDATED NET PAY TARGET DECK -->
         <div class="net-pay-display-deck" id="netPayWrapperDeck">
             <div class="lbl">NET DISBURSABLE PAYOUT</div>
             <div class="val-stream" id="breakdownNet">₱0.00</div>
             <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">METRIC CYCLE RECORD LOCKED</div>
         </div>
 
-        <!-- ENGINE ACTION TRANSACTIONS -->
         <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
             <button class="engine-btn primary-btn" onclick="commitTimelineTransactionToCloud()">
                 <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE OR UPDATE ENGINE TRANSACTIONS
             </button>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <button class="engine-btn" onclick="triggerPDFExportPipeline()">
-                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT OR EXPORT PDF
+                <button class="engine-btn" onclick="triggerPrintPreviewPipeline()">
+                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT PREVIEW / PDF
                 </button>
                 <button class="engine-btn" onclick="triggerCSVExportPipeline()">
                     <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
@@ -621,7 +614,6 @@
         </div>
     </div>
 
-    <!-- SYSTEM DATA CAPTURE MODAL SYSTEM -->
     <div class="modal-overlay" id="timeConfigModalOverlay">
         <div class="modal-box">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
@@ -699,10 +691,8 @@
         </div>
     </div>
 
-    <!-- HARD-COPY MONOCHROME COMMERCIAL RECEIPT CONTAINER -->
     <div id="print-render-matrix"></div>
 
-    <!-- MOTOR INTEGRATION LOGIC ARCHITECTURE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -723,10 +713,10 @@
 
         const userId = localStorage.getItem("userId") || "test_user_id";
 
-        // Hybrid Profile Sync Framework
+        // Dynamic local coupling setup checks
         let userProfile = { 
             name: localStorage.getItem("username") || "DZEY_USER",
-            customName: localStorage.getItem("customName") || "Dzey Autajay", 
+            customName: "DZEY AUTAJAY", 
             email: localStorage.getItem("userEmail") || "autajaydzey@gmail.com" 
         };
         let salarySettings = { dailyRate: 460, timeIn: "08:00", timeOut: "17:00", position: "Billing Clerk", department: "Finance" };
@@ -738,29 +728,30 @@
 
         async function bootEngineCore() {
             try {
-                // Instantly update UI fields safely with defaults
-                updateUIProfileElements();
+                // Initialize custom configurations and backgrounds directly from customizations module hooks
+                const localBtnVal = localStorage.getItem("btnValue");
+                const localBgVal = localStorage.getItem("bgValue");
+                if (localBtnVal) document.documentElement.style.setProperty('--primary', localBtnVal);
+                if (localBgVal) document.documentElement.style.setProperty('--bg', localBgVal);
+
+                // Check and fetch explicit workspace identity parameters 
+                const setSnap = await getDoc(doc(db, "salary_settings", userId));
+                if (setSnap.exists()) {
+                    salarySettings = setSnap.data();
+                    if (salarySettings.firstName && salarySettings.lastName) {
+                        const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : "";
+                        userProfile.customName = `${salarySettings.firstName}${mi} ${salarySettings.lastName}`.toUpperCase();
+                    }
+                }
 
                 const accSnap = await getDoc(doc(db, "accounts", userId));
                 if (accSnap.exists()) {
                     const d = accSnap.data();
-                    userProfile.name = d.username || d.name || userProfile.name;
-                    userProfile.customName = d.customName || userProfile.customName;
+                    userProfile.name = d.username || userProfile.name;
                     userProfile.email = d.email || userProfile.email;
-                    updateUIProfileElements();
                 }
 
-                const setSnap = await getDoc(doc(db, "salary_settings", userId));
-                if (setSnap.exists()) {
-                    salarySettings = setSnap.data();
-                    updateUIProfileElements();
-                }
-
-                const localBtnVal = localStorage.getItem("btnValue") || userProfile.btnValue;
-                const localBgVal = localStorage.getItem("bgValue") || userProfile.bgValue;
-                if (localBtnVal) document.documentElement.style.setProperty('--primary', localBtnVal);
-                if (localBgVal) document.documentElement.style.setProperty('--bg', localBgVal);
-
+                updateUIProfileElements();
                 buildDropdownTargetIntervals();
                 processPeriodEngineChange();
                 
@@ -781,12 +772,12 @@
                 recomputeGlobalFinancials();
 
             } catch (err) {
-                console.error("Setup error: ", err);
+                console.error("Setup initialization error: ", err);
             }
         }
 
         function updateUIProfileElements() {
-            document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName.toUpperCase();
+            document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName;
             document.getElementById('profNameDisplay').innerText = userProfile.name.toUpperCase();
             document.getElementById('profEmailDisplay').innerText = userProfile.email.toUpperCase();
             document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
@@ -906,7 +897,7 @@
                 `;
 
                 if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-                    cell.style.backgroundColor = localStorage.getItem("btnValue") || userProfile.btnValue || "var(--primary)";
+                    cell.style.backgroundColor = localStorage.getItem("btnValue") || "var(--primary)";
                     cell.style.color = "#000000";
                     cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
                 }
@@ -941,6 +932,7 @@
         };
 
         function timeStringToMinutes(timeStr) {
+            if(!timeStr || timeStr === "-") return 0;
             const p = timeStr.split(':');
             return parseInt(p[0]) * 60 + parseInt(p[1]);
         }
@@ -1090,6 +1082,8 @@
                     date: dateKey,
                     in1: timelineBuffer[dateKey]?.in1 || '-',
                     out1: timelineBuffer[dateKey]?.out1 || '-',
+                    inOT: (timelineBuffer[dateKey]?.hasOT && timelineBuffer[dateKey]?.inOT) ? timelineBuffer[dateKey].inOT : '-',
+                    outOT: (timelineBuffer[dateKey]?.hasOT && timelineBuffer[dateKey]?.outOT) ? timelineBuffer[dateKey].outOT : '-',
                     lates: dayLateMins,
                     undertime: dayUndertimeMins,
                     gross: dayGross,
@@ -1155,13 +1149,17 @@
         function generateCommercialReceiptLayout(m) {
             const printContainer = document.getElementById('print-render-matrix');
             const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
+            const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
 
             let dailyRowsHtml = "";
             m.structuralDailyArrayLogs.forEach(row => {
                 dailyRowsHtml += `
                     <tr>
                         <td>${row.date}</td>
-                        <td>${row.in1} / ${row.out1}</td>
+                        <td>${row.in1}</td>
+                        <td>${row.out1}</td>
+                        <td>${row.inOT}</td>
+                        <td>${row.outOT}</td>
                         <td>${row.lates}m</td>
                         <td>${row.undertime}m</td>
                         <td>₱${row.gross.toFixed(2)}</td>
@@ -1174,12 +1172,12 @@
                 <div class="print-sheet">
                     <div class="print-header-banner">
                         OFFICIAL TIME & PAYSLIP COMMERCIAL RECEIPT
-                        <div style="font-size:10px; font-weight:400; margin-top:4px; font-family:monospace;">MONOCHROME AUDIT STATEMENT SYSTEM</div>
+                        <div style="font-size:9px; font-weight:400; margin-top:4px; font-family:monospace;">GENERATED AUDIT TIME: ${timestampStr}</div>
                     </div>
                     
                     <div class="print-sub-section-title">USER IDENTITY & PARAMETERS</div>
                     <table class="print-table">
-                        <tr><td><strong>COMPLETE SETTINGS NAME:</strong></td><td>${userProfile.customName.toUpperCase()}</td></tr>
+                        <tr><td><strong>COMPLETE SETTINGS NAME:</strong></td><td>${userProfile.customName}</td></tr>
                         <tr><td><strong>ACCOUNT USERNAME:</strong></td><td>${userProfile.name.toUpperCase()}</td></tr>
                         <tr><td><strong>EMAIL ADDRESS:</strong></td><td>${userProfile.email.toUpperCase()}</td></tr>
                         <tr><td><strong>ASSIGNED POSITION:</strong></td><td>${(salarySettings.position || 'Billing Clerk').toUpperCase()}</td></tr>
@@ -1189,15 +1187,18 @@
                     </table>
 
                     <div class="print-sub-section-title">DAILY DUTY LOGS & ATTENDANCE VALUE BREAKDOWN</div>
-                    <table class="print-table" style="font-size: 10px;">
+                    <table class="print-table" style="font-size: 9px;">
                         <thead>
                             <tr>
                                 <th>DATE</th>
-                                <th>IN / OUT</th>
+                                <th>TIME IN</th>
+                                <th>TIME OUT</th>
+                                <th>OT IN</th>
+                                <th>OT OUT</th>
                                 <th>LATE</th>
                                 <th>UT</th>
-                                <th>GROSS PAY</th>
-                                <th>DEDUCTION</th>
+                                <th>GROSS DAY</th>
+                                <th>DED. DAY</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1206,79 +1207,69 @@
                     </table>
 
                     <div class="print-sub-section-title">DETAILED PAYSLIP FINANCIAL METRIC SUMMARY</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                        <table class="print-table">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width:100%;">
+                        <table class="print-table" style="display:inline-table; width:48%;">
                             <thead><tr><th colspan="2">EARNINGS ITEMS STREAM</th></tr></thead>
                             <tr><td>BASIC BASE VALUE</td><td style="text-align:right;">₱${m.totalBasicEarnings.toFixed(2)}</td></tr>
                             <tr><td>OVERTIME RENDERED</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
                             <tr><td>DOUBLE PAY MATRIX</td><td style="text-align:right;">₱${m.doublePay.toFixed(2)}</td></tr>
                             <tr><td>REIMBURSEMENT ADS</td><td style="text-align:right;">₱${m.reimbursements.toFixed(2)}</td></tr>
                             <tr><td>MISC ADDS (OTHERS)</td><td style="text-align:right;">₱${m.otherEarn.toFixed(2)}</td></tr>
-                            <tr style="font-weight:800; background:#f5f5f5;"><td>TOTAL GROSS EARNED</td><td style="text-align:right;">₱${m.grossPay.toFixed(2)}</td></tr>
+                            <tr style="font-weight:800; background:#e5e5e5 !important;"><td>TOTAL GROSS EARNED</td><td style="text-align:right;">₱${m.grossPay.toFixed(2)}</td></tr>
                         </table>
 
-                        <table class="print-table">
+                        <table class="print-table" style="display:inline-table; width:48%; float:right;">
                             <thead><tr><th colspan="2">DEDUCTION TRANS METRIC</th></tr></thead>
                             <tr><td>SSS PREMIUM CONTRIB</td><td style="text-align:right;">₱${m.sss.toFixed(2)}</td></tr>
                             <tr><td>PHIC HEALTH TRANS</td><td style="text-align:right;">₱${m.phic.toFixed(2)}</td></tr>
                             <tr><td>HDMF HOUSING MUTUAL</td><td style="text-align:right;">₱${m.hdmf.toFixed(2)}</td></tr>
                             <tr><td>LATE / UNDERTIME CUTS</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
                             <tr><td>CASH ADVANCES ACCS</td><td style="text-align:right;">₱${m.advances.toFixed(2)}</td></tr>
-                            <tr style="font-weight:800; background:#f5f5f5;"><td>TOTAL LIQUIDATED DED</td><td style="text-align:right;">₱${m.totalDeductions.toFixed(2)}</td></tr>
+                            <tr style="font-weight:800; background:#e5e5e5 !important;"><td>TOTAL LIQUIDATED DED</td><td style="text-align:right;">₱${m.totalDeductions.toFixed(2)}</td></tr>
                         </table>
                     </div>
 
-                    <div style="border: 2px solid #000; padding: 10px; font-weight:800; font-size:13px; margin-top:8px; display:flex; justify-content:space-between;">
+                    <div style="border: 2px solid #000; padding: 10px; font-weight:800; font-size:13px; margin-top:8px; clear:both; display:flex; justify-content:space-between; color:#000 !important;">
                         <span>NET DISBURSABLE PAYOUT AMOUNT:</span>
                         <span>₱${m.netPay.toFixed(2)}</span>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; margin-top:35px; font-size:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:10px; color:#000 !important;">
                         <div>
-                            <div style="border-bottom: 1px solid #000; width: 220px; text-align:center; font-weight:700;">SYSTEM CLEARING AGENT</div>
+                            <div style="border-bottom: 1px solid #000; width: 200px; text-align:center; font-weight:700;">SYSTEM CLEARING AGENT</div>
                             <div style="text-align:center; margin-top:2px;">PREPARED AND VERIFIED</div>
                         </div>
                         <div>
-                            <div style="border-bottom: 1px solid #000; width: 220px; text-align:center; font-weight:700;">${userProfile.customName.toUpperCase()}</div>
-                            <div style="text-align:center; margin-top:2px;">ACKNOWLEDGEMENT RECEIPTEE RECIPIENT</div>
+                            <div style="border-bottom: 1px solid #000; width: 200px; text-align:center; font-weight:700;">${userProfile.customName}</div>
+                            <div style="text-align:center; margin-top:2px;">ACKNOWLEDGEMENT RECEIPTEE</div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        window.triggerPDFExportPipeline = function() {
-            const element = document.getElementById('print-render-matrix');
-            element.style.display = 'block';
-            
-            const opt = {
-                margin:       [0.2, 0.2, 0.2, 0.2],
-                filename:     `COMMREVENUE_RECEIPT_${userId}.pdf`,
-                image:        { type: 'jpeg', quality: 0.99 },
-                html2canvas:  { scale: 2, logging: false, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.display = 'none';
-            });
+        window.triggerPrintPreviewPipeline = function() {
+            window.print();
         };
 
         window.triggerCSVExportPipeline = function() {
             let csvRows = [];
-            csvRows.push(`PAYSLIP ENGINE EXPORT REPORT`);
-            csvRows.push(`COMPLETE NAME,${userProfile.customName}`);
-            csvRows.push(`USERNAME,${userProfile.name}`);
-            csvRows.push(`EMAIL,${userProfile.email}`);
-            csvRows.push(`PERIOD RANGE,${document.getElementById('payableRangeDisplay').value}`);
+            csvRows.push([`PAYSLIP ENGINE EXPORT REPORT`]);
+            csvRows.push([`COMPLETE NAME`, userProfile.customName]);
+            csvRows.push([`USERNAME`, userProfile.name]);
+            csvRows.push([`EMAIL`, userProfile.email]);
+            csvRows.push([`PERIOD RANGE`, document.getElementById('payableRangeDisplay').value]);
             csvRows.push([]);
             
-            // Detail Headers
-            csvRows.push(`DATE,IN1/OUT1,LATES(MIN),UNDERTIME(MIN),GROSS PAY DAY,DEDUCTION DAY`);
+            // Explicit tracking layout columns breakdown
+            csvRows.push([`DATE`, `TIME IN`, `TIME OUT`, `OT IN`, `OT OUT`, `LATES(MIN)`, `UNDERTIME(MIN)`, `GROSS PAY DAY`, `DEDUCTION DAY`]);
             
-            // Find inputs from memory or use the calculated metrics directly
-            const selector = document.getElementById('periodSelector').value;
-            
+            const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
+            const hourlyRate = dailyRate / 8;
+            const minuteRate = hourlyRate / 60;
+            const schedInMins = timeStringToMinutes(salarySettings.timeIn || "08:00");
+            const schedOutMins = timeStringToMinutes(salarySettings.timeOut || "17:00");
+
             activeDatesArray.forEach(dateObj => {
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -1287,19 +1278,36 @@
                 
                 if(timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
                     const rec = timelineBuffer[dateKey];
-                    csvRows.push(`${dateKey},"${rec.in1}/${rec.out1}",0,0,0,0`);
+                    let lateMins = 0;
+                    let utMins = 0;
+                    let dayGross = dailyRate;
+
+                    if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
+                    if (timeStringToMinutes(rec.out1) < schedOutMins) utMins = schedOutMins - timeStringToMinutes(rec.out1);
+                    let dayDed = (lateMins + utMins) * minuteRate;
+
+                    if (rec.hasOT && rec.inOT && rec.outOT) {
+                        const otMins = timeStringToMinutes(rec.outOT) - timeStringToMinutes(rec.inOT);
+                        if (otMins >= 30) dayGross += (otMins * minuteRate);
+                    }
+
+                    csvRows.push([
+                        dateKey, rec.in1, rec.out1, 
+                        rec.hasOT ? rec.inOT : '-', rec.hasOT ? rec.outOT : '-', 
+                        lateMins, utMins, dayGross.toFixed(2), dayDed.toFixed(2)
+                    ]);
                 } else {
-                    csvRows.push(`${dateKey},-,-,0,0,0,0`);
+                    csvRows.push([dateKey, `-`, `-`, `-`, `-`, 0, 0, `0.00`, `0.00`]);
                 }
             });
             
             csvRows.push([]);
-            csvRows.push(`SUMMARY TOTAL VALUES`);
-            csvRows.push(`GROSS RUN,${document.getElementById('breakdownGross').innerText.replace('₱','')}`);
-            csvRows.push(`DEDUCTIONS TOTAL,${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}`);
-            csvRows.push(`NET DISBURSABLE PAYOUT,${document.getElementById('breakdownNet').innerText.replace('₱','')}`);
+            csvRows.push([`SUMMARY TOTAL VALUES`]);
+            csvRows.push([`GROSS RUN`, document.getElementById('breakdownGross').innerText.replace('₱','')]);
+            csvRows.push([`DEDUCTIONS TOTAL`, document.getElementById('breakdownTotalDed').innerText.replace('₱','')]);
+            csvRows.push([`NET DISBURSABLE PAYOUT`, document.getElementById('breakdownNet').innerText.replace('₱','')]);
 
-            const csvString = csvRows.map(e => e.join ? e.join(",") : e).join("\n");
+            const csvString = csvRows.map(e => e.join(",")).join("\n");
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
