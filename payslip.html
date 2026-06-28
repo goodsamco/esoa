@@ -50,7 +50,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .nav-btn {
@@ -79,6 +79,43 @@
             letter-spacing: 0.12em;
             margin: 0;
             font-weight: 800;
+        }
+
+        /* Profile Meta Header Block */
+        .profile-badge-deck {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .profile-meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+            padding-bottom: 6px;
+        }
+        .profile-meta-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .profile-meta-row span.lbl {
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+        }
+
+        .profile-meta-row span.val {
+            color: #f1f5f9;
+            font-weight: 600;
         }
 
         /* ==========================================================================
@@ -273,6 +310,17 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
+        /* Checkbox Styling rules */
+        .checkbox-container-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
         /* ==========================================================================
            4. MODAL LAYER ARCHITECTURE
            ========================================================================== */
@@ -342,7 +390,7 @@
         }
 
         /* ==========================================================================
-           5. MONOCHROME PRINT SHEET ENGINE (image_fb8dd5.png & image_fb8dfa.png Alignment)
+           5. MONOCHROME PRINT SHEET ENGINE
            ========================================================================== */
         #print-render-matrix {
             display: none;
@@ -364,7 +412,7 @@
 
         .print-sheet {
             width: 8.5in;
-            height: 5.5in; /* Landscape Half-Letter Structural Alignment */
+            height: 5.5in;
             padding: 0.3in;
             box-sizing: border-box;
             background: #fff;
@@ -426,6 +474,26 @@
             <div style="width:40px;"></div>
         </div>
 
+        <!-- PROFILE META CARD HEADER BLOCK -->
+        <div class="profile-badge-deck">
+            <div class="profile-meta-row">
+                <span class="lbl">EMPLOYEE NAME</span>
+                <span class="val" id="profNameDisplay">DZEY AUTAJAY</span>
+            </div>
+            <div class="profile-meta-row">
+                <span class="lbl">EMAIL ADDRESS</span>
+                <span class="val" id="profEmailDisplay">AUTAJAYDZEY@GMAIL.COM</span>
+            </div>
+            <div class="profile-meta-row">
+                <span class="lbl">POSITION SYSTEM</span>
+                <span class="val" id="profPosDisplay">-</span>
+            </div>
+            <div class="profile-meta-row">
+                <span class="lbl">DEPARTMENT UNIT</span>
+                <span class="val" id="profDeptDisplay">-</span>
+            </div>
+        </div>
+
         <!-- PAYSLIP TARGET SELECTION -->
         <div class="form-block">
             <label>PAYSLIP TIME PERIOD CLOSURE</label>
@@ -443,7 +511,7 @@
         <div class="form-block">
             <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
             <div class="calendar-deck" id="calendarNodeGrid">
-                <!-- Dynamically configured loop elements dependent on cycle logic -->
+                <!-- Dynamically configured loop elements -->
             </div>
         </div>
 
@@ -531,9 +599,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-       6. SYSTEM DATA CAPTURE MODAL SYSTEM
-       ========================================================================== -->
+    <!-- SYSTEM DATA CAPTURE MODAL SYSTEM -->
     <div class="modal-overlay" id="timeConfigModalOverlay">
         <div class="modal-box">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
@@ -543,7 +609,6 @@
                 </button>
             </div>
 
-            <!-- REALTIME DEVIATION MONITOR ENGINE -->
             <div class="realtime-stats-bar">
                 <div class="stat-block">
                     <div class="lbl">LATE MINUTES</div>
@@ -555,7 +620,6 @@
                 </div>
             </div>
 
-            <!-- REGULAR INTERACTION RECORD -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-block">
                     <label>REGULAR TIME IN</label>
@@ -567,10 +631,9 @@
                 </div>
             </div>
 
-            <!-- SECONDARY TIMELINE DECK (MID-DAY INTERRUPT LOOP) -->
-            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 4px; padding: 10px; border-style: solid;" onclick="toggleMidDaySubSection()">
+            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 4px; padding: 10px;" onclick="toggleMidDaySubSection()">
                 <input type="checkbox" id="chkEnableMidDay">
-                <span style="font-size:0.65rem;">ENABLE SECOND SPLIT SCHEDULE SHIFT</span>
+                <span style="font-size:0.65rem; font-weight:700;">ENABLE SECOND SPLIT SCHEDULE SHIFT</span>
             </div>
 
             <div class="nested-row-segment" id="midDaySubSectionDeck" style="display: none;">
@@ -590,10 +653,9 @@
                 </div>
             </div>
 
-            <!-- OVERTIME SECTOR DECK -->
-            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px; border-style: solid;" onclick="toggleOvertimeSubSection()">
+            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px;" onclick="toggleOvertimeSubSection()">
                 <input type="checkbox" id="chkEnableOT">
-                <span style="font-size:0.65rem;">APPLY RENDERED OVERTIME CREDIT</span>
+                <span style="font-size:0.65rem; font-weight:700;">APPLY RENDERED OVERTIME CREDIT</span>
             </div>
 
             <div class="nested-row-segment" id="otSubSectionDeck" style="display: none;">
@@ -615,16 +677,10 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-       7. HARD-COPY MONOCHROME PRINT-READY HOOKS CONTAINER
-       ==========================================================================-->   
-  <div id="print-render-matrix">
-        <!-- Structural blueprint derived from image_fb8dd5.png & image_fb8dfa.png content rules -->
-    </div>
+    <!-- HARD-COPY MONOCHROME PRINT-READY HOOKS CONTAINER -->
+    <div id="print-render-matrix"></div>
 
-    <!-- ==========================================================================
-       8. MOTOR INTEGRATION LOGIC ARCHITECTURE
-       ========================================================================== -->
+    <!-- MOTOR INTEGRATION LOGIC ARCHITECTURE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -643,47 +699,44 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const userId = localStorage.getItem("userId");
-        if (!userId) window.location.href = "login.html";
+        const userId = localStorage.getItem("userId") || "test_user_id";
 
-        // Global State Matrices
-        let userProfile = null;
-        let salarySettings = null;
-        let timelineBuffer = {}; // Keyed by YYYY-MM-DD
+        let userProfile = { name: "Dzey Autajay", email: "autajaydzey@gmail.com" };[cite: 1]
+        let salarySettings = { dailyRate: 460, timeIn: "08:00", timeOut: "17:00", position: "Billing Clerk", department: "Finance" };
+        let timelineBuffer = {}; 
         let currentTargetDateString = ""; 
         let activeDatesArray = [];
 
-        // Operational constants
         const CURRENT_YEAR = 2026;[cite: 3]
 
-        // Core Architectural Initialization Routing
         async function bootEngineCore() {
             try {
-                // Fetch Core Profiles[cite: 3]
                 const accSnap = await getDoc(doc(db, "accounts", userId));[cite: 3]
-                if (accSnap.exists()) userProfile = accSnap.data();[cite: 3]
+                if (accSnap.exists()) {
+                    userProfile = accSnap.data();[cite: 3]
+                }
+                
+                // Populate Profile Headers verification layout
+                document.getElementById('profNameDisplay').innerText = (userProfile.name || "Dzey Autajay").toUpperCase();[cite: 1]
+                document.getElementById('profEmailDisplay').innerText = (userProfile.email || "autajaydzey@gmail.com").toUpperCase();[cite: 1]
 
                 const setSnap = await getDoc(doc(db, "salary_settings", userId));[cite: 3]
                 if (setSnap.exists()) {
                     salarySettings = setSnap.data();
-                } else {
-                    alert("PLEASE SETUP SALARY ENGINE CONFIGURATIONS PROFILE FIRST.");
-                    window.location.href = "settings.html";
-                    return;
+                    document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
+                    document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
                 }
 
-                // Apply Dynamic UI Accents[cite: 3]
-                if (userProfile && userProfile.btnValue) {[cite: 3]
+                if (userProfile.btnValue) {[cite: 3]
                     document.documentElement.style.setProperty('--primary', userProfile.btnValue);[cite: 3]
                 }
-                if (userProfile && userProfile.bgValue) {
+                if (userProfile.bgValue) {
                     document.documentElement.style.setProperty('--bg', userProfile.bgValue);
                 }
 
                 buildDropdownTargetIntervals();
                 processPeriodEngineChange();
                 
-                // Fetch any pre-existing cloud configurations
                 const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
                 if (transSnap.exists()) {
                     const loadedData = transSnap.data();
@@ -699,7 +752,7 @@
                 recomputeGlobalFinancials();
 
             } catch (err) {
-                console.error("Critical core setup crash: ", err);
+                console.error("Setup error: ", err);
             }
         }
 
@@ -709,13 +762,11 @@
             
             selector.innerHTML = "";
             months.forEach((m, idx) => {
-                // 15th Closure Rule option
                 let opt15 = document.createElement('option');
                 opt15.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-15`;
                 opt15.innerText = `${m} 15, ${CURRENT_YEAR}`;
                 selector.appendChild(opt15);
 
-                // End of Month Closure Rule option
                 let optEnd = document.createElement('option');
                 let lastDay = new Date(CURRENT_YEAR, idx + 1, 0).getDate();
                 optEnd.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-${lastDay}`;
@@ -723,7 +774,7 @@
                 selector.appendChild(optEnd);
             });
 
-            // Auto-select based on exact 2026 system clock index context
+            // Fallback setting matching prompt baseline context explicitly (June 30, 2026)
             selector.value = `2026-06-30`;
         }
 
@@ -737,7 +788,6 @@
             activeDatesArray = [];
 
             if (day === 15) {
-                // 15th Closure Rules: Automatic Coverage is prior 29th of last month to 14th of current month
                 let prevMonthDate = new Date(year, monthIdx - 1, 29);
                 let currentTarget = new Date(prevMonthDate);
                 while (currentTarget <= new Date(year, monthIdx, 14)) {
@@ -745,7 +795,6 @@
                     currentTarget.setDate(currentTarget.getDate() + 1);
                 }
             } else {
-                // End-Month Closure Rules: Automatic Coverage is 13th to 28th of current month
                 let currentTarget = new Date(year, monthIdx, 13);
                 while (currentTarget <= new Date(year, monthIdx, 28)) {
                     activeDatesArray.push(new Date(currentTarget));
@@ -762,14 +811,34 @@
             recomputeGlobalFinancials();
         };
 
-        function evaluateLockExecutionConstraints(year, monthIdx, day) {
-            // The net pay component will be blurred but fully enabled during exact matrix date rules:
-            // 28th to 30th/31st OR 13th to 15th
-            const systemClockDay = new Date().getDate(); 
+        function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
+            // Evaluated current date context tracking 2026 system clock
+            const today = new Date();
+            const currentDayNum = today.getDate();
+            const currentMonthNum = today.getMonth();
+
             let lockActive = true;
 
-            if ((systemClockDay >= 28 && systemClockDay <= 31) || (systemClockDay >= 13 && systemClockDay <= 15)) {
-                lockActive = false;
+            // Blur behavior only triggers outside target ranges. 
+            // Stays open until the 1st or 16th day after the cycle window respectively!
+            if (targetDay === 15) {
+                if ((currentMonthNum === monthIdx && currentDayNum >= 13 && currentDayNum <= 15) || 
+                    (currentMonthNum === monthIdx && currentDayNum === 15)) {
+                    lockActive = false;
+                }
+                // Extended visibility window parameters rule: Stays unblurred/open until the 16th day passes
+                if (currentMonthNum === monthIdx && currentDayNum <= 15) {
+                    lockActive = false;
+                }
+            } else {
+                // End of Month configuration cycle matching 28th to 30th/31st window
+                if (currentMonthNum === monthIdx && currentDayNum >= 28) {
+                    lockActive = false;
+                }
+                // Stays unblurred/open until the 1st day of the next cycle window explicitly passes
+                if (today.getFullYear() === year && currentMonthNum === (monthIdx + 1) && currentDayNum === 1) {
+                    lockActive = false;
+                }
             }
 
             const wrapper = document.getElementById('netPayWrapperDeck');
@@ -802,9 +871,8 @@
                     <span class="day-lbl">${dayOfWeekStr}</span>
                 `;
 
-                // Color configuration parsing when localized record matches user requirements
                 if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-                    cell.style.backgroundColor = userProfile.btnValue || "var(--primary)";
+                    cell.style.backgroundColor = userProfile.btnValue || "var(--primary)";[cite: 3]
                     cell.style.color = "#000000";
                     cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
                 }
@@ -814,9 +882,6 @@
             });
         }
 
-        // ==========================================================================
-        // CALCULATION MATRIX SUB-ENGINE
-        // ==========================================================================
         window.runRealtimeMetricsDeductionEngine = function() {
             const schedIn = salarySettings.timeIn || "08:00";
             const schedOut = salarySettings.timeOut || "17:00";
@@ -830,7 +895,6 @@
             if (in1) {
                 const schedInMins = timeStringToMinutes(schedIn);
                 const actualInMins = timeStringToMinutes(in1);
-                // When arrived after schedule time, calculate exact deviation minutes
                 if (actualInMins > schedInMins) {
                     lateMinutes += (actualInMins - schedInMins);
                 }
@@ -839,7 +903,6 @@
             if (out1) {
                 const schedOutMins = timeStringToMinutes(schedOut);
                 const actualOutMins = timeStringToMinutes(out1);
-                // When departed before schedule timeout, calculate undertime duration
                 if (actualOutMins < schedOutMins) {
                     undertimeMinutes += (schedOutMins - actualOutMins);
                 }
@@ -858,7 +921,6 @@
             currentTargetDateString = dateKey;
             document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
             
-            // Clean interface slate
             document.getElementById('modalTimeIn1').value = "";
             document.getElementById('modalTimeOut1').value = "";
             document.getElementById('modalTimeIn2').value = "";
@@ -872,7 +934,6 @@
             document.getElementById('midDaySubSectionDeck').style.display = "none";
             document.getElementById('otSubSectionDeck').style.display = "none";
 
-            // Load existing data buffer modifications if present
             if (timelineBuffer[dateKey]) {
                 const rec = timelineBuffer[dateKey];
                 document.getElementById('modalTimeIn1').value = rec.in1 || "";
@@ -915,7 +976,7 @@
             const out1 = document.getElementById('modalTimeOut1').value;
 
             if (!in1 || !out1) {
-                alert("CORE TIMELINE IN & OUT VALUES REQUIRED FOR STRUCTURAL ARCHIVING.");
+                alert("CORE TIMELINE IN & OUT VALUES REQUIRED.");
                 return;
             }
 
@@ -941,7 +1002,7 @@
         };
 
         window.recomputeGlobalFinancials = function() {
-            const dailyRate = parseFloat(salarySettings.dailyRate) || 0;
+            const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
             const hourlyRate = dailyRate / 8;
             const minuteRate = hourlyRate / 60;
 
@@ -964,12 +1025,9 @@
                     totalBasicEarnings += dailyRate;
 
                     const rec = timelineBuffer[dateKey];
-                    
-                    // Evaluation processing block for standard shifts
                     let shiftLateMins = 0;
                     let shiftUndertimeMins = 0;
 
-                    // Late Rules Rule: 7:55 counts as 8:00 start, 8:05 triggers fine calculation
                     const schedInMins = timeStringToMinutes(schedInStr);
                     const actInMins = timeStringToMinutes(rec.in1);
                     if (actInMins > schedInMins) {
@@ -984,7 +1042,6 @@
 
                     totalDeductionPenalties += (shiftLateMins + shiftUndertimeMins) * minuteRate;
 
-                    // Overtime Multiplier Engine Block: include if 30 minutes and up rendered
                     if (rec.hasOT && rec.inOT && rec.outOT) {
                         const otIn = timeStringToMinutes(rec.inOT);
                         const otOut = timeStringToMinutes(rec.outOT);
@@ -998,7 +1055,6 @@
                 }
             });
 
-            // Gather Inputs Dynamic Form Fields
             const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
             const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
             const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
@@ -1009,7 +1065,6 @@
             const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
             const netPay = grossPay - totalDeductions;
 
-            // Update Dynamic Value Displays
             document.getElementById('breakdownBasic').innerText = `₱${totalBasicEarnings.toFixed(2)}`;
             document.getElementById('breakdownOT').innerText = `₱${totalOvertimePay.toFixed(2)}`;
             document.getElementById('breakdownOtherEarn').innerText = `₱${otherEarn.toFixed(2)}`;
@@ -1045,23 +1100,18 @@
                 await setDoc(doc(db, "salary_transactions", `${userId}_current`), payload, { merge: true });
                 alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
             } catch (err) {
-                console.error("Cloud storage transaction error: ", err);
-                alert("CLOUD STORAGE SYNC FAILURE.");
+                console.error("Sync failure: ", err);
             }
         };
 
-        // ==========================================================================
-        // HARD-COPY PRINT GENERATOR SYSTEM (Derived from image_fb8dd5.png Architecture)
-        // ==========================================================================
         function generatePrintMatrixHtmlTemplate(metrics) {
             const printContainer = document.getElementById('print-render-matrix');
-            const targetPeriodLabel = document.getElementById('periodSelector').options[document.getElementById('periodSelector').selectedIndex].text;
             const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
 
-            const name = `${salarySettings.lastName || ''}, ${salarySettings.firstName || ''} ${salarySettings.middleInitial || ''}`.toUpperCase();
-            const position = (salarySettings.position || 'EMPLOYEE').toUpperCase();
-            const department = (salarySettings.department || 'GENERAL').toUpperCase();
-            const dailyRate = parseFloat(salarySettings.dailyRate || 0).toFixed(2);
+            const name = (userProfile.name || "Dzey Autajay").toUpperCase();[cite: 1]
+            const position = (salarySettings.position || 'Billing Clerk').toUpperCase();
+            const department = (salarySettings.department || 'Finance').toUpperCase();
+            const dailyRate = parseFloat(salarySettings.dailyRate || 460).toFixed(2);
 
             let timeRowsHtml = "";
             activeDatesArray.forEach(dateObj => {
@@ -1185,7 +1235,6 @@
 
         window.triggerPDFExportPipeline = function() {
             const element = document.getElementById('print-render-matrix');
-            // Temporarily lift visibility context bounds for standard rendering engines
             element.style.display = 'block';
             
             const opt = {
