@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCOUNT SETTINGS — SALARY COMPUTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #0b0f1a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #22c55e;
+            --text-main: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 10px 140px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            padding: 25px;
+            border-radius: 24px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .header-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        
+        h1 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.15em; margin: 0; }
+
+        .form-group { margin-bottom: 20px; text-align: left; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 14px;
+            color: white;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        /* Fixed checkbox alignment */
+        .checkbox-container-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed var(--border-glass);
+            padding: 16px;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-container-row input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .action-btn {
+            width: 100%;
+            height: 54px;
+            border: none;
+            border-radius: 35px;
+            background-color: var(--primary);
+            color: #000;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-nav">
+            <button class="back-btn" onclick="window.location.href='payslip.html'">
+                <i data-lucide="arrow-left"></i>
+            </button>
+            <h1>PROFILE CONFIGURATION</h1>
+            <div style="width:40px;"></div>
+        </div>
+
+        <form id="settingsForm" onsubmit="event.preventDefault();">
+            <div class="form-group">
+                <label>EMAIL ADDRESS</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label>LAST NAME</label>
+                <input type="text" id="lastName" required>
+            </div>
+            <div class="form-group">
+                <label>FIRST NAME</label>
+                <input type="text" id="firstName" required>
+            </div>
+            <div class="form-group">
+                <label>DAILY RATE (₱)</label>
+                <input type="number" id="dailyRate" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label>REST PERIOD INTERMISSION</label>
+                <label class="checkbox-container-row" for="hasLunchBreak">
+                    <input type="checkbox" id="hasLunchBreak">
+                    <span>INCLUDE LUNCH BREAK (12-1 PM)</span>
+                </label>
+            </div>
+
+            <button type="button" class="action-btn" onclick="saveSystemSettings()">SAVE CONFIGURATIONS</button>
+        </form>
+    </div>
+
+   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+        authDomain: "svls-289ee.firebaseapp.com",
+        databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+        projectId: "svls-289ee",
+        storageBucket: "svls-289ee.firebasestorage.app",
+        messagingSenderId: "500705386198",
+        appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+        measurementId: "G-5TNBMQ2HN5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) window.location.href = "login.html";
+
+    window.toggleDeptCustom = function(value) {
+        const customInput = document.getElementById('departmentCustom');
+        if (value === 'Custom') {
+            customInput.style.display = 'block';
+            customInput.setAttribute('required', 'true');
+        } else {
+            customInput.style.display = 'none';
+            customInput.removeAttribute('required');
+        }
+    };
+
+    async function fetchIdentityAndTheme() {
+        try {
+            const accountRef = doc(db, "accounts", userId);
+            const accountSnap = await getDoc(accountRef);
+
+            if (accountSnap.exists()) {
+                const accountData = accountSnap.data();
+                const customProfileName = accountData.customName || localStorage.getItem("userName") || "USER";
+                document.getElementById('userDisplayName').innerText = customProfileName.toUpperCase();
+                
+                if (accountData.avatarUrl) {
+                    document.getElementById('userDisplayAvatar').src = accountData.avatarUrl;
+                }
+                if (accountData.bgValue) document.documentElement.style.setProperty('--bg', accountData.bgValue);
+                if (accountData.btnValue) document.documentElement.style.setProperty('--primary', accountData.btnValue);
+            }
+
+            const settingsRef = doc(db, "salary_settings", userId);
+            const settingsSnap = await getDoc(settingsRef);
+
+            if (settingsSnap.exists()) {
+                const data = settingsSnap.data();
+                // Populate existing fields + new email field
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('lastName').value = (data.lastName || '').toUpperCase();
+                document.getElementById('firstName').value = (data.firstName || '').toUpperCase();
+                document.getElementById('middleInitial').value = (data.middleInitial || '').toUpperCase();
+                document.getElementById('dailyRate').value = data.dailyRate || '';
+                document.getElementById('position').value = (data.position || '').toUpperCase();
+                document.getElementById('timeIn').value = data.timeIn || '08:00';
+                document.getElementById('timeOut').value = data.timeOut || '17:00';
+                document.getElementById('hasLunchBreak').checked = data.hasLunchBreak !== false;
+
+                if (data.department === 'Admin' || data.department === 'Finance') {
+                    document.getElementById('departmentSelect').value = data.department;
+                } else if (data.department) {
+                    document.getElementById('departmentSelect').value = 'Custom';
+                    toggleDeptCustom('Custom');
+                    document.getElementById('departmentCustom').value = data.department.toUpperCase();
+                }
+
+                if (data.dutyDays && Array.isArray(data.dutyDays)) {
+                    data.dutyDays.forEach(day => {
+                        const chip = document.querySelector(`.day-chip input[value="${day}"]`);
+                        if (chip) chip.checked = true;
+                    });
+                }
+                document.getElementById('saveBtn').innerText = "UPDATE CONFIGURATIONS";
+            }
+        } catch (err) {
+            console.error("System configuration parsing failure:", err);
+        }
+    }
+
+    window.saveSystemSettings = async function() {
+        const deptSelect = document.getElementById('departmentSelect').value;
+        const finalDept = deptSelect === 'Custom' ? document.getElementById('departmentCustom').value.trim() : deptSelect;
+
+        const selectedDays = [];
+        document.querySelectorAll('.day-matrix input[type="checkbox"]:checked').forEach(cb => {
+            selectedDays.push(cb.value);
+        });
+
+        // Added 'email' field to payload
+        const payload = {
+            email: document.getElementById('email').value.trim(),
+            lastName: document.getElementById('lastName').value.trim().toUpperCase(),
+            firstName: document.getElementById('firstName').value.trim().toUpperCase(),
+            middleInitial: document.getElementById('middleInitial').value.trim().toUpperCase(),
+            dailyRate: parseFloat(document.getElementById('dailyRate').value) || 0,
+            position: document.getElementById('position').value.trim().toUpperCase(),
+            department: finalDept.toUpperCase(),
+            dutyDays: selectedDays,
+            timeIn: document.getElementById('timeIn').value,
+            timeOut: document.getElementById('timeOut').value,
+            hasLunchBreak: document.getElementById('hasLunchBreak').checked,
+            updatedAt: Date.now()
+        };
+
+        try {
+            await setDoc(doc(db, "salary_settings", userId), payload, { merge: true });
+            alert("PROFILE SETTINGS ACCURATELY SYNCED SUCCESSFULLY.");
+            window.location.href = "payslip.html";
+        } catch (error) {
+            console.error("Data synchronization error:", error);
+            alert("FAILED TRANSACTION SYNCHRONIZATION.");
+        }
+    };
+
+    window.onload = () => {
+        fetchIdentityAndTheme();
+        if (window.lucide) window.lucide.createIcons();
+    };
+</script>
+</body>
+</html>
