@@ -228,6 +228,27 @@
             border-bottom: none;
         }
 
+        /* Responsive UI breakdown adjustments */
+        .scannable-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            margin-top: 10px;
+        }
+
+        .scannable-table-wrapper .matrix-table {
+            border: none;
+            margin-top: 0;
+            min-width: 450px;
+        }
+
+        .scannable-table-wrapper th, .scannable-table-wrapper td {
+            padding: 10px 12px;
+            font-size: 0.75rem;
+        }
+
         .net-pay-display-deck {
             background: rgba(255,255,255,0.02);
             border: 1px solid var(--border-glass);
@@ -591,6 +612,27 @@
                         <td>TOTAL COMPASS DEDUCTIONS</td><td style="text-align: right; color:#ef4444;" id="breakdownTotalDed">₱0.00</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- DETAILED DAILY BREAKDOWN COMPONENT -->
+        <div class="form-block">
+            <label>DETAILED DAILY TRACKING BREAKDOWN</label>
+            <div class="scannable-table-wrapper">
+                <table class="matrix-table" id="uiDailyBreakdownTable">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>STATUS</th>
+                            <th>LATE/UT</th>
+                            <th style="text-align: right;">GROSS</th>
+                            <th style="text-align: right;">DED.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="uiDailyBreakdownBody">
+                        <!-- Instantiated Dynamically via JavaScript Engine -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="net-pay-display-deck" id="netPayWrapperDeck">
@@ -1035,22 +1077,27 @@
             const schedOutStr = salarySettings.timeOut || "17:00";
 
             let structuralDailyArrayLogs = [];
+            let uiTableRowsHtml = "";
 
             activeDatesArray.forEach(dateObj => {
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const day = String(dateObj.getDate()).padStart(2, '0');
                 const dateKey = `${year}-${month}-${day}`;
+                const rawDayStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                 let dayGross = 0;
                 let dayDed = 0;
                 let dayLateMins = 0;
                 let dayUndertimeMins = 0;
+                let statusLabel = `<span style="color:#64748b;">UNFILED</span>`;
+                let metricsLabel = "-";
 
                 if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
                     actualDaysWorkedCounter++;
                     totalBasicEarnings += dailyRate;
                     dayGross += dailyRate;
+                    statusLabel = `<span style="color:var(--primary);">FILED</span>`;
 
                     const rec = timelineBuffer[dateKey];
                     const schedInMins = timeStringToMinutes(schedInStr);
@@ -1064,6 +1111,12 @@
                     dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
                     totalDeductionPenalties += dayDed;
 
+                    if (dayLateMins > 0 || dayUndertimeMins > 0) {
+                        metricsLabel = `${dayLateMins}m / ${dayUndertimeMins}m`;
+                    } else {
+                        metricsLabel = "0 / 0";
+                    }
+
                     if (rec.hasOT && rec.inOT && rec.outOT) {
                         const otIn = timeStringToMinutes(rec.inOT);
                         const otOut = timeStringToMinutes(rec.outOT);
@@ -1073,10 +1126,22 @@
                                 const otPay = otMins * minuteRate;
                                 totalOvertimePay += otPay;
                                 dayGross += otPay;
+                                statusLabel = `<span style="color:var(--primary);">FILED + OT</span>`;
                             }
                         }
                     }
                 }
+
+                // Append row matrix configuration to the Live UI panel tracking element
+                uiTableRowsHtml += `
+                    <tr>
+                        <td>${rawDayStr}</td>
+                        <td>${statusLabel}</td>
+                        <td style="color: #94a3b8;">${metricsLabel}</td>
+                        <td style="text-align: right; color: ${dayGross > 0 ? '#fff' : '#64748b'};">₱${dayGross.toFixed(2)}</td>
+                        <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${dayDed.toFixed(2)}</td>
+                    </tr>
+                `;
 
                 structuralDailyArrayLogs.push({
                     date: dateKey,
@@ -1090,6 +1155,9 @@
                     deductions: dayDed
                 });
             });
+
+            // Re-render core live table node tracking data metrics directly
+            document.getElementById('uiDailyBreakdownBody').innerHTML = uiTableRowsHtml;
 
             const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
             const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
