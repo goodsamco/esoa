@@ -164,6 +164,7 @@
         }
 
         .form-group input[type="text"],
+        .form-group input[type="email"],
         .form-group input[type="time"],
         .form-group input[type="number"],
         .form-group select {
@@ -357,29 +358,34 @@
         <form id="settingsForm" onsubmit="event.preventDefault();">
             <div class="form-group">
                 <label>LAST NAME</label>
-                <input type="text" id="lastName" placeholder="E.G. AUTAJAY" required autocomplete="off">
+                <input type="text" id="lastName" required autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label>FIRST NAME</label>
-                <input type="text" id="firstName" placeholder="E.G. DZEY" required autocomplete="off">
+                <input type="text" id="firstName" required autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label>MIDDLE INITIAL</label>
-                <input type="text" id="middleInitial" placeholder="E.G. A" maxlength="2" autocomplete="off">
+                <input type="text" id="middleInitial" maxlength="2" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>EMAIL ADDRESS</label>
+                <input type="email" id="emailAddress" required autocomplete="off">
             </div>
 
             <div class="daily-rate-isolated-row">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>DAILY RATE VALUE (₱)</label>
-                    <input type="number" id="dailyRate" placeholder="460.00" step="0.01" required autocomplete="off">
+                    <input type="number" id="dailyRate" step="0.01" required autocomplete="off">
                 </div>
             </div>
 
             <div class="form-group">
                 <label>POSITION</label>
-                <input type="text" id="position" placeholder="E.G. SYSTEM ADMINISTRATOR" required autocomplete="off">
+                <input type="text" id="position" required autocomplete="off">
             </div>
 
             <div class="form-group">
@@ -389,7 +395,7 @@
                     <option value="Finance">FINANCE</option>
                     <option value="Custom">OTHER (TYPE CUSTOM)</option>
                 </select>
-                <input type="text" id="departmentCustom" placeholder="TYPE DEPARTMENT NAME" style="display:none; margin-top:8px;" autocomplete="off">
+                <input type="text" id="departmentCustom" style="display:none; margin-top:8px;" autocomplete="off">
             </div>
 
             <div class="form-group">
@@ -418,10 +424,10 @@
 
             <div class="form-group">
                 <label>REST PERIOD INTERMISSION</label>
-                <label class="checkbox-container-row" for="hasLunchBreak">
-                    <input type="checkbox" id="hasLunchBreak" checked>
+                <div class="checkbox-container-row" onclick="document.getElementById('hasLunchBreak').click();">
+                    <input type="checkbox" id="hasLunchBreak" checked onclick="event.stopPropagation();">
                     <span>INCLUDE LUNCH BREAK(12-1 PM)</span>
-                </label>
+                </div>
             </div>
 
             <button type="button" class="action-btn" id="saveBtn" onclick="saveSystemSettings()">SAVE CONFIGURATIONS</button>
@@ -498,6 +504,7 @@
                     document.getElementById('lastName').value = (data.lastName || '').toUpperCase();
                     document.getElementById('firstName').value = (data.firstName || '').toUpperCase();
                     document.getElementById('middleInitial').value = (data.middleInitial || '').toUpperCase();
+                    document.getElementById('emailAddress').value = data.emailAddress || '';
                     document.getElementById('dailyRate').value = data.dailyRate || '';
                     document.getElementById('position').value = (data.position || '').toUpperCase();
                     document.getElementById('timeIn').value = data.timeIn || '08:00';
@@ -538,6 +545,7 @@
                 lastName: document.getElementById('lastName').value.trim().toUpperCase(),
                 firstName: document.getElementById('firstName').value.trim().toUpperCase(),
                 middleInitial: document.getElementById('middleInitial').value.trim().toUpperCase(),
+                emailAddress: document.getElementById('emailAddress').value.trim(),
                 dailyRate: parseFloat(document.getElementById('dailyRate').value) || 0,
                 position: document.getElementById('position').value.trim().toUpperCase(),
                 department: finalDept.toUpperCase(),
