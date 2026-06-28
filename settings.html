@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACCOUNT SETTINGS — SALARY COMPUTER</title>
+    <!-- Inter Font & Lucide Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* ==========================================================================
-           1. DESIGN TOKENS & SYSTEM VARIABLES (DYNAMIC COLOR BINDING)
+           1. DESIGN TOKENS & SYSTEM VARIABLES (DYNAMIC GLOBAL THEMING)
            ========================================================================== */
         :root {
-            --bg: #111111;
-            --surface: #1b1b1b;
-            --primary: #e5e5e5; /* Dynamically replaced by script if user has custom accent */
-            --success: #fbff00;
-            --text-main: #fafafa;
+            --bg: #0b0f1a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --primary: #22c55e; /* Default fallback; overridden by user's btnValue */
+            --success: #ffee00;
+            --text-main: #f1f5f9;
             --glass: rgba(255, 255, 255, 0.08);
-            --modal-bg: rgba(17, 17, 17, 0.98);
+            --border-glass: rgba(255, 255, 255, 0.12);
         }
 
         body {
@@ -25,7 +26,7 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 40px 10px 10vh 10px;
+            padding: 40px 10px 140px 10px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -38,16 +39,16 @@
            2. CORE LAYOUT CONTAINER
            ========================================================================== */
         .container {
-            position: relative;
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 25px;
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid var(--border-glass);
+            position: relative;
             box-sizing: border-box;
         }
 
@@ -55,31 +56,33 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .back-btn {
             background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-glass);
             color: var(--text-main);
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .back-btn:hover {
             background: var(--primary);
             color: #000;
+            border-color: var(--primary);
+            transform: scale(1.05);
         }
 
         h1 {
-            font-size: 0.8rem;
-            color: var(--primary);
+            font-size: 0.9rem;
+            color: var(--text-main);
             text-transform: uppercase;
             letter-spacing: 0.15em;
             margin: 0;
@@ -87,30 +90,30 @@
         }
 
         /* ==========================================================================
-           3. CURRENT PROFILE BANNER (IDENTITY RECOGNITION)
+           3. CURRENT PROFILE BANNER (IDENTITY NODE DISPLAY)
            ========================================================================== */
         .profile-identity-card {
             display: flex;
             align-items: center;
-            gap: 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
             padding: 16px;
-            border-radius: 16px;
+            border-radius: 20px;
             margin-bottom: 24px;
         }
 
         .profile-avatar-wrapper {
-            position: relative;
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             border: 2px solid var(--primary);
             overflow: hidden;
-            background: #000;
+            background: rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .profile-avatar-wrapper img {
@@ -122,11 +125,11 @@
         .profile-meta-info {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 4px;
         }
 
         .profile-meta-info .user-name {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 800;
             text-transform: uppercase;
             color: var(--text-main);
@@ -134,16 +137,15 @@
         }
 
         .profile-meta-info .user-role {
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             font-weight: 600;
             text-transform: uppercase;
-            color: var(--primary);
+            color: #94a3b8;
             letter-spacing: 0.08em;
-            opacity: 0.8;
         }
 
         /* ==========================================================================
-           4. FORM CONFIGURATION INTERFACE
+           4. DATA MATRIX FORM CONTROLS
            ========================================================================== */
         .form-group {
             margin-bottom: 20px;
@@ -152,13 +154,13 @@
 
         .form-group label {
             display: block;
-            font-size: 0.65rem;
-            color: var(--primary);
-            margin-left: 6px;
-            margin-bottom: 6px;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-left: 2px;
+            margin-bottom: 8px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.12em;
         }
 
         .form-group input[type="text"],
@@ -166,31 +168,45 @@
         .form-group input[type="number"],
         .form-group select {
             width: 100%;
-            background: #000000;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 12px 14px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 14px;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             box-sizing: border-box;
             font-weight: 600;
             outline: none;
-            text-transform: uppercase; /* FORCED GLOBAL VALUE STRUCTURE UPPERCASE */
-            transition: border-color 0.2s ease;
+            text-transform: uppercase; /* Force structural user values uppercase */
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .form-group input:focus,
         .form-group select:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
         }
 
-        /* Dedicated Full Row Layout Highlight for Daily Rate */
-        .daily-rate-row {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 20px;
+        /* Isolated Bold Row Layout Highlight for Daily Rate Metric */
+        .daily-rate-isolated-row {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1.5px solid var(--border-glass);
+            padding: 18px 16px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+        }
+
+        .daily-rate-isolated-row label {
+            color: var(--text-main);
+            font-weight: 800;
+            font-size: 0.75rem;
+        }
+
+        .daily-rate-isolated-row input[type="number"] {
+            font-weight: 800 !important;
+            font-size: 1.1rem !important;
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
         }
 
         /* Day Selection Matrix */
@@ -216,13 +232,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #000000;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 10px 0;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
+            padding: 12px 0;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #94a3b8;
             cursor: pointer;
             margin: 0;
             text-align: center;
@@ -237,31 +253,37 @@
             font-weight: 800;
         }
 
-        /* Cleaned Up Structural Layout Checkbox Container Alignment */
+        /* Fixed Studio-Aligned Custom Checkbox Structural Deck */
         .checkbox-container-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.15);
-            padding: 14px;
-            border-radius: 12px;
+            gap: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed var(--border-glass);
+            padding: 16px;
+            border-radius: 14px;
             cursor: pointer;
             user-select: none;
-            margin-top: 8px;
+            margin-top: 6px;
+            transition: border-color 0.2s ease;
+        }
+
+        .checkbox-container-row:hover {
+            border-color: rgba(255, 255, 255, 0.25);
         }
 
         .checkbox-container-row input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
-            background-color: #000000;
+            background-color: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 9px;
-            border-radius: 6px;
+            padding: 10px;
+            border-radius: 8px;
             display: inline-block;
             position: relative;
             cursor: pointer;
             outline: none;
+            flex-shrink: 0;
         }
 
         .checkbox-container-row input[type="checkbox"]:checked {
@@ -271,41 +293,43 @@
 
         .checkbox-container-row input[type="checkbox"]:checked:after {
             content: '\2714';
-            font-size: 11px;
+            font-size: 12px;
             position: absolute;
             top: 2px;
-            left: 3px;
+            left: 4px;
             color: #000000;
         }
 
         .checkbox-container-row span {
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             font-weight: 800;
             color: var(--text-main);
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.05em;
+            line-height: 1.4;
         }
 
-        /* Action Buttons */
+        /* Persistent Action Launcher Deck */
         .action-btn {
             width: 100%;
-            height: 50px;
+            height: 54px;
             border: none;
-            border-radius: 25px;
+            border-radius: 35px;
             font-weight: 800;
-            font-size: 0.85rem;
+            font-size: 0.92rem;
             text-transform: uppercase;
             letter-spacing: 2px;
             background-color: var(--primary);
             color: #000;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 24px;
         }
 
         .action-btn:hover {
-            filter: brightness(1.1);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
@@ -313,19 +337,20 @@
 
     <div class="container">
         <div class="header-nav">
-            <button class="back-btn" onclick="window.location.href='payslip.html'" title="BACK TO PAYSLIP">
-                <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+            <button class="back-btn" onclick="window.location.href='payslip.html'" title="RETURN TO ENGINE">
+                <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
             </button>
             <h1>PROFILE CONFIGURATION</h1>
-            <div style="width:36px;"></div>
+            <div style="width:40px;"></div>
         </div>
 
+        <!-- IDENTITY CARD BLOCK ROUTER -->
         <div class="profile-identity-card">
             <div class="profile-avatar-wrapper">
-                <img id="userDisplayAvatar" src="https://via.placeholder.com/150" alt="PROFILE PIC">
+                <img id="userDisplayAvatar" src="https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg" alt="AVATAR NODE">
             </div>
             <div class="profile-meta-info">
-                <div class="user-name" id="userDisplayName">LOADING IDENTITY...</div>
+                <div class="user-name" id="userDisplayName">LOADING PREFERENCES...</div>
                 <div class="user-role" id="userDisplayRole">AUTHENTICATED EMPLOYEE</div>
             </div>
         </div>
@@ -346,10 +371,11 @@
                 <input type="text" id="middleInitial" placeholder="E.G. A" maxlength="2" autocomplete="off">
             </div>
 
-            <div class="daily-rate-row">
+            <!-- OWN ISOLATED FULL-WIDTH ROW FOR DAILY RATE -->
+            <div class="daily-rate-isolated-row">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label style="color: var(--text-main)">DAILY RATE VALUE (₱)</label>
-                    <input type="number" id="dailyRate" placeholder="460.00" step="0.01" required autocomplete="off" style="border-color: rgba(255,255,255,0.35);">
+                    <label>DAILY RATE VALUE (₱)</label>
+                    <input type="number" id="dailyRate" placeholder="460.00" step="0.01" required autocomplete="off">
                 </div>
             </div>
 
@@ -392,6 +418,7 @@
                 </div>
             </div>
 
+            <!-- RESTORED & ALIGNED DOCK LUNCH INTERMISSION CONTROL -->
             <div class="form-group">
                 <label>REST PERIOD INTERMISSION</label>
                 <label class="checkbox-container-row" for="hasLunchBreak">
@@ -404,6 +431,7 @@
         </form>
     </div>
 
+    <!-- FIREBASE ARCHITECTURE CORE LOGIC COUPLING -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -422,8 +450,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Fetch user context from global scope
-        const userId = localStorage.getItem("userId") || "test_user_node";
+        const userId = localStorage.getItem("userId");
+        if (!userId) window.location.href = "login.html";
 
         window.toggleDeptCustom = function(value) {
             const customInput = document.getElementById('departmentCustom');
@@ -436,34 +464,52 @@
             }
         };
 
-        // Real-time theme loading from user account structure
-        async function fetchIdentityAndSettings() {
+        // Conversion Algorithms matching Studio environment mapping
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+
+        // Pull saved variables out of Account Identity Document nodes
+        async function fetchIdentityAndTheme() {
             try {
-                // First read user config details for names & colors
-                const accountRef = doc(db, "users", userId);
+                // Targeting collection 'accounts' based on Global architecture specifications
+                const accountRef = doc(db, "accounts", userId);
                 const accountSnap = await getDoc(accountRef);
 
                 if (accountSnap.exists()) {
                     const accountData = accountSnap.data();
+
+                    // Map Account Profile Top Display Section
+                    const customProfileName = accountData.customName || localStorage.getItem("userName") || "UNKNOWN USER";
+                    document.getElementById('userDisplayName').innerText = customProfileName.toUpperCase();
                     
-                    // Display User identity
-                    const fullName = `${accountData.lastName || ''}, ${accountData.firstName || ''}`.toUpperCase();
-                    document.getElementById('userDisplayName').innerText = fullName.replace(/^, /, '') || 'ANONYMOUS USER';
-                    if (accountData.role) {
-                        document.getElementById('userDisplayRole').innerText = accountData.role.toUpperCase();
-                    }
-                    if (accountData.avatar) {
-                        document.getElementById('userDisplayAvatar').src = accountData.avatar;
+                    if (accountData.avatarUrl) {
+                        document.getElementById('userDisplayAvatar').src = accountData.avatarUrl;
                     }
 
-                    // Dynamically set Global variable accent color if stored in account
-                    if (accountData.themeColor || accountData.color) {
-                        const targetColor = accountData.themeColor || accountData.color;
-                        document.documentElement.style.setProperty('--primary', targetColor);
+                    // Dynamically set Primary Accent values using stored node properties
+                    let dynamicHex = "#22c55e"; 
+                    if (accountData.btnValue) {
+                        if (accountData.btnValue.includes('hsl')) {
+                            const match = accountData.btnValue.match(/\d+/g);
+                            if (match && match.length >= 3) {
+                                dynamicHex = hslToHex(parseInt(match[0]), parseInt(match[1]), parseInt(match[2]));
+                            }
+                        } else {
+                            dynamicHex = accountData.btnValue;
+                        }
                     }
+                    document.documentElement.style.setProperty('--primary', dynamicHex);
                 }
 
-                // Populate operational settings document definitions
+                // Populate operational fields from salary metadata configurations
                 const settingsRef = doc(db, "salary_settings", userId);
                 const settingsSnap = await getDoc(settingsRef);
 
@@ -495,7 +541,7 @@
                     document.getElementById('saveBtn').innerText = "UPDATE CONFIGURATIONS";
                 }
             } catch (err) {
-                console.error("Errors resolving accounts dataset properties:", err);
+                console.error("System configuration parsing failure:", err);
             }
         }
 
@@ -527,13 +573,15 @@
                 alert("PROFILE SETTINGS ACCURATELY SYNCED SUCCESSFULLY.");
                 window.location.href = "payslip.html";
             } catch (error) {
-                console.error("Error committing records down to Firestore:", error);
+                console.error("Data synchronization error:", error);
                 alert("FAILED TRANSACTION SYNCHRONIZATION.");
             }
         };
 
-        if (window.lucide) window.lucide.createIcons();
-        fetchIdentityAndSettings();
+        window.onload = () => {
+            fetchIdentityAndTheme();
+            if (window.lucide) window.lucide.createIcons();
+        };
     </script>
 </body>
 </html>
