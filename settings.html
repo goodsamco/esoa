@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings — Salary Computer</title>
+    <!-- Inter Font & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ==========================================================================
+           1. DESIGN TOKENS & SYSTEM VARIABLES (MONOCHROME SINGLE THEME)
+           ========================================================================== */
+        :root {
+            --bg: #111111;
+            --surface: #1b1b1b;
+            --primary: #e5e5e5;
+            --success: #fbff00;
+            --text-main: #fafafa;
+            --glass: rgba(255, 255, 255, 0.08);
+            --modal-bg: rgba(17, 17, 17, 0.98);
+        }
+
+        /* ==========================================================================
+           2. BASE SYSTEM RESET
+           ========================================================================== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 10px 10vh 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================================
+           3. CORE LAYOUT CONTAINER
+           ========================================================================== */
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .back-btn {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        h1 {
+            font-size: 0.8rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin: 0;
+            font-weight: 800;
+            text-shadow: 0 0 12px rgba(255,255,255,0.2);
+        }
+
+        /* ==========================================================================
+           4. FIXED SINGLE-THEMED FORM STRUCTURES
+           ========================================================================== */
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--primary);
+            margin-left: 6px;
+            margin-bottom: 6px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="time"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            background: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+        }
+
+        /* Day Selection Matrix */
+        .day-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .day-chip {
+            position: relative;
+        }
+
+        .day-chip input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .day-chip label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 0;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            margin: 0;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .day-chip input[type="checkbox"]:checked + label {
+            background: var(--primary);
+            color: #000000;
+            border-color: var(--primary);
+            font-weight: 800;
+        }
+
+        /* Lunch break row alignment */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-container span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background-color: var(--primary);
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <div class="header-nav">
+            <button class="back-btn" onclick="window.location.href='payslip.html'" title="To Payslip View">
+                <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+            </button>
+            <h1>Profile Settings</h1>
+            <div style="width:36px;"></div> <!-- Spacer balancing alignment -->
+        </div>
+
+        <form id="settingsForm" onsubmit="event.preventDefault();">
+            <!-- Full Name Fields Split logically -->
+            <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" id="lastName" placeholder="e.g. Autajay" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>First Name</label>
+                <input type="text" id="firstName" placeholder="e.g. Dzey" required autocomplete="off">
+            </div>
+
+            <div class="form-check-row" style="display: grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div class="form-group">
+                    <label>Middle Initial</label>
+                    <input type="text" id="middleInitial" placeholder="e.g. A" maxlength="2" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Daily Rate (₱)</label>
+                    <input type="number" id="dailyRate" placeholder="460.00" step="0.01" required autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Position Configuration -->
+            <div class="form-group">
+                <label>Position</label>
+                <input type="text" id="position" placeholder="e.g. System Administrator" required autocomplete="off">
+            </div>
+
+            <!-- Department Selector & Native Typed Input Combo -->
+            <div class="form-group">
+                <label>Department</label>
+                <select id="departmentSelect" onchange="toggleDeptCustom(this.value)">
+                    <option value="Admin">Admin</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Custom">Other (Type Custom)</option>
+                </select>
+                <input type="text" id="departmentCustom" placeholder="Type Department Name" style="display:none; margin-top:8px;" autocomplete="off">
+            </div>
+
+            <!-- Schedule Target Matrix Selection -->
+            <div class="form-group">
+                <label>Schedule of Duties</label>
+                <div class="day-matrix">
+                    <div class="day-chip"><input type="checkbox" id="day-Mon" value="Monday"><label for="day-Mon">Mon</label></div>
+                    <div class="day-chip"><input type="checkbox" id="day-Tue" value="Tuesday"><label for="day-Tue">Tue</label></div>
+                    <div class="day-chip"><input type="checkbox" id="day-Wed" value="Wednesday"><label for="day-Wed">Wed</label></div>
+                    <div class="day-chip"><input type="checkbox" id="day-Thu" value="Thursday"><label for="day-Thu">Thu</label></div>
+                    <div class="day-chip"><input type="checkbox" id="day-Fri" value="Friday"><label for="day-Fri">Fri</label></div>
+                    <div class="day-chip"><input type="checkbox" id="day-Sat" value="Saturday"><label for="day-Sat">Sat</label></div>
+                    <div class="day-chip"><input type="checkbox" id="day-Sun" value="Sunday"><label for="day-Sun">Sun</label></div>
+                </div>
+            </div>
+
+            <!-- Duty Shift Ranges -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div class="form-group">
+                    <label>Time In</label>
+                    <input type="time" id="timeIn" value="08:00" required>
+                </div>
+                <div class="form-group">
+                    <label>Time Out</label>
+                    <input type="time" id="timeOut" value="17:00" required>
+                </div>
+            </div>
+
+            <!-- Lunch Break Automatic Window Restriction -->
+            <div class="form-group" style="margin-top: 5px;">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="hasLunchBreak" checked>
+                    <span>Include Lunch Break (12:00 PM - 1:00 PM)</span>
+                </label>
+            </div>
+
+            <!-- Primary Trigger Action -->
+            <button type="button" class="action-btn" id="saveBtn" onclick="saveSystemSettings()">Save Configurations</button>
+        </form>
+    </div>
+
+    <!-- Firebase Connection Integration Context -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Identical parameters inherited cleanly from your core operational context
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+            authDomain: "svls-289ee.firebaseapp.com",
+            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+            projectId: "svls-289ee",
+            storageBucket: "svls-289ee.firebasestorage.app",
+            messagingSenderId: "500705386198",
+            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+            measurementId: "G-5TNBMQ2HN5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Verification access routing checks
+        const userId = localStorage.getItem("userId") || "test_user_node";
+
+        window.toggleDeptCustom = function(value) {
+            const customInput = document.getElementById('departmentCustom');
+            if (value === 'Custom') {
+                customInput.style.display = 'block';
+                customInput.setAttribute('required', 'true');
+            } else {
+                customInput.style.display = 'none';
+                customInput.removeAttribute('required');
+            }
+        };
+
+        // Real-time population binding
+        async function loadProfileSettings() {
+            try {
+                const docRef = doc(db, "salary_settings", userId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('lastName').value = data.lastName || '';
+                    document.getElementById('firstName').value = data.firstName || '';
+                    document.getElementById('middleInitial').value = data.middleInitial || '';
+                    document.getElementById('dailyRate').value = data.dailyRate || '';
+                    document.getElementById('position').value = data.position || '';
+                    document.getElementById('timeIn').value = data.timeIn || '08:00';
+                    document.getElementById('timeOut').value = data.timeOut || '17:00';
+                    document.getElementById('hasLunchBreak').checked = data.hasLunchBreak !== false;
+
+                    if (data.department === 'Admin' || data.department === 'Finance') {
+                        document.getElementById('departmentSelect').value = data.department;
+                    } else if (data.department) {
+                        document.getElementById('departmentSelect').value = 'Custom';
+                        toggleDeptCustom('Custom');
+                        document.getElementById('departmentCustom').value = data.department;
+                    }
+
+                    if (data.dutyDays && Array.isArray(data.dutyDays)) {
+                        data.dutyDays.forEach(day => {
+                            const chip = document.querySelector(`.day-chip input[value="${day}"]`);
+                            if (chip) chip.checked = true;
+                        });
+                    }
+                    document.getElementById('saveBtn').innerText = "Update Configurations";
+                }
+            } catch (err) {
+                console.error("Errors restoring operational dataset metadata:", err);
+            }
+        }
+
+        window.saveSystemSettings = async function() {
+            const deptSelect = document.getElementById('departmentSelect').value;
+            const finalDept = deptSelect === 'Custom' ? document.getElementById('departmentCustom').value.trim() : deptSelect;
+
+            const selectedDays = [];
+            document.querySelectorAll('.day-matrix input[type="checkbox"]:checked').forEach(cb => {
+                selectedDays.push(cb.value);
+            });
+
+            const payload = {
+                lastName: document.getElementById('lastName').value.trim(),
+                firstName: document.getElementById('firstName').value.trim(),
+                middleInitial: document.getElementById('middleInitial').value.trim(),
+                dailyRate: parseFloat(document.getElementById('dailyRate').value) || 0,
+                position: document.getElementById('position').value.trim(),
+                department: finalDept,
+                dutyDays: selectedDays,
+                timeIn: document.getElementById('timeIn').value,
+                timeOut: document.getElementById('timeOut').value,
+                hasLunchBreak: document.getElementById('hasLunchBreak').checked,
+                updatedAt: Date.now()
+            };
+
+            try {
+                await setDoc(doc(db, "salary_settings", userId), payload, { merge: true });
+                alert("Profile settings accurately synced successfully.");
+                window.location.href = "payslip.html";
+            } catch (error) {
+                console.error("Error committing records down to Firestore:", error);
+                alert("Failed transaction synchronization.");
+            }
+        };
+
+        // Initialize icons and data binding lifecycle hooks
+        if (window.lucide) window.lucide.createIcons();
+        loadProfileSettings();
+    </script>
+</body>
+</html>
