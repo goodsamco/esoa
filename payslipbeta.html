@@ -1170,188 +1170,100 @@
             }
         };
 
-        /* ==========================================================================
-           6. COMPREHENSIVE COMMERCIAL SLIP SYSTEM PREVIEW (MINIMAL COLUMN LAYOUT)
-           ========================================================================== */
-        function generateCommercialReceiptLayout(m) {
-            const printContainer = document.getElementById('print-render-matrix');
-            const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
-            const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
+    /* ==========================================================================
+   6. COMPREHENSIVE COMMERCIAL SLIP SYSTEM PREVIEW (MINIMAL COLUMN LAYOUT)
+   ========================================================================== */
+function generateCommercialReceiptLayout(m) {
+    const printContainer = document.getElementById('print-render-matrix');
+    const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
+    const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
 
-            // Generate daily rows inside clean independent table rows matching specified column width ratios
-            let dailyRowsHtml = "";
-            m.structuralDailyArrayLogs.forEach(row => {
-                dailyRowsHtml += `
-                    <tr style="border-bottom: 1px dashed #000;">
-                        <td style="width:12%; font-weight:700; padding:3px 2px; text-align:left;">${row.date}</td>
-                        <td style="width:10%; padding:3px 2px; text-align:center;">${row.in1 || '-'}</td>
-                        <td style="width:10%; padding:3px 2px; text-align:center;">${row.out1 || '-'}</td>
-                        <td style="width:10%; padding:3px 2px; text-align:center;">${row.inOT !== '-' ? row.inOT : '-'}</td>
-                        <td style="width:10%; padding:3px 2px; text-align:center;">${row.outOT !== '-' ? row.outOT : '-'}</td>
-                        <td style="width:10%; padding:3px 2px; text-align:center;">${row.lates > 0 ? `${row.lates}m` : '-'}</td>
-                        <td style="width:12%; padding:3px 2px; text-align:center;">${row.undertime > 0 ? `${row.undertime}m` : '-'}</td>
-                        <td style="width:13%; text-align: right; padding:3px 2px; font-weight:600;">₱${row.gross.toFixed(2)}</td>
-                        <td style="width:13%; text-align: right; padding:3px 2px;">₱${row.deductions.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
+    let dailyRowsHtml = "";
+    m.structuralDailyArrayLogs.forEach(row => {
+        dailyRowsHtml += `
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 4px; font-weight:700;">${row.date}</td>
+                <td style="padding: 4px;">${row.in1} / ${row.out1}</td>
+                <td style="padding: 4px;">${row.inOT !== '-' ? `${row.inOT}/${row.outOT}` : '-'}</td>
+                <td style="padding: 4px; color:#555;">${row.lates > 0 ? `${row.lates}m` : '-'} / ${row.undertime > 0 ? `${row.undertime}m` : '-'}</td>
+                <td style="padding: 4px; text-align: right;">₱${row.gross.toFixed(2)}</td>
+                <td style="padding: 4px; text-align: right; color:#c00;">₱${row.deductions.toFixed(2)}</td>
+            </tr>
+        `;
+    });
 
-            printContainer.innerHTML = `
-                <div class="print-sheet" style="font-size:10px; width:100%; max-width:1050px; margin:0 auto; padding:0; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
-                    
-                    <div style="border:1px solid #000; background:#fff; padding:6px; margin-bottom:10px; box-sizing:border-box;">
-                        <div style="border-bottom:1px solid #000; padding-bottom:3px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:flex-end;">
-                            <div>
-                                <span style="font-size:11px; font-weight:800; letter-spacing:0.5px;">EMPLOYEE INFORMATION</span>
-                                <span style="font-size:9px; margin-left:10px; color:#000;">[ID: ${userProfile.name.toUpperCase()}]</span>
-                            </div>
-                            <div style="font-size:8px; color:#000;">PRINTED: ${timestampStr}</div>
-                        </div>
-                        <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:10px;">
-                            <div>
-                                <div style="font-size:7px; font-weight:800;">EMPLOYEE IDENTITY</div>
-                                <div style="font-weight:800; font-size:11px; margin-top:1px;">${userProfile.customName}</div>
-                                <div style="font-size:9px; margin-top:1px;">${userProfile.email.toUpperCase()}</div>
-                            </div>
-                            <div>
-                                <div style="font-size:7px; font-weight:800;">ASSIGNED STATION</div>
-                                <div style="font-weight:700; margin-top:1px;">${(salarySettings.position || 'Staff').toUpperCase()}</div>
-                                <div style="margin-top:1px;">${(salarySettings.department || 'Operations').toUpperCase()}</div>
-                            </div>
-                            <div>
-                                <div style="font-size:7px; font-weight:800;">CYCLE COVERAGE WINDOW</div>
-                                <div style="font-weight:700; margin-top:1px;">${dateRangeLabel}</div>
-                                <div style="font-size:8px; margin-top:1px;">Rate: ₱${parseFloat(salarySettings.dailyRate || 460).toFixed(2)} (Days: ${m.actualDaysWorkedCounter})</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1.55fr 1fr; gap: 0; border: 1px solid #000; box-sizing:border-box; align-items: stretch;">
-                        
-                        <div style="padding: 8px; border-right: 1px solid #000; box-sizing:border-box;">
-                            <div style="font-weight:800; font-size:11px; border-bottom:1px solid #000; padding-bottom:3px; margin-bottom:8px; letter-spacing:0.5px;">DAILY ATTENDANCE</div>
-                            <table style="width:100%; border-collapse:collapse; font-size:9px; table-layout: fixed;">
-                                <thead>
-                                    <tr style="border-bottom:1px solid #000;">
-                                        <th style="width:12%; padding:4px 2px; text-align:left; font-weight:800;">DATE</th>
-                                        <th style="width:10%; padding:4px 2px; text-align:center; font-weight:800;">TIME IN</th>
-                                        <th style="width:10%; padding:4px 2px; text-align:center; font-weight:800;">TIME OUT</th>
-                                        <th style="width:10%; padding:4px 2px; text-align:center; font-weight:800;">OT IN</th>
-                                        <th style="width:10%; padding:4px 2px; text-align:center; font-weight:800;">OT OUT</th>
-                                        <th style="width:10%; padding:4px 2px; text-align:center; font-weight:800;">LATES</th>
-                                        <th style="width:12%; padding:4px 2px; text-align:center; font-weight:800;">UNDERTIME</th>
-                                        <th style="width:13%; padding:4px 2px; text-align:right; font-weight:800;">GROSS</th>
-                                        <th style="width:13%; padding:4px 2px; text-align:right; font-weight:800;">DEDUCTION</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${dailyRowsHtml}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div style="padding: 8px; background: #fff; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between;">
-                            <div>
-                                <div style="font-weight:800; font-size:11px; border-bottom:1px solid #000; padding-bottom:3px; margin-bottom:8px; letter-spacing:0.5px;">PAYSLIP SUMMARY</div>
-                                
-                                <div style="margin-bottom:10px;">
-                                    <div style="font-weight:800; font-size:8px; margin-bottom:4px; text-transform:uppercase;">Earnings</div>
-                                    
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">BASIC ACCRUED BASE</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.totalBasicEarnings.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">OVERTIME PAY EXTS</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.totalOvertimePay.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">DOUBLE PAY ADDITIONS</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.doublePay.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">REIMBURSEMENTS / STIPENDS</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.reimbursements.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">MISCELLANEOUS ADDITIONS</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.otherEarn.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; font-weight:800; margin-top:4px; border-top:1px dashed #000; padding-top:3px;">
-                                        <span style="white-space: nowrap;">GROSS TOTAL ACCRUAL</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span>₱${m.grossPay.toFixed(2)}</span>
-                                    </div>
-                                </div>
-
-                                <div style="margin-bottom:10px;">
-                                    <div style="font-weight:800; font-size:8px; margin-bottom:4px; text-transform:uppercase;">Deductions</div>
-                                    
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">SSS PREMIUM CONTRIBUTION</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.sss.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">PHIC SYSTEM MEDICAL</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.phic.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">HDMF HOUSING MUTUAL</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.hdmf.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">LATE RUNS / UNDERTIME CUTS</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.totalDeductionPenalties.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3px;">
-                                        <span style="white-space: nowrap;">CASH ADVANCES BALANCE</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span style="font-weight:700;">₱${m.advances.toFixed(2)}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; font-weight:800; margin-top:4px; border-top:1px dashed #000; padding-top:3px;">
-                                        <span style="white-space: nowrap;">TOTAL LIQUIDATION</span>
-                                        <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                        <span>₱${m.totalDeductions.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="border-top:1px dashed #000; padding-top:6px; margin-top:auto;">
-                                <div style="display:flex; justify-content:space-between; align-items:flex-end; font-weight:900; font-size:12px;">
-                                    <span>NET PAY</span>
-                                    <span style="flex-grow:1; border-bottom:1px dotted #000; margin:0 4px; position:relative; bottom:2px;"></span>
-                                    <span>₱${m.netPay.toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; margin-top:25px; font-size:8px; box-sizing:border-box;">
-                        <div style="width:180px; text-align:center;">
-                            <div style="border-top:1px solid #000; padding-top:2px; font-weight:700;">SYSTEM CLEARING AGENT</div>
-                            <div style="color:#000; font-size:7px;">PREPARED & AUDITED ELECTRONICALLY</div>
-                        </div>
-                        <div style="width:180px; text-align:center;">
-                            <div style="border-top:1px solid #000; padding-top:2px; font-weight:700;">${userProfile.customName}</div>
-                            <div style="color:#000; font-size:7px;">RECIPIENT SIGNATURE ACKNOWLEDGEMENT</div>
-                        </div>
-                    </div>
+    printContainer.innerHTML = `
+        <div class="print-sheet" style="font-size:10px; width:100%; max-width:800px; margin:0 auto; padding:10px; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
+            
+            <div style="border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:12px; text-align:center;">
+                <div style="font-size:16px; font-weight:900; letter-spacing:1px;">PAYSLIP STATEMENT</div>
+                <div style="font-size:10px;">Payroll Period: ${dateRangeLabel}</div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; background:#f9f9f9; padding:8px; border:1px solid #ddd;">
+                <div>
+                    <b>NAME:</b> ${userProfile.customName}<br>
+                    <b>ID:</b> ${userProfile.name.toUpperCase()}<br>
+                    <b>EMAIL:</b> ${userProfile.email.toUpperCase()}
                 </div>
-            `;
-        }
+                <div>
+                    <b>POSITION:</b> ${(salarySettings.position || 'Staff').toUpperCase()}<br>
+                    <b>DEPT:</b> ${(salarySettings.department || 'Operations').toUpperCase()}<br>
+                    <b>DAYS WORKED:</b> ${m.actualDaysWorkedCounter}
+                </div>
+            </div>
 
-        window.triggerPrintPreviewPipeline = function() {
-            window.print();
-        };
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                <table style="width:100%; border-collapse:collapse; font-size:9px;">
+                    <thead>
+                        <tr style="background:#000; color:#fff; font-weight:800;">
+                            <th style="padding:4px; text-align:left;">DATE</th>
+                            <th style="padding:4px; text-align:left;">TIME</th>
+                            <th style="padding:4px; text-align:left;">OT</th>
+                            <th style="padding:4px; text-align:left;">LATE/UT</th>
+                            <th style="padding:4px; text-align:right;">GROSS</th>
+                            <th style="padding:4px; text-align:right;">DED.</th>
+                        </tr>
+                    </thead>
+                    <tbody>${dailyRowsHtml}</tbody>
+                </table>
+
+                <table style="width:100%; font-size:10px; border-collapse:collapse;">
+                    <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
+                    <tbody>
+                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${m.totalBasicEarnings.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px 0;">OT</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${m.totalIncentives.toFixed(2)}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Other</td><td style="text-align:right;">₱${m.otherEarn.toFixed(2)}</td></tr>
+                        <tr><td style="padding:4px 0;"><b>GROSS</b></td><td style="text-align:right;"><b>₱${m.grossPay.toFixed(2)}</b></td></tr>
+                        <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${m.sss.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${m.phic.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${m.hdmf.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px 0;">Late/UT</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Advances</td><td style="text-align:right;">₱${m.advances.toFixed(2)}</td></tr>
+                        <tr><td style="padding:4px 0;"><b>TOTAL DED.</b></td><td style="text-align:right; color:#c00;"><b>₱${m.totalDeductions.toFixed(2)}</b></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top:15px; border:2px solid #000; padding:10px; text-align:center; background:#eee;">
+                <span style="font-weight:900; font-size:14px;">NET DISBURSABLE PAY: ₱${m.netPay.toFixed(2)}</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:10px;">
+                <div style="text-align:center;">________________________<br>Payroll Administrator</div>
+                <div style="text-align:center;">________________________<br>Employee Signature</div>
+            </div>
+            
+            <div style="margin-top:10px; font-size:8px; color:#888; text-align:center;">PRINTED: ${timestampStr}</div>
+        </div>
+    `;
+}
+
+// Ensure this trigger is in your script
+window.triggerPrintPreviewPipeline = function() {
+    window.print();
+};
         
         /* ==========================================================================
            7. GRANULAR CSV EXPORT PIPELINE ARCHITECTURE (COMPREHENSIVE CELLS MAPPED)
