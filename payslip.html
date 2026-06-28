@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAYSLIP ENGINE — SALARY COMPUTER</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Inter Font, Lucide Icons & html2pdf -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -389,7 +390,7 @@
         }
 
         /* ==========================================================================
-           5. MONOCHROME PRINT SHEET ENGINE
+           5. MONOCHROME COMMERCIAL RECEIPT SHEET ENGINE
            ========================================================================== */
         #print-render-matrix {
             display: none;
@@ -411,41 +412,41 @@
 
         .print-sheet {
             width: 8.5in;
-            height: 5.5in;
-            padding: 0.3in;
+            padding: 0.4in;
             box-sizing: border-box;
             background: #fff;
             color: #000;
-            font-family: 'Inter', sans-serif;
-            font-size: 10px;
-            line-height: 1.2;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            line-height: 1.3;
         }
 
         .print-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .print-table th, .print-table td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 5px 6px;
             text-transform: uppercase;
+            text-align: left;
         }
 
         .print-table th {
-            background: #f0f0f0;
+            background: #e5e5e5;
             font-weight: 800;
-            font-size: 9px;
+            font-size: 10px;
         }
 
         .print-header-banner {
             text-align: center;
             font-weight: 800;
-            font-size: 12px;
+            font-size: 14px;
             border: 2px solid #000;
-            padding: 6px;
-            margin-bottom: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
             letter-spacing: 1px;
         }
 
@@ -453,17 +454,20 @@
             background: #000;
             color: #fff;
             font-weight: 800;
-            padding: 3px 6px;
-            font-size: 9px;
+            padding: 5px 6px;
+            font-size: 11px;
             letter-spacing: 0.05em;
             text-align: center;
             text-transform: uppercase;
+            margin-top: 10px;
+            margin-bottom: 4px;
         }
     </style>
 </head>
 <body>
 
     <div class="engine-container">
+        <!-- TOP NAVIGATION ROW -->
         <div class="top-nav-deck">
             <button class="nav-btn" onclick="window.location.href='esoa.html'" title="RETURN">
                 <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
@@ -472,14 +476,19 @@
             <div style="width:40px;"></div>
         </div>
 
+        <!-- PROFILE META CARD HEADER BLOCK -->
         <div class="profile-badge-deck">
             <div class="profile-meta-row">
-                <span class="lbl">EMPLOYEE NAME</span>
-                <span class="val" id="profNameDisplay">DZEY AUTAJAY</span>
+                <span class="lbl">COMPLETE SETTINGS NAME</span>
+                <span class="val" id="profSettingsNameDisplay">-</span>
+            </div>
+            <div class="profile-meta-row">
+                <span class="lbl">ACCOUNT USERNAME</span>
+                <span class="val" id="profNameDisplay">-</span>
             </div>
             <div class="profile-meta-row">
                 <span class="lbl">EMAIL ADDRESS</span>
-                <span class="val" id="profEmailDisplay">AUTAJAYDZEY@GMAIL.COM</span>
+                <span class="val" id="profEmailDisplay">-</span>
             </div>
             <div class="profile-meta-row">
                 <span class="lbl">POSITION SYSTEM</span>
@@ -491,10 +500,12 @@
             </div>
         </div>
 
+        <!-- PAYSLIP TARGET SELECTION -->
         <div class="form-block">
             <label>PAYSLIP TIME PERIOD CLOSURE</label>
             <select id="periodSelector" onchange="processPeriodEngineChange()">
-                </select>
+                <!-- Populated dynamically via controller framework -->
+            </select>
         </div>
 
         <div class="form-block">
@@ -502,12 +513,30 @@
             <input type="text" id="payableRangeDisplay" readonly style="opacity: 0.8; background: rgba(0,0,0,0.2);">
         </div>
 
+        <!-- CUSTOM ADAPTIVE CALENDAR GRID MODULE -->
         <div class="form-block">
             <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
             <div class="calendar-deck" id="calendarNodeGrid">
-                </div>
+                <!-- Dynamically configured loop elements -->
+            </div>
         </div>
 
+        <!-- CUSTOM ADDITIONAL INCENTIVES MODULE -->
+        <div class="form-block" style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass); margin-bottom: 20px;">
+            <label style="margin-bottom: 12px; display: block;">EXTRA CYCLE INCENTIVES</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">DOUBLE PAY ADDITIONS</label>
+                    <input type="number" id="inputDoublePay" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+                <div>
+                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">REIMBURSEMENTS / ALLOWANCE</label>
+                    <input type="number" id="inputReimbursements" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTRIBUTION CONTROL PANEL MODULE -->
         <div class="form-block" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass);">
             <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTION INPUTS</label>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
@@ -536,6 +565,7 @@
             </div>
         </div>
 
+        <!-- LIVE EARNINGS COMPILATION DISPLAY BOARD -->
         <div class="form-block">
             <label>SALARY DETAILS METRIC BREAKDOWN</label>
             <table class="matrix-table">
@@ -545,6 +575,7 @@
                 <tbody>
                     <tr><td>BASIC PAY RUN</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
                     <tr><td>OVERTIME EXTENSION PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
+                    <tr><td>EXTRA CYCLE INCENTIVES</td><td style="text-align: right; color:#fff;" id="breakdownIncentives">₱0.00</td></tr>
                     <tr><td>OTHERS (MISC ADDS)</td><td style="text-align: right; color:#fff;" id="breakdownOtherEarn">₱0.00</td></tr>
                     <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
                         <td>GROSS PAY VALUE</td><td style="text-align: right; color:var(--primary);" id="breakdownGross">₱0.00</td></tr>
@@ -567,27 +598,30 @@
             </table>
         </div>
 
+        <!-- DYNAMIC LIQUIDATED NET PAY TARGET DECK -->
         <div class="net-pay-display-deck" id="netPayWrapperDeck">
             <div class="lbl">NET DISBURSABLE PAYOUT</div>
             <div class="val-stream" id="breakdownNet">₱0.00</div>
             <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">METRIC CYCLE RECORD LOCKED</div>
         </div>
 
+        <!-- ENGINE ACTION TRANSACTIONS -->
         <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
             <button class="engine-btn primary-btn" onclick="commitTimelineTransactionToCloud()">
                 <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE OR UPDATE ENGINE TRANSACTIONS
             </button>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <button class="engine-btn" onclick="triggerNativePrintPipeline()">
-                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT MATRIX
-                </button>
                 <button class="engine-btn" onclick="triggerPDFExportPipeline()">
-                    <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT PDF
+                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT OR EXPORT PDF
+                </button>
+                <button class="engine-btn" onclick="triggerCSVExportPipeline()">
+                    <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- SYSTEM DATA CAPTURE MODAL SYSTEM -->
     <div class="modal-overlay" id="timeConfigModalOverlay">
         <div class="modal-box">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
@@ -665,8 +699,10 @@
         </div>
     </div>
 
+    <!-- HARD-COPY MONOCHROME COMMERCIAL RECEIPT CONTAINER -->
     <div id="print-render-matrix"></div>
 
+    <!-- MOTOR INTEGRATION LOGIC ARCHITECTURE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -689,7 +725,8 @@
 
         // Hybrid Profile Sync Framework
         let userProfile = { 
-            name: localStorage.getItem("customName") || "Dzey Autajay", 
+            name: localStorage.getItem("username") || "DZEY_USER",
+            customName: localStorage.getItem("customName") || "Dzey Autajay", 
             email: localStorage.getItem("userEmail") || "autajaydzey@gmail.com" 
         };
         let salarySettings = { dailyRate: 460, timeIn: "08:00", timeOut: "17:00", position: "Billing Clerk", department: "Finance" };
@@ -701,24 +738,22 @@
 
         async function bootEngineCore() {
             try {
-                // Instantly sync layout with local variables to prevent blank profiles on fast loading
-                document.getElementById('profNameDisplay').innerText = userProfile.name.toUpperCase();
-                document.getElementById('profEmailDisplay').innerText = userProfile.email.toUpperCase();
-                document.getElementById('profPosDisplay').innerText = salarySettings.position.toUpperCase();
-                document.getElementById('profDeptDisplay').innerText = salarySettings.department.toUpperCase();
+                // Instantly update UI fields safely with defaults
+                updateUIProfileElements();
 
                 const accSnap = await getDoc(doc(db, "accounts", userId));
                 if (accSnap.exists()) {
-                    userProfile = accSnap.data();
-                    document.getElementById('profNameDisplay').innerText = (userProfile.customName || userProfile.name || "Dzey Autajay").toUpperCase();
-                    document.getElementById('profEmailDisplay').innerText = (userProfile.email || "autajaydzey@gmail.com").toUpperCase();
+                    const d = accSnap.data();
+                    userProfile.name = d.username || d.name || userProfile.name;
+                    userProfile.customName = d.customName || userProfile.customName;
+                    userProfile.email = d.email || userProfile.email;
+                    updateUIProfileElements();
                 }
 
                 const setSnap = await getDoc(doc(db, "salary_settings", userId));
                 if (setSnap.exists()) {
                     salarySettings = setSnap.data();
-                    document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
-                    document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
+                    updateUIProfileElements();
                 }
 
                 const localBtnVal = localStorage.getItem("btnValue") || userProfile.btnValue;
@@ -738,6 +773,8 @@
                     if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
                     if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
                     if (loadedData.inputOtherEarn) document.getElementById('inputOtherEarn').value = loadedData.inputOtherEarn;
+                    if (loadedData.inputDoublePay) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay;
+                    if (loadedData.inputReimbursements) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements;
                 }
                 
                 renderActivePeriodCalendarGrid();
@@ -746,6 +783,14 @@
             } catch (err) {
                 console.error("Setup error: ", err);
             }
+        }
+
+        function updateUIProfileElements() {
+            document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName.toUpperCase();
+            document.getElementById('profNameDisplay').innerText = userProfile.name.toUpperCase();
+            document.getElementById('profEmailDisplay').innerText = userProfile.email.toUpperCase();
+            document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
+            document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
         }
 
         function buildDropdownTargetIntervals() {
@@ -766,7 +811,6 @@
                 selector.appendChild(optEnd);
             });
 
-            // Auto-detect matching current date context query (June 2026)
             const today = new Date();
             if (today.getFullYear() === CURRENT_YEAR) {
                 const targetDay = today.getDate() <= 15 ? 15 : new Date(CURRENT_YEAR, today.getMonth() + 1, 0).getDate();
@@ -785,7 +829,6 @@
 
             activeDatesArray = [];
 
-            // 15th Payout Period: spans 29th of previous month to 14th of current month
             if (day === 15) {
                 let prevMonthDate = new Date(year, monthIdx - 1, 29);
                 let currentTarget = new Date(prevMonthDate);
@@ -794,7 +837,6 @@
                     currentTarget.setDate(currentTarget.getDate() + 1);
                 }
             } else {
-                // EOM Payout Period: spans 13th of current month to 28th of current month
                 let currentTarget = new Date(year, monthIdx, 13);
                 while (currentTarget <= new Date(year, monthIdx, 28)) {
                     activeDatesArray.push(new Date(currentTarget));
@@ -819,15 +861,11 @@
 
             let lockActive = true;
 
-            // Target period is the 15th cycle (runs from 29th of previous month to 14th of current month)
             if (targetDay === 15) {
-                // Stays open throughout the window up until the 16th day after passes
                 if (currentYearNum === year && currentMonthNum === monthIdx && currentDayNum <= 16) {
                     lockActive = false;
                 }
             } else {
-                // Target period is End of Month cycle (runs from 13th of current month to 28th of current month)
-                // Stays open throughout the window up until the 1st day of the next month passes
                 if (currentYearNum === year) {
                     if (currentMonthNum === monthIdx && currentDayNum >= 13) {
                         lockActive = false;
@@ -858,7 +896,6 @@
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const day = String(dateObj.getDate()).padStart(2, '0');
                 const dateKey = `${year}-${month}-${day}`;
-
                 const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
                 const cell = document.createElement('div');
@@ -882,7 +919,6 @@
         window.runRealtimeMetricsDeductionEngine = function() {
             const schedIn = salarySettings.timeIn || "08:00";
             const schedOut = salarySettings.timeOut || "17:00";
-
             const in1 = document.getElementById('modalTimeIn1').value;
             const out1 = document.getElementById('modalTimeOut1').value;
 
@@ -892,17 +928,12 @@
             if (in1) {
                 const schedInMins = timeStringToMinutes(schedIn);
                 const actualInMins = timeStringToMinutes(in1);
-                if (actualInMins > schedInMins) {
-                    lateMinutes += (actualInMins - schedInMins);
-                }
+                if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
             }
-
             if (out1) {
                 const schedOutMins = timeStringToMinutes(schedOut);
                 const actualOutMins = timeStringToMinutes(out1);
-                if (actualOutMins < schedOutMins) {
-                    undertimeMinutes += (schedOutMins - actualOutMins);
-                }
+                if (actualOutMins < schedOutMins) undertimeMinutes += (schedOutMins - actualOutMins);
             }
 
             document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
@@ -1011,46 +1042,64 @@
             const schedInStr = salarySettings.timeIn || "08:00";
             const schedOutStr = salarySettings.timeOut || "17:00";
 
+            let structuralDailyArrayLogs = [];
+
             activeDatesArray.forEach(dateObj => {
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const day = String(dateObj.getDate()).padStart(2, '0');
                 const dateKey = `${year}-${month}-${day}`;
 
+                let dayGross = 0;
+                let dayDed = 0;
+                let dayLateMins = 0;
+                let dayUndertimeMins = 0;
+
                 if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
                     actualDaysWorkedCounter++;
                     totalBasicEarnings += dailyRate;
+                    dayGross += dailyRate;
 
                     const rec = timelineBuffer[dateKey];
-                    let shiftLateMins = 0;
-                    let shiftUndertimeMins = 0;
-
                     const schedInMins = timeStringToMinutes(schedInStr);
                     const actInMins = timeStringToMinutes(rec.in1);
-                    if (actInMins > schedInMins) {
-                        shiftLateMins += (actInMins - schedInMins);
-                    }
+                    if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
 
                     const schedOutMins = timeStringToMinutes(schedOutStr);
                     const actOutMins = timeStringToMinutes(rec.out1);
-                    if (actOutMins < schedOutMins) {
-                        shiftUndertimeMins += (schedOutMins - actOutMins);
-                    }
+                    if (actOutMins < schedOutMins) dayUndertimeMins = (schedOutMins - actOutMins);
 
-                    totalDeductionPenalties += (shiftLateMins + shiftUndertimeMins) * minuteRate;
+                    dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
+                    totalDeductionPenalties += dayDed;
 
                     if (rec.hasOT && rec.inOT && rec.outOT) {
                         const otIn = timeStringToMinutes(rec.inOT);
                         const otOut = timeStringToMinutes(rec.outOT);
                         if (otOut > otIn) {
-                            const totalOTMins = otOut - otIn;
-                            if (totalOTMins >= 30) {
-                                totalOvertimePay += totalOTMins * minuteRate;
+                            const otMins = otOut - otIn;
+                            if (otMins >= 30) {
+                                const otPay = otMins * minuteRate;
+                                totalOvertimePay += otPay;
+                                dayGross += otPay;
                             }
                         }
                     }
                 }
+
+                structuralDailyArrayLogs.push({
+                    date: dateKey,
+                    in1: timelineBuffer[dateKey]?.in1 || '-',
+                    out1: timelineBuffer[dateKey]?.out1 || '-',
+                    lates: dayLateMins,
+                    undertime: dayUndertimeMins,
+                    gross: dayGross,
+                    deductions: dayDed
+                });
             });
+
+            const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
+            const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
+            const totalIncentives = doublePay + reimbursements;
 
             const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
             const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
@@ -1058,12 +1107,13 @@
             const advances = parseFloat(document.getElementById('inputAdvances').value) || 0;
             const otherEarn = parseFloat(document.getElementById('inputOtherEarn').value) || 0;
 
-            const grossPay = totalBasicEarnings + totalOvertimePay + otherEarn;
+            const grossPay = totalBasicEarnings + totalOvertimePay + totalIncentives + otherEarn;
             const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
             const netPay = grossPay - totalDeductions;
 
             document.getElementById('breakdownBasic').innerText = `₱${totalBasicEarnings.toFixed(2)}`;
             document.getElementById('breakdownOT').innerText = `₱${totalOvertimePay.toFixed(2)}`;
+            document.getElementById('breakdownIncentives').innerText = `₱${totalIncentives.toFixed(2)}`;
             document.getElementById('breakdownOtherEarn').innerText = `₱${otherEarn.toFixed(2)}`;
             document.getElementById('breakdownGross').innerText = `₱${grossPay.toFixed(2)}`;
 
@@ -1075,10 +1125,10 @@
             document.getElementById('breakdownTotalDed').innerText = `₱${totalDeductions.toFixed(2)}`;
             document.getElementById('breakdownNet').innerText = `₱${netPay.toFixed(2)}`;
 
-            generatePrintMatrixHtmlTemplate({
-                totalBasicEarnings, totalOvertimePay, otherEarn, grossPay,
+            generateCommercialReceiptLayout({
+                totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, otherEarn, grossPay,
                 sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
-                actualDaysWorkedCounter
+                actualDaysWorkedCounter, structuralDailyArrayLogs
             });
         };
 
@@ -1091,9 +1141,10 @@
                     inputHDMF: document.getElementById('inputHDMF').value,
                     inputAdvances: document.getElementById('inputAdvances').value,
                     inputOtherEarn: document.getElementById('inputOtherEarn').value,
+                    inputDoublePay: document.getElementById('inputDoublePay').value,
+                    inputReimbursements: document.getElementById('inputReimbursements').value,
                     updatedAt: Date.now()
                 };
-
                 await setDoc(doc(db, "salary_transactions", `${userId}_current`), payload, { merge: true });
                 alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
             } catch (err) {
@@ -1101,150 +1152,161 @@
             }
         };
 
-        function generatePrintMatrixHtmlTemplate(metrics) {
+        function generateCommercialReceiptLayout(m) {
             const printContainer = document.getElementById('print-render-matrix');
             const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
 
-            const name = (userProfile.customName || userProfile.name || "Dzey Autajay").toUpperCase();
-            const position = (salarySettings.position || 'Billing Clerk').toUpperCase();
-            const department = (salarySettings.department || 'Finance').toUpperCase();
-            const dailyRate = parseFloat(salarySettings.dailyRate || 460).toFixed(2);
-
-            let timeRowsHtml = "";
-            activeDatesArray.forEach(dateObj => {
-                const year = dateObj.getFullYear();
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const dateKey = `${year}-${month}-${day}`;
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'LONG' }).toUpperCase();
-
-                if (timelineBuffer[dateKey]) {
-                    const rec = timelineBuffer[dateKey];
-                    timeRowsHtml += `
-                        <tr>
-                            <td>${month}/${day}/${year}</td>
-                            <td>${dayName}</td>
-                            <td>${rec.in1 || '-'}</td>
-                            <td>${rec.out1 || '-'}</td>
-                            <td>${rec.in2 || '-'}</td>
-                            <td>${rec.out2 || '-'}</td>
-                            <td>${rec.inOT || '-'}</td>
-                            <td>${rec.outOT || '-'}</td>
-                            <td>${rec.splitReason || '-'}</td>
-                        </tr>
-                    `;
-                } else {
-                    timeRowsHtml += `
-                        <tr>
-                            <td>${month}/${day}/${year}</td>
-                            <td>${dayName}</td>
-                            <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-                        </tr>
-                    `;
-                }
+            let dailyRowsHtml = "";
+            m.structuralDailyArrayLogs.forEach(row => {
+                dailyRowsHtml += `
+                    <tr>
+                        <td>${row.date}</td>
+                        <td>${row.in1} / ${row.out1}</td>
+                        <td>${row.lates}m</td>
+                        <td>${row.undertime}m</td>
+                        <td>₱${row.gross.toFixed(2)}</td>
+                        <td>₱${row.deductions.toFixed(2)}</td>
+                    </tr>
+                `;
             });
 
             printContainer.innerHTML = `
                 <div class="print-sheet">
                     <div class="print-header-banner">
-                        M'LANG DIGITAL REVENUE ENGINE COMPILATION SYSTEM
-                        <div style="font-size:8px; font-weight:400; margin-top:2px;">WORK LOG TRANSACTION RECORD INDEX</div>
+                        OFFICIAL TIME & PAYSLIP COMMERCIAL RECEIPT
+                        <div style="font-size:10px; font-weight:400; margin-top:4px; font-family:monospace;">MONOCHROME AUDIT STATEMENT SYSTEM</div>
                     </div>
                     
+                    <div class="print-sub-section-title">USER IDENTITY & PARAMETERS</div>
                     <table class="print-table">
-                        <tr>
-                            <td><strong>EMPLOYEE NAME:</strong> ${name}</td>
-                            <td><strong>PAYABLE DAYS RANGE:</strong> ${dateRangeLabel}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>POSITION:</strong> ${position}</td>
-                            <td><strong>DAYS RENDERED:</strong> ${metrics.actualDaysWorkedCounter}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>DEPARTMENT:</strong> ${department}</td>
-                            <td><strong>DAILY BASE RATE:</strong> ₱${dailyRate}</td>
-                        </tr>
+                        <tr><td><strong>COMPLETE SETTINGS NAME:</strong></td><td>${userProfile.customName.toUpperCase()}</td></tr>
+                        <tr><td><strong>ACCOUNT USERNAME:</strong></td><td>${userProfile.name.toUpperCase()}</td></tr>
+                        <tr><td><strong>EMAIL ADDRESS:</strong></td><td>${userProfile.email.toUpperCase()}</td></tr>
+                        <tr><td><strong>ASSIGNED POSITION:</strong></td><td>${(salarySettings.position || 'Billing Clerk').toUpperCase()}</td></tr>
+                        <tr><td><strong>DEPARTMENT ASSIGNED:</strong></td><td>${(salarySettings.department || 'Finance').toUpperCase()}</td></tr>
+                        <tr><td><strong>BASE DAILY CONTEXT:</strong></td><td>₱${parseFloat(salarySettings.dailyRate || 460).toFixed(2)} (Days Filed: ${m.actualDaysWorkedCounter})</td></tr>
+                        <tr><td><strong>CYCLE PAYABLE WINDOW:</strong></td><td>${dateRangeLabel}</td></tr>
                     </table>
 
-                    <div class="print-sub-section-title">DETAILED TIMELINE ENTRIES</div>
-                    <table class="print-table" style="font-size: 8px;">
+                    <div class="print-sub-section-title">DAILY DUTY LOGS & ATTENDANCE VALUE BREAKDOWN</div>
+                    <table class="print-table" style="font-size: 10px;">
                         <thead>
                             <tr>
                                 <th>DATE</th>
-                                <th>DAY</th>
-                                <th>IN1</th>
-                                <th>OUT1</th>
-                                <th>IN2</th>
-                                <th>OUT2</th>
-                                <th>OT_IN</th>
-                                <th>OT_OUT</th>
-                                <th>REMARKS</th>
+                                <th>IN / OUT</th>
+                                <th>LATE</th>
+                                <th>UT</th>
+                                <th>GROSS PAY</th>
+                                <th>DEDUCTION</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${timeRowsHtml}
+                            ${dailyRowsHtml}
                         </tbody>
                     </table>
 
-                    <div class="print-sub-section-title">PAYSLIP SUMMARY CONFIGURATION</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                    <div class="print-sub-section-title">DETAILED PAYSLIP FINANCIAL METRIC SUMMARY</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <table class="print-table">
-                            <thead><tr><th colspan="2">EARNINGS</th></tr></thead>
-                            <tr><td>BASIC PAY</td><td style="text-align:right;">₱${metrics.totalBasicEarnings.toFixed(2)}</td></tr>
-                            <tr><td>OVERTIME PAY</td><td style="text-align:right;">₱${metrics.totalOvertimePay.toFixed(2)}</td></tr>
-                            <tr><td>OTHERS</td><td style="text-align:right;">₱${metrics.otherEarn.toFixed(2)}</td></tr>
-                            <tr style="font-weight:800;"><td>GROSS PAY</td><td style="text-align:right;">₱${metrics.grossPay.toFixed(2)}</td></tr>
+                            <thead><tr><th colspan="2">EARNINGS ITEMS STREAM</th></tr></thead>
+                            <tr><td>BASIC BASE VALUE</td><td style="text-align:right;">₱${m.totalBasicEarnings.toFixed(2)}</td></tr>
+                            <tr><td>OVERTIME RENDERED</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
+                            <tr><td>DOUBLE PAY MATRIX</td><td style="text-align:right;">₱${m.doublePay.toFixed(2)}</td></tr>
+                            <tr><td>REIMBURSEMENT ADS</td><td style="text-align:right;">₱${m.reimbursements.toFixed(2)}</td></tr>
+                            <tr><td>MISC ADDS (OTHERS)</td><td style="text-align:right;">₱${m.otherEarn.toFixed(2)}</td></tr>
+                            <tr style="font-weight:800; background:#f5f5f5;"><td>TOTAL GROSS EARNED</td><td style="text-align:right;">₱${m.grossPay.toFixed(2)}</td></tr>
                         </table>
 
                         <table class="print-table">
-                            <thead><tr><th colspan="2">DEDUCTIONS</th></tr></thead>
-                            <tr><td>SSS</td><td style="text-align:right;">₱${metrics.sss.toFixed(2)}</td></tr>
-                            <tr><td>PHIC</td><td style="text-align:right;">₱${metrics.phic.toFixed(2)}</td></tr>
-                            <tr><td>HDMF</td><td style="text-align:right;">₱${metrics.hdmf.toFixed(2)}</td></tr>
-                            <tr><td>LATES/UNDERTIME</td><td style="text-align:right;">₱${metrics.totalDeductionPenalties.toFixed(2)}</td></tr>
-                            <tr><td>CASH ADVANCES</td><td style="text-align:right;">₱${metrics.advances.toFixed(2)}</td></tr>
-                            <tr style="font-weight:800;"><td>TOTAL DEDUCTIONS</td><td style="text-align:right;">₱${metrics.totalDeductions.toFixed(2)}</td></tr>
+                            <thead><tr><th colspan="2">DEDUCTION TRANS METRIC</th></tr></thead>
+                            <tr><td>SSS PREMIUM CONTRIB</td><td style="text-align:right;">₱${m.sss.toFixed(2)}</td></tr>
+                            <tr><td>PHIC HEALTH TRANS</td><td style="text-align:right;">₱${m.phic.toFixed(2)}</td></tr>
+                            <tr><td>HDMF HOUSING MUTUAL</td><td style="text-align:right;">₱${m.hdmf.toFixed(2)}</td></tr>
+                            <tr><td>LATE / UNDERTIME CUTS</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
+                            <tr><td>CASH ADVANCES ACCS</td><td style="text-align:right;">₱${m.advances.toFixed(2)}</td></tr>
+                            <tr style="font-weight:800; background:#f5f5f5;"><td>TOTAL LIQUIDATED DED</td><td style="text-align:right;">₱${m.totalDeductions.toFixed(2)}</td></tr>
                         </table>
                     </div>
 
-                    <div style="border: 2px solid #000; padding: 6px; font-weight:800; font-size:11px; margin-top:4px; display:flex; justify-content:space-between; text-transform:uppercase;">
+                    <div style="border: 2px solid #000; padding: 10px; font-weight:800; font-size:13px; margin-top:8px; display:flex; justify-content:space-between;">
                         <span>NET DISBURSABLE PAYOUT AMOUNT:</span>
-                        <span>₱${metrics.netPay.toFixed(2)}</span>
+                        <span>₱${m.netPay.toFixed(2)}</span>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; margin-top:25px; padding: 0 20px;">
+                    <div style="display:flex; justify-content:space-between; margin-top:35px; font-size:10px;">
                         <div>
-                            <div style="border-bottom: 1px solid #000; width: 180px; text-align:center; font-weight:700;">SYSTEM CLEARING AGENT</div>
-                            <div style="font-size:7px; text-align:center; margin-top:2px;">PREPARED AND VERIFIED BY</div>
+                            <div style="border-bottom: 1px solid #000; width: 220px; text-align:center; font-weight:700;">SYSTEM CLEARING AGENT</div>
+                            <div style="text-align:center; margin-top:2px;">PREPARED AND VERIFIED</div>
                         </div>
                         <div>
-                            <div style="border-bottom: 1px solid #000; width: 180px; text-align:center; font-weight:700;">${name}</div>
-                            <div style="font-size:7px; text-align:center; margin-top:2px;">ACKNOWLEDGEMENT RECEIVED BY</div>
+                            <div style="border-bottom: 1px solid #000; width: 220px; text-align:center; font-weight:700;">${userProfile.customName.toUpperCase()}</div>
+                            <div style="text-align:center; margin-top:2px;">ACKNOWLEDGEMENT RECEIPTEE RECIPIENT</div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        window.triggerNativePrintPipeline = function() {
-            window.print();
-        };
-
         window.triggerPDFExportPipeline = function() {
             const element = document.getElementById('print-render-matrix');
             element.style.display = 'block';
             
             const opt = {
-                margin:       0,
-                filename:     `PAYSLIP_MATRIX_${userId}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
+                margin:       [0.2, 0.2, 0.2, 0.2],
+                filename:     `COMMREVENUE_RECEIPT_${userId}.pdf`,
+                image:        { type: 'jpeg', quality: 0.99 },
                 html2canvas:  { scale: 2, logging: false, useCORS: true },
-                jsPDF:        { unit: 'in', format: [8.5, 5.5], orientation: 'landscape' }
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
             html2pdf().set(opt).from(element).save().then(() => {
                 element.style.display = 'none';
             });
+        };
+
+        window.triggerCSVExportPipeline = function() {
+            let csvRows = [];
+            csvRows.push(`PAYSLIP ENGINE EXPORT REPORT`);
+            csvRows.push(`COMPLETE NAME,${userProfile.customName}`);
+            csvRows.push(`USERNAME,${userProfile.name}`);
+            csvRows.push(`EMAIL,${userProfile.email}`);
+            csvRows.push(`PERIOD RANGE,${document.getElementById('payableRangeDisplay').value}`);
+            csvRows.push([]);
+            
+            // Detail Headers
+            csvRows.push(`DATE,IN1/OUT1,LATES(MIN),UNDERTIME(MIN),GROSS PAY DAY,DEDUCTION DAY`);
+            
+            // Find inputs from memory or use the calculated metrics directly
+            const selector = document.getElementById('periodSelector').value;
+            
+            activeDatesArray.forEach(dateObj => {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+                
+                if(timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
+                    const rec = timelineBuffer[dateKey];
+                    csvRows.push(`${dateKey},"${rec.in1}/${rec.out1}",0,0,0,0`);
+                } else {
+                    csvRows.push(`${dateKey},-,-,0,0,0,0`);
+                }
+            });
+            
+            csvRows.push([]);
+            csvRows.push(`SUMMARY TOTAL VALUES`);
+            csvRows.push(`GROSS RUN,${document.getElementById('breakdownGross').innerText.replace('₱','')}`);
+            csvRows.push(`DEDUCTIONS TOTAL,${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}`);
+            csvRows.push(`NET DISBURSABLE PAYOUT,${document.getElementById('breakdownNet').innerText.replace('₱','')}`);
+
+            const csvString = csvRows.map(e => e.join ? e.join(",") : e).join("\n");
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `PAYSLIP_SUMMARY_${userId}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         };
 
         window.onload = () => {
