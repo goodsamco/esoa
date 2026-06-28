@@ -3,1318 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAYSLIP ENGINE — SALARY COMPUTER</title>
-    <!-- Inter Font, Lucide Icons & html2pdf -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Employee Payslip & Attendance Management</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ==========================================================================
-           1. CORE DESIGN TOKENS & DYNAMIC COUPLING
-           ========================================================================== */
-        :root {
-            --bg: #0b0f1a;
-            --surface: rgba(255, 255, 255, 0.03);
-            --primary: #22c55e;
-            --text-main: #f1f5f9;
-            --glass: rgba(255, 255, 255, 0.08);
-            --border-glass: rgba(255, 255, 255, 0.12);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px 10px 120px 10px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .engine-container {
-            width: 100%;
-            max-width: 500px;
-            background: var(--surface);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            padding: 24px;
-            border-radius: 24px;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-            box-sizing: border-box;
-        }
-
-        .top-nav-deck {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .nav-btn {
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            color: var(--text-main);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .nav-btn:hover {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-        }
-
-        h1 {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            margin: 0;
-            font-weight: 800;
-        }
-
-        /* Profile Meta Header Block */
-        .profile-badge-deck {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .profile-meta-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            border-bottom: 1px dashed rgba(255,255,255,0.05);
-            padding-bottom: 6px;
-        }
-        .profile-meta-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .profile-meta-row span.lbl {
-            color: #94a3b8;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.65rem;
-            letter-spacing: 0.05em;
-        }
-
-        .profile-meta-row span.val {
-            color: #f1f5f9;
-            font-weight: 600;
-        }
-
-        /* ==========================================================================
-           2. INTERFACE ELEMENTS & FORM SYSTEM
-           ========================================================================== */
-        .form-block {
-            margin-bottom: 20px;
-        }
-
-        .form-block label {
-            display: block;
-            font-size: 0.7rem;
-            color: #94a3b8;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
-        }
-
-        select, input[type="text"], input[type="number"], input[type="time"] {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-glass);
-            padding: 14px;
-            border-radius: 14px;
-            color: white;
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            font-weight: 600;
-            outline: none;
-        }
-
-        select:focus, input:focus {
-            border-color: var(--primary);
-        }
-
-        /* Custom Adaptive Calendar Matrix */
-        .calendar-deck {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
-            padding: 14px;
-            border-radius: 16px;
-            border: 1px solid var(--border-glass);
-        }
-
-        .calendar-day-node {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 12px 6px;
-            text-align: center;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-        }
-
-        .calendar-day-node:hover {
-            border-color: rgba(255,255,255,0.3);
-            transform: translateY(-1px);
-        }
-
-        .calendar-day-node .day-num {
-            font-size: 1.1rem;
-            font-weight: 800;
-            display: block;
-        }
-
-        .calendar-day-node .day-lbl {
-            font-size: 0.6rem;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            margin-top: 2px;
-            display: block;
-        }
-
-        /* ==========================================================================
-           3. MATRIX FINANCIAL BREAKDOWN ARCHITECTURE
-           ========================================================================== */
-        .matrix-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--border-glass);
-        }
-
-        .matrix-table th {
-            background: rgba(255,255,255,0.04);
-            text-align: left;
-            padding: 12px 14px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #94a3b8;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-glass);
-        }
-
-        .matrix-table td {
-            padding: 12px 14px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .matrix-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .net-pay-display-deck {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-top: 20px;
-            position: relative;
-        }
-
-        .net-pay-display-deck.blurred-lock .val-stream {
-            filter: blur(6px);
-            pointer-events: none;
-        }
-
-        .net-pay-display-deck .lbl {
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .net-pay-display-deck .val-stream {
-            font-size: 2rem;
-            font-weight: 900;
-            color: var(--primary);
-            margin-top: 6px;
-            transition: filter 0.3s ease;
-        }
-
-        .lock-indicator {
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-            padding: 4px 10px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 8px;
-        }
-
-        /* Action Buttons */
-        .engine-btn {
-            width: 100%;
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            color: white;
-            padding: 14px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
-        }
-
-        .engine-btn:hover {
-            border-color: rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.05);
-        }
-
-        .engine-btn.primary-btn {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            font-weight: 800;
-        }
-
-        .engine-btn.primary-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        /* Checkbox Styling rules */
-        .checkbox-container-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            cursor: pointer;
-        }
-
-        /* ==========================================================================
-           4. MODAL LAYER ARCHITECTURE
-           ========================================================================== */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 7, 12, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            padding: 14px;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-box {
-            background: #111625;
-            border: 1px solid var(--border-glass);
-            width: 100%;
-            max-width: 420px;
-            border-radius: 20px;
-            padding: 22px;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.6);
-            box-sizing: border-box;
-        }
-
-        .realtime-stats-bar {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 18px;
-            text-align: center;
-        }
-
-        .realtime-stats-bar .stat-block .lbl {
-            font-size: 0.6rem;
-            font-weight: 800;
-            color: #94a3b8;
-            text-transform: uppercase;
-        }
-
-        .realtime-stats-bar .stat-block .val {
-            font-size: 0.95rem;
-            font-weight: 800;
-            margin-top: 2px;
-        }
-
-        .nested-row-segment {
-            background: rgba(0,0,0,0.15);
-            border: 1px dashed var(--border-glass);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 14px;
-        }
-
-        /* ==========================================================================
-           5. MONOCHROME COMMERCIAL RECEIPT SHEET ENGINE
-           ========================================================================== */
-        #print-render-matrix {
-            display: none;
-        }
-
+        /* Print-specific styling for pristine print previews */
         @media print {
             body * {
                 visibility: hidden;
             }
-            #print-render-matrix, #print-render-matrix * {
+            #printArea, #printArea * {
                 visibility: visible;
             }
-            #print-render-matrix {
+            #printArea {
                 position: absolute;
-                left: 0; top: 0; width: 100%;
-                display: block !important;
+                left: 0;
+                top: 0;
+                width: 100%;
             }
-        }
-
-        .print-sheet {
-            width: 8.5in;
-            padding: 0.4in;
-            box-sizing: border-box;
-            background: #fff;
-            color: #000;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 11px;
-            line-height: 1.3;
-        }
-
-        .print-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 12px;
-        }
-
-        .print-table th, .print-table td {
-            border: 1px solid #000;
-            padding: 5px 6px;
-            text-transform: uppercase;
-            text-align: left;
-        }
-
-        .print-table th {
-            background: #e5e5e5;
-            font-weight: 800;
-            font-size: 10px;
-        }
-
-        .print-header-banner {
-            text-align: center;
-            font-weight: 800;
-            font-size: 14px;
-            border: 2px solid #000;
-            padding: 10px;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-
-        .print-sub-section-title {
-            background: #000;
-            color: #fff;
-            font-weight: 800;
-            padding: 5px 6px;
-            font-size: 11px;
-            letter-spacing: 0.05em;
-            text-align: center;
-            text-transform: uppercase;
-            margin-top: 10px;
-            margin-bottom: 4px;
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 font-sans text-gray-900 antialiased">
 
-    <div class="engine-container">
-        <!-- TOP NAVIGATION ROW -->
-        <div class="top-nav-deck">
-            <button class="nav-btn" onclick="window.location.href='esoa.html'" title="RETURN">
-                <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
-            </button>
-            <h1>TIME & PAYSLIP MATRIX</h1>
-            <div style="width:40px;"></div>
-        </div>
-
-        <!-- PROFILE META CARD HEADER BLOCK -->
-        <div class="profile-badge-deck">
-            <div class="profile-meta-row">
-                <span class="lbl">COMPLETE SETTINGS NAME</span>
-                <span class="val" id="profSettingsNameDisplay">-</span>
+    <div class="max-w-7xl mx-auto px-4 py-8 no-print">
+        <!-- Header Controls -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between pb-6 mb-8 border-b border-gray-200 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">Payroll & Attendance Generator</h1>
+                <p class="text-sm text-gray-500 mt-1">Upload attendance logs, calculate daily computations, and generate official payslips.</p>
             </div>
-            <div class="profile-meta-row">
-                <span class="lbl">ACCOUNT USERNAME</span>
-                <span class="val" id="profNameDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">EMAIL ADDRESS</span>
-                <span class="val" id="profEmailDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">POSITION SYSTEM</span>
-                <span class="val" id="profPosDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">DEPARTMENT UNIT</span>
-                <span class="val" id="profDeptDisplay">-</span>
-            </div>
-        </div>
-
-        <!-- PAYSLIP TARGET SELECTION -->
-        <div class="form-block">
-            <label>PAYSLIP TIME PERIOD CLOSURE</label>
-            <select id="periodSelector" onchange="processPeriodEngineChange()">
-                <!-- Populated dynamically via controller framework -->
-            </select>
-        </div>
-
-        <div class="form-block">
-            <label>PAYABLE CYCLE COVERAGE WINDOW</label>
-            <input type="text" id="payableRangeDisplay" readonly style="opacity: 0.8; background: rgba(0,0,0,0.2);">
-        </div>
-
-        <!-- CUSTOM ADAPTIVE CALENDAR GRID MODULE -->
-        <div class="form-block">
-            <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
-            <div class="calendar-deck" id="calendarNodeGrid">
-                <!-- Dynamically configured loop elements -->
-            </div>
-        </div>
-
-        <!-- CUSTOM ADDITIONAL INCENTIVES MODULE -->
-        <div class="form-block" style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass); margin-bottom: 20px;">
-            <label style="margin-bottom: 12px; display: block;">EXTRA CYCLE INCENTIVES</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">DOUBLE PAY ADDITIONS</label>
-                    <input type="number" id="inputDoublePay" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-                <div>
-                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">REIMBURSEMENTS / ALLOWANCE</label>
-                    <input type="number" id="inputReimbursements" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-            </div>
-        </div>
-
-        <!-- CONTRIBUTION CONTROL PANEL MODULE -->
-        <div class="form-block" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass);">
-            <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTION INPUTS</label>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                <div>
-                    <label style="font-size:0.6rem;">SSS</label>
-                    <input type="number" id="inputSSS" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-                <div>
-                    <label style="font-size:0.6rem;">PHIC</label>
-                    <input type="number" id="inputPHIC" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-                <div>
-                    <label style="font-size:0.6rem;">HDMF</label>
-                    <input type="number" id="inputHDMF" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-                <div>
-                    <label style="font-size:0.6rem;">CASH ADVANCES</label>
-                    <input type="number" id="inputAdvances" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-                <div>
-                    <label style="font-size:0.6rem;">OTHERS EARN</label>
-                    <input type="number" id="inputOtherEarn" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-            </div>
-        </div>
-
-        <!-- LIVE EARNINGS COMPILATION DISPLAY BOARD -->
-        <div class="form-block">
-            <label>SALARY DETAILS METRIC BREAKDOWN</label>
-            <table class="matrix-table">
-                <thead>
-                    <tr><th>EARNINGS STREAM</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>BASIC PAY RUN</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
-                    <tr><td>OVERTIME EXTENSION PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
-                    <tr><td>EXTRA CYCLE INCENTIVES</td><td style="text-align: right; color:#fff;" id="breakdownIncentives">₱0.00</td></tr>
-                    <tr><td>OTHERS (MISC ADDS)</td><td style="text-align: right; color:#fff;" id="breakdownOtherEarn">₱0.00</td></tr>
-                    <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
-                        <td>GROSS PAY VALUE</td><td style="text-align: right; color:var(--primary);" id="breakdownGross">₱0.00</td></tr>
-                </tbody>
-            </table>
-
-            <table class="matrix-table" style="margin-top: 12px;">
-                <thead>
-                    <tr><th>DEDUCTION MATRIX</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>SSS PREMIUM CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownSSS">₱0.00</td></tr>
-                    <tr><td>PHIC STANDARD MEDICAL</td><td style="text-align: right; color:#fff;" id="breakdownPHIC">₱0.00</td></tr>
-                    <tr><td>HDMF HOUSING FUND</td><td style="text-align: right; color:#fff;" id="breakdownHDMF">₱0.00</td></tr>
-                    <tr><td>ABSENCES / LATE STRIKES / UNDERTIME</td><td style="text-align: right; color:#ef4444;" id="breakdownPenalties">₱0.00</td></tr>
-                    <tr><td>CASH ADVANCES ACCOUNTS</td><td style="text-align: right; color:#ef4444;" id="breakdownAdvances">₱0.00</td></tr>
-                    <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
-                        <td>TOTAL COMPASS DEDUCTIONS</td><td style="text-align: right; color:#ef4444;" id="breakdownTotalDed">₱0.00</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- DYNAMIC LIQUIDATED NET PAY TARGET DECK -->
-        <div class="net-pay-display-deck" id="netPayWrapperDeck">
-            <div class="lbl">NET DISBURSABLE PAYOUT</div>
-            <div class="val-stream" id="breakdownNet">₱0.00</div>
-            <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">METRIC CYCLE RECORD LOCKED</div>
-        </div>
-
-        <!-- ENGINE ACTION TRANSACTIONS -->
-        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
-            <button class="engine-btn primary-btn" onclick="commitTimelineTransactionToCloud()">
-                <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE OR UPDATE ENGINE TRANSACTIONS
-            </button>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <button class="engine-btn" onclick="triggerPDFExportPipeline()">
-                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT OR EXPORT PDF
+            <div class="flex items-center gap-3">
+                <button onclick="window.print()" class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class="fa-solid fa-print mr-2"></i> Print Preview / Save PDF
                 </button>
-                <button class="engine-btn" onclick="triggerCSVExportPipeline()">
-                    <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
-                </button>
+            </div>
+        </div>
+
+        <!-- CSV Upload and Processing Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-lg font-semibold mb-4 text-gray-800"><i class="fa-solid fa-file-csv text-green-600 mr-2"></i>Import Attendance CSV</h2>
+            <div class="flex items-center justify-center w-full">
+                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p class="text-xs text-gray-400">CSV file containing separated Time In/Out & OT columns</p>
+                    </div>
+                    <input type="file" id="csvFile" accept=".csv" class="hidden" onchange="processCSV()" />
+                </label>
+            </div>
+            
+            <!-- Expected CSV Format Reference -->
+            <div class="mt-3 text-xs text-gray-400">
+                <span class="font-semibold">Expected format:</span> Date, Time In, Time Out, OT In, OT Out, Rate Per Hour
+            </div>
+        </div>
+
+        <!-- Form Details Input Matrix -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Employee Info -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-md font-bold text-gray-700 border-b pb-2 mb-4"><i class="fa-solid fa-user text-gray-400 mr-2"></i>Employee Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Employee Name</label>
+                        <input type="text" id="empName" value="Dzey Autajay" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Pay Period</label>
+                        <input type="text" id="payPeriod" placeholder="e.g., June 16 - June 30, 2026" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Earnings & Rate Defaults -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-md font-bold text-gray-700 border-b pb-2 mb-4"><i class="fa-solid fa-wallet text-gray-400 mr-2"></i>Earnings & Allowances</h3>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Hourly Rate (₱)</label>
+                            <input type="number" id="hourlyRate" value="100" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">OT Hourly Rate (₱)</label>
+                            <input type="number" id="otRate" value="125" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">De Minimis / Allowances (₱)</label>
+                        <input type="number" id="allowance" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deductions Details -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-md font-bold text-gray-700 border-b pb-2 mb-4"><i class="fa-solid fa-percentage text-gray-400 mr-2"></i>Deductions</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">SSS (₱)</label>
+                        <input type="number" id="deducSSS" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">PhilHealth (₱)</label>
+                        <input type="number" id="deducPhilhealth" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Pag-IBIG (₱)</label>
+                        <input type="number" id="deducPagibig" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tax / Others (₱)</label>
+                        <input type="number" id="deducTax" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm" oninput="calculatePayroll()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Attendance Calculation Table Summary -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Attendance Log Breakdown & Computations</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 font-medium">
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Time In</th>
+                            <th class="p-4">Time Out</th>
+                            <th class="p-4">OT In</th>
+                            <th class="p-4">OT Out</th>
+                            <th class="p-4 text-right">Regular Hrs</th>
+                            <th class="p-4 text-right">OT Hrs</th>
+                            <th class="p-4 text-right">Subtotal Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody" class="divide-y divide-gray-100 text-gray-700">
+                        <tr>
+                            <td colspan="8" class="p-8 text-center text-gray-400 italic">No CSV parsed yet. Fill or import data above to test calculations.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- SYSTEM DATA CAPTURE MODAL SYSTEM -->
-    <div class="modal-overlay" id="timeConfigModalOverlay">
-        <div class="modal-box">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;" id="modalTargetDateHeader">LOGS TRANSACTION RECORD</h3>
-                <button class="nav-btn" style="width:32px; height:32px;" onclick="closeTimeTransactionModal()">
-                    <i data-lucide="x" style="width:14px;height:14px;"></i>
-                </button>
+    <!-- PRINT PREVIEW SHEET AREA (Matches clean crisp executive styles) -->
+    <div id="printArea" class="bg-white max-w-4xl mx-auto p-12 my-0 md:my-8 shadow-none md:shadow-lg rounded-none md:rounded-xl border-none md:border border-gray-300">
+        <!-- Top Metadata & Header Layout -->
+        <div class="flex justify-between items-start border-b-2 border-gray-800 pb-6 mb-6">
+            <div>
+                <h2 class="text-2xl font-black tracking-tight text-gray-900 uppercase">OFFICIAL PAYSLIP</h2>
+                <p class="text-xs text-gray-500 font-mono uppercase mt-1">Generated: <span id="generationTimestamp">--:-- --</span></p>
+            </div>
+            <div class="text-right">
+                <h3 class="text-lg font-bold text-gray-800">SK LEPAGA INITIATIVES</h3>
+                <p class="text-xs text-gray-500">Barangay Lepaga, PH</p>
+            </div>
+        </div>
+
+        <!-- Employee Info Metadata Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mb-8 p-4 bg-gray-50 rounded-lg">
+            <div>
+                <span class="block text-gray-400 uppercase font-semibold">Employee Name:</span>
+                <span id="previewName" class="font-bold text-gray-900 text-sm">Dzey Autajay</span>
+            </div>
+            <div>
+                <span class="block text-gray-400 uppercase font-semibold">Pay Period:</span>
+                <span id="previewPeriod" class="font-medium text-gray-900">--</span>
+            </div>
+            <div>
+                <span class="block text-gray-400 uppercase font-semibold">Total Regular Hours:</span>
+                <span id="previewTotalRegHrs" class="font-medium text-gray-900">0.00 hrs</span>
+            </div>
+            <div>
+                <span class="block text-gray-400 uppercase font-semibold">Total Overtime Hours:</span>
+                <span id="previewTotalOTHrs" class="font-medium text-gray-900">0.00 hrs</span>
+            </div>
+        </div>
+
+        <!-- Earnings vs Deductions Breakdown Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Earnings Ledger Matrix -->
+            <div>
+                <h4 class="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-400 pb-2 mb-3">Itemized Earnings</h4>
+                <table class="w-full text-xs space-y-2">
+                    <tbody>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">Basic Regular Salary Pay:</span>
+                            <span id="previewBasicPay" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">Overtime Premium Pay:</span>
+                            <span id="previewOTPay" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">De Minimis / Allowances:</span>
+                            <span id="previewAllowance" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-2 mt-2 font-bold text-sm bg-gray-50 px-2 rounded">
+                            <span class="text-gray-800">Gross Earnings:</span>
+                            <span id="previewGross" class="font-mono text-gray-900">₱0.00</span>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <div class="realtime-stats-bar">
-                <div class="stat-block">
-                    <div class="lbl">LATE MINUTES</div>
-                    <div class="val" id="rtLateDisplay" style="color: #ef4444;">0 MINS</div>
-                </div>
-                <div class="stat-block">
-                    <div class="lbl">UNDERTIME MINUTES</div>
-                    <div class="val" id="rtUndertimeDisplay" style="color: #f59e0b;">0 MINS</div>
-                </div>
+            <!-- Deductions Ledger Matrix -->
+            <div>
+                <h4 class="text-sm font-bold uppercase tracking-wider text-gray-800 border-b border-gray-400 pb-2 mb-3">Itemized Deductions</h4>
+                <table class="w-full text-xs">
+                    <tbody>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">SSS Contribution:</span>
+                            <span id="previewSSS" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">PhilHealth Premium:</span>
+                            <span id="previewPhilhealth" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">Pag-IBIG Contribution:</span>
+                            <span id="previewPagibig" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-1.5 border-b border-gray-100">
+                            <span class="text-gray-600">Withholding Tax & Others:</span>
+                            <span id="previewTax" class="font-mono font-semibold text-gray-900">₱0.00</span>
+                        </tr>
+                        <tr class="flex justify-between py-2 mt-2 font-bold text-sm bg-gray-50 px-2 rounded">
+                            <span class="text-gray-800">Total Deductions:</span>
+                            <span id="previewTotalDeduc" class="font-mono text-red-600">₱0.00</span>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-block">
-                    <label>REGULAR TIME IN</label>
-                    <input type="time" id="modalTimeIn1" onchange="runRealtimeMetricsDeductionEngine()">
-                </div>
-                <div class="form-block">
-                    <label>REGULAR TIME OUT</label>
-                    <input type="time" id="modalTimeOut1" onchange="runRealtimeMetricsDeductionEngine()">
-                </div>
+        <!-- Net Summary Total Pay Box -->
+        <div class="border-t-2 border-gray-800 pt-4 flex justify-between items-center px-4 py-4 bg-gray-900 text-white rounded-lg">
+            <span class="text-base uppercase tracking-wider font-bold">Net Take-Home Pay:</span>
+            <span id="previewNetPay" class="text-2xl font-black font-mono">₱0.00</span>
+        </div>
+
+        <!-- Signature/Verification Signatures Block -->
+        <div class="grid grid-cols-2 gap-12 mt-16 text-center text-xs">
+            <div>
+                <div class="border-b border-gray-400 w-full h-8 mb-2"></div>
+                <p class="text-gray-500 uppercase font-semibold">Employee Signature</p>
             </div>
-
-            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 4px; padding: 10px;" onclick="toggleMidDaySubSection()">
-                <input type="checkbox" id="chkEnableMidDay">
-                <span style="font-size:0.65rem; font-weight:700;">ENABLE SECOND SPLIT SCHEDULE SHIFT</span>
+            <div>
+                <div class="border-b border-gray-400 w-full h-8 mb-2"></div>
+                <p class="text-gray-500 uppercase font-semibold">Authorized Payroll Officer</p>
             </div>
-
-            <div class="nested-row-segment" id="midDaySubSectionDeck" style="display: none;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-block">
-                        <label>SPLIT TIME IN (IN2)</label>
-                        <input type="time" id="modalTimeIn2">
-                    </div>
-                    <div class="form-block">
-                        <label>SPLIT TIME OUT (OUT2)</label>
-                        <input type="time" id="modalTimeOut2">
-                    </div>
-                </div>
-                <div class="form-block" style="margin-bottom: 0; margin-top: 6px;">
-                    <label>REASON FOR INTERRUPT SEQUENCE</label>
-                    <input type="text" id="modalSplitReason" placeholder="E.G., MEDICAL EMERGENCY EXCURSION" style="font-size:0.75rem; padding: 10px;">
-                </div>
-            </div>
-
-            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px;" onclick="toggleOvertimeSubSection()">
-                <input type="checkbox" id="chkEnableOT">
-                <span style="font-size:0.65rem; font-weight:700;">APPLY RENDERED OVERTIME CREDIT</span>
-            </div>
-
-            <div class="nested-row-segment" id="otSubSectionDeck" style="display: none;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0;">
-                    <div class="form-block" style="margin-bottom: 0;">
-                        <label>OVERTIME IN</label>
-                        <input type="time" id="modalTimeInOT">
-                    </div>
-                    <div class="form-block" style="margin-bottom: 0;">
-                        <label>OVERTIME OUT</label>
-                        <input type="time" id="modalTimeOutOT">
-                    </div>
-                </div>
-            </div>
-
-            <button class="engine-btn primary-btn" style="margin-top: 20px; height: 48px;" onclick="commitModalDayStateToLocalBuffer()">
-                APPLY CHANGES TO MATRIX
-            </button>
         </div>
     </div>
 
-    <!-- HARD-COPY MONOCHROME COMMERCIAL RECEIPT CONTAINER -->
-    <div id="print-render-matrix"></div>
+    <!-- Script Logic Processing Computations -->
+    <script>
+        let globalAttendanceRecords = [];
 
-    <!-- MOTOR INTEGRATION LOGIC ARCHITECTURE -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
-            authDomain: "svls-289ee.firebaseapp.com",
-            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
-            projectId: "svls-289ee",
-            storageBucket: "svls-289ee.firebasestorage.app",
-            messagingSenderId: "500705386198",
-            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
-            measurementId: "G-5TNBMQ2HN5"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const userId = localStorage.getItem("userId") || "test_user_id";
-
-        // Hybrid Profile Sync Framework
-        let userProfile = { 
-            name: localStorage.getItem("username") || "DZEY_USER",
-            customName: localStorage.getItem("customName") || "Dzey Autajay", 
-            email: localStorage.getItem("userEmail") || "autajaydzey@gmail.com" 
-        };
-        let salarySettings = { dailyRate: 460, timeIn: "08:00", timeOut: "17:00", position: "Billing Clerk", department: "Finance" };
-        let timelineBuffer = {}; 
-        let currentTargetDateString = ""; 
-        let activeDatesArray = [];
-
-        const CURRENT_YEAR = 2026;
-
-        async function bootEngineCore() {
-            try {
-                // Instantly update UI fields safely with defaults
-                updateUIProfileElements();
-
-                const accSnap = await getDoc(doc(db, "accounts", userId));
-                if (accSnap.exists()) {
-                    const d = accSnap.data();
-                    userProfile.name = d.username || d.name || userProfile.name;
-                    userProfile.customName = d.customName || userProfile.customName;
-                    userProfile.email = d.email || userProfile.email;
-                    updateUIProfileElements();
-                }
-
-                const setSnap = await getDoc(doc(db, "salary_settings", userId));
-                if (setSnap.exists()) {
-                    salarySettings = setSnap.data();
-                    updateUIProfileElements();
-                }
-
-                const localBtnVal = localStorage.getItem("btnValue") || userProfile.btnValue;
-                const localBgVal = localStorage.getItem("bgValue") || userProfile.bgValue;
-                if (localBtnVal) document.documentElement.style.setProperty('--primary', localBtnVal);
-                if (localBgVal) document.documentElement.style.setProperty('--bg', localBgVal);
-
-                buildDropdownTargetIntervals();
-                processPeriodEngineChange();
-                
-                const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
-                if (transSnap.exists()) {
-                    const loadedData = transSnap.data();
-                    if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
-                    if (loadedData.inputSSS) document.getElementById('inputSSS').value = loadedData.inputSSS;
-                    if (loadedData.inputPHIC) document.getElementById('inputPHIC').value = loadedData.inputPHIC;
-                    if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
-                    if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
-                    if (loadedData.inputOtherEarn) document.getElementById('inputOtherEarn').value = loadedData.inputOtherEarn;
-                    if (loadedData.inputDoublePay) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay;
-                    if (loadedData.inputReimbursements) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements;
-                }
-                
-                renderActivePeriodCalendarGrid();
-                recomputeGlobalFinancials();
-
-            } catch (err) {
-                console.error("Setup error: ", err);
-            }
-        }
-
-        function updateUIProfileElements() {
-            document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName.toUpperCase();
-            document.getElementById('profNameDisplay').innerText = userProfile.name.toUpperCase();
-            document.getElementById('profEmailDisplay').innerText = userProfile.email.toUpperCase();
-            document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
-            document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
-        }
-
-        function buildDropdownTargetIntervals() {
-            const selector = document.getElementById('periodSelector');
-            const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-            
-            selector.innerHTML = "";
-            months.forEach((m, idx) => {
-                let opt15 = document.createElement('option');
-                opt15.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-15`;
-                opt15.innerText = `${m} 15, ${CURRENT_YEAR}`;
-                selector.appendChild(opt15);
-
-                let optEnd = document.createElement('option');
-                let lastDay = new Date(CURRENT_YEAR, idx + 1, 0).getDate();
-                optEnd.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-${lastDay}`;
-                optEnd.innerText = `${m} ${lastDay}, ${CURRENT_YEAR}`;
-                selector.appendChild(optEnd);
-            });
-
-            const today = new Date();
-            if (today.getFullYear() === CURRENT_YEAR) {
-                const targetDay = today.getDate() <= 15 ? 15 : new Date(CURRENT_YEAR, today.getMonth() + 1, 0).getDate();
-                selector.value = `${CURRENT_YEAR}-${String(today.getMonth() + 1).padStart(2, '0')}-${targetDay}`;
-            } else {
-                selector.value = `2026-06-30`;
-            }
-        }
-
-        window.processPeriodEngineChange = function() {
-            const val = document.getElementById('periodSelector').value;
-            const pieces = val.split('-');
-            const year = parseInt(pieces[0]);
-            const monthIdx = parseInt(pieces[1]) - 1;
-            const day = parseInt(pieces[2]);
-
-            activeDatesArray = [];
-
-            if (day === 15) {
-                let prevMonthDate = new Date(year, monthIdx - 1, 29);
-                let currentTarget = new Date(prevMonthDate);
-                while (currentTarget <= new Date(year, monthIdx, 14)) {
-                    activeDatesArray.push(new Date(currentTarget));
-                    currentTarget.setDate(currentTarget.getDate() + 1);
-                }
-            } else {
-                let currentTarget = new Date(year, monthIdx, 13);
-                while (currentTarget <= new Date(year, monthIdx, 28)) {
-                    activeDatesArray.push(new Date(currentTarget));
-                    currentTarget.setDate(currentTarget.getDate() + 1);
-                }
-            }
-
-            const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
-
-            evaluateLockExecutionConstraints(year, monthIdx, day);
-            renderActivePeriodCalendarGrid();
-            recomputeGlobalFinancials();
-        };
-
-        function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
-            const today = new Date();
-            const currentDayNum = today.getDate();
-            const currentMonthNum = today.getMonth();
-            const currentYearNum = today.getFullYear();
-
-            let lockActive = true;
-
-            if (targetDay === 15) {
-                if (currentYearNum === year && currentMonthNum === monthIdx && currentDayNum <= 16) {
-                    lockActive = false;
-                }
-            } else {
-                if (currentYearNum === year) {
-                    if (currentMonthNum === monthIdx && currentDayNum >= 13) {
-                        lockActive = false;
-                    }
-                    if (currentMonthNum === (monthIdx + 1) && currentDayNum <= 1) {
-                        lockActive = false;
-                    }
-                }
-            }
-
-            const wrapper = document.getElementById('netPayWrapperDeck');
-            const badge = document.getElementById('lockBadgeDisplay');
-            if (lockActive) {
-                wrapper.classList.add('blurred-lock');
-                badge.style.display = "inline-block";
-            } else {
-                wrapper.classList.remove('blurred-lock');
-                badge.style.display = "none";
-            }
-        }
-
-        function renderActivePeriodCalendarGrid() {
-            const grid = document.getElementById('calendarNodeGrid');
-            grid.innerHTML = "";
-
-            activeDatesArray.forEach(dateObj => {
-                const year = dateObj.getFullYear();
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const dateKey = `${year}-${month}-${day}`;
-                const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-
-                const cell = document.createElement('div');
-                cell.className = "calendar-day-node";
-                cell.innerHTML = `
-                    <span class="day-num">${day}</span>
-                    <span class="day-lbl">${dayOfWeekStr}</span>
-                `;
-
-                if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-                    cell.style.backgroundColor = localStorage.getItem("btnValue") || userProfile.btnValue || "var(--primary)";
-                    cell.style.color = "#000000";
-                    cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
-                }
-
-                cell.onclick = () => launchTimeTransactionModal(dateKey);
-                grid.appendChild(cell);
+        // Dynamic Time Helper
+        function updateGenerationTimestamp() {
+            const now = new Date();
+            document.getElementById('generationTimestamp').innerText = now.toLocaleString('en-US', { 
+                dateStyle: 'medium', 
+                timeStyle: 'short' 
             });
         }
 
-        window.runRealtimeMetricsDeductionEngine = function() {
-            const schedIn = salarySettings.timeIn || "08:00";
-            const schedOut = salarySettings.timeOut || "17:00";
-            const in1 = document.getElementById('modalTimeIn1').value;
-            const out1 = document.getElementById('modalTimeOut1').value;
-
-            let lateMinutes = 0;
-            let undertimeMinutes = 0;
-
-            if (in1) {
-                const schedInMins = timeStringToMinutes(schedIn);
-                const actualInMins = timeStringToMinutes(in1);
-                if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
-            }
-            if (out1) {
-                const schedOutMins = timeStringToMinutes(schedOut);
-                const actualOutMins = timeStringToMinutes(out1);
-                if (actualOutMins < schedOutMins) undertimeMinutes += (schedOutMins - actualOutMins);
-            }
-
-            document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
-            document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
-        };
-
-        function timeStringToMinutes(timeStr) {
-            const p = timeStr.split(':');
-            return parseInt(p[0]) * 60 + parseInt(p[1]);
+        // Helper to convert dynamic "HH:MM" timestamps to decimal hours
+        function parseTimeToDecimal(timeStr) {
+            if (!timeStr || timeStr.trim() === "" || timeStr.toLowerCase() === "null") return 0;
+            const [hours, minutes] = timeStr.trim().split(':').map(Number);
+            return hours + (minutes / 60);
         }
 
-        window.launchTimeTransactionModal = function(dateKey) {
-            currentTargetDateString = dateKey;
-            document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
-            
-            document.getElementById('modalTimeIn1').value = "";
-            document.getElementById('modalTimeOut1').value = "";
-            document.getElementById('modalTimeIn2').value = "";
-            document.getElementById('modalTimeOut2').value = "";
-            document.getElementById('modalSplitReason').value = "";
-            document.getElementById('modalTimeInOT').value = "";
-            document.getElementById('modalTimeOutOT').value = "";
-            
-            document.getElementById('chkEnableMidDay').checked = false;
-            document.getElementById('chkEnableOT').checked = false;
-            document.getElementById('midDaySubSectionDeck').style.display = "none";
-            document.getElementById('otSubSectionDeck').style.display = "none";
+        // CSV parsing mapping the distinct tracking columns
+        function processCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            if (!file) return;
 
-            if (timelineBuffer[dateKey]) {
-                const rec = timelineBuffer[dateKey];
-                document.getElementById('modalTimeIn1').value = rec.in1 || "";
-                document.getElementById('modalTimeOut1').value = rec.out1 || "";
-                if (rec.hasMidDay) {
-                    document.getElementById('chkEnableMidDay').checked = true;
-                    document.getElementById('midDaySubSectionDeck').style.display = "block";
-                    document.getElementById('modalTimeIn2').value = rec.in2 || "";
-                    document.getElementById('modalTimeOut2').value = rec.out2 || "";
-                    document.getElementById('modalSplitReason').value = rec.splitReason || "";
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').filter(row => row.trim() !== '');
+                
+                globalAttendanceRecords = [];
+                
+                // Skipping header index row 0 safely
+                for(let i = 1; i < rows.length; i++) {
+                    const columns = rows[i].split(',');
+                    if(columns.length >= 3) {
+                        const date = columns[0] ? columns[0].trim() : '';
+                        const timeIn = columns[1] ? columns[1].trim() : '';
+                        const timeOut = columns[2] ? columns[2].trim() : '';
+                        const otIn = columns[3] ? columns[3].trim() : '';
+                        const otOut = columns[4] ? columns[4].trim() : '';
+                        
+                        // Core mathematical logic execution per line
+                        const regHrs = Math.max(0, parseTimeToDecimal(timeOut) - parseTimeToDecimal(timeIn));
+                        const otHrs = Math.max(0, parseTimeToDecimal(otOut) - parseTimeToDecimal(otIn));
+                        
+                        globalAttendanceRecords.push({
+                            date, timeIn, timeOut, otIn, otOut, regHrs, otHrs
+                        });
+                    }
                 }
-                if (rec.hasOT) {
-                    document.getElementById('chkEnableOT').checked = true;
-                    document.getElementById('otSubSectionDeck').style.display = "block";
-                    document.getElementById('modalTimeInOT').value = rec.inOT || "";
-                    document.getElementById('modalTimeOutOT').value = rec.outOT || "";
-                }
-            }
+                renderAttendanceTable();
+                calculatePayroll();
+            };
+            reader.readAsText(file);
+        }
 
-            runRealtimeMetricsDeductionEngine();
-            document.getElementById('timeConfigModalOverlay').classList.add('active');
-        };
-
-        window.closeTimeTransactionModal = function() {
-            document.getElementById('timeConfigModalOverlay').classList.remove('active');
-        };
-
-        window.toggleMidDaySubSection = function() {
-            const checked = document.getElementById('chkEnableMidDay').checked;
-            document.getElementById('midDaySubSectionDeck').style.display = checked ? "block" : "none";
-        };
-
-        window.toggleOvertimeSubSection = function() {
-            const checked = document.getElementById('chkEnableOT').checked;
-            document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
-        };
-
-        window.commitModalDayStateToLocalBuffer = function() {
-            const in1 = document.getElementById('modalTimeIn1').value;
-            const out1 = document.getElementById('modalTimeOut1').value;
-
-            if (!in1 || !out1) {
-                alert("CORE TIMELINE IN & OUT VALUES REQUIRED.");
+        // Display rows onto DOM
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            if(globalAttendanceRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-400 italic">No attendance data matched.</td></tr>`;
                 return;
             }
 
-            const hasMidDay = document.getElementById('chkEnableMidDay').checked;
-            const hasOT = document.getElementById('chkEnableOT').checked;
+            const hRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const oRate = parseFloat(document.getElementById('otRate').value) || 0;
 
-            timelineBuffer[currentTargetDateString] = {
-                filled: true,
-                in1: in1,
-                out1: out1,
-                hasMidDay: hasMidDay,
-                in2: hasMidDay ? document.getElementById('modalTimeIn2').value : "",
-                out2: hasMidDay ? document.getElementById('modalTimeOut2').value : "",
-                splitReason: hasMidDay ? document.getElementById('modalSplitReason').value : "",
-                hasOT: hasOT,
-                inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
-                outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
-            };
-
-            closeTimeTransactionModal();
-            renderActivePeriodCalendarGrid();
-            recomputeGlobalFinancials();
-        };
-
-        window.recomputeGlobalFinancials = function() {
-            const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
-            const hourlyRate = dailyRate / 8;
-            const minuteRate = hourlyRate / 60;
-
-            let totalBasicEarnings = 0;
-            let totalOvertimePay = 0;
-            let totalDeductionPenalties = 0;
-            let actualDaysWorkedCounter = 0;
-
-            const schedInStr = salarySettings.timeIn || "08:00";
-            const schedOutStr = salarySettings.timeOut || "17:00";
-
-            let structuralDailyArrayLogs = [];
-
-            activeDatesArray.forEach(dateObj => {
-                const year = dateObj.getFullYear();
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const dateKey = `${year}-${month}-${day}`;
-
-                let dayGross = 0;
-                let dayDed = 0;
-                let dayLateMins = 0;
-                let dayUndertimeMins = 0;
-
-                if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-                    actualDaysWorkedCounter++;
-                    totalBasicEarnings += dailyRate;
-                    dayGross += dailyRate;
-
-                    const rec = timelineBuffer[dateKey];
-                    const schedInMins = timeStringToMinutes(schedInStr);
-                    const actInMins = timeStringToMinutes(rec.in1);
-                    if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
-
-                    const schedOutMins = timeStringToMinutes(schedOutStr);
-                    const actOutMins = timeStringToMinutes(rec.out1);
-                    if (actOutMins < schedOutMins) dayUndertimeMins = (schedOutMins - actOutMins);
-
-                    dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
-                    totalDeductionPenalties += dayDed;
-
-                    if (rec.hasOT && rec.inOT && rec.outOT) {
-                        const otIn = timeStringToMinutes(rec.inOT);
-                        const otOut = timeStringToMinutes(rec.outOT);
-                        if (otOut > otIn) {
-                            const otMins = otOut - otIn;
-                            if (otMins >= 30) {
-                                const otPay = otMins * minuteRate;
-                                totalOvertimePay += otPay;
-                                dayGross += otPay;
-                            }
-                        }
-                    }
-                }
-
-                structuralDailyArrayLogs.push({
-                    date: dateKey,
-                    in1: timelineBuffer[dateKey]?.in1 || '-',
-                    out1: timelineBuffer[dateKey]?.out1 || '-',
-                    lates: dayLateMins,
-                    undertime: dayUndertimeMins,
-                    gross: dayGross,
-                    deductions: dayDed
-                });
-            });
-
-            const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
-            const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
-            const totalIncentives = doublePay + reimbursements;
-
-            const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
-            const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
-            const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
-            const advances = parseFloat(document.getElementById('inputAdvances').value) || 0;
-            const otherEarn = parseFloat(document.getElementById('inputOtherEarn').value) || 0;
-
-            const grossPay = totalBasicEarnings + totalOvertimePay + totalIncentives + otherEarn;
-            const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
-            const netPay = grossPay - totalDeductions;
-
-            document.getElementById('breakdownBasic').innerText = `₱${totalBasicEarnings.toFixed(2)}`;
-            document.getElementById('breakdownOT').innerText = `₱${totalOvertimePay.toFixed(2)}`;
-            document.getElementById('breakdownIncentives').innerText = `₱${totalIncentives.toFixed(2)}`;
-            document.getElementById('breakdownOtherEarn').innerText = `₱${otherEarn.toFixed(2)}`;
-            document.getElementById('breakdownGross').innerText = `₱${grossPay.toFixed(2)}`;
-
-            document.getElementById('breakdownSSS').innerText = `₱${sss.toFixed(2)}`;
-            document.getElementById('breakdownPHIC').innerText = `₱${phic.toFixed(2)}`;
-            document.getElementById('breakdownHDMF').innerText = `₱${hdmf.toFixed(2)}`;
-            document.getElementById('breakdownPenalties').innerText = `₱${totalDeductionPenalties.toFixed(2)}`;
-            document.getElementById('breakdownAdvances').innerText = `₱${advances.toFixed(2)}`;
-            document.getElementById('breakdownTotalDed').innerText = `₱${totalDeductions.toFixed(2)}`;
-            document.getElementById('breakdownNet').innerText = `₱${netPay.toFixed(2)}`;
-
-            generateCommercialReceiptLayout({
-                totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, otherEarn, grossPay,
-                sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
-                actualDaysWorkedCounter, structuralDailyArrayLogs
-            });
-        };
-
-        window.commitTimelineTransactionToCloud = async function() {
-            try {
-                const payload = {
-                    timelineBuffer: timelineBuffer,
-                    inputSSS: document.getElementById('inputSSS').value,
-                    inputPHIC: document.getElementById('inputPHIC').value,
-                    inputHDMF: document.getElementById('inputHDMF').value,
-                    inputAdvances: document.getElementById('inputAdvances').value,
-                    inputOtherEarn: document.getElementById('inputOtherEarn').value,
-                    inputDoublePay: document.getElementById('inputDoublePay').value,
-                    inputReimbursements: document.getElementById('inputReimbursements').value,
-                    updatedAt: Date.now()
-                };
-                await setDoc(doc(db, "salary_transactions", `${userId}_current`), payload, { merge: true });
-                alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
-            } catch (err) {
-                console.error("Sync failure: ", err);
-            }
-        };
-
-        function generateCommercialReceiptLayout(m) {
-            const printContainer = document.getElementById('print-render-matrix');
-            const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
-
-            let dailyRowsHtml = "";
-            m.structuralDailyArrayLogs.forEach(row => {
-                dailyRowsHtml += `
-                    <tr>
-                        <td>${row.date}</td>
-                        <td>${row.in1} / ${row.out1}</td>
-                        <td>${row.lates}m</td>
-                        <td>${row.undertime}m</td>
-                        <td>₱${row.gross.toFixed(2)}</td>
-                        <td>₱${row.deductions.toFixed(2)}</td>
+            tbody.innerHTML = globalAttendanceRecords.map(rec => {
+                const daySubtotal = (rec.regHrs * hRate) + (rec.otHrs * oRate);
+                return `
+                    <tr class="hover:bg-gray-50 border-b border-gray-100">
+                        <td class="p-4 font-medium">${rec.date}</td>
+                        <td class="p-4 font-mono text-xs">${rec.timeIn || '--'}</td>
+                        <td class="p-4 font-mono text-xs">${rec.timeOut || '--'}</td>
+                        <td class="p-4 font-mono text-xs">${rec.otIn || '--'}</td>
+                        <td class="p-4 font-mono text-xs">${rec.otOut || '--'}</td>
+                        <td class="p-4 text-right font-mono">${rec.regHrs.toFixed(2)}</td>
+                        <td class="p-4 text-right font-mono">${rec.otHrs.toFixed(2)}</td>
+                        <td class="p-4 text-right font-mono font-semibold">₱${daySubtotal.toFixed(2)}</td>
                     </tr>
                 `;
-            });
-
-            printContainer.innerHTML = `
-                <div class="print-sheet">
-                    <div class="print-header-banner">
-                        OFFICIAL TIME & PAYSLIP COMMERCIAL RECEIPT
-                        <div style="font-size:10px; font-weight:400; margin-top:4px; font-family:monospace;">MONOCHROME AUDIT STATEMENT SYSTEM</div>
-                    </div>
-                    
-                    <div class="print-sub-section-title">USER IDENTITY & PARAMETERS</div>
-                    <table class="print-table">
-                        <tr><td><strong>COMPLETE SETTINGS NAME:</strong></td><td>${userProfile.customName.toUpperCase()}</td></tr>
-                        <tr><td><strong>ACCOUNT USERNAME:</strong></td><td>${userProfile.name.toUpperCase()}</td></tr>
-                        <tr><td><strong>EMAIL ADDRESS:</strong></td><td>${userProfile.email.toUpperCase()}</td></tr>
-                        <tr><td><strong>ASSIGNED POSITION:</strong></td><td>${(salarySettings.position || 'Billing Clerk').toUpperCase()}</td></tr>
-                        <tr><td><strong>DEPARTMENT ASSIGNED:</strong></td><td>${(salarySettings.department || 'Finance').toUpperCase()}</td></tr>
-                        <tr><td><strong>BASE DAILY CONTEXT:</strong></td><td>₱${parseFloat(salarySettings.dailyRate || 460).toFixed(2)} (Days Filed: ${m.actualDaysWorkedCounter})</td></tr>
-                        <tr><td><strong>CYCLE PAYABLE WINDOW:</strong></td><td>${dateRangeLabel}</td></tr>
-                    </table>
-
-                    <div class="print-sub-section-title">DAILY DUTY LOGS & ATTENDANCE VALUE BREAKDOWN</div>
-                    <table class="print-table" style="font-size: 10px;">
-                        <thead>
-                            <tr>
-                                <th>DATE</th>
-                                <th>IN / OUT</th>
-                                <th>LATE</th>
-                                <th>UT</th>
-                                <th>GROSS PAY</th>
-                                <th>DEDUCTION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${dailyRowsHtml}
-                        </tbody>
-                    </table>
-
-                    <div class="print-sub-section-title">DETAILED PAYSLIP FINANCIAL METRIC SUMMARY</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                        <table class="print-table">
-                            <thead><tr><th colspan="2">EARNINGS ITEMS STREAM</th></tr></thead>
-                            <tr><td>BASIC BASE VALUE</td><td style="text-align:right;">₱${m.totalBasicEarnings.toFixed(2)}</td></tr>
-                            <tr><td>OVERTIME RENDERED</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
-                            <tr><td>DOUBLE PAY MATRIX</td><td style="text-align:right;">₱${m.doublePay.toFixed(2)}</td></tr>
-                            <tr><td>REIMBURSEMENT ADS</td><td style="text-align:right;">₱${m.reimbursements.toFixed(2)}</td></tr>
-                            <tr><td>MISC ADDS (OTHERS)</td><td style="text-align:right;">₱${m.otherEarn.toFixed(2)}</td></tr>
-                            <tr style="font-weight:800; background:#f5f5f5;"><td>TOTAL GROSS EARNED</td><td style="text-align:right;">₱${m.grossPay.toFixed(2)}</td></tr>
-                        </table>
-
-                        <table class="print-table">
-                            <thead><tr><th colspan="2">DEDUCTION TRANS METRIC</th></tr></thead>
-                            <tr><td>SSS PREMIUM CONTRIB</td><td style="text-align:right;">₱${m.sss.toFixed(2)}</td></tr>
-                            <tr><td>PHIC HEALTH TRANS</td><td style="text-align:right;">₱${m.phic.toFixed(2)}</td></tr>
-                            <tr><td>HDMF HOUSING MUTUAL</td><td style="text-align:right;">₱${m.hdmf.toFixed(2)}</td></tr>
-                            <tr><td>LATE / UNDERTIME CUTS</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
-                            <tr><td>CASH ADVANCES ACCS</td><td style="text-align:right;">₱${m.advances.toFixed(2)}</td></tr>
-                            <tr style="font-weight:800; background:#f5f5f5;"><td>TOTAL LIQUIDATED DED</td><td style="text-align:right;">₱${m.totalDeductions.toFixed(2)}</td></tr>
-                        </table>
-                    </div>
-
-                    <div style="border: 2px solid #000; padding: 10px; font-weight:800; font-size:13px; margin-top:8px; display:flex; justify-content:space-between;">
-                        <span>NET DISBURSABLE PAYOUT AMOUNT:</span>
-                        <span>₱${m.netPay.toFixed(2)}</span>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; margin-top:35px; font-size:10px;">
-                        <div>
-                            <div style="border-bottom: 1px solid #000; width: 220px; text-align:center; font-weight:700;">SYSTEM CLEARING AGENT</div>
-                            <div style="text-align:center; margin-top:2px;">PREPARED AND VERIFIED</div>
-                        </div>
-                        <div>
-                            <div style="border-bottom: 1px solid #000; width: 220px; text-align:center; font-weight:700;">${userProfile.customName.toUpperCase()}</div>
-                            <div style="text-align:center; margin-top:2px;">ACKNOWLEDGEMENT RECEIPTEE RECIPIENT</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            }).join('');
         }
 
-        window.triggerPDFExportPipeline = function() {
-            const element = document.getElementById('print-render-matrix');
-            element.style.display = 'block';
-            
-            const opt = {
-                margin:       [0.2, 0.2, 0.2, 0.2],
-                filename:     `COMMREVENUE_RECEIPT_${userId}.pdf`,
-                image:        { type: 'jpeg', quality: 0.99 },
-                html2canvas:  { scale: 2, logging: false, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+        // Live calculation logic feeding the printable preview payload
+        function calculatePayroll() {
+            updateGenerationTimestamp();
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.display = 'none';
+            const hRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const oRate = parseFloat(document.getElementById('otRate').value) || 0;
+            const allowance = parseFloat(document.getElementById('allowance').value) || 0;
+
+            const sss = parseFloat(document.getElementById('deducSSS').value) || 0;
+            const philhealth = parseFloat(document.getElementById('deducPhilhealth').value) || 0;
+            const pagibig = parseFloat(document.getElementById('deducPagibig').value) || 0;
+            const tax = parseFloat(document.getElementById('deducTax').value) || 0;
+
+            let totalRegHrs = 0;
+            let totalOTHrs = 0;
+
+            globalAttendanceRecords.forEach(rec => {
+                totalRegHrs += rec.regHrs;
+                totalOTHrs += rec.otHrs;
             });
-        };
 
-        window.triggerCSVExportPipeline = function() {
-            let csvRows = [];
-            csvRows.push(`PAYSLIP ENGINE EXPORT REPORT`);
-            csvRows.push(`COMPLETE NAME,${userProfile.customName}`);
-            csvRows.push(`USERNAME,${userProfile.name}`);
-            csvRows.push(`EMAIL,${userProfile.email}`);
-            csvRows.push(`PERIOD RANGE,${document.getElementById('payableRangeDisplay').value}`);
-            csvRows.push([]);
-            
-            // Detail Headers
-            csvRows.push(`DATE,IN1/OUT1,LATES(MIN),UNDERTIME(MIN),GROSS PAY DAY,DEDUCTION DAY`);
-            
-            // Find inputs from memory or use the calculated metrics directly
-            const selector = document.getElementById('periodSelector').value;
-            
-            activeDatesArray.forEach(dateObj => {
-                const year = dateObj.getFullYear();
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const dateKey = `${year}-${month}-${day}`;
-                
-                if(timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-                    const rec = timelineBuffer[dateKey];
-                    csvRows.push(`${dateKey},"${rec.in1}/${rec.out1}",0,0,0,0`);
-                } else {
-                    csvRows.push(`${dateKey},-,-,0,0,0,0`);
-                }
-            });
-            
-            csvRows.push([]);
-            csvRows.push(`SUMMARY TOTAL VALUES`);
-            csvRows.push(`GROSS RUN,${document.getElementById('breakdownGross').innerText.replace('₱','')}`);
-            csvRows.push(`DEDUCTIONS TOTAL,${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}`);
-            csvRows.push(`NET DISBURSABLE PAYOUT,${document.getElementById('breakdownNet').innerText.replace('₱','')}`);
+            const basicPaySubtotal = totalRegHrs * hRate;
+            const otPaySubtotal = totalOTHrs * oRate;
+            const grossEarnings = basicPaySubtotal + otPaySubtotal + allowance;
+            const totalDeductions = sss + philhealth + pagibig + tax;
+            const netTakeHomePay = grossEarnings - totalDeductions;
 
-            const csvString = csvRows.map(e => e.join ? e.join(",") : e).join("\n");
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `PAYSLIP_SUMMARY_${userId}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
+            // Sync structural information data text directly to UI Print Nodes
+            document.getElementById('previewName').innerText = document.getElementById('empName').value || 'Dzey Autajay';
+            document.getElementById('previewPeriod').innerText = document.getElementById('payPeriod').value || 'N/A';
+            
+            document.getElementById('previewTotalRegHrs').innerText = totalRegHrs.toFixed(2) + ' hrs';
+            document.getElementById('previewTotalOTHrs').innerText = totalOTHrs.toFixed(2) + ' hrs';
 
-        window.onload = () => {
-            bootEngineCore();
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-        };
+            document.getElementById('previewBasicPay').innerText = '₱' + basicPaySubtotal.toFixed(2);
+            document.getElementById('previewOTPay').innerText = '₱' + otPaySubtotal.toFixed(2);
+            document.getElementById('previewAllowance').innerText = '₱' + allowance.toFixed(2);
+            document.getElementById('previewGross').innerText = '₱' + grossEarnings.toFixed(2);
+
+            document.getElementById('previewSSS').innerText = '₱' + sss.toFixed(2);
+            document.getElementById('previewPhilhealth').innerText = '₱' + philhealth.toFixed(2);
+            document.getElementById('previewPagibig').innerText = '₱' + pagibig.toFixed(2);
+            document.getElementById('previewTax').innerText = '₱' + tax.toFixed(2);
+            document.getElementById('previewTotalDeduc').innerText = '₱' + totalDeductions.toFixed(2);
+
+            document.getElementById('previewNetPay').innerText = '₱' + netTakeHomePay.toFixed(2);
+        }
+
+        // Initialize state timestamps
+        window.addEventListener('DOMContentLoaded', () => {
+            updateGenerationTimestamp();
+            
+            // Listeners to live update the preview form metadata fields instantly upon changing values
+            document.getElementById('empName').addEventListener('input', calculatePayroll);
+            document.getElementById('payPeriod').addEventListener('input', calculatePayroll);
+        });
     </script>
 </body>
 </html>
