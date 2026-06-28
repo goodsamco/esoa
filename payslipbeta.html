@@ -228,7 +228,6 @@
             border-bottom: none;
         }
 
-        /* Responsive UI breakdown adjustments */
         .scannable-table-wrapper {
             width: 100%;
             overflow-x: auto;
@@ -329,7 +328,6 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
-        /* Checkbox Styling rules */
         .checkbox-container-row {
             display: flex;
             align-items: center;
@@ -737,17 +735,14 @@
                     const accountData = accountSnap.data();
                     userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
                     
-                    // Restore custom compiled profile name if defined
                     if (accountData.customName) {
                         userProfile.customName = accountData.customName.toUpperCase();
                     }
 
-                    // Dynamically map layout backdrop variables directly
                     if (accountData.bgValue) {
                         document.documentElement.style.setProperty('--bg', accountData.bgValue);
                     }
 
-                    // Dynamically map primary accent button styling
                     if (accountData.btnValue) {
                         document.documentElement.style.setProperty('--primary', accountData.btnValue);
                     }
@@ -759,15 +754,12 @@
                 if (settingsSnap.exists()) {
                     salarySettings = settingsSnap.data();
                     
-                    // Fallback configuration if custom name isn't built on the top-level accounts document
-                    if (!accountSnap.exists() || !accountSnap.data().customName) {
-                        if (salarySettings.firstName && salarySettings.lastName) {
-                            const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : "";
-                            userProfile.customName = `${salarySettings.firstName}${mi} ${salarySettings.lastName}`.toUpperCase();
-                        }
+                    // Rebuilt Full Name Logic compilation (Constructing: FIRST NAME + [MIDDLE INITIAL] + LAST NAME)
+                    if (salarySettings.firstName && salarySettings.lastName) {
+                        const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : "";
+                        userProfile.customName = `${salarySettings.firstName}${mi} ${salarySettings.lastName}`.toUpperCase();
                     }
 
-                    // Retrieve and map the email address property accurately out of salary_settings
                     if (salarySettings.emailAddress) {
                         userProfile.email = salarySettings.emailAddress;
                     }
