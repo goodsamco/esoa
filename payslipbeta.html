@@ -1200,18 +1200,21 @@ function generateCommercialReceiptLayout(m) {
                 <div style="font-size:10px;">Payroll Period: ${dateRangeLabel}</div>
             </div>
             
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; background:#f9f9f9; padding:8px; border:1px solid #ddd;">
-                <div>
-                    <b>NAME:</b> ${userProfile.customName}<br>
-                    <b>ID:</b> ${userProfile.name.toUpperCase()}<br>
-                    <b>EMAIL:</b> ${userProfile.email.toUpperCase()}
-                </div>
-                <div>
-                    <b>POSITION:</b> ${(salarySettings.position || 'Staff').toUpperCase()}<br>
-                    <b>DEPT:</b> ${(salarySettings.department || 'Operations').toUpperCase()}<br>
-                    <b>DAYS WORKED:</b> ${m.actualDaysWorkedCounter}
-                </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:15px; background:#f9f9f9; padding:10px; border:1px solid #ddd;">
+            
+            <div style="display:grid; grid-template-columns: 80px 1fr; gap: 5px;">
+                <div style="font-weight:700;">NAME:</div>    <div>${userProfile.customName}</div>
+                <div style="font-weight:700;">ID:</div>      <div>${userProfile.name.toUpperCase()}</div>
+                <div style="font-weight:700;">EMAIL:</div>   <div>${userProfile.email.toUpperCase()}</div>
             </div>
+
+            <div style="display:grid; grid-template-columns: 90px 1fr; gap: 5px;">
+                <div style="font-weight:700;">POSITION:</div>  <div>${(salarySettings.position || 'Staff').toUpperCase()}</div>
+                <div style="font-weight:700;">DEPT:</div>      <div>${(salarySettings.department || 'Operations').toUpperCase()}</div>
+                <div style="font-weight:700;">WORKED:</div>    <div>${m.actualDaysWorkedCounter} DAYS</div>
+            </div>
+            
+        </div>
 
             <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 15px;">
                 <table style="width:100%; border-collapse:collapse; font-size:9px;">
