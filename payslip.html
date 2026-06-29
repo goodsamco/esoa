@@ -1075,7 +1075,7 @@ window.evaluateLunchBreakConstraints = function() {
     const out1 = document.getElementById('modalTimeOut1').value;
     if (out1) {
         const out1Mins = timeStringToMinutes(out1);
-        const noonMins = timeStringToMinutes("12:00");
+        const noonMins = timeStringToMinutes("12:59");
         if (out1Mins < noonMins) {
             document.getElementById('modalTimeIn2').value = "";
             document.getElementById('modalTimeOut2').value = "";
