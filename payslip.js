@@ -1,6 +1,8 @@
-// ==========================================================================
-// 1. FIREBASE DEPLOYMENT INTERACTION SETUP
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 1. FIREBASE ARCHITECTURE INITIALIZATION & SETUP
+ * ==========================================================================
+ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -18,15 +20,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Check runtime credentials allocation state
+// Session Verification Gate
 const userId = localStorage.getItem("userId");
 if (!userId) {
     window.location.href = "login.html";
 }
 
-// ==========================================================================
-// 2. DYNAMIC APPLICATION ENGINE GLOBAL STATE
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 2. GLOBAL ENGINE APPLICATION STATE
+ * ==========================================================================
+ */
 let userProfile = {};
 let salarySettings = { 
     dailyRate: 460, 
@@ -39,23 +43,30 @@ let salarySettings = {
 let timelineBuffer = {}; 
 let currentTargetDateString = ""; 
 let activeDatesArray = [];
+let previousArchiveViewingMode = false;
+
 const CURRENT_YEAR = 2026;
 
-// Helper formulation utility for currency tracking layout alignment
+/**
+ * ==========================================================================
+ * 3. HELPER UTILITIES
+ * ==========================================================================
+ */
 function formatCurrency(amount) {
     return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Helper time evaluation runtime mapper parsing string values directly to tracking units
 function timeStringToMinutes(timeStr) {
     if(!timeStr || timeStr === "-") return 0;
     const p = timeStr.split(':');
     return parseInt(p) * 60 + parseInt(p);
 }
 
-// ==========================================================================
-// 3. CORE INITIALIZATION PIPELINE BOOTSTRIKE ENGINE
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 4. CORE ENGINE BOOTSTRAPPER & UI SYNC
+ * ==========================================================================
+ */
 async function bootEngineCore() {
     try {
         const accountRef = doc(db, "accounts", userId);
@@ -116,9 +127,6 @@ async function bootEngineCore() {
     }
 }
 
-// ==========================================================================
-// 4. USER INTERACTIVE PROFILE ENGINE PARSING & POPULATION
-// ==========================================================================
 function updateUIProfileElements() {
     document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName.toUpperCase();
     document.getElementById('profNameDisplay').innerText = userProfile.name.toUpperCase();
@@ -145,9 +153,11 @@ function updateUIProfileElements() {
     }
 }
 
-// ==========================================================================
-// 5. DROPDOWN CYCLE DATE CALCULATOR COMPILER LOGIC
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 5. PAYABLE CYCLE & CALENDAR MATRIX LOGIC
+ * ==========================================================================
+ */
 function buildDropdownTargetIntervals() {
     const selector = document.getElementById('periodSelector');
     const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
@@ -175,7 +185,6 @@ function buildDropdownTargetIntervals() {
     }
 }
 
-// Exposed globally to respond directly inside interaction triggers
 window.processPeriodEngineChange = function() {
     const val = document.getElementById('periodSelector').value;
     const pieces = val.split('-');
@@ -209,7 +218,6 @@ window.processPeriodEngineChange = function() {
     recomputeGlobalFinancials();
 };
 
-// Evaluates layout restrictions depending on strict timeline history boundaries
 function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
     const today = new Date();
     const currentMonthNum = today.getMonth();
@@ -238,9 +246,6 @@ function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
     }
 }
 
-// ==========================================================================
-// 6. ADAPTIVE TIME MATRIX GRID CELL COMPILER VIEW LOGIC
-// ==========================================================================
 function renderActivePeriodCalendarGrid() {
     const grid = document.getElementById('calendarNodeGrid');
     if (!grid) return;
@@ -305,9 +310,11 @@ function renderActivePeriodCalendarGrid() {
     if (window.lucide) window.lucide.createIcons();
 }
 
-// ==========================================================================
-// 7. TIME ADJUSTMENT MODAL OVERLAY LOGIC PIPELINE
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 6. MODAL TRANSACTION MANAGEMENT PIPELINE
+ * ==========================================================================
+ */
 window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
     currentTargetDateString = dateKey;
     document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
@@ -379,13 +386,6 @@ window.closeTimeTransactionModal = function() {
     document.getElementById('timeConfigModalOverlay').classList.remove('active');
 };
 
-window.toggleOvertimeSubSection = function() {
-    if(document.getElementById('chkEnableOT').disabled) return;
-    const checked = document.getElementById('chkEnableOT').checked;
-    document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
-};
-
-// Real-time local calculation mapping penalty changes instantly prior to buffer commitment
 window.runRealtimeMetricsDeductionEngine = function() {
     const schedIn = salarySettings.timeIn || "08:00";
     const schedOut = salarySettings.timeOut || "17:00";
@@ -412,6 +412,12 @@ window.runRealtimeMetricsDeductionEngine = function() {
 
     document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
     document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
+};
+
+window.toggleOvertimeSubSection = function() {
+    if(document.getElementById('chkEnableOT').disabled) return;
+    const checked = document.getElementById('chkEnableOT').checked;
+    document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
 };
 
 window.commitModalDayStateToLocalBuffer = function() {
@@ -450,9 +456,11 @@ window.clearModalDayState = function() {
     recomputeGlobalFinancials();
 };
 
-// ==========================================================================
-// 8. GLOBAL FINANCIAL COMPILATION RUNTIME MATRIX
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 7. CORE COMPUTE STREAM (FINANCIAL MATHEMATICS ENGINE)
+ * ==========================================================================
+ */
 window.recomputeGlobalFinancials = function() {
     const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
     const hourlyRate = dailyRate / 8;
@@ -619,9 +627,11 @@ window.recomputeGlobalFinancials = function() {
     });
 };
 
-// ==========================================================================
-// 9. DATA SYNC PLATFORM PERSISTENCE EXTENSION (CLOUD INTERFACES)
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 8. DATA SYNC & STORAGE ACTION ENGINE
+ * ==========================================================================
+ */
 window.commitTimelineTransactionToCloud = async function() {
     try {
         const payload = {
@@ -641,9 +651,11 @@ window.commitTimelineTransactionToCloud = async function() {
     }
 };
 
-// ==========================================================================
-// 10. OFFSCREEN ENGINE PRODUCTION GENERATOR (PRINT PIPELINE SPECIALIST)
-// ==========================================================================
+/**
+ * ==========================================================================
+ * 9. DATA EXPORT PIPELINES (PRINT MATRIX & CSV GENERATION)
+ * ==========================================================================
+ */
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
     if (!printContainer) return;
@@ -754,9 +766,6 @@ window.triggerPrintPreviewPipeline = function() {
     window.print();
 };
 
-// ==========================================================================
-// 11. AUDITABLE REPORT EXPORTER INTERFACE (CSV GENERATION SERVICE)
-// ==========================================================================
 window.triggerCSVExportPipeline = function() {
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
     
@@ -855,12 +864,14 @@ window.triggerCSVExportPipeline = function() {
     document.body.removeChild(link);
 };
 
-// ==========================================================================
-// 12. RUNTIME EVENT ATTACHMENT EXECUTION WINDOW MAPPING
-// ==========================================================================
-window.addEventListener('DOMContentLoaded', () => {
+/**
+ * ==========================================================================
+ * 10. RUNTIME CONTEXT MOUNT ATTACHMENT
+ * ==========================================================================
+ */
+window.onload = () => {
     bootEngineCore();
     if (window.lucide) {
         window.lucide.createIcons();
     }
-});
+};
