@@ -491,11 +491,11 @@
                 <span class="val" id="profSettingsNameDisplay">-</span>
             </div>
             <div class="profile-meta-row">
-                <span class="lbl">ACCOUNT USERNAME</span>
+                <span class="lbl">USERNAME</span>
                 <span class="val" id="profNameDisplay">-</span>
             </div>
             <div class="profile-meta-row">
-                <span class="lbl">EMAIL ADDRESS</span>
+                <span class="lbl">ID NO.</span>
                 <span class="val" id="profEmailDisplay">-</span>
             </div>
             <div class="profile-meta-row">
@@ -639,11 +639,11 @@
 
         <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
             <button class="engine-btn primary-btn" onclick="commitTimelineTransactionToCloud()">
-                <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE OR UPDATE ENGINE TRANSACTIONS
+                <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE
             </button>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <button class="engine-btn" onclick="triggerPrintPreviewPipeline()">
-                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT PREVIEW / PDF
+                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT PREVIEW
                 </button>
                 <button class="engine-btn" onclick="triggerCSVExportPipeline()">
                     <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
@@ -747,13 +747,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 2. GLOBAL STATE ENGINES
-const userId = localStorage.getItem("userId") || "test_user_id";
-let userProfile = { 
-    name: "DZEY_USER",
-    customName: "UNKNOWN USER", 
-    email: "Loading..." 
-};
+// Check if user is logged in
+const userId = localStorage.getItem("userId");
+
+if (!userId) {
+    window.location.href = "login.html";
+}
+
+// Global State
+let userProfile = {};
 let salarySettings = { 
     dailyRate: 460, 
     timeIn: "08:00", 
@@ -900,12 +902,12 @@ window.processPeriodEngineChange = function() {
     if (day === 15) {
         let prevMonthDate = new Date(year, monthIdx - 1, 29);
         let currentTarget = new Date(prevMonthDate);
-        while (currentTarget <= new Date(year, monthIdx, 14)) {
+        while (currentTarget <= new Date(year, monthIdx, 13)) {
             activeDatesArray.push(new Date(currentTarget));
             currentTarget.setDate(currentTarget.getDate() + 1);
         }
     } else {
-        let currentTarget = new Date(year, monthIdx, 13);
+        let currentTarget = new Date(year, monthIdx, 14);
         while (currentTarget <= new Date(year, monthIdx, 28)) {
             activeDatesArray.push(new Date(currentTarget));
             currentTarget.setDate(currentTarget.getDate() + 1);
@@ -1073,7 +1075,7 @@ window.evaluateLunchBreakConstraints = function() {
     const out1 = document.getElementById('modalTimeOut1').value;
     if (out1) {
         const out1Mins = timeStringToMinutes(out1);
-        const noonMins = timeStringToMinutes("12:00");
+        const noonMins = timeStringToMinutes("12:59");
         if (out1Mins < noonMins) {
             document.getElementById('modalTimeIn2').value = "";
             document.getElementById('modalTimeOut2').value = "";
@@ -1225,7 +1227,7 @@ window.recomputeGlobalFinancials = function() {
 
             dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
             totalDeductionPenalties += dayDed;
-
+/*
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
@@ -1241,7 +1243,25 @@ window.recomputeGlobalFinancials = function() {
                 }
             }
         }
+*/
 
+            if (rec.hasOT && rec.inOT && rec.outOT) {
+            otIn = rec.inOT;
+            otOut = rec.outOT;
+
+            const oInMins = timeStringToMinutes(rec.inOT);
+            const oOutMins = timeStringToMinutes(rec.outOT);
+
+            if (oOutMins > oInMins) {
+            const otMins = oOutMins - oInMins;
+            const otPay = otMins * minuteRate;
+
+            totalOvertimePay += otPay;
+            dayGross += otPay;
+            }
+        }
+        }
+            
         let dayNet = dayGross - dayDed;
 
         aggLates += dayLateMins;
@@ -1384,8 +1404,8 @@ function generateCommercialReceiptLayout(m) {
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:15px; background:#f9f9f9; padding:10px; border:1px solid #ddd;">
                 <div style="display:grid; grid-template-columns: 80px 1fr; gap: 5px;">
                     <div style="font-weight:700;">NAME:</div>    <div>${userProfile.customName}</div>
-                    <div style="font-weight:700;">ID:</div>      <div>${userProfile.name.toUpperCase()}</div>
-                    <div style="font-weight:700;">EMAIL:</div>   <div>${userProfile.email.toUpperCase()}</div>
+                    <div style="font-weight:700;">USERNAME:</div>      <div>${userProfile.name.toUpperCase()}</div>
+                    <div style="font-weight:700;">ID NO.:</div>   <div>${userProfile.email.toUpperCase()}</div>
                 </div>
                 <div style="display:grid; grid-template-columns: 90px 1fr; gap: 5px;">
                     <div style="font-weight:700;">POSITION:</div>  <div>${(salarySettings.position || 'Staff').toUpperCase()}</div>
@@ -1464,7 +1484,7 @@ window.triggerCSVExportPipeline = function() {
     csvRows.push([`\"PAYSLIP ENGINE AUDIT REPORT EXPORT\"`]);
     csvRows.push([`\"NAME\"`,`\"${userProfile.customName}\"`]);
     csvRows.push([`\"USERNAME\"`,`\"${userProfile.name.toUpperCase()}\"`]);
-    csvRows.push([`\"EMAIL\"`,`\"${userProfile.email.toUpperCase()}\"`]);
+    csvRows.push([`\"ID NO.\"`,`\"${userProfile.email.toUpperCase()}\"`]);
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
     csvRows.push([`\"DAILY RATE\"`,`\"PHP ${formatCurrency(dailyRateValue)}\"`]);
@@ -1540,7 +1560,7 @@ window.triggerCSVExportPipeline = function() {
     csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${document.getElementById('breakdownPHIC').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${document.getElementById('breakdownHDMF').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${document.getElementById('breakdownPenalties').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"CASH ADVANCES BALANCE\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"CASH ADVANCES\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
     csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${document.getElementById('breakdownNet').innerText.replace('₱','')}\"`]);
