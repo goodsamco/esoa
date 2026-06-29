@@ -746,6 +746,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+        
+        const userId = localStorage.getItem("userId");
+        if (!userId) window.location.href = "login.html";
 
 // 2. GLOBAL STATE ENGINES
 const userId = localStorage.getItem("userId") || "test_user_id";
