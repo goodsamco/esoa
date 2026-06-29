@@ -53,15 +53,15 @@
         </div>
 
         <div class="form-block">
-            <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
+            <label>DUTY TIME RECORD (CLICK DATE TO FILE TIME)</label>
             <div class="calendar-deck" id="calendarNodeGrid"></div>
         </div>
 
         <div class="form-block" style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass); margin-bottom: 20px;">
-            <label style="margin-bottom: 12px; display: block;">EXTRA CYCLE INCENTIVES</label>
+            <label style="margin-bottom: 12px; display: block;">INCENTIVES</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
-                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">DOUBLE PAY ADDITIONS</label>
+                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">HOLIDAY PAY</label>
                     <input type="number" id="inputDoublePay" value="0.00" step="0.01">
                 </div>
                 <div>
@@ -72,7 +72,7 @@
         </div>
 
         <div class="form-block" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass);">
-            <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTION INPUTS</label>
+            <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTIONS</label>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
                 <div>
                     <label style="font-size:0.6rem;">SSS</label>
@@ -89,22 +89,22 @@
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px;">
                 <div>
-                    <label style="font-size:0.6rem;">CASH ADVANCES</label>
+                    <label style="font-size:0.6rem;">FOR CASH ADVANCES</label>
                     <input type="number" id="inputAdvances" value="0.00" step="0.01">
                 </div>
             </div>
         </div>
 
         <div class="form-block">
-            <label>SALARY DETAILS METRIC BREAKDOWN</label>
+            <label>SALARY DETAILS BREAKDOWN</label>
             <table class="matrix-table">
                 <thead>
                     <tr><th>EARNINGS STREAM</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>BASIC PAY RUN</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
-                    <tr><td>OVERTIME EXTENSION PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
-                    <tr><td>EXTRA CYCLE INCENTIVES</td><td style="text-align: right; color:#fff;" id="breakdownIncentives">₱0.00</td></tr>
+                    <tr><td>BASIC PAY</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
+                    <tr><td>OVERTIME PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
+                    <tr><td>EXTRA INCENTIVES</td><td style="text-align: right; color:#fff;" id="breakdownIncentives">₱0.00</td></tr>
                     <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
                         <td>GROSS PAY VALUE</td><td style="text-align: right; color:var(--primary);" id="breakdownGross">₱0.00</td></tr>
                 </tbody>
@@ -112,16 +112,16 @@
 
             <table class="matrix-table" style="margin-top: 12px;">
                 <thead>
-                    <tr><th>DEDUCTION MATRIX</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
+                    <tr><th>DEDUCTIONS</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>SSS PREMIUM CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownSSS">₱0.00</td></tr>
-                    <tr><td>PHIC STANDARD MEDICAL</td><td style="text-align: right; color:#fff;" id="breakdownPHIC">₱0.00</td></tr>
-                    <tr><td>HDMF HOUSING FUND</td><td style="text-align: right; color:#fff;" id="breakdownHDMF">₱0.00</td></tr>
-                    <tr><td>ABSENCES / LATE STRIKES / UNDERTIME</td><td style="text-align: right; color:#ef4444;" id="breakdownPenalties">₱0.00</td></tr>
+                    <tr><td>SSS CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownSSS">₱0.00</td></tr>
+                    <tr><td>PHILHEALTH CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownPHIC">₱0.00</td></tr>
+                    <tr><td>PAG-IBIG FUND CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownHDMF">₱0.00</td></tr>
+                    <tr><td>LATE / UNDERTIME</td><td style="text-align: right; color:#ef4444;" id="breakdownPenalties">₱0.00</td></tr>
                     <tr><td>CASH ADVANCES ACCOUNTS</td><td style="text-align: right; color:#ef4444;" id="breakdownAdvances">₱0.00</td></tr>
                     <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
-                        <td>TOTAL COMPASS DEDUCTIONS</td><td style="text-align: right; color:#ef4444;" id="breakdownTotalDed">₱0.00</td></tr>
+                        <td>TOTAL DEDUCTIONS</td><td style="text-align: right; color:#ef4444;" id="breakdownTotalDed">₱0.00</td></tr>
                 </tbody>
             </table>
         </div>
@@ -163,9 +163,9 @@
         </div>
 
         <div class="net-pay-display-deck" id="netPayWrapperDeck">
-            <div class="lbl">NET DISBURSABLE PAYOUT</div>
+            <div class="lbl">NET PAY</div>
             <div class="val-stream" id="breakdownNet">₱0.00</div>
-            <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">METRIC CYCLE RECORD LOCKED</div>
+            <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">RECORD LOCKED</div>
         </div>
 
         <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
@@ -227,7 +227,7 @@
 
             <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px;" id="chkEnableOTWrapper">
                 <input type="checkbox" id="chkEnableOT">
-                <span style="font-size:0.65rem; font-weight:700;">CHECKBOX FOR OT</span>
+                <span style="font-size:0.65rem; font-weight:700;">OVERTIME</span>
             </div>
 
             <div class="nested-row-segment" id="otSubSectionDeck" style="display: none;">
