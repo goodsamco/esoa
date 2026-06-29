@@ -84,22 +84,9 @@ async function bootEngineCore() {
 
         updateUIProfileElements();
         buildDropdownTargetIntervals();
-        processPeriodEngineChange();
         
-        const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
-        if (transSnap.exists()) {
-            const loadedData = transSnap.data();
-            if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
-            if (loadedData.inputSSS) document.getElementById('inputSSS').value = loadedData.inputSSS;
-            if (loadedData.inputPHIC) document.getElementById('inputPHIC').value = loadedData.inputPHIC;
-            if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
-            if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
-            if (loadedData.inputDoublePay) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay;
-            if (loadedData.inputReimbursements) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements;
-        }
-        
-        renderActivePeriodCalendarGrid();
-        recomputeGlobalFinancials();
+        // Trigger data loading seamlessly for the initial selected period
+        await processPeriodEngineChange();
 
     } catch (err) {
         console.error("Setup initialization error: ", err);
@@ -107,9 +94,9 @@ async function bootEngineCore() {
 }
 
 function updateUIProfileElements() {
-    document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName.toUpperCase();
-    document.getElementById('profNameDisplay').innerText = userProfile.name.toUpperCase();
-    document.getElementById('profEmailDisplay').innerText = userProfile.email.toUpperCase();
+    document.getElementById('profSettingsNameDisplay').innerText = userProfile.customName ? userProfile.customName.toUpperCase() : "-";
+    document.getElementById('profNameDisplay').innerText = userProfile.name ? userProfile.name.toUpperCase() : "-";
+    document.getElementById('profEmailDisplay').innerText = userProfile.email ? userProfile.email.toUpperCase() : "-";
     document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
     document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
     
@@ -159,7 +146,8 @@ function buildDropdownTargetIntervals() {
     }
 }
 
-window.processPeriodEngineChange = function() {
+// Fixed: Now accurately pulls independent data sets dynamically based on chosen period window
+window.processPeriodEngineChange = async function() {
     const val = document.getElementById('periodSelector').value;
     const pieces = val.split('-');
     const year = parseInt(pieces);
@@ -186,6 +174,32 @@ window.processPeriodEngineChange = function() {
     const startStr = activeDatesArray.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
+
+    // Reset fields to avoid leakage while loading cloud data
+    timelineBuffer = {};
+    document.getElementById('inputSSS').value = "0.00";
+    document.getElementById('inputPHIC').value = "0.00";
+    document.getElementById('inputHDMF').value = "0.00";
+    document.getElementById('inputAdvances').value = "0.00";
+    document.getElementById('inputDoublePay').value = "0.00";
+    document.getElementById('inputReimbursements').value = "0.00";
+
+    try {
+        // Dynamic isolated storage retrieval per payroll period partition
+        const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_${val}`));
+        if (transSnap.exists()) {
+            const loadedData = transSnap.data();
+            if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
+            if (loadedData.inputSSS) document.getElementById('inputSSS').value = loadedData.inputSSS;
+            if (loadedData.inputPHIC) document.getElementById('inputPHIC').value = loadedData.inputPHIC;
+            if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
+            if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
+            if (loadedData.inputDoublePay) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay;
+            if (loadedData.inputReimbursements) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements;
+        }
+    } catch (err) {
+        console.error("Error loading isolated period data: ", err);
+    }
 
     evaluateLockExecutionConstraints(year, monthIdx, day);
     renderActivePeriodCalendarGrid();
@@ -284,7 +298,6 @@ function renderActivePeriodCalendarGrid() {
     if (window.lucide) window.lucide.createIcons();
 }
 
-// 5. TRANSACTIONS MODAL PROCESS ENGINE
 window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
     currentTargetDateString = dateKey;
     document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
@@ -601,6 +614,7 @@ window.recomputeGlobalFinancials = function() {
 
 window.commitTimelineTransactionToCloud = async function() {
     try {
+        const val = document.getElementById('periodSelector').value;
         const payload = {
             timelineBuffer: timelineBuffer,
             inputSSS: document.getElementById('inputSSS').value,
@@ -611,7 +625,8 @@ window.commitTimelineTransactionToCloud = async function() {
             inputReimbursements: document.getElementById('inputReimbursements').value,
             updatedAt: Date.now()
         };
-        await setDoc(doc(db, "salary_transactions", `${userId}_current`), payload, { merge: true });
+        // Save dynamically partition locked to the active period string
+        await setDoc(doc(db, "salary_transactions", `${userId}_${val}`), payload, { merge: true });
         alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
     } catch (err) {
         console.error("Sync failure: ", err);
@@ -655,9 +670,9 @@ function generateCommercialReceiptLayout(m) {
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:15px; background:#f9f9f9; padding:10px; border:1px solid #ddd;">
                 <div style="display:grid; grid-template-columns: 80px 1fr; gap: 5px;">
-                    <div style="font-weight:700;">NAME:</div>    <div>${userProfile.customName}</div>
-                    <div style="font-weight:700;">USERNAME:</div>      <div>${userProfile.name.toUpperCase()}</div>
-                    <div style="font-weight:700;">ID NO.:</div>   <div>${userProfile.email.toUpperCase()}</div>
+                    <div style="font-weight:700;">NAME:</div>    <div>${userProfile.customName || "-"}</div>
+                    <div style="font-weight:700;">USERNAME:</div>      <div>${userProfile.name ? userProfile.name.toUpperCase() : "-"}</div>
+                    <div style="font-weight:700;">ID NO.:</div>   <div>${userProfile.email ? userProfile.email.toUpperCase() : "-"}</div>
                 </div>
                 <div style="display:grid; grid-template-columns: 90px 1fr; gap: 5px;">
                     <div style="font-weight:700;">POSITION:</div>  <div>${(salarySettings.position || 'Staff').toUpperCase()}</div>
@@ -731,12 +746,13 @@ window.triggerPrintPreviewPipeline = function() {
 
 window.triggerCSVExportPipeline = function() {
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
+    const val = document.getElementById('periodSelector').value;
     
     let csvRows = [];
     csvRows.push([`\"PAYSLIP ENGINE AUDIT REPORT EXPORT\"`]);
-    csvRows.push([`\"NAME\"`,`\"${userProfile.customName}\"`]);
-    csvRows.push([`\"USERNAME\"`,`\"${userProfile.name.toUpperCase()}\"`]);
-    csvRows.push([`\"ID NO.\"`,`\"${userProfile.email.toUpperCase()}\"`]);
+    csvRows.push([`\"NAME\"`,`\"${userProfile.customName || '-'}\"`]);
+    csvRows.push([`\"USERNAME\"`,`\"${userProfile.name ? userProfile.name.toUpperCase() : '-'}\"`]);
+    csvRows.push([`\"ID NO.\"`,`\"${userProfile.email ? userProfile.email.toUpperCase() : '-'}\"`]);
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
     csvRows.push([`\"DAILY RATE\"`,`\"PHP ${formatCurrency(dailyRateValue)}\"`]);
@@ -821,7 +837,7 @@ window.triggerCSVExportPipeline = function() {
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `PAYSLIP_AUDIT_LOGS_${userId}.csv`);
+    link.setAttribute("download", `PAYSLIP_AUDIT_LOGS_${userId}_${val}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
