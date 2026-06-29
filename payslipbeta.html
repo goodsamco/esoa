@@ -602,10 +602,10 @@
                         <tr>
                             <th>DATE</th>
                             <th>DAY</th>
-                            <th>TIME IN</th>
-                            <th>TIME OUT</th>
-                            <th>TIME IN 2</th>
-                            <th>TIME OUT 2</th>
+                            <th>IN1</th>
+                            <th>OUT1</th>
+                            <th>IN2</th>
+                            <th>OUT2</th>
                             <th>OT IN</th>
                             <th>OT OUT</th>
                             <th>LATES (MINS)</th>
@@ -674,45 +674,39 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-block">
-                    <label>REGULAR TIME IN</label>
+                    <label>IN1</label>
                     <input type="time" id="modalTimeIn1" onchange="runRealtimeMetricsDeductionEngine()">
                 </div>
                 <div class="form-block">
-                    <label>REGULAR TIME OUT</label>
-                    <input type="time" id="modalTimeOut1" onchange="runRealtimeMetricsDeductionEngine()">
+                    <label>OUT1</label>
+                    <input type="time" id="modalTimeOut1" onchange="evaluateLunchBreakConstraints(); runRealtimeMetricsDeductionEngine();">
                 </div>
             </div>
 
-            <div class="nested-row-segment" id="midDaySubSectionDeck" style="display: none;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-block">
-                        <label>SPLIT TIME IN (IN2)</label>
-                        <input type="time" id="modalTimeIn2" onchange="runRealtimeMetricsDeductionEngine()">
-                    </div>
-                    <div class="form-block">
-                        <label>SPLIT TIME OUT (OUT2)</label>
-                        <input type="time" id="modalTimeOut2" onchange="runRealtimeMetricsDeductionEngine()">
-                    </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-block">
+                    <label>IN2</label>
+                    <input type="time" id="modalTimeIn2" onchange="runRealtimeMetricsDeductionEngine()">
                 </div>
-                <div class="form-block" style="margin-bottom: 0; margin-top: 6px;">
-                    <label>REASON FOR INTERRUPT SEQUENCE</label>
-                    <input type="text" id="modalSplitReason" placeholder="E.G., MEDICAL EMERGENCY EXCURSION" style="font-size:0.75rem; padding: 10px;">
+                <div class="form-block">
+                    <label>OUT2</label>
+                    <input type="time" id="modalTimeOut2" onchange="runRealtimeMetricsDeductionEngine()">
                 </div>
             </div>
 
             <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px;" onclick="toggleOvertimeSubSection()">
                 <input type="checkbox" id="chkEnableOT">
-                <span style="font-size:0.65rem; font-weight:700;">APPLY RENDERED OVERTIME CREDIT</span>
+                <span style="font-size:0.65rem; font-weight:700;">CHECKBOX FOR OT</span>
             </div>
 
             <div class="nested-row-segment" id="otSubSectionDeck" style="display: none;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0;">
                     <div class="form-block" style="margin-bottom: 0;">
-                        <label>OVERTIME IN</label>
+                        <label>OT IN</label>
                         <input type="time" id="modalTimeInOT">
                     </div>
                     <div class="form-block" style="margin-bottom: 0;">
-                        <label>OVERTIME OUT</label>
+                        <label>OT OUT</label>
                         <input type="time" id="modalTimeOutOT">
                     </div>
                 </div>
@@ -1028,24 +1022,18 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
     document.getElementById('modalTimeOut1').value = "";
     document.getElementById('modalTimeIn2').value = "";
     document.getElementById('modalTimeOut2').value = "";
-    document.getElementById('modalSplitReason').value = "";
     document.getElementById('modalTimeInOT').value = "";
     document.getElementById('modalTimeOutOT').value = "";
     
     document.getElementById('chkEnableOT').checked = false;
-    document.getElementById('midDaySubSectionDeck').style.display = "none";
     document.getElementById('otSubSectionDeck').style.display = "none";
 
     if (timelineBuffer[dateKey]) {
         const rec = timelineBuffer[dateKey];
         document.getElementById('modalTimeIn1').value = rec.in1 || "";
         document.getElementById('modalTimeOut1').value = rec.out1 || "";
-        if (rec.hasMidDay) {
-            document.getElementById('midDaySubSectionDeck').style.display = "block";
-            document.getElementById('modalTimeIn2').value = rec.in2 || "";
-            document.getElementById('modalTimeOut2').value = rec.out2 || "";
-            document.getElementById('modalSplitReason').value = rec.splitReason || "";
-        }
+        document.getElementById('modalTimeIn2').value = rec.in2 || "";
+        document.getElementById('modalTimeOut2').value = rec.out2 || "";
         if (rec.hasOT) {
             document.getElementById('chkEnableOT').checked = true;
             document.getElementById('otSubSectionDeck').style.display = "block";
@@ -1056,12 +1044,13 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
         if (salarySettings.hasLunchBreak !== false) {
             document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
             document.getElementById('modalTimeOut1').value = "12:00";
-            document.getElementById('midDaySubSectionDeck').style.display = "block";
             document.getElementById('modalTimeIn2').value = "13:00";
             document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
         } else {
             document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
             document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
         }
     }
 
@@ -1080,6 +1069,18 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
     document.getElementById('timeConfigModalOverlay').classList.add('active');
 };
 
+window.evaluateLunchBreakConstraints = function() {
+    const out1 = document.getElementById('modalTimeOut1').value;
+    if (out1) {
+        const out1Mins = timeStringToMinutes(out1);
+        const noonMins = timeStringToMinutes("12:00");
+        if (out1Mins < noonMins) {
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
+        }
+    }
+};
+
 window.closeTimeTransactionModal = function() {
     document.getElementById('timeConfigModalOverlay').classList.remove('active');
 };
@@ -1091,7 +1092,6 @@ window.runRealtimeMetricsDeductionEngine = function() {
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
     const out2 = document.getElementById('modalTimeOut2').value;
-    const hasMidDay = (salarySettings.hasLunchBreak !== false);
 
     let lateMinutes = 0;
     let undertimeMinutes = 0;
@@ -1102,7 +1102,7 @@ window.runRealtimeMetricsDeductionEngine = function() {
         if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
     }
 
-    const effectiveFinalOut = (hasMidDay && out2) ? out2 : out1;
+    const effectiveFinalOut = out2 ? out2 : out1;
     if (effectiveFinalOut) {
         const schedOutMins = timeStringToMinutes(schedOut);
         const actualOutMins = timeStringToMinutes(effectiveFinalOut);
@@ -1134,17 +1134,14 @@ window.commitModalDayStateToLocalBuffer = function() {
         return;
     }
 
-    const hasMidDay = (salarySettings.hasLunchBreak !== false);
     const hasOT = document.getElementById('chkEnableOT').checked;
 
     timelineBuffer[currentTargetDateString] = {
         filled: true,
         in1: in1,
         out1: out1,
-        hasMidDay: hasMidDay,
-        in2: hasMidDay ? document.getElementById('modalTimeIn2').value : "",
-        out2: hasMidDay ? document.getElementById('modalTimeOut2').value : "",
-        splitReason: hasMidDay ? document.getElementById('modalSplitReason').value : "",
+        in2: document.getElementById('modalTimeIn2').value || "",
+        out2: document.getElementById('modalTimeOut2').value || "",
         hasOT: hasOT,
         inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
         outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
@@ -1221,7 +1218,7 @@ window.recomputeGlobalFinancials = function() {
             const actInMins = timeStringToMinutes(rec.in1);
             if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
 
-            const effectiveFinalOut = rec.hasMidDay && rec.out2 ? rec.out2 : rec.out1;
+            const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
             const schedOutMins = timeStringToMinutes(schedOutStr);
             const actOutMins = timeStringToMinutes(effectiveFinalOut);
             if (actOutMins < schedOutMins) dayUndertimeMins = (schedOutMins - actOutMins);
@@ -1500,7 +1497,7 @@ window.triggerCSVExportPipeline = function() {
 
             if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
             
-            const effectiveFinalOut = rec.hasMidDay && rec.out2 ? rec.out2 : rec.out1;
+            const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
             if (timeStringToMinutes(effectiveFinalOut) < schedOutMins) utMins = schedOutMins - timeStringToMinutes(effectiveFinalOut);
             
             let dayDed = (lateMins + utMins) * minuteRate;
@@ -1519,7 +1516,7 @@ window.triggerCSVExportPipeline = function() {
             sumNet += dayNet;
 
             csvRows.push([
-                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.hasMidDay ? rec.in2 : '-'}\"`, `\"${rec.hasMidDay ? rec.out2 : '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, formatCurrency(dayGross), formatCurrency(dayDed), formatCurrency(dayNet)
+                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.in2 || '-'}\"`, `\"${rec.out2 || '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, formatCurrency(dayGross), formatCurrency(dayDed), formatCurrency(dayNet)
             ]);
         } else {
             csvRows.push([`\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, 0, 0, `0.00`, `0.00`, `0.00`]);
