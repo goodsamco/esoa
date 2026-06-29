@@ -1227,7 +1227,7 @@ window.recomputeGlobalFinancials = function() {
 
             dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
             totalDeductionPenalties += dayDed;
-
+/*
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
@@ -1243,7 +1243,24 @@ window.recomputeGlobalFinancials = function() {
                 }
             }
         }
+*/
 
+            if (rec.hasOT && rec.inOT && rec.outOT) {
+            otIn = rec.inOT;
+            otOut = rec.outOT;
+
+            const oInMins = timeStringToMinutes(rec.inOT);
+            const oOutMins = timeStringToMinutes(rec.outOT);
+
+            if (oOutMins > oInMins) {
+            const otMins = oOutMins - oInMins;
+            const otPay = otMins * minuteRate;
+
+            totalOvertimePay += otPay;
+            dayGross += otPay;
+            }
+        }
+            
         let dayNet = dayGross - dayDed;
 
         aggLates += dayLateMins;
