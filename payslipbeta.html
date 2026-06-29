@@ -170,11 +170,18 @@
             cursor: pointer;
             user-select: none;
             transition: all 0.2s ease;
+            position: relative;
         }
 
         .calendar-day-node:hover {
             border-color: rgba(255,255,255,0.3);
             transform: translateY(-1px);
+        }
+
+        .calendar-day-node.node-locked {
+            opacity: 0.5;
+            border-style: dotted;
+            background: rgba(239, 68, 68, 0.03);
         }
 
         .calendar-day-node .day-num {
@@ -190,6 +197,14 @@
             text-transform: uppercase;
             margin-top: 2px;
             display: block;
+        }
+
+        .lock-corner-icon {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            color: #ef4444;
+            opacity: 0.8;
         }
 
         /* ==========================================================================
@@ -634,6 +649,10 @@
                     <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
                 </button>
             </div>
+            <!-- Historical Past Record View Controller Trigger -->
+            <button class="engine-btn" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.03);" onclick="toggleHistoricalPastDateReadingOverride()">
+                <i data-lucide="archive" style="width:16px;height:16px;"></i> <span id="pastRecordBtnText">VIEW PREVIOUS RECORDS</span>
+            </button>
         </div>
     </div>
 
@@ -655,11 +674,6 @@
                     <div class="lbl">UNDERTIME MINUTES</div>
                     <div class="val" id="rtUndertimeDisplay" style="color: #f59e0b;">0 MINS</div>
                 </div>
-            </div>
-
-            <div class="checkbox-container-row" style="margin-bottom: 14px; padding: 10px;" onclick="handleLunchBreakToggle()">
-                <input type="checkbox" id="chkEnableLunchBreak">
-                <span style="font-size:0.65rem; font-weight:700;">12PM LUNCH BREAK AUTOMATION</span>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -713,13 +727,16 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 20px;">
+            <div id="modalActionFooterDeck" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 20px;">
                 <button class="engine-btn primary-btn" style="height: 48px;" onclick="commitModalDayStateToLocalBuffer()">
                     APPLY CHANGES
                 </button>
                 <button class="engine-btn danger-btn" style="height: 48px;" onclick="clearModalDayState()">
                     CLEAR
                 </button>
+            </div>
+            <div id="modalLockedWarningLabel" style="display: none; margin-top: 20px; text-align: center; color: #ef4444; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 12px;">
+                <i data-lucide="lock" style="width:12px; height:12px; inline-size: auto; vertical-align: middle; margin-right: 4px;"></i> HISTORICAL ARCHIVE RECORD READ-ONLY
             </div>
         </div>
     </div>
@@ -751,10 +768,11 @@
             customName: "UNKNOWN USER", 
             email: "Loading..." 
         };
-        let salarySettings = { dailyRate: 460, timeIn: "08:00", timeOut: "17:00", position: "Staff", department: "Operations" };
+        let salarySettings = { dailyRate: 460, timeIn: "08:00", timeOut: "17:00", position: "Staff", department: "Operations", hasLunchBreak: true };
         let timelineBuffer = {}; 
         let currentTargetDateString = ""; 
         let activeDatesArray = [];
+        let previousArchiveViewingMode = false;
 
         const CURRENT_YEAR = 2026;
 
@@ -922,9 +940,24 @@
             }
         }
 
+        window.toggleHistoricalPastDateReadingOverride = function() {
+            previousArchiveViewingMode = !previousArchiveViewingMode;
+            const btnText = document.getElementById('pastRecordBtnText');
+            if (previousArchiveViewingMode) {
+                btnText.innerText = "DISABLE HISTORICAL ARCHIVE VIEW";
+                alert("HISTORICAL MODE ENABLED: YOU CAN NOW VIEW READ-ONLY LOGS FOR CLOSED / PAST DATE CHIPS.");
+            } else {
+                btnText.innerText = "VIEW PREVIOUS RECORDS";
+            }
+            renderActivePeriodCalendarGrid();
+        };
+
         function renderActivePeriodCalendarGrid() {
             const grid = document.getElementById('calendarNodeGrid');
             grid.innerHTML = "";
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
 
             activeDatesArray.forEach(dateObj => {
                 const year = dateObj.getFullYear();
@@ -933,34 +966,48 @@
                 const dateKey = `${year}-${month}-${day}`;
                 const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
+                const compareInstance = new Date(dateObj);
+                compareInstance.setHours(0,0,0,0);
+                const isPastDate = compareInstance < today;
+
                 const cell = document.createElement('div');
                 cell.className = "calendar-day-node";
+                if (isPastDate) {
+                    cell.classList.add("node-locked");
+                }
+
                 cell.innerHTML = `
                     <span class="day-num">${day}</span>
                     <span class="day-lbl">${dayOfWeekStr}</span>
                 `;
 
+                if (isPastDate) {
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = "lock-corner-icon";
+                    iconSpan.innerHTML = `<i data-lucide="lock" style="width:10px;height:10px;"></i>`;
+                    cell.appendChild(iconSpan);
+                }
+
                 if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
                     cell.style.backgroundColor = document.documentElement.style.getPropertyValue('--primary') || "var(--primary)";
                     cell.style.color = "#000000";
                     cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
+                    if (isPastDate) {
+                        cell.querySelector('.lock-corner-icon').style.color = "#000000";
+                    }
                 }
 
-                cell.onclick = () => launchTimeTransactionModal(dateKey);
+                cell.onclick = () => {
+                    if (isPastDate && !previousArchiveViewingMode) {
+                        alert("THIS DATE IS SET IN THE PAST AND LOCKED. CLICK 'VIEW PREVIOUS RECORDS' AT THE BOTTOM TO INITIATE ARCHIVE VIEW COMPLIANCE.");
+                        return;
+                    }
+                    launchTimeTransactionModal(dateKey, isPastDate);
+                };
                 grid.appendChild(cell);
             });
+            if (window.lucide) window.lucide.createIcons();
         }
-
-        window.handleLunchBreakToggle = function() {
-            const checked = document.getElementById('chkEnableLunchBreak').checked;
-            if (checked) {
-                document.getElementById('modalTimeOut1').value = "12:00";
-                document.getElementById('chkEnableMidDay').checked = true;
-                document.getElementById('midDaySubSectionDeck').style.display = "block";
-                document.getElementById('modalTimeIn2').value = "13:00";
-            }
-            runRealtimeMetricsDeductionEngine();
-        };
 
         window.runRealtimeMetricsDeductionEngine = function() {
             const schedIn = salarySettings.timeIn || "08:00";
@@ -981,14 +1028,6 @@
                 if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
             }
 
-            if (hasMidDay && in2 && out1) {
-                const out1Mins = timeStringToMinutes(out1);
-                const in2Mins = timeStringToMinutes(in2);
-                if (out1Mins < 1200 && in2Mins > 1300) {
-                    // Custom calculation overlap if desired
-                }
-            }
-
             const effectiveFinalOut = (hasMidDay && out2) ? out2 : out1;
             if (effectiveFinalOut) {
                 const schedOutMins = timeStringToMinutes(schedOut);
@@ -1006,7 +1045,7 @@
             return parseInt(p[0]) * 60 + parseInt(p[1]);
         }
 
-        window.launchTimeTransactionModal = function(dateKey) {
+        window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
             currentTargetDateString = dateKey;
             document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
             
@@ -1018,7 +1057,6 @@
             document.getElementById('modalTimeInOT').value = "";
             document.getElementById('modalTimeOutOT').value = "";
             
-            document.getElementById('chkEnableLunchBreak').checked = false;
             document.getElementById('chkEnableMidDay').checked = false;
             document.getElementById('chkEnableOT').checked = false;
             document.getElementById('midDaySubSectionDeck').style.display = "none";
@@ -1028,7 +1066,6 @@
                 const rec = timelineBuffer[dateKey];
                 document.getElementById('modalTimeIn1').value = rec.in1 || "";
                 document.getElementById('modalTimeOut1').value = rec.out1 || "";
-                document.getElementById('chkEnableLunchBreak').checked = rec.hasLunchAutomation || false;
                 if (rec.hasMidDay) {
                     document.getElementById('chkEnableMidDay').checked = true;
                     document.getElementById('midDaySubSectionDeck').style.display = "block";
@@ -1043,9 +1080,30 @@
                     document.getElementById('modalTimeOutOT').value = rec.outOT || "";
                 }
             } else {
-                // Default fallback if unfiled: automatically out in afternoon unless overwritten
-                document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-                document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+                // If lunch break intermission flag configuration is true, pre-configure automation mappings directly
+                if (salarySettings.hasLunchBreak !== false) {
+                    document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+                    document.getElementById('modalTimeOut1').value = "12:00";
+                    document.getElementById('chkEnableMidDay').checked = true;
+                    document.getElementById('midDaySubSectionDeck').style.display = "block";
+                    document.getElementById('modalTimeIn2').value = "13:00";
+                    document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
+                } else {
+                    document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+                    document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+                }
+            }
+
+            // Lock and freeze inputs if checking a previous locked data node window
+            const inputs = document.getElementById('modalBoxContainer').querySelectorAll('input, select');
+            if (isPastDate) {
+                inputs.forEach(el => el.setAttribute('disabled', 'true'));
+                document.getElementById('modalActionFooterDeck').style.display = "none";
+                document.getElementById('modalLockedWarningLabel').style.display = "block";
+            } else {
+                inputs.forEach(el => el.removeAttribute('disabled'));
+                document.getElementById('modalActionFooterDeck').style.display = "grid";
+                document.getElementById('modalLockedWarningLabel').style.display = "none";
             }
 
             runRealtimeMetricsDeductionEngine();
@@ -1057,11 +1115,13 @@
         };
 
         window.toggleMidDaySubSection = function() {
+            if(document.getElementById('chkEnableMidDay').disabled) return;
             const checked = document.getElementById('chkEnableMidDay').checked;
             document.getElementById('midDaySubSectionDeck').style.display = checked ? "block" : "none";
         };
 
         window.toggleOvertimeSubSection = function() {
+            if(document.getElementById('chkEnableOT').disabled) return;
             const checked = document.getElementById('chkEnableOT').checked;
             document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
         };
@@ -1077,13 +1137,11 @@
 
             const hasMidDay = document.getElementById('chkEnableMidDay').checked;
             const hasOT = document.getElementById('chkEnableOT').checked;
-            const hasLunchAutomation = document.getElementById('chkEnableLunchBreak').checked;
 
             timelineBuffer[currentTargetDateString] = {
                 filled: true,
                 in1: in1,
                 out1: out1,
-                hasLunchAutomation: hasLunchAutomation,
                 hasMidDay: hasMidDay,
                 in2: hasMidDay ? document.getElementById('modalTimeIn2').value : "",
                 out2: hasMidDay ? document.getElementById('modalTimeOut2').value : "",
@@ -1134,7 +1192,6 @@
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const day = String(dateObj.getDate()).padStart(2, '0');
                 const dateKey = `${year}-${month}-${day}`;
-                const rawDayStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
                 let dayGross = 0;
