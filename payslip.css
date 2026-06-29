@@ -1,0 +1,655 @@
+/* ==========================================================================
+   1. CORE DESIGN TOKENS & SYSTEM VARIABLES
+   ========================================================================== */
+:root {
+    --bg: #0b0f1a;
+    --surface: rgba(255, 255, 255, 0.03);
+    --primary: #22c55e;
+    --text-main: #f1f5f9;
+    --glass: rgba(255, 255, 255, 0.08);
+    --border-glass: rgba(255, 255, 255, 0.12);
+}
+
+/* ==========================================================================
+   2. GLOBAL RESET & LAYOUT WRAPPER 
+   ========================================================================== */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    margin: 0;
+    padding: 20px 10px 120px 10px;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.engine-container {
+    width: 100%;
+    max-width: 500px;
+    background: var(--surface);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    padding: 24px;
+    border-radius: 24px;
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   3. NAVIGATION & APP BLOCK LAYOUT HEADERS
+   ========================================================================== */
+.top-nav-deck {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.nav-btn {
+    background: var(--glass);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: var(--primary);
+    color: #000;
+    border-color: var(--primary);
+}
+
+.nav-spacer {
+    width: 40px;
+}
+
+.icon-nav-back {
+    width: 18px;
+    height: 18px;
+}
+
+h1 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0;
+    font-weight: 800;
+}
+
+/* ==========================================================================
+   4. USER PROFILE ARCHITECTURE SEGMENTS
+   ========================================================================== */
+.profile-badge-deck {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.profile-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    padding-bottom: 6px;
+}
+
+.profile-meta-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.profile-meta-row span.lbl {
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+}
+
+.profile-meta-row span.val {
+    color: #f1f5f9;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   5. INPUT DESIGN CONFIGURATION & FORM LAYOUT ELEMENTS
+   ========================================================================== */
+.form-block {
+    margin-bottom: 20px;
+}
+
+.form-block label {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+}
+
+select, input[type="text"], input[type="number"], input[type="time"] {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-glass);
+    padding: 14px;
+    border-radius: 14px;
+    color: white;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    font-weight: 600;
+    outline: none;
+}
+
+select:focus, input:focus {
+    border-color: var(--primary);
+}
+
+.input-readonly-coverage {
+    opacity: 0.8; 
+    background: rgba(0,0,0,0.2);
+}
+
+/* Custom Styled Pod Sub-panels */
+.panel-glass-pod {
+    background: rgba(255, 255, 255, 0.02); 
+    padding: 14px; 
+    border-radius: 16px; 
+    border: 1px solid var(--border-glass); 
+    margin-bottom: 20px;
+}
+
+.panel-dark-pod {
+    background: rgba(0,0,0,0.2); 
+    padding: 14px; 
+    border-radius: 16px; 
+    border: 1px solid var(--border-glass);
+}
+
+.lbl-panel-title {
+    margin-bottom: 12px; 
+    display: block;
+}
+
+.lbl-sub-grid {
+    font-size: 0.6rem; 
+    color: #94a3b8; 
+    font-weight: 800;
+}
+
+.lbl-micro {
+    font-size: 0.6rem;
+}
+
+/* Utility Flex/Grid Component Helpers */
+.grid-single-column {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.grid-two-columns {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+}
+
+.grid-three-columns {
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 8px;
+}
+
+.gap-12 { gap: 12px; }
+.margin-top-10 { margin-top: 10px; }
+.margin-top-12 { margin-top: 12px; }
+.margin-bottom-0 { margin-bottom: 0 !important; }
+
+/* Text Alignment & Palette Modifiers */
+.txt-right { text-align: right; }
+.txt-white { color: #fff; }
+.txt-primary { color: var(--primary); }
+.txt-danger { color: #ef4444; }
+.txt-blue { color: #38bdf8; }
+
+/* ==========================================================================
+   6. CALENDAR GRID MATRIX STYLING
+   ========================================================================== */
+.calendar-deck {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    background: rgba(0,0,0,0.2);
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border-glass);
+}
+
+.calendar-day-node {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.calendar-day-node:hover {
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-1px);
+}
+
+.calendar-day-node.node-locked {
+    opacity: 0.5;
+    border-style: dotted;
+    background: rgba(239, 68, 68, 0.03);
+}
+
+.calendar-day-node .day-num {
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: block;
+}
+
+.calendar-day-node .day-lbl {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-top: 2px;
+    display: block;
+}
+
+.lock-corner-icon {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    color: #ef4444;
+    opacity: 0.8;
+}
+
+/* ==========================================================================
+   7. MATRIX DATA TABLES & SCANNABLE VIEWS
+   ========================================================================== */
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border-glass);
+}
+
+.matrix-table th {
+    background: rgba(255,255,255,0.04);
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.matrix-table td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.matrix-table tr:last-child td {
+    border-bottom: none;
+}
+
+.row-total-gross {
+    border-top: 1px solid var(--border-glass); 
+    font-weight: 800;
+}
+
+.row-total-deductions {
+    border-top: 1px solid var(--border-glass); 
+    font-weight: 800;
+}
+
+.scannable-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: rgba(0,0,0,0.2);
+    border-radius: 14px;
+    border: 1px solid var(--border-glass);
+    margin-top: 10px;
+}
+
+.scannable-table-wrapper .matrix-table {
+    border: none;
+    margin-top: 0;
+    min-width: 900px;
+}
+
+.scannable-table-wrapper th, 
+.scannable-table-wrapper td {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+}
+
+.row-table-totals {
+    border-top: 2px solid var(--border-glass); 
+    font-weight: 800; 
+    background: rgba(255,255,255,0.02);
+}
+
+/* ==========================================================================
+   8. DISBURSABLE DISPLAY DECK MODULE
+   ========================================================================== */
+.net-pay-display-deck {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 20px;
+    position: relative;
+}
+
+.net-pay-display-deck.blurred-lock .val-stream {
+    filter: blur(6px);
+    pointer-events: none;
+}
+
+.net-pay-display-deck .lbl {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.net-pay-display-deck .val-stream {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--primary);
+    margin-top: 6px;
+    transition: filter 0.3s ease;
+}
+
+.lock-indicator {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 8px;
+    display: none; /* Controlled via logic state manipulation dynamically */
+}
+
+/* ==========================================================================
+   9. INTERFACE BUTTON SIGNALS
+   ========================================================================== */
+.action-trigger-deck {
+    margin-top: 24px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px;
+}
+
+.engine-btn {
+    width: 100%;
+    background: var(--glass);
+    border: 1px solid var(--border-glass);
+    color: white;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.engine-btn:hover {
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.05);
+}
+
+.engine-btn.primary-btn {
+    background: var(--primary);
+    color: #000;
+    border: none;
+    font-weight: 800;
+}
+
+.engine-btn.primary-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.engine-btn.danger-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+}
+
+.engine-btn.danger-btn:hover {
+    background: #dc2626;
+}
+
+.icon-btn-micro {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================================
+   10. MODAL DISPLAY ARCHITECTURE 
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(5, 7, 12, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 14px;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    background: #111625;
+    border: 1px solid var(--border-glass);
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+    box-sizing: border-box;
+}
+
+.modal-header-deck {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    margin-bottom: 16px;
+}
+
+.modal-header-deck h3 {
+    margin: 0; 
+    font-size: 0.85rem; 
+    letter-spacing: 0.05em; 
+    text-transform: uppercase;
+}
+
+.btn-modal-close {
+    width: 32px; 
+    height: 32px;
+}
+
+.icon-modal-close {
+    width: 14px;
+    height: 14px;
+}
+
+.realtime-stats-bar {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.realtime-stats-bar .stat-block .lbl {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.realtime-stats-bar .stat-block .val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.rt-stat-late { color: #ef4444; }
+.rt-stat-ut { color: #f59e0b; }
+
+.checkbox-container-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.class-checkbox-ot {
+    margin-bottom: 0; 
+    margin-top: 10px; 
+    padding: 10px;
+}
+
+.lbl-ot-chk {
+    font-size: 0.65rem; 
+    font-weight: 700;
+}
+
+.nested-row-segment {
+    background: rgba(0,0,0,0.15);
+    border: 1px dashed var(--border-glass);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 14px;
+    display: none;
+}
+
+.modal-footer-deck {
+    display: grid; 
+    grid-template-columns: 2fr 1fr; 
+    gap: 10px; 
+    margin-top: 20px;
+}
+
+.btn-h48 { height: 48px; }
+
+.modal-locked-warning {
+    display: none; 
+    margin-top: 20px; 
+    text-align: center; 
+    color: #ef4444; 
+    font-size: 0.7rem; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+    background: rgba(239, 68, 68, 0.1); 
+    padding: 12px; 
+    border-radius: 12px;
+}
+
+.icon-warning-lock {
+    width: 12px; 
+    height: 12px; 
+    inline-size: auto; 
+    vertical-align: middle; 
+    margin-right: 4px;
+}
+
+/* ==========================================================================
+   11. HARDWARE PIXEL-PERFECT PRINT MEDIA ARCHITECTURE
+   ========================================================================== */
+#print-render-matrix {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 5mm;
+    }
+    body, html {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    body > *:not(#print-render-matrix) {
+        display: none !important;
+    }
+    #print-render-matrix {
+        display: block !important;
+        width: 100% !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+    }
+    #print-render-matrix * {
+        display: revert; 
+        visibility: visible !important;
+    }
+    .print-sheet {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    tr {
+        page-break-inside: avoid !important;
+    }
+}
