@@ -1464,7 +1464,7 @@ window.triggerCSVExportPipeline = function() {
     csvRows.push([`\"PAYSLIP ENGINE AUDIT REPORT EXPORT\"`]);
     csvRows.push([`\"NAME\"`,`\"${userProfile.customName}\"`]);
     csvRows.push([`\"USERNAME\"`,`\"${userProfile.name.toUpperCase()}\"`]);
-    csvRows.push([`\"EMAIL\"`,`\"${userProfile.email.toUpperCase()}\"`]);
+    csvRows.push([`\"ID NO.\"`,`\"${userProfile.email.toUpperCase()}\"`]);
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
     csvRows.push([`\"DAILY RATE\"`,`\"PHP ${formatCurrency(dailyRateValue)}\"`]);
@@ -1540,7 +1540,7 @@ window.triggerCSVExportPipeline = function() {
     csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${document.getElementById('breakdownPHIC').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${document.getElementById('breakdownHDMF').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${document.getElementById('breakdownPenalties').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"CASH ADVANCES BALANCE\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"CASH ADVANCES\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
     csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${document.getElementById('breakdownNet').innerText.replace('₱','')}\"`]);
