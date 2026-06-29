@@ -181,7 +181,6 @@ function processPeriodEngineChange() {
 
     activeDatesArray = [];
 
-    // Construct array of date entities corresponding to dynamic bi-weekly windows
     if (day === 15) {
         let prevMonthDate = new Date(year, monthIdx - 1, 29);
         let currentTarget = new Date(prevMonthDate);
@@ -375,28 +374,63 @@ function closeTimeTransactionModal() {
     document.getElementById('timeConfigModalOverlay').classList.remove('active');
 }
 
+/* ==========================================================================
+   5B. SESSION-AWARE TIME DEDUCTIONS PARSER (BUG FIX DEPLOYMENT)
+   ========================================================================== */
 function runRealtimeMetricsDeductionEngine() {
     const schedIn = salarySettings.timeIn || "08:00";
     const schedOut = salarySettings.timeOut || "17:00";
     
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
+    const in2 = document.getElementById('modalTimeIn2').value;
     const out2 = document.getElementById('modalTimeOut2').value;
 
     let lateMinutes = 0;
     let undertimeMinutes = 0;
 
-    if (in1) {
-        const schedInMins = timeStringToMinutes(schedIn);
-        const actualInMins = timeStringToMinutes(in1);
-        if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
-    }
+    if (salarySettings.hasLunchBreak !== false) {
+        // Session 1 Logic: Morning Window (Bounded strictly by 12:00 PM)
+        if (in1) {
+            const schedInMins = timeStringToMinutes(schedIn);
+            const actualInMins = timeStringToMinutes(in1);
+            if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
+        }
+        if (out1) {
+            const midEndMins = timeStringToMinutes("12:00");
+            const actualOut1Mins = timeStringToMinutes(out1);
+            if (actualOut1Mins < midEndMins) undertimeMinutes += (midEndMins - actualOut1Mins);
+        }
 
-    const effectiveFinalOut = out2 ? out2 : out1;
-    if (effectiveFinalOut) {
-        const schedOutMins = timeStringToMinutes(schedOut);
-        const actualOutMins = timeStringToMinutes(effectiveFinalOut);
-        if (actualOutMins < schedOutMins) undertimeMinutes += (schedOutMins - actualOutMins);
+        // Session 2 Logic: Afternoon Window (Bounded strictly by 1:00 PM and target Schedule Out)
+        if (in2) {
+            const midStartMins = timeStringToMinutes("13:00");
+            const actualIn2Mins = timeStringToMinutes(in2);
+            if (actualIn2Mins > midStartMins) lateMinutes += (actualIn2Mins - midStartMins);
+        }
+        if (out2) {
+            const schedOutMins = timeStringToMinutes(schedOut);
+            const actualOut2Mins = timeStringToMinutes(out2);
+            if (actualOut2Mins < schedOutMins) undertimeMinutes += (schedOutMins - actualOut2Mins);
+        } else if (!out2 && in2) {
+            // Checked in for Session 2 but missing checkout completely drops full afternoon run
+            const schedOutMins = timeStringToMinutes(schedOut);
+            const midStartMins = timeStringToMinutes("13:00");
+            undertimeMinutes += (schedOutMins - midStartMins);
+        }
+    } else {
+        // Fallback Seamless Unified Track (Continuous Shift)
+        if (in1) {
+            const schedInMins = timeStringToMinutes(schedIn);
+            const actualInMins = timeStringToMinutes(in1);
+            if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
+        }
+        const effectiveFinalOut = out2 ? out2 : out1;
+        if (effectiveFinalOut) {
+            const schedOutMins = timeStringToMinutes(schedOut);
+            const actualOutMins = timeStringToMinutes(effectiveFinalOut);
+            if (actualOutMins < schedOutMins) undertimeMinutes += (schedOutMins - actualOutMins);
+        }
     }
 
     document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
@@ -500,14 +534,42 @@ function recomputeGlobalFinancials() {
             tIn2 = rec.in2 || "-";
             tOut2 = rec.out2 || "-";
 
-            const schedInMins = timeStringToMinutes(schedInStr);
-            const actInMins = timeStringToMinutes(rec.in1);
-            if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
+            if (salarySettings.hasLunchBreak !== false) {
+                // Session-Aware Morning Evaluation Check
+                const schedInMins = timeStringToMinutes(schedInStr);
+                const actInMins = timeStringToMinutes(rec.in1);
+                if (actInMins > schedInMins) dayLateMins += (actInMins - schedInMins);
 
-            const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
-            const schedOutMins = timeStringToMinutes(schedOutStr);
-            const actOutMins = timeStringToMinutes(effectiveFinalOut);
-            if (actOutMins < schedOutMins) dayUndertimeMins = (schedOutMins - actOutMins);
+                const midEndMins = timeStringToMinutes("12:00");
+                const actOut1Mins = timeStringToMinutes(rec.out1);
+                if (actOut1Mins < midEndMins) dayUndertimeMins += (midEndMins - actOut1Mins);
+
+                // Session-Aware Afternoon Evaluation Check
+                if (rec.in2) {
+                    const midStartMins = timeStringToMinutes("13:00");
+                    const actIn2Mins = timeStringToMinutes(rec.in2);
+                    if (actIn2Mins > midStartMins) dayLateMins += (actIn2Mins - midStartMins);
+                }
+                if (rec.out2) {
+                    const schedOutMins = timeStringToMinutes(schedOutStr);
+                    const actOut2Mins = timeStringToMinutes(rec.out2);
+                    if (actOut2Mins < schedOutMins) dayUndertimeMins += (schedOutMins - actOut2Mins);
+                } else if (!rec.out2 && rec.in2) {
+                    const schedOutMins = timeStringToMinutes(schedOutStr);
+                    const midStartMins = timeStringToMinutes("13:00");
+                    dayUndertimeMins += (schedOutMins - midStartMins);
+                }
+            } else {
+                // Continuous fallback structure configuration tracking
+                const schedInMins = timeStringToMinutes(schedInStr);
+                const actInMins = timeStringToMinutes(rec.in1);
+                if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
+
+                const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
+                const schedOutMins = timeStringToMinutes(schedOutStr);
+                const actOutMins = timeStringToMinutes(effectiveFinalOut);
+                if (actOutMins < schedOutMins) dayUndertimeMins = (schedOutMins - actOutMins);
+            }
 
             dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
             totalDeductionPenalties += dayDed;
@@ -784,10 +846,17 @@ function triggerCSVExportPipeline() {
             let utMins = 0;
             let dayGross = dailyRateValue;
 
-            if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
-            
-            const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
-            if (timeStringToMinutes(effectiveFinalOut) < schedOutMins) utMins = schedOutMins - timeStringToMinutes(effectiveFinalOut);
+            if (salarySettings.hasLunchBreak !== false) {
+                if (timeStringToMinutes(rec.in1) > schedInMins) lateMins += (timeStringToMinutes(rec.in1) - schedInMins);
+                if (timeStringToMinutes(rec.out1) < timeStringToMinutes("12:00")) utMins += (timeStringToMinutes("12:00") - timeStringToMinutes(rec.out1));
+                if (rec.in2 && timeStringToMinutes(rec.in2) > timeStringToMinutes("13:00")) lateMins += (timeStringToMinutes(rec.in2) - timeStringToMinutes("13:00"));
+                if (rec.out2 && timeStringToMinutes(rec.out2) < schedOutMins) utMins += (schedOutMins - timeStringToMinutes(rec.out2));
+                else if (!rec.out2 && rec.in2) utMins += (schedOutMins - timeStringToMinutes("13:00"));
+            } else {
+                if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
+                const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
+                if (timeStringToMinutes(effectiveFinalOut) < schedOutMins) utMins = schedOutMins - timeStringToMinutes(effectiveFinalOut);
+            }
             
             let dayDed = (lateMins + utMins) * minuteRate;
 
