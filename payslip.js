@@ -733,7 +733,7 @@ function generateCommercialReceiptLayout(m) {
                     <tbody>
                         ${dailyRowsHtml}
                         <tr style="border-top:2px solid #000; font-weight:bold; background:#eee;">
-                            <td colspan="8" style="padding:4px;">TOTALS</td>
+                            <td colspan="8" style="padding:4px;">TOTAL:</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
                             <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggGross)}</td>
