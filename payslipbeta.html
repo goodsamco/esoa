@@ -854,6 +854,12 @@ function updateUIProfileElements() {
     document.getElementById('profEmailDisplay').innerText = userProfile.email.toUpperCase();
     document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
     document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
+    
+    // Add Daily Rate to Employee Details layout dynamically if element exists
+    const rateElement = document.getElementById('profDailyRateDisplay');
+    if (rateElement) {
+        rateElement.innerText = `₱${(parseFloat(salarySettings.dailyRate) || 460).toFixed(2)}`;
+    }
 }
 
 function buildDropdownTargetIntervals() {
@@ -918,22 +924,18 @@ window.processPeriodEngineChange = function() {
 
 // 4. PRECISION TIME LOCKOUT ENGINE
 function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
-    const today = new Date(); // e.g., 6/29/2026
+    const today = new Date();
     const currentMonthNum = today.getMonth();
     const currentYearNum = today.getFullYear();
 
     let lockActive = true;
 
-    // Do not disable or lock down records if it belongs to the current month or its preceding adjacent cycle
     if (year === currentYearNum) {
         if (monthIdx === currentMonthNum) {
-            // Unlocks current month targets (e.g. June 15 and June 30 targets)
             lockActive = false;
         } else if (monthIdx === currentMonthNum - 1 && targetDay > 15) {
-            // Unlocks previous month's end-cycle which bleeds directly into the current month's start window
             lockActive = false;
         } else if (monthIdx === currentMonthNum + 1 && targetDay === 15) {
-            // Unlocks next month's start-cycle which includes current month end dates (e.g., June 29/30 inside July 15 period)
             lockActive = false;
         }
     }
@@ -978,12 +980,10 @@ function renderActivePeriodCalendarGrid() {
         const dateKey = `${year}-${monthStr}-${dayStr}`;
         const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
-        // Lock determination: True historical past records (Prior months completely outside current month limits)
         let isPastDate = false;
         if (year < currentYearNum) {
             isPastDate = true;
         } else if (year === currentYearNum && monthIdx < currentMonthNum) {
-            // Exceptions made for trailing days that overlap into the current active ecosystem window
             if (!(monthIdx === currentMonthNum - 1 && dateObj.getDate() >= 29)) {
                 isPastDate = true;
             }
@@ -1064,7 +1064,6 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
             document.getElementById('modalTimeOutOT').value = rec.outOT || "";
         }
     } else {
-        // Automatically cascade Lunch Break configuration states from Settings Database
         if (salarySettings.hasLunchBreak !== false) {
             document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
             document.getElementById('modalTimeOut1').value = "12:00";
@@ -1368,12 +1367,13 @@ window.commitTimelineTransactionToCloud = async function() {
     }
 };
 
-// 7. COMPACT MATRIX RENDERING (FOR PRINTING)
+// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF)
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
     if (!printContainer) return;
     const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
     const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
+    const currentDailyRate = parseFloat(salarySettings.dailyRate) || 460;
 
     let dailyRowsHtml = "";
     m.structuralDailyArrayLogs.forEach(row => {
@@ -1411,6 +1411,7 @@ function generateCommercialReceiptLayout(m) {
                 <div style="display:grid; grid-template-columns: 90px 1fr; gap: 5px;">
                     <div style="font-weight:700;">POSITION:</div>  <div>${(salarySettings.position || 'Staff').toUpperCase()}</div>
                     <div style="font-weight:700;">DEPT:</div>      <div>${(salarySettings.department || 'Operations').toUpperCase()}</div>
+                    <div style="font-weight:700;">DAILY RATE:</div><div><b>₱${currentDailyRate.toFixed(2)}</b></div>
                     <div style="font-weight:700;">WORKED:</div>    <div>${m.actualDaysWorkedCounter} DAYS</div>
                 </div>
             </div>
@@ -1478,6 +1479,8 @@ window.triggerPrintPreviewPipeline = function() {
 };
 
 window.triggerCSVExportPipeline = function() {
+    const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
+    
     let csvRows = [];
     csvRows.push([`\"PAYSLIP ENGINE AUDIT REPORT EXPORT\"`]);
     csvRows.push([`\"NAME\"`,`\"${userProfile.customName}\"`]);
@@ -1485,6 +1488,7 @@ window.triggerCSVExportPipeline = function() {
     csvRows.push([`\"EMAIL\"`,`\"${userProfile.email.toUpperCase()}\"`]);
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
+    csvRows.push([`\"DAILY RATE\"`,`\"PHP ${dailyRateValue.toFixed(2)}\"`]);
     csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
     csvRows.push([]);
     
@@ -1492,8 +1496,7 @@ window.triggerCSVExportPipeline = function() {
         `\"DATE\"`, `\"DAY\"`, `\"TIME IN 1\"`, `\"TIME OUT 1\"`, `\"TIME IN 2\"`, `\"TIME OUT 2\"`, `\"OT IN\"`, `\"OT OUT\"`, `\"LATES (MINS)\"`, `\"UNDERTIME (MINS)\"`, `\"GROSS DAY VALUE\"`, `\"DEDUCTION DAY CUT\"`, `\"DAILY NET\"`
     ]);
     
-    const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
-    const hourlyRate = dailyRate / 8;
+    const hourlyRate = dailyRateValue / 8;
     const minuteRate = hourlyRate / 60;
     const schedInMins = timeStringToMinutes(salarySettings.timeIn || "08:00");
     const schedOutMins = timeStringToMinutes(salarySettings.timeOut || "17:00");
@@ -1511,7 +1514,7 @@ window.triggerCSVExportPipeline = function() {
             const rec = timelineBuffer[dateKey];
             let lateMins = 0;
             let utMins = 0;
-            let dayGross = dailyRate;
+            let dayGross = dailyRateValue;
 
             if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
             
