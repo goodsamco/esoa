@@ -649,10 +649,6 @@
                     <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
                 </button>
             </div>
-            <!-- Historical Past Record View Controller Trigger -->
-            <button class="engine-btn" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.03);" onclick="toggleHistoricalPastDateReadingOverride()">
-                <i data-lucide="archive" style="width:16px;height:16px;"></i> <span id="pastRecordBtnText">VIEW PREVIOUS RECORDS</span>
-            </button>
         </div>
     </div>
 
@@ -685,11 +681,6 @@
                     <label>REGULAR TIME OUT</label>
                     <input type="time" id="modalTimeOut1" onchange="runRealtimeMetricsDeductionEngine()">
                 </div>
-            </div>
-
-            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 4px; padding: 10px;" onclick="toggleMidDaySubSection()">
-                <input type="checkbox" id="chkEnableMidDay">
-                <span style="font-size:0.65rem; font-weight:700;">ENABLE SECOND SPLIT SCHEDULE SHIFT</span>
             </div>
 
             <div class="nested-row-segment" id="midDaySubSectionDeck" style="display: none;">
@@ -784,10 +775,14 @@ let previousArchiveViewingMode = false;
 
 const CURRENT_YEAR = 2026;
 
+// Helper to add comma separators for currencies
+function formatCurrency(amount) {
+    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // 3. CORE INITIALIZATION ENGINE
 async function bootEngineCore() {
     try {
-        // Fetch Account Identity & Themes
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
@@ -808,7 +803,6 @@ async function bootEngineCore() {
             }
         }
 
-        // Fetch Universal Salary Parameters
         const settingsRef = doc(db, "salary_settings", userId);
         const settingsSnap = await getDoc(settingsRef);
         if (settingsSnap.exists()) {
@@ -827,7 +821,6 @@ async function bootEngineCore() {
         buildDropdownTargetIntervals();
         processPeriodEngineChange();
         
-        // Load Transacted Work Timeline Buffer Logs
         const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
         if (transSnap.exists()) {
             const loadedData = transSnap.data();
@@ -855,14 +848,12 @@ function updateUIProfileElements() {
     document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
     document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
     
-    // Check if the Daily Rate row is already present or explicitly configured in HTML
     let rateElement = document.getElementById('profDailyRateDisplay');
-    const formattedRate = `₱${(parseFloat(salarySettings.dailyRate) || 460).toFixed(2)}`;
+    const formattedRate = `₱${formatCurrency(parseFloat(salarySettings.dailyRate) || 460)}`;
     
     if (rateElement) {
         rateElement.innerText = formattedRate;
     } else {
-        // Safely find the profile badge deck and inject the missing row via JS runtime architecture
         const badgeDeck = document.querySelector('.profile-badge-deck');
         if (badgeDeck) {
             const newMetaRow = document.createElement('div');
@@ -936,7 +927,6 @@ window.processPeriodEngineChange = function() {
     recomputeGlobalFinancials();
 };
 
-// 4. PRECISION TIME LOCKOUT ENGINE
 function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
     const today = new Date();
     const currentMonthNum = today.getMonth();
@@ -965,18 +955,6 @@ function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
     }
 }
 
-window.toggleHistoricalPastDateReadingOverride = function() {
-    previousArchiveViewingMode = !previousArchiveViewingMode;
-    const btnText = document.getElementById('pastRecordBtnText');
-    if (previousArchiveViewingMode) {
-        btnText.innerText = "DISABLE HISTORICAL ARCHIVE VIEW";
-        alert("HISTORICAL MODE ENABLED: ARCHIVED CLOSED ENTRIES ARE REMOVED FROM LOCKED BLOCKADE FOR VISUAL ANALYSIS.");
-    } else {
-        btnText.innerText = "VIEW PREVIOUS RECORDS";
-    }
-    renderActivePeriodCalendarGrid();
-};
-
 function renderActivePeriodCalendarGrid() {
     const grid = document.getElementById('calendarNodeGrid');
     if (!grid) return;
@@ -988,17 +966,16 @@ function renderActivePeriodCalendarGrid() {
 
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
-        const monthIdx = dateObj.getMonth();
-        const monthStr = String(monthIdx + 1).padStart(2, '0');
-        const dayStr = String(dateObj.getDate()).padStart(2, '0');
-        const dateKey = `${year}-${monthStr}-${dayStr}`;
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const dateKey = `${year}-${month}-${day}`;
         const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
         let isPastDate = false;
         if (year < currentYearNum) {
             isPastDate = true;
-        } else if (year === currentYearNum && monthIdx < currentMonthNum) {
-            if (!(monthIdx === currentMonthNum - 1 && dateObj.getDate() >= 29)) {
+        } else if (year === currentYearNum && dateObj.getMonth() < currentMonthNum) {
+            if (!(dateObj.getMonth() === currentMonthNum - 1 && dateObj.getDate() >= 29)) {
                 isPastDate = true;
             }
         }
@@ -1010,7 +987,7 @@ function renderActivePeriodCalendarGrid() {
         }
 
         cell.innerHTML = `
-            <span class="day-num">${dayStr}</span>
+            <span class="day-num">${day}</span>
             <span class="day-lbl">${dayOfWeekStr}</span>
         `;
 
@@ -1031,8 +1008,8 @@ function renderActivePeriodCalendarGrid() {
         }
 
         cell.onclick = () => {
-            if (isPastDate && !previousArchiveViewingMode) {
-                alert("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE. CLICK 'VIEW PREVIOUS RECORDS' AT THE BOTTOM TO REVEAL PROTECTED TRANSACTION LOGS.");
+            if (isPastDate) {
+                alert("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
             launchTimeTransactionModal(dateKey, isPastDate);
@@ -1055,7 +1032,6 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
     document.getElementById('modalTimeInOT').value = "";
     document.getElementById('modalTimeOutOT').value = "";
     
-    document.getElementById('chkEnableMidDay').checked = false;
     document.getElementById('chkEnableOT').checked = false;
     document.getElementById('midDaySubSectionDeck').style.display = "none";
     document.getElementById('otSubSectionDeck').style.display = "none";
@@ -1065,7 +1041,6 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
         document.getElementById('modalTimeIn1').value = rec.in1 || "";
         document.getElementById('modalTimeOut1').value = rec.out1 || "";
         if (rec.hasMidDay) {
-            document.getElementById('chkEnableMidDay').checked = true;
             document.getElementById('midDaySubSectionDeck').style.display = "block";
             document.getElementById('modalTimeIn2').value = rec.in2 || "";
             document.getElementById('modalTimeOut2').value = rec.out2 || "";
@@ -1081,7 +1056,6 @@ window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
         if (salarySettings.hasLunchBreak !== false) {
             document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
             document.getElementById('modalTimeOut1').value = "12:00";
-            document.getElementById('chkEnableMidDay').checked = true;
             document.getElementById('midDaySubSectionDeck').style.display = "block";
             document.getElementById('modalTimeIn2').value = "13:00";
             document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
@@ -1117,7 +1091,7 @@ window.runRealtimeMetricsDeductionEngine = function() {
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
     const out2 = document.getElementById('modalTimeOut2').value;
-    const hasMidDay = document.getElementById('chkEnableMidDay').checked;
+    const hasMidDay = (salarySettings.hasLunchBreak !== false);
 
     let lateMinutes = 0;
     let undertimeMinutes = 0;
@@ -1145,12 +1119,6 @@ function timeStringToMinutes(timeStr) {
     return parseInt(p[0]) * 60 + parseInt(p[1]);
 }
 
-window.toggleMidDaySubSection = function() {
-    if(document.getElementById('chkEnableMidDay').disabled) return;
-    const checked = document.getElementById('chkEnableMidDay').checked;
-    document.getElementById('midDaySubSectionDeck').style.display = checked ? "block" : "none";
-};
-
 window.toggleOvertimeSubSection = function() {
     if(document.getElementById('chkEnableOT').disabled) return;
     const checked = document.getElementById('chkEnableOT').checked;
@@ -1166,7 +1134,7 @@ window.commitModalDayStateToLocalBuffer = function() {
         return;
     }
 
-    const hasMidDay = document.getElementById('chkEnableMidDay').checked;
+    const hasMidDay = (salarySettings.hasLunchBreak !== false);
     const hasOT = document.getElementById('chkEnableOT').checked;
 
     timelineBuffer[currentTargetDateString] = {
@@ -1297,9 +1265,9 @@ window.recomputeGlobalFinancials = function() {
                 <td>${otOut}</td>
                 <td style="color: #94a3b8;">${dayLateMins}</td>
                 <td style="color: #94a3b8;">${dayUndertimeMins}</td>
-                <td style="text-align: right; color: ${dayGross > 0 ? '#fff' : '#64748b'};">₱${dayGross.toFixed(2)}</td>
-                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${dayDed.toFixed(2)}</td>
-                <td style="text-align: right; color: #38bdf8;">₱${dayNet.toFixed(2)}</td>
+                <td style="text-align: right; color: ${dayGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayGross)}</td>
+                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
+                <td style="text-align: right; color: #38bdf8;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
 
@@ -1325,9 +1293,9 @@ window.recomputeGlobalFinancials = function() {
 
     document.getElementById('totalLates').innerText = aggLates;
     document.getElementById('totalUndertime').innerText = aggUndertime;
-    document.getElementById('totalGross').innerText = `₱${aggGross.toFixed(2)}`;
-    document.getElementById('totalDed').innerText = `₱${aggDed.toFixed(2)}`;
-    document.getElementById('totalDailyNet').innerText = `₱${aggNet.toFixed(2)}`;
+    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggGross)}`;
+    document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
+    document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
     const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
     const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
@@ -1342,18 +1310,18 @@ window.recomputeGlobalFinancials = function() {
     const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
     const netPay = grossPay - totalDeductions;
 
-    document.getElementById('breakdownBasic').innerText = `₱${totalBasicEarnings.toFixed(2)}`;
-    document.getElementById('breakdownOT').innerText = `₱${totalOvertimePay.toFixed(2)}`;
-    document.getElementById('breakdownIncentives').innerText = `₱${totalIncentives.toFixed(2)}`;
-    document.getElementById('breakdownGross').innerText = `₱${grossPay.toFixed(2)}`;
+    document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
+    document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
+    document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
+    document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
 
-    document.getElementById('breakdownSSS').innerText = `₱${sss.toFixed(2)}`;
-    document.getElementById('breakdownPHIC').innerText = `₱${phic.toFixed(2)}`;
-    document.getElementById('breakdownHDMF').innerText = `₱${hdmf.toFixed(2)}`;
-    document.getElementById('breakdownPenalties').innerText = `₱${totalDeductionPenalties.toFixed(2)}`;
-    document.getElementById('breakdownAdvances').innerText = `₱${advances.toFixed(2)}`;
-    document.getElementById('breakdownTotalDed').innerText = `₱${totalDeductions.toFixed(2)}`;
-    document.getElementById('breakdownNet').innerText = `₱${netPay.toFixed(2)}`;
+    document.getElementById('breakdownSSS').innerText = `₱${formatCurrency(sss)}`;
+    document.getElementById('breakdownPHIC').innerText = `₱${formatCurrency(phic)}`;
+    document.getElementById('breakdownHDMF').innerText = `₱${formatCurrency(hdmf)}`;
+    document.getElementById('breakdownPenalties').innerText = `₱${formatCurrency(totalDeductionPenalties)}`;
+    document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
+    document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
+    document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
 
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
@@ -1403,9 +1371,9 @@ function generateCommercialReceiptLayout(m) {
                 <td style="padding: 4px;">${row.outOT}</td>
                 <td style="padding: 4px;">${row.lates}</td>
                 <td style="padding: 4px;">${row.undertime}</td>
-                <td style="padding: 4px; text-align: right;">₱${row.gross.toFixed(2)}</td>
-                <td style="padding: 4px; text-align: right; color:#c00;">₱${row.deductions.toFixed(2)}</td>
-                <td style="padding: 4px; text-align: right; color:#00f;">₱${row.net.toFixed(2)}</td>
+                <td style="padding: 4px; text-align: right;">₱${formatCurrency(row.gross)}</td>
+                <td style="padding: 4px; text-align: right; color:#c00;">₱${formatCurrency(row.deductions)}</td>
+                <td style="padding: 4px; text-align: right; color:#00f;">₱${formatCurrency(row.net)}</td>
             </tr>
         `;
     });
@@ -1425,7 +1393,7 @@ function generateCommercialReceiptLayout(m) {
                 <div style="display:grid; grid-template-columns: 90px 1fr; gap: 5px;">
                     <div style="font-weight:700;">POSITION:</div>  <div>${(salarySettings.position || 'Staff').toUpperCase()}</div>
                     <div style="font-weight:700;">DEPT:</div>      <div>${(salarySettings.department || 'Operations').toUpperCase()}</div>
-                    <div style="font-weight:700;">DAILY RATE:</div><div><b>₱${currentDailyRate.toFixed(2)}</b></div>
+                    <div style="font-weight:700;">DAILY RATE:</div><div><b>₱${formatCurrency(currentDailyRate)}</b></div>
                     <div style="font-weight:700;">WORKED:</div>    <div>${m.actualDaysWorkedCounter} DAYS</div>
                 </div>
             </div>
@@ -1454,30 +1422,30 @@ function generateCommercialReceiptLayout(m) {
                             <td colspan="8" style="padding:4px;">TOTALS</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
-                            <td style="padding:4px; text-align:right;">₱${m.aggGross.toFixed(2)}</td>
-                            <td style="padding:4px; text-align:right; color:#c00;">₱${m.aggDed.toFixed(2)}</td>
-                            <td style="padding:4px; text-align:right; color:#00f;">₱${m.aggNet.toFixed(2)}</td>
+                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggGross)}</td>
+                            <td style="padding:4px; text-align:right; color:#c00;">₱${formatCurrency(m.aggDed)}</td>
+                            <td style="padding:4px; text-align:right; color:#00f;">₱${formatCurrency(m.aggNet)}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${m.totalBasicEarnings.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px 0;">OT Pay</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${m.totalIncentives.toFixed(2)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${m.grossPay.toFixed(2)}</b></td></tr>
-                        <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${m.sss.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${m.phic.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${m.hdmf.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Advances</td><td style="text-align:right;">₱${m.advances.toFixed(2)}</td></tr>
-                        <tr><td style="padding:4px 0;"><b>TOTAL DED.</b></td><td style="text-align:right; color:#c00;"><b>₱${m.totalDeductions.toFixed(2)}</b></td></tr>
+                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
+                        <tr><td style="padding:2px 0;">OT Pay</td><td style="text-align:right;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
+                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
+                        <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
+                        <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
+                        <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
+                        <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${formatCurrency(m.totalDeductionPenalties)}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Advances</td><td style="text-align:right;">₱${formatCurrency(m.advances)}</td></tr>
+                        <tr><td style="padding:4px 0;"><b>TOTAL DED.</b></td><td style="text-align:right; color:#c00;"><b>₱${formatCurrency(m.totalDeductions)}</b></td></tr>
                     </tbody>
                 </table>
             </div>
             <div style="margin-top:15px; border:2px solid #000; padding:10px; text-align:center; background:#eee;">
-                <span style="font-weight:900; font-size:14px;">NET DISBURSABLE PAY: ₱${m.netPay.toFixed(2)}</span>
+                <span style="font-weight:900; font-size:14px;">NET DISBURSABLE PAY: ₱${formatCurrency(m.netPay)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:10px;">
                 <div style="text-align:center;">________________________<br>Payroll Administrator</div>
@@ -1502,7 +1470,7 @@ window.triggerCSVExportPipeline = function() {
     csvRows.push([`\"EMAIL\"`,`\"${userProfile.email.toUpperCase()}\"`]);
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
-    csvRows.push([`\"DAILY RATE\"`,`\"PHP ${dailyRateValue.toFixed(2)}\"`]);
+    csvRows.push([`\"DAILY RATE\"`,`\"PHP ${formatCurrency(dailyRateValue)}\"`]);
     csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
     csvRows.push([]);
     
@@ -1551,7 +1519,7 @@ window.triggerCSVExportPipeline = function() {
             sumNet += dayNet;
 
             csvRows.push([
-                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.hasMidDay ? rec.in2 : '-'}\"`, `\"${rec.hasMidDay ? rec.out2 : '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, dayGross.toFixed(2), dayDed.toFixed(2), dayNet.toFixed(2)
+                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.hasMidDay ? rec.in2 : '-'}\"`, `\"${rec.hasMidDay ? rec.out2 : '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, formatCurrency(dayGross), formatCurrency(dayDed), formatCurrency(dayNet)
             ]);
         } else {
             csvRows.push([`\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, 0, 0, `0.00`, `0.00`, `0.00`]);
@@ -1559,15 +1527,15 @@ window.triggerCSVExportPipeline = function() {
     });
 
     csvRows.push([
-        `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, sumGross.toFixed(2), sumDed.toFixed(2), sumNet.toFixed(2)
+        `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, formatCurrency(sumGross), formatCurrency(sumDed), formatCurrency(sumNet)
     ]);
     
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
     csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"OVERTIME PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${parseFloat(document.getElementById('inputDoublePay').value || 0).toFixed(2)}\"`]);
-    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${parseFloat(document.getElementById('inputReimbursements').value || 0).toFixed(2)}\"`]);
+    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
+    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
     csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${document.getElementById('breakdownGross').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
     csvRows.push([`\"DEDUCTION ACCOUNT ITEMS\"`]);
