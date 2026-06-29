@@ -3,265 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAYSLIP ENGINE — SALARY COMPUTER</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Payroll & Timekeeping Dashboard</title>
+    <!-- Stylesheets: Core UI Styles followed by specific Print Overrides -->
     <link rel="stylesheet" href="payslip.css">
+    <link rel="stylesheet" href="print.css" media="print">
+    <!-- Icon Font Library: Lucide Icons for responsive vector glyphs -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-    <div class="engine-container">
-        <div class="top-nav-deck">
-            <button class="nav-btn" onclick="window.location.href='settings.html'" title="SETTINGS">
-                <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
-            </button>
-            <h1>TIME & PAYSLIP SYSTEM</h1>
-            <div style="width:40px;"></div>
-        </div>
+    <!-- PRIMARY DASHBOARD WRAPPER -->
+    <div class="dashboard-container">
+        
+        <!-- SIDEBAR NAVIGATION MENU -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <h2>SVLS SYSTEM</h2>
+            </div>
+            <nav class="nav-menu">
+                <!-- Navigation anchors leading back to core modules -->
+                <a href="dashboard.html" class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                <a href="attendance.html" class="nav-item"><i data-lucide="calendar"></i> Attendance</a>
+                <a href="payslipbeta.html" class="nav-item active"><i data-lucide="file-text"></i> Payslip Engine</a>
+                <a href="settings.html" class="nav-item"><i data-lucide="settings"></i> Settings</a>
+                <a href="login.html" class="nav-item logout" style="margin-top: auto;"><i data-lucide="log-out"></i> Logout</a>
+            </nav>
+        </aside>
 
-        <div class="profile-badge-deck">
-            <div class="profile-meta-row">
-                <span class="lbl">NAME</span>
-                <span class="val" id="profSettingsNameDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">USERNAME</span>
-                <span class="val" id="profNameDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">ID NO.</span>
-                <span class="val" id="profEmailDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">POSITION</span>
-                <span class="val" id="profPosDisplay">-</span>
-            </div>
-            <div class="profile-meta-row">
-                <span class="lbl">DEPARTMENT</span>
-                <span class="val" id="profDeptDisplay">-</span>
-            </div>
-        </div>
-
-        <div class="form-block">
-            <label>PAYSLIP TIME PERIOD CLOSURE</label>
-            <select id="periodSelector" onchange="processPeriodEngineChange()">
-            </select>
-        </div>
-
-        <div class="form-block">
-            <label>PAYABLE CYCLE COVERAGE WINDOW</label>
-            <input type="text" id="payableRangeDisplay" readonly style="opacity: 0.8; background: rgba(0,0,0,0.2);">
-        </div>
-
-        <div class="form-block">
-            <label>DUTY TRANSACTION MATRIX (CLICK DATE TO FILE TIME)</label>
-            <div class="calendar-deck" id="calendarNodeGrid">
-            </div>
-        </div>
-
-        <div class="form-block" style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass); margin-bottom: 20px;">
-            <label style="margin-bottom: 12px; display: block;">EXTRA CYCLE INCENTIVES</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <!-- MAIN DASHBOARD CONTENT AREA -->
+        <main class="main-content">
+            
+            <!-- HEADER: Profile Summary & App Title -->
+            <header class="top-header">
                 <div>
-                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">DOUBLE PAY ADDITIONS</label>
-                    <input type="number" id="inputDoublePay" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    <h1>Payroll Ledger</h1>
+                    <p class="subtitle">Realtime Timekeeping Verification & Net Distribution Pipeline</p>
                 </div>
-                <div>
-                    <label style="font-size:0.6rem; color: #94a3b8; font-weight:800;">REIMBURSEMENTS / ALLOWANCE</label>
-                    <input type="number" id="inputReimbursements" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                <!-- Profile Deck: Displays current active identity variables parsed via JS -->
+                <div class="profile-badge-deck">
+                    <div class="profile-meta-row"><span class="lbl">ID/USER:</span> <span class="val" id="profNameDisplay">-</span></div>
+                    <div class="profile-meta-row"><span class="lbl">NAME:</span> <span class="val" id="profSettingsNameDisplay">-</span></div>
+                    <div class="profile-meta-row"><span class="lbl">EMAIL:</span> <span class="val" id="profEmailDisplay">-</span></div>
+                    <div class="profile-meta-row"><span class="lbl">POSITION:</span> <span class="val" id="profPosDisplay">-</span></div>
+                    <div class="profile-meta-row"><span class="lbl">DEPT:</span> <span class="val" id="profDeptDisplay">-</span></div>
                 </div>
+            </header>
+
+            <!-- PAYROLL CONFIGURATION CONTROL BOARD -->
+            <section class="control-card">
+                <h3>Payroll Period Setup</h3>
+                <div class="control-grid">
+                    <!-- Period Selection: Selects targets from automatically generated options in JS -->
+                    <div class="input-field-group">
+                        <label for="periodSelector">Target Cutoff Period</label>
+                        <select id="periodSelector" onchange="processPeriodEngineChange()"></select>
+                    </div>
+                    <!-- Date Range Span (Read-only): Confirms physical window calculated by code -->
+                    <div class="input-field-group">
+                        <label>Calculated Cutoff Range</label>
+                        <input type="text" id="payableRangeDisplay" readonly style="background: rgba(255,255,255,0.05); color: var(--text-muted);">
+                    </div>
+                </div>
+
+                <hr style="border:0; border-top: 1px dashed rgba(255,255,255,0.1); margin: 20px 0;">
+
+                <!-- MANUAL ADJUSTMENTS SECTION: Financial fields injected to override gross values -->
+                <h4 style="margin-bottom: 12px; color: var(--primary);">Manual Variances & Allowances</h4>
+                <div class="control-grid adjustments-grid">
+                    <div class="input-field-group">
+                        <label>SSS Contrib (₱)</label>
+                        <input type="number" id="inputSSS" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    </div>
+                    <div class="input-field-group">
+                        <label>PHIC Premium (₱)</label>
+                        <input type="number" id="inputPHIC" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    </div>
+                    <div class="input-field-group">
+                        <label>HDMF Fund (₱)</label>
+                        <input type="number" id="inputHDMF" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    </div>
+                    <div class="input-field-group">
+                        <label>Cash Advances (₱)</label>
+                        <input type="number" id="inputAdvances" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    </div>
+                    <div class="input-field-group">
+                        <label>Double Pay (₱)</label>
+                        <input type="number" id="inputDoublePay" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    </div>
+                    <div class="input-field-group">
+                        <label>Reimbursements (₱)</label>
+                        <input type="number" id="inputReimbursements" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+                    </div>
+                </div>
+            </section>
+
+            <!-- INTERACTIVE CALENDAR GRID SUB-COMPONENT -->
+            <section class="calendar-section">
+                <div class="section-title-bar">
+                    <h3>Cutoff Timeline Track</h3>
+                    <span class="instruction-tag">Click an active date node below to edit or record hours.</span>
+                </div>
+                <!-- Dynamic Node Injection Point handled by `renderActivePeriodCalendarGrid()` -->
+                <div class="calendar-grid" id="calendarNodeGrid"></div>
+            </section>
+
+            <!-- STATISTICAL & BREAKDOWN FOOTER SECTION -->
+            <div class="financials-layout-split">
+                
+                <!-- LEDGER STATEMENT PREVIEW: Formatted similarly to a legal payslip slip -->
+                <section class="payslip-slip-card" id="printablePayslipDocument">
+                    <div class="slip-header">
+                        <h3>SVLS SYSTEM INC.</h3>
+                        <p>Official Digital Earnings Statement</p>
+                    </div>
+                    
+                    <!-- Financial Data Blocks -->
+                    <div class="slip-body">
+                        <div class="slip-row header-row"><span>EARNING MATRIX ITEMS</span><span>VALUE AMOUNT</span></div>
+                        <div class="slip-row"><span>Basic Run Pay (Days Worked)</span><span id="breakdownBasic">₱0.00</span></div>
+                        <div class="slip-row"><span>Overtime Premium Pay</span><span id="breakdownOT">₱0.00</span></div>
+                        <div class="slip-row"><span>Incentives, Double Pay & Reimbursements</span><span id="breakdownIncentives">₱0.00</span></div>
+                        <div class="slip-row total-row"><span>TOTAL COMPENSATED GROSS</span><span id="breakdownGross">₱0.00</span></div>
+
+                        <div class="slip-row header-row" style="margin-top:15px;"><span>DEDUCTION ACCOUNT ITEMS</span><span>CHARGES</span></div>
+                        <div class="slip-row"><span>Social Security System (SSS)</span><span id="breakdownSSS" class="deduction-val">₱0.00</span></div>
+                        <div class="slip-row"><span>PhilHealth Insurance (PHIC)</span><span id="breakdownPHIC" class="deduction-val">₱0.00</span></div>
+                        <div class="slip-row"><span>Pag-IBIG Fund (HDMF)</span><span id="breakdownHDMF" class="deduction-val">₱0.00</span></div>
+                        <div class="slip-row"><span>Attendance Penalties (Lates/Undertime)</span><span id="breakdownPenalties" class="deduction-val">₱0.00</span></div>
+                        <div class="slip-row"><span>Salary Loans / Advanced Cash Out</span><span id="breakdownAdvances" class="deduction-val">₱0.00</span></div>
+                        <div class="slip-row total-row"><span>TOTAL DEDUCTIBLE VALS</span><span id="breakdownTotalDed" class="deduction-val">₱0.00</span></div>
+
+                        <!-- MAIN TARGET: Final Disbursable Remainder -->
+                        <div class="net-payout-banner" id="netPayWrapperDeck">
+                            <span class="label">NET DISBURSABLE PAYOUT</span>
+                            <span class="amount" id="breakdownNet">₱0.00</span>
+                            <!-- Security Guardrail Badge: Displayed if viewing an archive out of window bounds -->
+                            <div class="lock-badge" id="lockBadgeDisplay"><i data-lucide="lock" style="width:14px; height:14px;"></i> ARCHIVED HISTORICAL DATA</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PIPELINE UTILITY CONTROLS: File Actions -->
+                <section class="actions-card-deck">
+                    <h3>Pipeline Execution Hooks</h3>
+                    <p style="font-size:12px; color: var(--text-muted); margin-bottom: 20px;">
+                        Commit calculations to live storage, print statements, or export audits out of client arrays.
+                    </p>
+                    <div class="action-buttons-stack">
+                        <button class="btn btn-primary" onclick="commitTimelineTransactionToCloud()">
+                            <i data-lucide="cloud-lightning"></i> Commit State to Cloud
+                        </button>
+                        <button class="btn btn-secondary" onclick="triggerCSVExportPipeline()">
+                            <i data-lucide="download"></i> Export Audit Spreadsheet (.CSV)
+                        </button>
+                        <button class="btn id-print-trigger" style="background: #27272a; color:#fff;" onclick="triggerPrintPreviewPipeline()">
+                            <i data-lucide="printer"></i> Trigger Local Print Pipeline
+                        </button>
+                    </div>
+                </section>
             </div>
-        </div>
 
-        <div class="form-block" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 16px; border: 1px solid var(--border-glass);">
-            <label style="margin-bottom: 12px; display: block;">STATUTORY CONTRIBUTION INPUTS</label>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                <div>
-                    <label style="font-size:0.6rem;">SSS</label>
-                    <input type="number" id="inputSSS" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
+            <!-- DETAILED DAILY BREAKDOWN DATAGRID -->
+            <section class="table-section-deck" style="margin-top: 30px;">
+                <h3>Itemized Daily Audit Ledger</h3>
+                <div style="overflow-x: auto; margin-top: 15px;">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Date Stamp</th>
+                                <th>Day</th>
+                                <th>In 1</th>
+                                <th>Out 1</th>
+                                <th>In 2</th>
+                                <th>Out 2</th>
+                                <th>OT In</th>
+                                <th>OT Out</th>
+                                <th>Late (m)</th>
+                                <th>UT (m)</th>
+                                <th style="text-align: right;">Gross Earned</th>
+                                <th style="text-align: right;">Penalties</th>
+                                <th style="text-align: right;">Take-Home</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uiDailyBreakdownBody">
+                            <!-- Populated row-by-row inside `recomputeGlobalFinancials()` -->
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <label style="font-size:0.6rem;">PHIC</label>
-                    <input type="number" id="inputPHIC" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-                <div>
-                    <label style="font-size:0.6rem;">HDMF</label>
-                    <input type="number" id="inputHDMF" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px;">
-                <div>
-                    <label style="font-size:0.6rem;">CASH ADVANCES</label>
-                    <input type="number" id="inputAdvances" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-            </div>
-        </div>
+            </section>
 
-        <div class="form-block">
-            <label>SALARY DETAILS METRIC BREAKDOWN</label>
-            <table class="matrix-table">
-                <thead>
-                    <tr><th>EARNINGS STREAM</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>BASIC PAY RUN</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
-                    <tr><td>OVERTIME EXTENSION PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
-                    <tr><td>EXTRA CYCLE INCENTIVES</td><td style="text-align: right; color:#fff;" id="breakdownIncentives">₱0.00</td></tr>
-                    <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
-                        <td>GROSS PAY VALUE</td><td style="text-align: right; color:var(--primary);" id="breakdownGross">₱0.00</td></tr>
-                </tbody>
-            </table>
-
-            <table class="matrix-table" style="margin-top: 12px;">
-                <thead>
-                    <tr><th>DEDUCTION MATRIX</th><th style="text-align: right;">VALUE AMOUNT</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>SSS PREMIUM CONTRIBUTION</td><td style="text-align: right; color:#fff;" id="breakdownSSS">₱0.00</td></tr>
-                    <tr><td>PHIC STANDARD MEDICAL</td><td style="text-align: right; color:#fff;" id="breakdownPHIC">₱0.00</td></tr>
-                    <tr><td>HDMF HOUSING FUND</td><td style="text-align: right; color:#fff;" id="breakdownHDMF">₱0.00</td></tr>
-                    <tr><td>ABSENCES / LATE STRIKES / UNDERTIME</td><td style="text-align: right; color:#ef4444;" id="breakdownPenalties">₱0.00</td></tr>
-                    <tr><td>CASH ADVANCES ACCOUNTS</td><td style="text-align: right; color:#ef4444;" id="breakdownAdvances">₱0.00</td></tr>
-                    <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
-                        <td>TOTAL COMPASS DEDUCTIONS</td><td style="text-align: right; color:#ef4444;" id="breakdownTotalDed">₱0.00</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="form-block">
-            <label>DETAILED DAILY TRACKING BREAKDOWN</label>
-            <div class="scannable-table-wrapper">
-                <table class="matrix-table" id="uiDailyBreakdownTable">
-                    <thead>
-                        <tr>
-                            <th>DATE</th>
-                            <th>DAY</th>
-                            <th>IN1</th>
-                            <th>OUT1</th>
-                            <th>IN2</th>
-                            <th>OUT2</th>
-                            <th>OT IN</th>
-                            <th>OT OUT</th>
-                            <th>LATES (MINS)</th>
-                            <th>UNDERTIME (MINS)</th>
-                            <th style="text-align: right;">GROSS DAY VALUE</th>
-                            <th style="text-align: right;">DEDUCTION DAY CUT</th>
-                            <th style="text-align: right;">DAILY NET</th>
-                        </tr>
-                    </thead>
-                    <tbody id="uiDailyBreakdownBody">
-                    </tbody>
-                    <tfoot>
-                        <tr style="border-top: 2px solid var(--border-glass); font-weight: 800; background: rgba(255,255,255,0.02);">
-                            <td colspan="8">TOTALS</td>
-                            <td id="totalLates">0</td>
-                            <td id="totalUndertime">0</td>
-                            <td style="text-align: right; color: var(--primary);" id="totalGross">₱0.00</td>
-                            <td style="text-align: right; color: #ef4444;" id="totalDed">₱0.00</td>
-                            <td style="text-align: right; color: #38bdf8;" id="totalDailyNet">₱0.00</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-
-        <div class="net-pay-display-deck" id="netPayWrapperDeck">
-            <div class="lbl">NET DISBURSABLE PAYOUT</div>
-            <div class="val-stream" id="breakdownNet">₱0.00</div>
-            <div id="lockBadgeDisplay" class="lock-indicator" style="display: none;">METRIC CYCLE RECORD LOCKED</div>
-        </div>
-
-        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
-            <button class="engine-btn primary-btn" onclick="commitTimelineTransactionToCloud()">
-                <i data-lucide="cloud-lightning" style="width:16px;height:16px;"></i> SAVE
-            </button>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <button class="engine-btn" onclick="triggerPrintPreviewPipeline()">
-                    <i data-lucide="printer" style="width:16px;height:16px;"></i> PRINT PREVIEW
-                </button>
-                <button class="engine-btn" onclick="triggerCSVExportPipeline()">
-                    <i data-lucide="file-text" style="width:16px;height:16px;"></i> EXPORT CSV
-                </button>
-            </div>
-        </div>
+        </main>
     </div>
 
+    <!-- MODAL POPUP LAYER: Manage Specific Day Shifts -->
     <div class="modal-overlay" id="timeConfigModalOverlay">
         <div class="modal-box" id="modalBoxContainer">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;" id="modalTargetDateHeader">LOGS TRANSACTION RECORD</h3>
-                <button class="nav-btn" style="width:32px; height:32px;" onclick="closeTimeTransactionModal()">
-                    <i data-lucide="x" style="width:14px;height:14px;"></i>
-                </button>
+            <div class="modal-header">
+                <h3 id="modalTargetDateHeader">LOGS FOR YYYY-MM-DD</h3>
+                <button class="close-btn" onclick="closeTimeTransactionModal()">&times;</button>
+            </div>
+            
+            <!-- Warning block shown when historical data criteria triggers readonly states -->
+            <div id="modalLockedWarningLabel" style="display:none; background: rgba(239,68,68,0.1); color: #ef4444; padding: 10px; border-radius: 6px; font-size:12px; margin-bottom:15px; font-weight:600; text-align:center; border: 1px solid rgba(239,68,68,0.2);">
+                <i data-lucide="lock" style="width:12px;height:12px; display:inline-block; vertical-align:middle; margin-top:-2px;"></i> HISTORICAL ARCHIVE DATA IS READ-ONLY
             </div>
 
-            <div class="realtime-stats-bar">
-                <div class="stat-block">
-                    <div class="lbl">LATE MINUTES</div>
-                    <div class="val" id="rtLateDisplay" style="color: #ef4444;">0 MINS</div>
-                </div>
-                <div class="stat-block">
-                    <div class="lbl">UNDERTIME MINUTES</div>
-                    <div class="val" id="rtUndertimeDisplay" style="color: #f59e0b;">0 MINS</div>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-block">
-                    <label>IN1</label>
-                    <input type="time" id="modalTimeIn1" onchange="runRealtimeMetricsDeductionEngine()">
-                </div>
-                <div class="form-block">
-                    <label>OUT1</label>
-                    <input type="time" id="modalTimeOut1" onchange="evaluateLunchBreakConstraints(); runRealtimeMetricsDeductionEngine();">
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-block">
-                    <label>IN2</label>
-                    <input type="time" id="modalTimeIn2" onchange="runRealtimeMetricsDeductionEngine()">
-                </div>
-                <div class="form-block">
-                    <label>OUT2</label>
-                    <input type="time" id="modalTimeOut2" onchange="runRealtimeMetricsDeductionEngine()">
-                </div>
-            </div>
-
-            <div class="checkbox-container-row" style="margin-bottom: 0; margin-top: 10px; padding: 10px;" onclick="toggleOvertimeSubSection()">
-                <input type="checkbox" id="chkEnableOT">
-                <span style="font-size:0.65rem; font-weight:700;">CHECKBOX FOR OT</span>
-            </div>
-
-            <div class="nested-row-segment" id="otSubSectionDeck" style="display: none;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0;">
-                    <div class="form-block" style="margin-bottom: 0;">
-                        <label>OT IN</label>
-                        <input type="time" id="modalTimeInOT">
+            <div class="modal-body">
+                <!-- Shifts Configuration Grid -->
+                <div class="shifts-input-matrix">
+                    <div class="input-field-group">
+                        <label>First Shift - Time In</label>
+                        <input type="time" id="modalTimeIn1" onchange="runRealtimeMetricsDeductionEngine()">
                     </div>
-                    <div class="form-block" style="margin-bottom: 0;">
-                        <label>OT OUT</label>
-                        <input type="time" id="modalTimeOutOT">
+                    <div class="input-field-group">
+                        <label>First Shift - Time Out</label>
+                        <input type="time" id="modalTimeOut1" onchange="evaluateLunchBreakConstraints(); runRealtimeMetricsDeductionEngine();">
+                    </div>
+                    <div class="input-field-group">
+                        <label>Second Shift - Time In</label>
+                        <input type="time" id="modalTimeIn2" onchange="runRealtimeMetricsDeductionEngine()">
+                    </div>
+                    <div class="input-field-group">
+                        <label>Second Shift - Time Out</label>
+                        <input type="time" id="modalTimeOut2" onchange="runRealtimeMetricsDeductionEngine()">
                     </div>
                 </div>
+
+                <!-- Overtime Extension Toggle Block -->
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight:600; color:var(--text-main);">
+                        <input type="checkbox" id="chkEnableOT" onchange="toggleOvertimeSubSection()" style="accent-color: var(--primary); width:16px; height:16px;">
+                        Extend Overtime Record Window
+                    </label>
+                </div>
+
+                <!-- Hidden Sub-section: Expanded conditionally via Overtime checkbox state -->
+                <div id="otSubSectionDeck" style="display: none; border-left: 2px solid var(--primary); padding-left: 15px; margin-bottom:15px;">
+                    <div class="shifts-input-matrix" style="grid-template-columns: 1fr 1fr;">
+                        <div class="input-field-group">
+                            <label>Overtime In</label>
+                            <input type="time" id="modalTimeInOT" onchange="runRealtimeMetricsDeductionEngine()">
+                        </div>
+                        <div class="input-field-group">
+                            <label>Overtime Out</label>
+                            <input type="time" id="modalTimeOutOT" onchange="runRealtimeMetricsDeductionEngine()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Metrics Readout Panel inside modal -->
+                <div class="live-metrics-panel">
+                    <div class="metric-block">
+                        <span class="lbl">Calculated Late Instance</span>
+                        <span class="val" id="rtLateDisplay" style="color: #ef4444;">0 MINS</span>
+                    </div>
+                    <div class="metric-block">
+                        <span class="lbl">Calculated Undertime</span>
+                        <span class="val" id="rtUndertimeDisplay" style="color: #ef4444;">0 MINS</span>
+                    </div>
+                </div>
             </div>
 
-            <div id="modalActionFooterDeck" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 20px;">
-                <button class="engine-btn primary-btn" style="height: 48px;" onclick="commitModalDayStateToLocalBuffer()">
-                    APPLY CHANGES
-                </button>
-                <button class="engine-btn danger-btn" style="height: 48px;" onclick="clearModalDayState()">
-                    CLEAR
-                </button>
-            </div>
-            <div id="modalLockedWarningLabel" style="display: none; margin-top: 20px; text-align: center; color: #ef4444; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 12px;">
-                <i data-lucide="lock" style="width:12px; height:12px; inline-size: auto; vertical-align: middle; margin-right: 4px;"></i> HISTORICAL ARCHIVE RECORD READ-ONLY
+            <!-- Modal Action Buttons Footer -->
+            <div class="modal-footer" id="modalActionFooterDeck">
+                <button class="btn btn-secondary" onclick="clearTimeTransactionRecord()" style="background: #ef4444; color: #ffffff;">Wipe Record</button>
+                <button class="btn btn-primary" onclick="saveTimeTransactionRecord()">Apply Shift Matrix</button>
             </div>
         </div>
     </div>
 
-    <div id="print-render-matrix"></div>
-
+    <!-- CORE LOGIC CONTROLLER -->
     <script type="module" src="payslip.js"></script>
+    <script>
+        // DOM Initialization fallback for Lucide icons rendering engine
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
 </body>
 </html>
