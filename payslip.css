@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. CORE DESIGN TOKENS & SYSTEM VARIABLES
+   1. CORE DESIGN TOKENS & DYNAMIC COUPLING
    ========================================================================== */
 :root {
     --bg: #0b0f1a;
@@ -10,9 +10,6 @@
     --border-glass: rgba(255, 255, 255, 0.12);
 }
 
-/* ==========================================================================
-   2. GLOBAL RESET & LAYOUT WRAPPER 
-   ========================================================================== */
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg);
@@ -38,9 +35,6 @@ body {
     box-sizing: border-box;
 }
 
-/* ==========================================================================
-   3. NAVIGATION & APP BLOCK LAYOUT HEADERS
-   ========================================================================== */
 .top-nav-deck {
     display: flex;
     align-items: center;
@@ -68,15 +62,6 @@ body {
     border-color: var(--primary);
 }
 
-.nav-spacer {
-    width: 40px;
-}
-
-.icon-nav-back {
-    width: 18px;
-    height: 18px;
-}
-
 h1 {
     font-size: 0.9rem;
     text-transform: uppercase;
@@ -85,9 +70,7 @@ h1 {
     font-weight: 800;
 }
 
-/* ==========================================================================
-   4. USER PROFILE ARCHITECTURE SEGMENTS
-   ========================================================================== */
+/* Profile Meta Header Block */
 .profile-badge-deck {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-glass);
@@ -103,7 +86,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     font-size: 0.75rem;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    border-bottom: 1px dashed rgba(255,255,255,0.05);
     padding-bottom: 6px;
 }
 
@@ -126,7 +109,7 @@ h1 {
 }
 
 /* ==========================================================================
-   5. INPUT DESIGN CONFIGURATION & FORM LAYOUT ELEMENTS
+   2. INTERFACE ELEMENTS & FORM SYSTEM
    ========================================================================== */
 .form-block {
     margin-bottom: 20px;
@@ -159,74 +142,7 @@ select:focus, input:focus {
     border-color: var(--primary);
 }
 
-.input-readonly-coverage {
-    opacity: 0.8; 
-    background: rgba(0,0,0,0.2);
-}
-
-/* Custom Styled Pod Sub-panels */
-.panel-glass-pod {
-    background: rgba(255, 255, 255, 0.02); 
-    padding: 14px; 
-    border-radius: 16px; 
-    border: 1px solid var(--border-glass); 
-    margin-bottom: 20px;
-}
-
-.panel-dark-pod {
-    background: rgba(0,0,0,0.2); 
-    padding: 14px; 
-    border-radius: 16px; 
-    border: 1px solid var(--border-glass);
-}
-
-.lbl-panel-title {
-    margin-bottom: 12px; 
-    display: block;
-}
-
-.lbl-sub-grid {
-    font-size: 0.6rem; 
-    color: #94a3b8; 
-    font-weight: 800;
-}
-
-.lbl-micro {
-    font-size: 0.6rem;
-}
-
-/* Utility Flex/Grid Component Helpers */
-.grid-single-column {
-    display: grid;
-    grid-template-columns: 1fr;
-}
-
-.grid-two-columns {
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-}
-
-.grid-three-columns {
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 8px;
-}
-
-.gap-12 { gap: 12px; }
-.margin-top-10 { margin-top: 10px; }
-.margin-top-12 { margin-top: 12px; }
-.margin-bottom-0 { margin-bottom: 0 !important; }
-
-/* Text Alignment & Palette Modifiers */
-.txt-right { text-align: right; }
-.txt-white { color: #fff; }
-.txt-primary { color: var(--primary); }
-.txt-danger { color: #ef4444; }
-.txt-blue { color: #38bdf8; }
-
-/* ==========================================================================
-   6. CALENDAR GRID MATRIX STYLING
-   ========================================================================== */
+/* Custom Adaptive Calendar Matrix */
 .calendar-deck {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -284,7 +200,7 @@ select:focus, input:focus {
 }
 
 /* ==========================================================================
-   7. MATRIX DATA TABLES & SCANNABLE VIEWS
+   3. FINANCIAL BREAKDOWN ARCHITECTURE
    ========================================================================== */
 .matrix-table {
     width: 100%;
@@ -319,16 +235,6 @@ select:focus, input:focus {
     border-bottom: none;
 }
 
-.row-total-gross {
-    border-top: 1px solid var(--border-glass); 
-    font-weight: 800;
-}
-
-.row-total-deductions {
-    border-top: 1px solid var(--border-glass); 
-    font-weight: 800;
-}
-
 .scannable-table-wrapper {
     width: 100%;
     overflow-x: auto;
@@ -344,21 +250,11 @@ select:focus, input:focus {
     min-width: 900px;
 }
 
-.scannable-table-wrapper th, 
-.scannable-table-wrapper td {
+.scannable-table-wrapper th, .scannable-table-wrapper td {
     padding: 10px 12px;
     font-size: 0.75rem;
 }
 
-.row-table-totals {
-    border-top: 2px solid var(--border-glass); 
-    font-weight: 800; 
-    background: rgba(255,255,255,0.02);
-}
-
-/* ==========================================================================
-   8. DISBURSABLE DISPLAY DECK MODULE
-   ========================================================================== */
 .net-pay-display-deck {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-glass);
@@ -400,19 +296,9 @@ select:focus, input:focus {
     border-radius: 20px;
     display: inline-block;
     margin-top: 8px;
-    display: none; /* Controlled via logic state manipulation dynamically */
 }
 
-/* ==========================================================================
-   9. INTERFACE BUTTON SIGNALS
-   ========================================================================== */
-.action-trigger-deck {
-    margin-top: 24px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 12px;
-}
-
+/* Action Buttons */
 .engine-btn {
     width: 100%;
     background: var(--glass);
@@ -459,13 +345,18 @@ select:focus, input:focus {
     background: #dc2626;
 }
 
-.icon-btn-micro {
-    width: 16px;
-    height: 16px;
+.checkbox-container-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    cursor: pointer;
 }
 
 /* ==========================================================================
-   10. MODAL DISPLAY ARCHITECTURE 
+   4. MODAL LAYER ARCHITECTURE
    ========================================================================== */
 .modal-overlay {
     position: fixed;
@@ -499,30 +390,6 @@ select:focus, input:focus {
     box-sizing: border-box;
 }
 
-.modal-header-deck {
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    margin-bottom: 16px;
-}
-
-.modal-header-deck h3 {
-    margin: 0; 
-    font-size: 0.85rem; 
-    letter-spacing: 0.05em; 
-    text-transform: uppercase;
-}
-
-.btn-modal-close {
-    width: 32px; 
-    height: 32px;
-}
-
-.icon-modal-close {
-    width: 14px;
-    height: 14px;
-}
-
 .realtime-stats-bar {
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border-glass);
@@ -548,72 +415,16 @@ select:focus, input:focus {
     margin-top: 2px;
 }
 
-.rt-stat-late { color: #ef4444; }
-.rt-stat-ut { color: #f59e0b; }
-
-.checkbox-container-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border-glass);
-    border-radius: 12px;
-    cursor: pointer;
-}
-
-.class-checkbox-ot {
-    margin-bottom: 0; 
-    margin-top: 10px; 
-    padding: 10px;
-}
-
-.lbl-ot-chk {
-    font-size: 0.65rem; 
-    font-weight: 700;
-}
-
 .nested-row-segment {
     background: rgba(0,0,0,0.15);
     border: 1px dashed var(--border-glass);
     border-radius: 12px;
     padding: 12px;
     margin-top: 14px;
-    display: none;
-}
-
-.modal-footer-deck {
-    display: grid; 
-    grid-template-columns: 2fr 1fr; 
-    gap: 10px; 
-    margin-top: 20px;
-}
-
-.btn-h48 { height: 48px; }
-
-.modal-locked-warning {
-    display: none; 
-    margin-top: 20px; 
-    text-align: center; 
-    color: #ef4444; 
-    font-size: 0.7rem; 
-    font-weight: 800; 
-    text-transform: uppercase; 
-    letter-spacing: 0.05em; 
-    background: rgba(239, 68, 68, 0.1); 
-    padding: 12px; 
-    border-radius: 12px;
-}
-
-.icon-warning-lock {
-    width: 12px; 
-    height: 12px; 
-    inline-size: auto; 
-    vertical-align: middle; 
-    margin-right: 4px;
 }
 
 /* ==========================================================================
-   11. HARDWARE PIXEL-PERFECT PRINT MEDIA ARCHITECTURE
+   5. PIXEL-PERFECT PRINT ARCHITECTURE
    ========================================================================== */
 #print-render-matrix {
     display: none;
