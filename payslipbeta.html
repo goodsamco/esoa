@@ -193,7 +193,7 @@
         }
 
         /* ==========================================================================
-           3. MATRIX FINANCIAL BREAKDOWN ARCHITECTURE
+           3. FINANCIAL BREAKDOWN ARCHITECTURE
            ========================================================================== */
         .matrix-table {
             width: 100%;
@@ -240,7 +240,7 @@
         .scannable-table-wrapper .matrix-table {
             border: none;
             margin-top: 0;
-            min-width: 450px;
+            min-width: 900px;
         }
 
         .scannable-table-wrapper th, .scannable-table-wrapper td {
@@ -326,6 +326,16 @@
         .engine-btn.primary-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .engine-btn.danger-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+
+        .engine-btn.danger-btn:hover {
+            background: #dc2626;
         }
 
         .checkbox-container-row {
@@ -456,13 +466,13 @@
             <button class="nav-btn" onclick="window.location.href='settings.html'" title="SETTINGS">
                 <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
             </button>
-            <h1>TIME & PAYSLIP MATRIX</h1>
+            <h1>TIME & PAYSLIP SYSTEM</h1>
             <div style="width:40px;"></div>
         </div>
 
         <div class="profile-badge-deck">
             <div class="profile-meta-row">
-                <span class="lbl">COMPLETE SETTINGS NAME</span>
+                <span class="lbl">NAME</span>
                 <span class="val" id="profSettingsNameDisplay">-</span>
             </div>
             <div class="profile-meta-row">
@@ -474,11 +484,11 @@
                 <span class="val" id="profEmailDisplay">-</span>
             </div>
             <div class="profile-meta-row">
-                <span class="lbl">POSITION SYSTEM</span>
+                <span class="lbl">POSITION</span>
                 <span class="val" id="profPosDisplay">-</span>
             </div>
             <div class="profile-meta-row">
-                <span class="lbl">DEPARTMENT UNIT</span>
+                <span class="lbl">DEPARTMENT</span>
                 <span class="val" id="profDeptDisplay">-</span>
             </div>
         </div>
@@ -530,14 +540,10 @@
                     <input type="number" id="inputHDMF" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px;">
                 <div>
                     <label style="font-size:0.6rem;">CASH ADVANCES</label>
                     <input type="number" id="inputAdvances" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
-                </div>
-                <div>
-                    <label style="font-size:0.6rem;">OTHERS EARN</label>
-                    <input type="number" id="inputOtherEarn" value="0.00" step="0.01" oninput="recomputeGlobalFinancials()">
                 </div>
             </div>
         </div>
@@ -552,7 +558,6 @@
                     <tr><td>BASIC PAY RUN</td><td style="text-align: right; color:#fff;" id="breakdownBasic">₱0.00</td></tr>
                     <tr><td>OVERTIME EXTENSION PAY</td><td style="text-align: right; color:#fff;" id="breakdownOT">₱0.00</td></tr>
                     <tr><td>EXTRA CYCLE INCENTIVES</td><td style="text-align: right; color:#fff;" id="breakdownIncentives">₱0.00</td></tr>
-                    <tr><td>OTHERS (MISC ADDS)</td><td style="text-align: right; color:#fff;" id="breakdownOtherEarn">₱0.00</td></tr>
                     <tr style="border-top: 1px solid var(--border-glass); font-weight:800;">
                         <td>GROSS PAY VALUE</td><td style="text-align: right; color:var(--primary);" id="breakdownGross">₱0.00</td></tr>
                 </tbody>
@@ -581,14 +586,32 @@
                     <thead>
                         <tr>
                             <th>DATE</th>
-                            <th>STATUS</th>
-                            <th>LATE/UT</th>
-                            <th style="text-align: right;">GROSS</th>
-                            <th style="text-align: right;">DED.</th>
+                            <th>DAY</th>
+                            <th>TIME IN</th>
+                            <th>TIME OUT</th>
+                            <th>TIME IN 2</th>
+                            <th>TIME OUT 2</th>
+                            <th>OT IN</th>
+                            <th>OT OUT</th>
+                            <th>LATES (MINS)</th>
+                            <th>UNDERTIME (MINS)</th>
+                            <th style="text-align: right;">GROSS DAY VALUE</th>
+                            <th style="text-align: right;">DEDUCTION DAY CUT</th>
+                            <th style="text-align: right;">DAILY NET</th>
                         </tr>
                     </thead>
                     <tbody id="uiDailyBreakdownBody">
                     </tbody>
+                    <tfoot>
+                        <tr style="border-top: 2px solid var(--border-glass); font-weight: 800; background: rgba(255,255,255,0.02);">
+                            <td colspan="8">TOTALS</td>
+                            <td id="totalLates">0</td>
+                            <td id="totalUndertime">0</td>
+                            <td style="text-align: right; color: var(--primary);" id="totalGross">₱0.00</td>
+                            <td style="text-align: right; color: #ef4444;" id="totalDed">₱0.00</td>
+                            <td style="text-align: right; color: #38bdf8;" id="totalDailyNet">₱0.00</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -615,7 +638,7 @@
     </div>
 
     <div class="modal-overlay" id="timeConfigModalOverlay">
-        <div class="modal-box">
+        <div class="modal-box" id="modalBoxContainer">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <h3 style="margin: 0; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;" id="modalTargetDateHeader">LOGS TRANSACTION RECORD</h3>
                 <button class="nav-btn" style="width:32px; height:32px;" onclick="closeTimeTransactionModal()">
@@ -632,6 +655,11 @@
                     <div class="lbl">UNDERTIME MINUTES</div>
                     <div class="val" id="rtUndertimeDisplay" style="color: #f59e0b;">0 MINS</div>
                 </div>
+            </div>
+
+            <div class="checkbox-container-row" style="margin-bottom: 14px; padding: 10px;" onclick="handleLunchBreakToggle()">
+                <input type="checkbox" id="chkEnableLunchBreak">
+                <span style="font-size:0.65rem; font-weight:700;">12PM LUNCH BREAK AUTOMATION</span>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -654,11 +682,11 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-block">
                         <label>SPLIT TIME IN (IN2)</label>
-                        <input type="time" id="modalTimeIn2">
+                        <input type="time" id="modalTimeIn2" onchange="runRealtimeMetricsDeductionEngine()">
                     </div>
                     <div class="form-block">
                         <label>SPLIT TIME OUT (OUT2)</label>
-                        <input type="time" id="modalTimeOut2">
+                        <input type="time" id="modalTimeOut2" onchange="runRealtimeMetricsDeductionEngine()">
                     </div>
                 </div>
                 <div class="form-block" style="margin-bottom: 0; margin-top: 6px;">
@@ -685,9 +713,14 @@
                 </div>
             </div>
 
-            <button class="engine-btn primary-btn" style="margin-top: 20px; height: 48px;" onclick="commitModalDayStateToLocalBuffer()">
-                APPLY CHANGES TO MATRIX
-            </button>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 20px;">
+                <button class="engine-btn primary-btn" style="height: 48px;" onclick="commitModalDayStateToLocalBuffer()">
+                    APPLY CHANGES
+                </button>
+                <button class="engine-btn danger-btn" style="height: 48px;" onclick="clearModalDayState()">
+                    CLEAR
+                </button>
+            </div>
         </div>
     </div>
 
@@ -727,7 +760,6 @@
 
         async function bootEngineCore() {
             try {
-                // 1. Fetch parameters out of Account Document Node (Theming System)
                 const accountRef = doc(db, "accounts", userId);
                 const accountSnap = await getDoc(accountRef);
 
@@ -745,16 +777,15 @@
 
                     if (accountData.btnValue) {
                         document.documentElement.style.setProperty('--primary', accountData.btnValue);
+                        document.getElementById('modalBoxContainer').style.border = `1px solid ${accountData.btnValue}`;
                     }
                 }
 
-                // 2. Fetch from salary settings metadata configurations
                 const settingsRef = doc(db, "salary_settings", userId);
                 const settingsSnap = await getDoc(settingsRef);
                 if (settingsSnap.exists()) {
                     salarySettings = settingsSnap.data();
                     
-                    // Rebuilt Full Name Logic compilation (Constructing: FIRST NAME + [MIDDLE INITIAL] + LAST NAME)
                     if (salarySettings.firstName && salarySettings.lastName) {
                         const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : "";
                         userProfile.customName = `${salarySettings.firstName}${mi} ${salarySettings.lastName}`.toUpperCase();
@@ -769,7 +800,6 @@
                 buildDropdownTargetIntervals();
                 processPeriodEngineChange();
                 
-                // 3. Fetch current workspace active cycle financials
                 const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
                 if (transSnap.exists()) {
                     const loadedData = transSnap.data();
@@ -778,7 +808,6 @@
                     if (loadedData.inputPHIC) document.getElementById('inputPHIC').value = loadedData.inputPHIC;
                     if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
                     if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
-                    if (loadedData.inputOtherEarn) document.getElementById('inputOtherEarn').value = loadedData.inputOtherEarn;
                     if (loadedData.inputDoublePay) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay;
                     if (loadedData.inputReimbursements) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements;
                 }
@@ -922,11 +951,26 @@
             });
         }
 
+        window.handleLunchBreakToggle = function() {
+            const checked = document.getElementById('chkEnableLunchBreak').checked;
+            if (checked) {
+                document.getElementById('modalTimeOut1').value = "12:00";
+                document.getElementById('chkEnableMidDay').checked = true;
+                document.getElementById('midDaySubSectionDeck').style.display = "block";
+                document.getElementById('modalTimeIn2').value = "13:00";
+            }
+            runRealtimeMetricsDeductionEngine();
+        };
+
         window.runRealtimeMetricsDeductionEngine = function() {
             const schedIn = salarySettings.timeIn || "08:00";
             const schedOut = salarySettings.timeOut || "17:00";
+            
             const in1 = document.getElementById('modalTimeIn1').value;
             const out1 = document.getElementById('modalTimeOut1').value;
+            const in2 = document.getElementById('modalTimeIn2').value;
+            const out2 = document.getElementById('modalTimeOut2').value;
+            const hasMidDay = document.getElementById('chkEnableMidDay').checked;
 
             let lateMinutes = 0;
             let undertimeMinutes = 0;
@@ -936,9 +980,19 @@
                 const actualInMins = timeStringToMinutes(in1);
                 if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
             }
-            if (out1) {
+
+            if (hasMidDay && in2 && out1) {
+                const out1Mins = timeStringToMinutes(out1);
+                const in2Mins = timeStringToMinutes(in2);
+                if (out1Mins < 1200 && in2Mins > 1300) {
+                    // Custom calculation overlap if desired
+                }
+            }
+
+            const effectiveFinalOut = (hasMidDay && out2) ? out2 : out1;
+            if (effectiveFinalOut) {
                 const schedOutMins = timeStringToMinutes(schedOut);
-                const actualOutMins = timeStringToMinutes(out1);
+                const actualOutMins = timeStringToMinutes(effectiveFinalOut);
                 if (actualOutMins < schedOutMins) undertimeMinutes += (schedOutMins - actualOutMins);
             }
 
@@ -964,6 +1018,7 @@
             document.getElementById('modalTimeInOT').value = "";
             document.getElementById('modalTimeOutOT').value = "";
             
+            document.getElementById('chkEnableLunchBreak').checked = false;
             document.getElementById('chkEnableMidDay').checked = false;
             document.getElementById('chkEnableOT').checked = false;
             document.getElementById('midDaySubSectionDeck').style.display = "none";
@@ -973,6 +1028,7 @@
                 const rec = timelineBuffer[dateKey];
                 document.getElementById('modalTimeIn1').value = rec.in1 || "";
                 document.getElementById('modalTimeOut1').value = rec.out1 || "";
+                document.getElementById('chkEnableLunchBreak').checked = rec.hasLunchAutomation || false;
                 if (rec.hasMidDay) {
                     document.getElementById('chkEnableMidDay').checked = true;
                     document.getElementById('midDaySubSectionDeck').style.display = "block";
@@ -986,6 +1042,10 @@
                     document.getElementById('modalTimeInOT').value = rec.inOT || "";
                     document.getElementById('modalTimeOutOT').value = rec.outOT || "";
                 }
+            } else {
+                // Default fallback if unfiled: automatically out in afternoon unless overwritten
+                document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+                document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
             }
 
             runRealtimeMetricsDeductionEngine();
@@ -1017,11 +1077,13 @@
 
             const hasMidDay = document.getElementById('chkEnableMidDay').checked;
             const hasOT = document.getElementById('chkEnableOT').checked;
+            const hasLunchAutomation = document.getElementById('chkEnableLunchBreak').checked;
 
             timelineBuffer[currentTargetDateString] = {
                 filled: true,
                 in1: in1,
                 out1: out1,
+                hasLunchAutomation: hasLunchAutomation,
                 hasMidDay: hasMidDay,
                 in2: hasMidDay ? document.getElementById('modalTimeIn2').value : "",
                 out2: hasMidDay ? document.getElementById('modalTimeOut2').value : "",
@@ -1031,6 +1093,15 @@
                 outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
             };
 
+            closeTimeTransactionModal();
+            renderActivePeriodCalendarGrid();
+            recomputeGlobalFinancials();
+        };
+
+        window.clearModalDayState = function() {
+            if (timelineBuffer[currentTargetDateString]) {
+                delete timelineBuffer[currentTargetDateString];
+            }
             closeTimeTransactionModal();
             renderActivePeriodCalendarGrid();
             recomputeGlobalFinancials();
@@ -1046,6 +1117,12 @@
             let totalDeductionPenalties = 0;
             let actualDaysWorkedCounter = 0;
 
+            let aggLates = 0;
+            let aggUndertime = 0;
+            let aggGross = 0;
+            let aggDed = 0;
+            let aggNet = 0;
+
             const schedInStr = salarySettings.timeIn || "08:00";
             const schedOutStr = salarySettings.timeOut || "17:00";
 
@@ -1058,77 +1135,110 @@
                 const day = String(dateObj.getDate()).padStart(2, '0');
                 const dateKey = `${year}-${month}-${day}`;
                 const rawDayStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
                 let dayGross = 0;
                 let dayDed = 0;
                 let dayLateMins = 0;
                 let dayUndertimeMins = 0;
-                let statusLabel = `<span style="color:#64748b;">UNFILED</span>`;
-                let metricsLabel = "-";
+
+                let tIn1 = "-";
+                let tOut1 = "-";
+                let tIn2 = "-";
+                let tOut2 = "-";
+                let otIn = "-";
+                let otOut = "-";
 
                 if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
                     actualDaysWorkedCounter++;
                     totalBasicEarnings += dailyRate;
                     dayGross += dailyRate;
-                    statusLabel = `<span style="color:var(--primary);">FILED</span>`;
 
                     const rec = timelineBuffer[dateKey];
+                    tIn1 = rec.in1 || "-";
+                    tOut1 = rec.out1 || "-";
+                    tIn2 = rec.in2 || "-";
+                    tOut2 = rec.out2 || "-";
+
                     const schedInMins = timeStringToMinutes(schedInStr);
                     const actInMins = timeStringToMinutes(rec.in1);
                     if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
 
+                    const effectiveFinalOut = rec.hasMidDay && rec.out2 ? rec.out2 : rec.out1;
                     const schedOutMins = timeStringToMinutes(schedOutStr);
-                    const actOutMins = timeStringToMinutes(rec.out1);
+                    const actOutMins = timeStringToMinutes(effectiveFinalOut);
                     if (actOutMins < schedOutMins) dayUndertimeMins = (schedOutMins - actOutMins);
 
                     dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
                     totalDeductionPenalties += dayDed;
 
-                    if (dayLateMins > 0 || dayUndertimeMins > 0) {
-                        metricsLabel = `${dayLateMins}m / ${dayUndertimeMins}m`;
-                    } else {
-                        metricsLabel = "0 / 0";
-                    }
-
                     if (rec.hasOT && rec.inOT && rec.outOT) {
-                        const otIn = timeStringToMinutes(rec.inOT);
-                        const otOut = timeStringToMinutes(rec.outOT);
-                        if (otOut > otIn) {
-                            const otMins = otOut - otIn;
+                        otIn = rec.inOT;
+                        otOut = rec.outOT;
+                        const oInMins = timeStringToMinutes(rec.inOT);
+                        const oOutMins = timeStringToMinutes(rec.outOT);
+                        if (oOutMins > oInMins) {
+                            const otMins = oOutMins - oInMins;
                             if (otMins >= 30) {
                                 const otPay = otMins * minuteRate;
                                 totalOvertimePay += otPay;
                                 dayGross += otPay;
-                                statusLabel = `<span style="color:var(--primary);">FILED + OT</span>`;
                             }
                         }
                     }
                 }
 
+                let dayNet = dayGross - dayDed;
+
+                aggLates += dayLateMins;
+                aggUndertime += dayUndertimeMins;
+                aggGross += dayGross;
+                aggDed += dayDed;
+                aggNet += dayNet;
+
                 uiTableRowsHtml += `
                     <tr>
-                        <td>${rawDayStr}</td>
-                        <td>${statusLabel}</td>
-                        <td style="color: #94a3b8;">${metricsLabel}</td>
+                        <td>${dateKey}</td>
+                        <td>${dayOfWeekStr.toUpperCase()}</td>
+                        <td>${tIn1}</td>
+                        <td>${tOut1}</td>
+                        <td>${tIn2}</td>
+                        <td>${tOut2}</td>
+                        <td>${otIn}</td>
+                        <td>${otOut}</td>
+                        <td style="color: #94a3b8;">${dayLateMins}</td>
+                        <td style="color: #94a3b8;">${dayUndertimeMins}</td>
                         <td style="text-align: right; color: ${dayGross > 0 ? '#fff' : '#64748b'};">₱${dayGross.toFixed(2)}</td>
                         <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${dayDed.toFixed(2)}</td>
+                        <td style="text-align: right; color: #38bdf8;">₱${dayNet.toFixed(2)}</td>
                     </tr>
                 `;
 
                 structuralDailyArrayLogs.push({
                     date: dateKey,
-                    in1: timelineBuffer[dateKey]?.in1 || '-',
-                    out1: timelineBuffer[dateKey]?.out1 || '-',
-                    inOT: (timelineBuffer[dateKey]?.hasOT && timelineBuffer[dateKey]?.inOT) ? timelineBuffer[dateKey].inOT : '-',
-                    outOT: (timelineBuffer[dateKey]?.hasOT && timelineBuffer[dateKey]?.outOT) ? timelineBuffer[dateKey].outOT : '-',
+                    dayStr: dayOfWeekStr.toUpperCase(),
+                    in1: tIn1,
+                    out1: tOut1,
+                    in2: tIn2,
+                    out2: tOut2,
+                    inOT: otIn,
+                    outOT: otOut,
                     lates: dayLateMins,
                     undertime: dayUndertimeMins,
                     gross: dayGross,
-                    deductions: dayDed
+                    deductions: dayDed,
+                    net: dayNet
                 });
             });
 
             document.getElementById('uiDailyBreakdownBody').innerHTML = uiTableRowsHtml;
+
+            // Update Totals Row
+            document.getElementById('totalLates').innerText = aggLates;
+            document.getElementById('totalUndertime').innerText = aggUndertime;
+            document.getElementById('totalGross').innerText = `₱${aggGross.toFixed(2)}`;
+            document.getElementById('totalDed').innerText = `₱${aggDed.toFixed(2)}`;
+            document.getElementById('totalDailyNet').innerText = `₱${aggNet.toFixed(2)}`;
 
             const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
             const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
@@ -1138,16 +1248,14 @@
             const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
             const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
             const advances = parseFloat(document.getElementById('inputAdvances').value) || 0;
-            const otherEarn = parseFloat(document.getElementById('inputOtherEarn').value) || 0;
 
-            const grossPay = totalBasicEarnings + totalOvertimePay + totalIncentives + otherEarn;
+            const grossPay = totalBasicEarnings + totalOvertimePay + totalIncentives;
             const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
             const netPay = grossPay - totalDeductions;
 
             document.getElementById('breakdownBasic').innerText = `₱${totalBasicEarnings.toFixed(2)}`;
             document.getElementById('breakdownOT').innerText = `₱${totalOvertimePay.toFixed(2)}`;
             document.getElementById('breakdownIncentives').innerText = `₱${totalIncentives.toFixed(2)}`;
-            document.getElementById('breakdownOtherEarn').innerText = `₱${otherEarn.toFixed(2)}`;
             document.getElementById('breakdownGross').innerText = `₱${grossPay.toFixed(2)}`;
 
             document.getElementById('breakdownSSS').innerText = `₱${sss.toFixed(2)}`;
@@ -1159,9 +1267,9 @@
             document.getElementById('breakdownNet').innerText = `₱${netPay.toFixed(2)}`;
 
             generateCommercialReceiptLayout({
-                totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, otherEarn, grossPay,
+                totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
                 sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
-                actualDaysWorkedCounter, structuralDailyArrayLogs
+                actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggGross, aggDed, aggNet
             });
         };
 
@@ -1173,7 +1281,6 @@
                     inputPHIC: document.getElementById('inputPHIC').value,
                     inputHDMF: document.getElementById('inputHDMF').value,
                     inputAdvances: document.getElementById('inputAdvances').value,
-                    inputOtherEarn: document.getElementById('inputOtherEarn').value,
                     inputDoublePay: document.getElementById('inputDoublePay').value,
                     inputReimbursements: document.getElementById('inputReimbursements').value,
                     updatedAt: Date.now()
@@ -1195,17 +1302,24 @@
                 dailyRowsHtml += `
                     <tr style="border-bottom: 1px solid #ddd;">
                         <td style="padding: 4px; font-weight:700;">${row.date}</td>
-                        <td style="padding: 4px;">${row.in1} / ${row.out1}</td>
-                        <td style="padding: 4px;">${row.inOT !== '-' ? `${row.inOT}/${row.outOT}` : '-'}</td>
-                        <td style="padding: 4px; color:#555;">${row.lates > 0 ? `${row.lates}m` : '-'} / ${row.undertime > 0 ? `${row.undertime}m` : '-'}</td>
+                        <td style="padding: 4px;">${row.dayStr}</td>
+                        <td style="padding: 4px;">${row.in1}</td>
+                        <td style="padding: 4px;">${row.out1}</td>
+                        <td style="padding: 4px;">${row.in2}</td>
+                        <td style="padding: 4px;">${row.out2}</td>
+                        <td style="padding: 4px;">${row.inOT}</td>
+                        <td style="padding: 4px;">${row.outOT}</td>
+                        <td style="padding: 4px;">${row.lates}</td>
+                        <td style="padding: 4px;">${row.undertime}</td>
                         <td style="padding: 4px; text-align: right;">₱${row.gross.toFixed(2)}</td>
                         <td style="padding: 4px; text-align: right; color:#c00;">₱${row.deductions.toFixed(2)}</td>
+                        <td style="padding: 4px; text-align: right; color:#00f;">₱${row.net.toFixed(2)}</td>
                     </tr>
                 `;
             });
 
             printContainer.innerHTML = `
-                <div class="print-sheet" style="font-size:10px; width:100%; max-width:800px; margin:0 auto; padding:10px; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
+                <div class="print-sheet" style="font-size:9px; width:100%; max-width:1000px; margin:0 auto; padding:10px; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
                     
                     <div style="border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:12px; text-align:center;">
                         <div style="font-size:16px; font-weight:900; letter-spacing:1px;">PAYSLIP STATEMENT</div>
@@ -1225,33 +1339,49 @@
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 15px;">
-                        <table style="width:100%; border-collapse:collapse; font-size:9px;">
+                    <div style="display:grid; grid-template-columns: 3fr 1fr; gap: 15px;">
+                        <table style="width:100%; border-collapse:collapse; font-size:8px;">
                             <thead>
                                 <tr style="background:#000; color:#fff; font-weight:800;">
                                     <th style="padding:4px; text-align:left;">DATE</th>
-                                    <th style="padding:4px; text-align:left;">TIME</th>
-                                    <th style="padding:4px; text-align:left;">OT</th>
-                                    <th style="padding:4px; text-align:left;">LATE/UT</th>
+                                    <th style="padding:4px; text-align:left;">DAY</th>
+                                    <th style="padding:4px; text-align:left;">IN 1</th>
+                                    <th style="padding:4px; text-align:left;">OUT 1</th>
+                                    <th style="padding:4px; text-align:left;">IN 2</th>
+                                    <th style="padding:4px; text-align:left;">OUT 2</th>
+                                    <th style="padding:4px; text-align:left;">OT IN</th>
+                                    <th style="padding:4px; text-align:left;">OT OUT</th>
+                                    <th style="padding:4px; text-align:left;">LATE</th>
+                                    <th style="padding:4px; text-align:left;">UT</th>
                                     <th style="padding:4px; text-align:right;">GROSS</th>
                                     <th style="padding:4px; text-align:right;">DED.</th>
+                                    <th style="padding:4px; text-align:right;">NET</th>
                                 </tr>
                             </thead>
-                            <tbody>${dailyRowsHtml}</tbody>
+                            <tbody>
+                                ${dailyRowsHtml}
+                                <tr style="border-top:2px solid #000; font-weight:bold; background:#eee;">
+                                    <td colspan="8" style="padding:4px;">TOTALS</td>
+                                    <td style="padding:4px;">${m.aggLates}</td>
+                                    <td style="padding:4px;">${m.aggUndertime}</td>
+                                    <td style="padding:4px; text-align:right;">₱${m.aggGross.toFixed(2)}</td>
+                                    <td style="padding:4px; text-align:right; color:#c00;">₱${m.aggDed.toFixed(2)}</td>
+                                    <td style="padding:4px; text-align:right; color:#00f;">₱${m.aggNet.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
                         </table>
 
-                        <table style="width:100%; font-size:10px; border-collapse:collapse;">
+                        <table style="width:100%; font-size:9px; border-collapse:collapse;">
                             <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                             <tbody>
                                 <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${m.totalBasicEarnings.toFixed(2)}</td></tr>
-                                <tr><td style="padding:2px 0;">OT</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
+                                <tr><td style="padding:2px 0;">OT Pay</td><td style="text-align:right;">₱${m.totalOvertimePay.toFixed(2)}</td></tr>
                                 <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${m.totalIncentives.toFixed(2)}</td></tr>
-                                <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Other</td><td style="text-align:right;">₱${m.otherEarn.toFixed(2)}</td></tr>
-                                <tr><td style="padding:4px 0;"><b>GROSS</b></td><td style="text-align:right;"><b>₱${m.grossPay.toFixed(2)}</b></td></tr>
+                                <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${m.grossPay.toFixed(2)}</b></td></tr>
                                 <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${m.sss.toFixed(2)}</td></tr>
                                 <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${m.phic.toFixed(2)}</td></tr>
                                 <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${m.hdmf.toFixed(2)}</td></tr>
-                                <tr><td style="padding:2px 0;">Late/UT</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
+                                <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${m.totalDeductionPenalties.toFixed(2)}</td></tr>
                                 <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Advances</td><td style="text-align:right;">₱${m.advances.toFixed(2)}</td></tr>
                                 <tr><td style="padding:4px 0;"><b>TOTAL DED.</b></td><td style="text-align:right; color:#c00;"><b>₱${m.totalDeductions.toFixed(2)}</b></td></tr>
                             </tbody>
@@ -1279,7 +1409,7 @@
         window.triggerCSVExportPipeline = function() {
             let csvRows = [];
             csvRows.push([`"PAYSLIP ENGINE AUDIT REPORT EXPORT"`]);
-            csvRows.push([`"COMPLETE NAME"`,`"${userProfile.customName}"`]);
+            csvRows.push([`"NAME"`,`"${userProfile.customName}"`]);
             csvRows.push([`"USERNAME"`,`"${userProfile.name.toUpperCase()}"`]);
             csvRows.push([`"EMAIL"`,`"${userProfile.email.toUpperCase()}"`]);
             csvRows.push([`"POSITION"`,`"${(salarySettings.position || 'Staff').toUpperCase()}"`]);
@@ -1288,7 +1418,7 @@
             csvRows.push([]);
             
             csvRows.push([
-                `"DATE"`, `"TIME IN"`, `"TIME OUT"`, `"OT IN"`, `"OT OUT"`, `"LATES (MINS)"`, `"UNDERTIME (MINS)"`, `"GROSS DAY VALUE"`, `"DEDUCTION DAY CUT"`
+                `"DATE"`, `"DAY"`, `"TIME IN 1"`, `"TIME OUT 1"`, `"TIME IN 2"`, `"TIME OUT 2"`, `"OT IN"`, `"OT OUT"`, `"LATES (MINS)"`, `"UNDERTIME (MINS)"`, `"GROSS DAY VALUE"`, `"DEDUCTION DAY CUT"`, `"DAILY NET"`
             ]);
             
             const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
@@ -1297,11 +1427,14 @@
             const schedInMins = timeStringToMinutes(salarySettings.timeIn || "08:00");
             const schedOutMins = timeStringToMinutes(salarySettings.timeOut || "17:00");
 
+            let sumLates = 0, sumUT = 0, sumGross = 0, sumDed = 0, sumNet = 0;
+
             activeDatesArray.forEach(dateObj => {
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const day = String(dateObj.getDate()).padStart(2, '0');
                 const dateKey = `${year}-${month}-${day}`;
+                const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
                 
                 if(timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
                     const rec = timelineBuffer[dateKey];
@@ -1310,7 +1443,10 @@
                     let dayGross = dailyRate;
 
                     if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
-                    if (timeStringToMinutes(rec.out1) < schedOutMins) utMins = schedOutMins - timeStringToMinutes(rec.out1);
+                    
+                    const effectiveFinalOut = rec.hasMidDay && rec.out2 ? rec.out2 : rec.out1;
+                    if (timeStringToMinutes(effectiveFinalOut) < schedOutMins) utMins = schedOutMins - timeStringToMinutes(effectiveFinalOut);
+                    
                     let dayDed = (lateMins + utMins) * minuteRate;
 
                     if (rec.hasOT && rec.inOT && rec.outOT) {
@@ -1318,13 +1454,25 @@
                         if (otMins >= 30) dayGross += (otMins * minuteRate);
                     }
 
+                    let dayNet = dayGross - dayDed;
+
+                    sumLates += lateMins;
+                    sumUT += utMins;
+                    sumGross += dayGross;
+                    sumDed += dayDed;
+                    sumNet += dayNet;
+
                     csvRows.push([
-                        `"${dateKey}"`, `"${rec.in1}"`, `"${rec.out1}"`, `"${rec.hasOT ? rec.inOT : '-'}"`, `"${rec.hasOT ? rec.outOT : '-'}"`, lateMins, utMins, dayGross.toFixed(2), dayDed.toFixed(2)
+                        `"${dateKey}"`, `"${dayOfWeekStr}"`, `"${rec.in1}"`, `"${rec.out1}"`, `"${rec.hasMidDay ? rec.in2 : '-'}"`, `"${rec.hasMidDay ? rec.out2 : '-'}"`, `"${rec.hasOT ? rec.inOT : '-'}"`, `"${rec.hasOT ? rec.outOT : '-'}"`, lateMins, utMins, dayGross.toFixed(2), dayDed.toFixed(2), dayNet.toFixed(2)
                     ]);
                 } else {
-                    csvRows.push([`"${dateKey}"`, `"-"`, `"-"`, `"-"`, `"-"`, 0, 0, `0.00`, `0.00`]);
+                    csvRows.push([`"${dateKey}"`, `"${dayOfWeekStr}"`, `"-"`, `"-"`, `"-"`, `"-"`, `"-"`, `"-"`, 0, 0, `0.00`, `0.00`, `0.00`]);
                 }
             });
+
+            csvRows.push([
+                `"TOTALS"`, `""`, `""`, `""`, `""`, `""`, `""`, `""`, sumLates, sumUT, sumGross.toFixed(2), sumDed.toFixed(2), sumNet.toFixed(2)
+            ]);
             
             csvRows.push([]);
             csvRows.push([`"FINANCIAL STREAM ENTRIES SUMMARY"`]);
@@ -1332,7 +1480,6 @@
             csvRows.push([`"OVERTIME PAY"`, `"${document.getElementById('breakdownOT').innerText.replace('₱','')}"`]);
             csvRows.push([`"DOUBLE PAY INCENTIVE"`, `"${parseFloat(document.getElementById('inputDoublePay').value || 0).toFixed(2)}"`]);
             csvRows.push([`"REIMBURSEMENTS ALLOWANCE"`, `"${parseFloat(document.getElementById('inputReimbursements').value || 0).toFixed(2)}"`]);
-            csvRows.push([`"OTHER MISC EARNED"`, `"${parseFloat(document.getElementById('inputOtherEarn').value || 0).toFixed(2)}"`]);
             csvRows.push([`"TOTAL GROSS RUN"`, `"${document.getElementById('breakdownGross').innerText.replace('₱','')}"`]);
             csvRows.push([]);
             csvRows.push([`"DEDUCTION ACCOUNT ITEMS"`]);
@@ -1341,7 +1488,7 @@
             csvRows.push([`"HDMF FUND CONTRIB"`, `"${document.getElementById('breakdownHDMF').innerText.replace('₱','')}"`]);
             csvRows.push([`"ATTENDANCE PENALTIES"`, `"${document.getElementById('breakdownPenalties').innerText.replace('₱','')}"`]);
             csvRows.push([`"CASH ADVANCES BALANCE"`, `"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}"`]);
-            csvRows.push([`"TOTAL COMPASS DEDUCTIONS"`, `"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}"`]);
+            csvRows.push([`"TOTAL DEDUCTIONS"`, `"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}"`]);
             csvRows.push([]);
             csvRows.push([`"NET DISBURSABLE PAYOUT"`, `"${document.getElementById('breakdownNet').innerText.replace('₱','')}"`]);
 
