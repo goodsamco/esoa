@@ -1,466 +1,570 @@
 /* ==========================================================================
-   1. CORE DESIGN TOKENS & DYNAMIC COUPLING
+   GLOBAL DESIGN VARIABLES & APPLICATION THEME DECK
    ========================================================================== */
 :root {
-    --bg: #0b0f1a;
-    --surface: rgba(255, 255, 255, 0.03);
-    --primary: #22c55e;
-    --text-main: #f1f5f9;
-    --glass: rgba(255, 255, 255, 0.08);
-    --border-glass: rgba(255, 255, 255, 0.12);
+    --bg-dark: #09090b;          /* Deep base layout backdrop */
+    --panel-dark: #121214;       /* Structural elements, cards, and sidebar backgrounds */
+    --border-dark: #27272a;      /* Grid line boundaries and standard dividers */
+    --text-main: #f4f4f5;        /* Primary typography high-contrast assignments */
+    --text-muted: #a1a1aa;       /* Lower emphasis strings, descriptions, and labels */
+    --primary: #fbbf24;          /* Brand primary yellow/gold execution accents */
+    --primary-hover: #f59e0b;    /* Dynamic interactive component transitions */
+    --font-stack: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+/* ==========================================================================
+   BASE RESET STYLES
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-stack);
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg);
+    background-color: var(--bg-dark);
     color: var(--text-main);
-    margin: 0;
-    padding: 20px 10px 120px 10px;
-    display: flex;
-    justify-content: center;
     min-height: 100vh;
-    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
-.engine-container {
-    width: 100%;
-    max-width: 500px;
-    background: var(--surface);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+/* ==========================================================================
+   CORE DASHBOARD LAYOUT STRUCT
+   ========================================================================== */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR RECTANGLE PANEL */
+.sidebar {
+    width: 260px;
+    background-color: var(--panel-dark);
+    border-right: 1px solid var(--border-dark);
+    display: flex;
+    flex-direction: column;
     padding: 24px;
-    border-radius: 24px;
-    border: 1px solid var(--border-glass);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-    box-sizing: border-box;
+    position: fixed;
+    height: 100vh;
+    z-index: 10;
 }
 
-.top-nav-deck {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.nav-btn {
-    background: var(--glass);
-    border: 1px solid var(--border-glass);
-    color: var(--text-main);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-    background: var(--primary);
-    color: #000;
-    border-color: var(--primary);
-}
-
-h1 {
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin: 0;
+.logo-section h2 {
+    color: var(--primary);
+    font-size: 20px;
     font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 36px;
 }
 
-/* Profile Meta Header Block */
+/* VERTICAL NAVIGATION MENU HOOKS */
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Active navigation pointer styles */
+.nav-item:hover, .nav-item.active {
+    color: var(--text-main);
+    background-color: var(--border-dark);
+}
+
+.nav-item.active {
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    padding-left: 13px;
+}
+
+/* Danger-state breakout navigation button */
+.nav-item.logout:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* MAIN VIEW CANVAS */
+.main-content {
+    flex: 1;
+    margin-left: 260px; /* Aligns canvas precisely to clear fixed sidebar spacing */
+    padding: 40px;
+    max-width: 1400px;
+    width: calc(100% - 260px);
+}
+
+/* ==========================================================================
+   HEADER COMPONENT & PROFILE SUB-DECK
+   ========================================================================== */
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border-dark);
+    padding-bottom: 24px;
+    gap: 20px;
+}
+
+.top-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.top-header .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Horizontal User Identity Data Deck */
 .profile-badge-deck {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-glass);
-    border-radius: 16px;
-    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    background: var(--panel-dark);
+    padding: 14px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-dark);
+    max-width: 70%;
+}
+
+.profile-meta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.profile-meta-row .lbl {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.profile-meta-row .val {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* ==========================================================================
+   LAYOUT MODULE STRUCTURES (CARDS)
+   ========================================================================== */
+.control-card, .calendar-section, .payslip-slip-card, .actions-card-deck, .table-section-deck {
+    background-color: var(--panel-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 24px;
     margin-bottom: 24px;
+}
+
+.control-card h3, .calendar-section h3, .actions-card-deck h3, .table-section-deck h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    letter-spacing: -0.2px;
+}
+
+/* INPUT COMPONENT GRID MAPPINGS */
+.control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.adjustments-grid {
+    grid-template-columns: repeat(6, 1fr); /* Split adjustments evenly over 6 columns */
+}
+
+/* Responsive wrap constraints for small desktop monitors */
+@media(max-width: 1200px) {
+    .adjustments-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* INPUT FORM ELEMENTS COMPONENTS */
+.input-field-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.profile-meta-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    border-bottom: 1px dashed rgba(255,255,255,0.05);
-    padding-bottom: 6px;
+.input-field-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
 }
 
-.profile-meta-row:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.profile-meta-row span.lbl {
-    color: #94a3b8;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.65rem;
-    letter-spacing: 0.05em;
-}
-
-.profile-meta-row span.val {
-    color: #f1f5f9;
-    font-weight: 600;
-}
-
-/* ==========================================================================
-   2. INTERFACE ELEMENTS & FORM SYSTEM
-   ========================================================================== */
-.form-block {
-    margin-bottom: 20px;
-}
-
-.form-block label {
-    display: block;
-    font-size: 0.7rem;
-    color: #94a3b8;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
-}
-
-select, input[type="text"], input[type="number"], input[type="time"] {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--border-glass);
-    padding: 14px;
-    border-radius: 14px;
-    color: white;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-    font-weight: 600;
+.input-field-group input, .input-field-group select {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-dark);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
     outline: none;
+    transition: border-color 0.15s ease;
+    width: 100%;
 }
 
-select:focus, input:focus {
+.input-field-group input:focus, .input-field-group select:focus {
     border-color: var(--primary);
 }
 
-/* Custom Adaptive Calendar Matrix */
-.calendar-deck {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    background: rgba(0,0,0,0.2);
-    padding: 14px;
-    border-radius: 16px;
-    border: 1px solid var(--border-glass);
+/* ==========================================================================
+   INTERACTIVE TIMELINE CALENDAR GRID
+   ========================================================================== */
+.section-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
 }
 
+.section-title-bar h3 { margin-bottom: 0; }
+
+.instruction-tag {
+    font-size: 12px;
+    color: var(--primary);
+    background: rgba(251, 191, 36, 0.08);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* Constant columns matching traditional week structures */
+    gap: 10px;
+}
+
+/* SYSTEM INTERACTIVE CALENDAR NODES */
 .calendar-day-node {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border-glass);
-    border-radius: 12px;
-    padding: 12px 6px;
-    text-align: center;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 14px;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
     position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .calendar-day-node:hover {
-    border-color: rgba(255,255,255,0.3);
-    transform: translateY(-1px);
-}
-
-.calendar-day-node.node-locked {
-    opacity: 0.5;
-    border-style: dotted;
-    background: rgba(239, 68, 68, 0.03);
+    transform: translateY(-2px);
+    border-color: rgba(251, 191, 36, 0.4);
 }
 
 .calendar-day-node .day-num {
-    font-size: 1.1rem;
-    font-weight: 800;
-    display: block;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .calendar-day-node .day-lbl {
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    margin-top: 2px;
-    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Node Context Conditions: Locked Node state variables */
+.calendar-day-node.node-locked {
+    background: repeating-linear-gradient(45deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01) 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+    opacity: 0.65;
 }
 
 .lock-corner-icon {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    color: #ef4444;
-    opacity: 0.8;
+    top: 6px;
+    right: 8px;
+    color: var(--text-muted);
 }
 
 /* ==========================================================================
-   3. FINANCIAL BREAKDOWN ARCHITECTURE
+   FINANCIALS SLIT LAYOUT ARCHITECTURE
    ========================================================================== */
-.matrix-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--border-glass);
+.financials-layout-split {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr; /* Prioritizes ledger preview sizing over tool action deck */
+    gap: 24px;
 }
 
-.matrix-table th {
-    background: rgba(255,255,255,0.04);
-    text-align: left;
-    padding: 12px 14px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: #94a3b8;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border-glass);
+@media (max-width: 992px) {
+    .financials-layout-split {
+        grid-template-columns: 1fr;
+    }
 }
 
-.matrix-table td {
-    padding: 12px 14px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+/* LEDGER PAYSLIP CARD SYSTEM */
+.payslip-slip-card {
+    border: 1px dashed var(--border-dark); /* Outlined like traditional detached payslips */
+    background: #141416;
 }
 
-.matrix-table tr:last-child td {
-    border-bottom: none;
-}
-
-.scannable-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    background: rgba(0,0,0,0.2);
-    border-radius: 14px;
-    border: 1px solid var(--border-glass);
-    margin-top: 10px;
-}
-
-.scannable-table-wrapper .matrix-table {
-    border: none;
-    margin-top: 0;
-    min-width: 900px;
-}
-
-.scannable-table-wrapper th, .scannable-table-wrapper td {
-    padding: 10px 12px;
-    font-size: 0.75rem;
-}
-
-.net-pay-display-deck {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-glass);
-    border-radius: 16px;
-    padding: 20px;
+.slip-header {
     text-align: center;
+    border-bottom: 2px solid var(--border-dark);
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+}
+
+.slip-header h3 { color: var(--primary); font-weight: 800; font-size: 18px; letter-spacing: 0.5px;}
+.slip-header p { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;}
+
+/* Slip Component Columns */
+.slip-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 0;
+    color: var(--text-muted);
+}
+
+.slip-row.header-row {
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-dark);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding-bottom: 4px;
+}
+
+.slip-row span:last-child {
+    font-family: monospace; /* Monospace keeps number layout columns clean */
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.slip-row .deduction-val {
+    color: #f87171 !important; /* Forces soft red rendering over default text blocks */
+}
+
+.slip-row.total-row {
+    border-top: 1px dashed var(--border-dark);
+    padding-top: 8px;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+/* BIG COMPENSATED NET DISPLAY BLOCK */
+.net-payout-banner {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 16px;
     margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     position: relative;
 }
 
-.net-pay-display-deck.blurred-lock .val-stream {
-    filter: blur(6px);
-    pointer-events: none;
-}
-
-.net-pay-display-deck .lbl {
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-.net-pay-display-deck .val-stream {
-    font-size: 2rem;
-    font-weight: 900;
+.net-payout-banner .label {
+    font-size: 11px;
+    font-weight: 700;
     color: var(--primary);
-    margin-top: 6px;
-    transition: filter 0.3s ease;
+    letter-spacing: 1px;
 }
 
-.lock-indicator {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-top: 8px;
-}
-
-/* Action Buttons */
-.engine-btn {
-    width: 100%;
-    background: var(--glass);
-    border: 1px solid var(--border-glass);
-    color: white;
-    padding: 14px;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-}
-
-.engine-btn:hover {
-    border-color: rgba(255,255,255,0.3);
-    background: rgba(255,255,255,0.05);
-}
-
-.engine-btn.primary-btn {
-    background: var(--primary);
-    color: #000;
-    border: none;
+.net-payout-banner .amount {
+    font-size: 32px;
     font-weight: 800;
+    font-family: monospace;
+    margin-top: 4px;
+    color: #22c55e; /* Vibrant financial green payout indicator */
 }
 
-.engine-btn.primary-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+/* HISTORICAL GUARDRAIL OVERLAYS */
+.blurred-lock {
+    filter: blur(4px);
+    pointer-events: none;
+    opacity: 0.3;
 }
 
-.engine-btn.danger-btn {
+.lock-badge {
+    position: absolute;
     background: #ef4444;
     color: white;
-    border: none;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 4px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 2;
+    white-space: nowrap;
 }
 
-.engine-btn.danger-btn:hover {
-    background: #dc2626;
-}
-
-.checkbox-container-row {
+/* PIPELINE SYSTEM BUTTON CONTROLS */
+.action-buttons-stack {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border-glass);
-    border-radius: 12px;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    border: none;
+    transition: opacity 0.15s ease;
+    width: 100%;
+}
+
+.btn:hover { opacity: 0.9; }
+.btn i { width: 16px; height: 16px; }
+
+.btn-primary { background-color: var(--primary); color: #000; }
+.btn-secondary { background-color: var(--border-dark); color: var(--text-main); }
+
+/* ==========================================================================
+   ITEMIZED DATA AUDIT TABLES
+   ========================================================================== */
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+}
+
+.audit-table th {
+    background-color: var(--bg-dark);
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 12px;
+    border-bottom: 2px solid var(--border-dark);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.audit-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-dark);
+    color: var(--text-main);
+}
+
+.audit-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* ==========================================================================
-   4. MODAL LAYER ARCHITECTURE
+   MODAL WINDOW DIALOG LAYERS
    ========================================================================== */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(5, 7, 12, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 100;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
-    padding: 14px;
+    transition: opacity 0.2s ease;
 }
 
+/* Toggle layer context handled globally through javascript injection classes */
 .modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
 }
 
 .modal-box {
-    background: #111625;
-    border: 1px solid var(--border-glass);
+    background-color: var(--panel-dark);
+    border: 1px solid var(--border-dark);
     width: 100%;
-    max-width: 420px;
-    border-radius: 20px;
-    padding: 22px;
-    box-shadow: 0 30px 70px rgba(0,0,0,0.6);
-    box-sizing: border-box;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+    overflow: hidden;
 }
 
-.realtime-stats-bar {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border-glass);
-    border-radius: 12px;
-    padding: 12px;
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
+
+.close-btn {
+    background: none; border: none;
+    color: var(--text-muted); font-size: 22px; cursor: pointer;
+}
+.close-btn:hover { color: var(--text-main); }
+
+.modal-body { padding: 20px; }
+
+/* Modal Shifts Inner Input Matrices */
+.shifts-input-matrix {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 18px;
-    text-align: center;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
-.realtime-stats-bar .stat-block .lbl {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #94a3b8;
-    text-transform: uppercase;
-}
-
-.realtime-stats-bar .stat-block .val {
-    font-size: 0.95rem;
-    font-weight: 800;
-    margin-top: 2px;
-}
-
-.nested-row-segment {
-    background: rgba(0,0,0,0.15);
-    border: 1px dashed var(--border-glass);
-    border-radius: 12px;
+/* Real-time Sub-panel indicators within configuration dialogs */
+.live-metrics-panel {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 6px;
     padding: 12px;
-    margin-top: 14px;
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-around;
 }
 
-/* ==========================================================================
-   5. PIXEL-PERFECT PRINT ARCHITECTURE
-   ========================================================================== */
-#print-render-matrix {
-    display: none;
+.metric-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
-@media print {
-    @page {
-        size: A4 landscape;
-        margin: 5mm;
-    }
-    body, html {
-        background: #fff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    body > *:not(#print-render-matrix) {
-        display: none !important;
-    }
-    #print-render-matrix {
-        display: block !important;
-        width: 100% !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-    }
-    #print-render-matrix * {
-        display: revert; 
-        visibility: visible !important;
-    }
-    .print-sheet {
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    tr {
-        page-break-inside: avoid !important;
-    }
+.metric-block .lbl { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+.metric-block .val { font-size: 13px; font-weight: 700; font-family: monospace; }
+
+.modal-footer {
+    padding: 12px 20px;
+    background-color: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border-dark);
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 10px;
 }
