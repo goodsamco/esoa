@@ -744,7 +744,7 @@
     <div id="print-render-matrix"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // 1. FIREBASE ARCHITECTURE CONFIGURATION
@@ -855,10 +855,24 @@ function updateUIProfileElements() {
     document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
     document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
     
-    // Add Daily Rate to Employee Details layout dynamically if element exists
-    const rateElement = document.getElementById('profDailyRateDisplay');
+    // Check if the Daily Rate row is already present or explicitly configured in HTML
+    let rateElement = document.getElementById('profDailyRateDisplay');
+    const formattedRate = `₱${(parseFloat(salarySettings.dailyRate) || 460).toFixed(2)}`;
+    
     if (rateElement) {
-        rateElement.innerText = `₱${(parseFloat(salarySettings.dailyRate) || 460).toFixed(2)}`;
+        rateElement.innerText = formattedRate;
+    } else {
+        // Safely find the profile badge deck and inject the missing row via JS runtime architecture
+        const badgeDeck = document.querySelector('.profile-badge-deck');
+        if (badgeDeck) {
+            const newMetaRow = document.createElement('div');
+            newMetaRow.className = "profile-meta-row";
+            newMetaRow.innerHTML = `
+                <span class="lbl">DAILY RATE</span>
+                <span class="val" id="profDailyRateDisplay">${formattedRate}</span>
+            `;
+            badgeDeck.appendChild(newMetaRow);
+        }
     }
 }
 
