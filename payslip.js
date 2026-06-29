@@ -706,7 +706,7 @@ function generateCommercialReceiptLayout(m) {
                 </div>
                 <div style="display:grid; grid-template-columns: 90px 1fr; gap: 5px;">
                     <div style="font-weight:700;">POSITION:</div>  <div>${(salarySettings.position || 'Staff').toUpperCase()}</div>
-                    <div style="font-weight:700;">DEPT:</div>      <div>${(salarySettings.department || 'Operations').toUpperCase()}</div>
+                    <div style="font-weight:700;">DEPARTMENT:</div>      <div>${(salarySettings.department || 'Operations').toUpperCase()}</div>
                     <div style="font-weight:700;">DAILY RATE:</div><div><b>₱${formatCurrency(currentDailyRate)}</b></div>
                     <div style="font-weight:700;">WORKED:</div>    <div>${m.actualDaysWorkedCounter} DAYS</div>
                 </div>
@@ -753,13 +753,13 @@ function generateCommercialReceiptLayout(m) {
                         <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
                         <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
                         <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${formatCurrency(m.totalDeductionPenalties)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Advances</td><td style="text-align:right;">₱${formatCurrency(m.advances)}</td></tr>
-                        <tr><td style="padding:4px 0;"><b>TOTAL DED.</b></td><td style="text-align:right; color:#c00;"><b>₱${formatCurrency(m.totalDeductions)}</b></td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Cash Advances Pay</td><td style="text-align:right;">₱${formatCurrency(m.advances)}</td></tr>
+                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>₱${formatCurrency(m.totalDeductions)}</b></td></tr>
                     </tbody>
                 </table>
             </div>
             <div style="margin-top:15px; border:2px solid #000; padding:10px; text-align:center; background:#eee;">
-                <span style="font-weight:900; font-size:14px;">NET DISBURSABLE PAY: ₱${formatCurrency(m.netPay)}</span>
+                <span style="font-weight:900; font-size:14px;">NET PAY: ₱${formatCurrency(m.netPay)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:10px;">
                 <div style="text-align:center;">________________________<br>Payroll Administrator</div>
