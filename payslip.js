@@ -1,11 +1,7 @@
-/**
- * ==========================================================================
- * 1. FIREBASE ARCHITECTURE INITIALIZATION & SETUP
- * ==========================================================================
- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// 1. FIREBASE ARCHITECTURE CONFIGURATION
 const firebaseConfig = {
     apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
     authDomain: "svls-289ee.firebaseapp.com",
@@ -20,17 +16,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Session Verification Gate
+// Check if user is logged in
 const userId = localStorage.getItem("userId");
+
 if (!userId) {
     window.location.href = "login.html";
 }
 
-/**
- * ==========================================================================
- * 2. GLOBAL ENGINE APPLICATION STATE
- * ==========================================================================
- */
+// Global State
 let userProfile = {};
 let salarySettings = { 
     dailyRate: 460, 
@@ -47,26 +40,12 @@ let previousArchiveViewingMode = false;
 
 const CURRENT_YEAR = 2026;
 
-/**
- * ==========================================================================
- * 3. HELPER UTILITIES
- * ==========================================================================
- */
+// Helper to add comma separators for currencies
 function formatCurrency(amount) {
     return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function timeStringToMinutes(timeStr) {
-    if(!timeStr || timeStr === "-") return 0;
-    const p = timeStr.split(':');
-    return parseInt(p) * 60 + parseInt(p);
-}
-
-/**
- * ==========================================================================
- * 4. CORE ENGINE BOOTSTRAPPER & UI SYNC
- * ==========================================================================
- */
+// 3. CORE INITIALIZATION ENGINE
 async function bootEngineCore() {
     try {
         const accountRef = doc(db, "accounts", userId);
@@ -153,11 +132,6 @@ function updateUIProfileElements() {
     }
 }
 
-/**
- * ==========================================================================
- * 5. PAYABLE CYCLE & CALENDAR MATRIX LOGIC
- * ==========================================================================
- */
 function buildDropdownTargetIntervals() {
     const selector = document.getElementById('periodSelector');
     const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
@@ -310,11 +284,7 @@ function renderActivePeriodCalendarGrid() {
     if (window.lucide) window.lucide.createIcons();
 }
 
-/**
- * ==========================================================================
- * 6. MODAL TRANSACTION MANAGEMENT PIPELINE
- * ==========================================================================
- */
+// 5. TRANSACTIONS MODAL PROCESS ENGINE
 window.launchTimeTransactionModal = function(dateKey, isPastDate = false) {
     currentTargetDateString = dateKey;
     document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
@@ -414,6 +384,12 @@ window.runRealtimeMetricsDeductionEngine = function() {
     document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
 };
 
+function timeStringToMinutes(timeStr) {
+    if(!timeStr || timeStr === "-") return 0;
+    const p = timeStr.split(':');
+    return parseInt(p) * 60 + parseInt(p);
+}
+
 window.toggleOvertimeSubSection = function() {
     if(document.getElementById('chkEnableOT').disabled) return;
     const checked = document.getElementById('chkEnableOT').checked;
@@ -456,11 +432,7 @@ window.clearModalDayState = function() {
     recomputeGlobalFinancials();
 };
 
-/**
- * ==========================================================================
- * 7. CORE COMPUTE STREAM (FINANCIAL MATHEMATICS ENGINE)
- * ==========================================================================
- */
+// 6. FINANCIAL RECOMPUTATION STREAM MODULE
 window.recomputeGlobalFinancials = function() {
     const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
     const hourlyRate = dailyRate / 8;
@@ -627,11 +599,6 @@ window.recomputeGlobalFinancials = function() {
     });
 };
 
-/**
- * ==========================================================================
- * 8. DATA SYNC & STORAGE ACTION ENGINE
- * ==========================================================================
- */
 window.commitTimelineTransactionToCloud = async function() {
     try {
         const payload = {
@@ -651,11 +618,7 @@ window.commitTimelineTransactionToCloud = async function() {
     }
 };
 
-/**
- * ==========================================================================
- * 9. DATA EXPORT PIPELINES (PRINT MATRIX & CSV GENERATION)
- * ==========================================================================
- */
+// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF)
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
     if (!printContainer) return;
@@ -864,11 +827,6 @@ window.triggerCSVExportPipeline = function() {
     document.body.removeChild(link);
 };
 
-/**
- * ==========================================================================
- * 10. RUNTIME CONTEXT MOUNT ATTACHMENT
- * ==========================================================================
- */
 window.onload = () => {
     bootEngineCore();
     if (window.lucide) {
