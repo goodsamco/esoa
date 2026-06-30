@@ -156,7 +156,18 @@ async function bootEngineCore() {
             const accountData = accountSnap.data();
             userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
-            if (accountData.bgValue) document.documentElement.style.setProperty('--bg', accountData.bgValue);
+            // Replace the old RESTORE LAYOUT BACKGROUND VALUE DIRECTLY block with this:
+if (accountData.bgValue) {
+    if (accountData.bgMode === "image") {
+        document.documentElement.style.setProperty('--bg', `url('${accountData.bgValue}')`);
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+        document.body.style.backgroundAttachment = "fixed";
+    } else {
+        document.documentElement.style.setProperty('--bg', accountData.bgValue);
+        document.body.style.backgroundImage = "none";
+    }
+}
             if (accountData.btnValue) {
                 document.documentElement.style.setProperty('--primary', accountData.btnValue);
                 const modalBox = document.getElementById('modalBoxContainer');
