@@ -18,7 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Authentication Guard Control Lock
 const userId = localStorage.getItem("userId");
 if (!userId) {
     window.location.href = "login.html";
@@ -41,19 +40,47 @@ let currentTargetDateString = "";
 let activeDatesArray = [];
 const CURRENT_YEAR = 2026;
 
-// Helper to add comma separators for local financial currencies representation
+// Debounce & State Flags
+let autoSaveTimer = null;
+let hasUnsavedChanges = false;
+
 function formatCurrency(amount) {
     return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Helper to convert time string values directly into scalar minutes integers
 function timeStringToMinutes(timeStr) {
     if(!timeStr || timeStr === "-") return 0;
     const p = timeStr.split(':');
     return parseInt(p[0]) * 60 + parseInt(p[1]);
 }
 
-// Loading Spinner UI Utilities
+// Custom Top Toast System
+function showToast(message, duration = 3000) {
+    let container = document.getElementById('toastEngineContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastEngineContainer';
+        container.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:100000; display:flex; flex-direction:column; gap:10px; pointer-events:none;";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = "background:#1e293b; color:#38bdf8; padding:12px 24px; border-radius:8px; border:1px solid #38bdf8; font-family:monospace; font-size:12px; font-weight:bold; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(-20px); letter-spacing:1px;";
+    toast.innerText = message.toUpperCase();
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+    }, 50);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-20px)";
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// Loading Spinner Utilities
 function showGlobalEngineLoader() {
     let loader = document.getElementById('engineGlobalLoader');
     if (!loader) {
@@ -76,26 +103,61 @@ function hideGlobalEngineLoader() {
     if (loader) loader.style.display = 'none';
 }
 
+// Unsaved Changes Safety Modal UI
+function injectExitGuardModal() {
+    if(document.getElementById('exitGuardModalOverlay')) return;
+    const modal = document.createElement('div');
+    modal.id = 'exitGuardModalOverlay';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100001; display:none; align-items:center; justify-content:center; font-family:monospace;";
+    modal.innerHTML = `
+        <div style="background:#0f172a; border:2px solid #ef4444; padding:25px; width:90%; max-width:400px; border-radius:8px; color:#fff; text-align:center;">
+            <div style="color:#ef4444; font-size:14px; font-weight:bold; margin-bottom:15px; letter-spacing:1px;">UNSAVED CHANGES DETECTED</div>
+            <p style="font-size:11px; color:#94a3b8; margin-bottom:20px; line-height:1.5;">YOU HAVE UNCOMMITTED PAYROLL TRANSACTIONS. CHOOSE AN ACTION BEFORE LEAVING.</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button id="btnGuardSaveExit" style="background:#38bdf8; color:#000; border:none; padding:10px; font-weight:bold; cursor:pointer; font-family:monospace; font-size:11px; border-radius:4px;">SAVE & EXIT</button>
+                <button id="btnGuardDiscard" style="background:#334155; color:#fff; border:none; padding:10px; font-weight:bold; cursor:pointer; font-family:monospace; font-size:11px; border-radius:4px;">DISCARD</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('btnGuardSaveExit').onclick = async () => {
+        await commitTimelineTransactionToCloud(true);
+        hasUnsavedChanges = false;
+        modal.style.display = 'none';
+        showToast("DATA SECURED. EXIT PERMITTED.");
+    };
+    document.getElementById('btnGuardDiscard').onclick = () => {
+        hasUnsavedChanges = false;
+        modal.style.display = 'none';
+        showToast("CHANGES DISCARDED.");
+    };
+}
+
+// Trigger Auto Save Engine Loop (1-Second Delay)
+function markChangeAndQueueAutoSave() {
+    hasUnsavedChanges = true;
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(async () => {
+        await commitTimelineTransactionToCloud(true);
+    }, 1000);
+}
+
 // ==========================================================================
 // 3. CORE INITIALIZATION ROUTINE ENGINE
 // ==========================================================================
 async function bootEngineCore() {
     showGlobalEngineLoader();
+    injectExitGuardModal();
     try {
-        // Fetch structural accounts profiling records
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
         if (accountSnap.exists()) {
             const accountData = accountSnap.data();
             userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
-            
-            if (accountData.customName) {
-                userProfile.customName = accountData.customName.toUpperCase();
-            }
-            if (accountData.bgValue) {
-                document.documentElement.style.setProperty('--bg', accountData.bgValue);
-            }
+            if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
+            if (accountData.bgValue) document.documentElement.style.setProperty('--bg', accountData.bgValue);
             if (accountData.btnValue) {
                 document.documentElement.style.setProperty('--primary', accountData.btnValue);
                 const modalBox = document.getElementById('modalBoxContainer');
@@ -103,19 +165,15 @@ async function bootEngineCore() {
             }
         }
 
-        // Fetch salary configuration settings matrix
         const settingsRef = doc(db, "salary_settings", userId);
         const settingsSnap = await getDoc(settingsRef);
         if (settingsSnap.exists()) {
             salarySettings = settingsSnap.data();
-            
             if (salarySettings.firstName && salarySettings.lastName) {
                 const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : "";
                 userProfile.customName = `${salarySettings.firstName}${mi} ${salarySettings.lastName}`.toUpperCase();
             }
-            if (salarySettings.emailAddress) {
-                userProfile.email = salarySettings.emailAddress;
-            }
+            if (salarySettings.emailAddress) userProfile.email = salarySettings.emailAddress;
         }
 
         updateUIProfileElements();
@@ -138,7 +196,6 @@ function updateUIProfileElements() {
     
     let rateElement = document.getElementById('profDailyRateDisplay');
     const formattedRate = `₱${formatCurrency(parseFloat(salarySettings.dailyRate) || 460)}`;
-    
     if (rateElement) {
         rateElement.innerText = formattedRate;
     } else {
@@ -146,10 +203,7 @@ function updateUIProfileElements() {
         if (badgeDeck) {
             const newMetaRow = document.createElement('div');
             newMetaRow.className = "profile-meta-row";
-            newMetaRow.innerHTML = `
-                <span class="lbl">DAILY RATE</span>
-                <span class="val" id="profDailyRateDisplay">${formattedRate}</span>
-            `;
+            newMetaRow.innerHTML = `<span class="lbl">DAILY RATE</span><span class="val" id="profDailyRateDisplay">${formattedRate}</span>`;
             badgeDeck.appendChild(newMetaRow);
         }
     }
@@ -183,6 +237,10 @@ function buildDropdownTargetIntervals() {
 }
 
 async function fetchAndProcessSelectedPeriodPayload() {
+    if(hasUnsavedChanges) {
+        document.getElementById('exitGuardModalOverlay').style.display = 'flex';
+        return;
+    }
     showGlobalEngineLoader();
     const selectedPeriodKey = document.getElementById('periodSelector').value; 
     const pieces = selectedPeriodKey.split('-');
@@ -193,7 +251,6 @@ async function fetchAndProcessSelectedPeriodPayload() {
     activeDatesArray = [];
     timelineBuffer = {};
 
-    // Construct array of date entities corresponding to dynamic bi-weekly windows
     if (day === 15) {
         let prevMonthDate = new Date(year, monthIdx - 1, 29);
         let currentTarget = new Date(prevMonthDate);
@@ -213,7 +270,6 @@ async function fetchAndProcessSelectedPeriodPayload() {
     const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
 
-    // Reset fields prior to processing payload load safely
     document.getElementById('inputSSS').value = "";
     document.getElementById('inputPHIC').value = "";
     document.getElementById('inputHDMF').value = "";
@@ -222,7 +278,6 @@ async function fetchAndProcessSelectedPeriodPayload() {
     document.getElementById('inputReimbursements').value = "";
 
     try {
-        // Fetch active/cached historical cycles payload transaction structures keyed by period instance
         const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`));
         if (transSnap.exists()) {
             const loadedData = transSnap.data();
@@ -235,22 +290,20 @@ async function fetchAndProcessSelectedPeriodPayload() {
             document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
         }
     } catch(e) {
-        console.error("Payload tracking data recovery error: ", e);
+        console.error("Payload data recovery error: ", e);
     }
 
     evaluateDynamicLockAndBlurConstraints();
     renderActivePeriodCalendarGrid();
     recomputeGlobalFinancials();
+    hasUnsavedChanges = false;
     hideGlobalEngineLoader();
 }
 
 function evaluateDynamicLockAndBlurConstraints() {
     const today = new Date();
     const currentDay = today.getDate();
-    const currentMonthNum = today.getMonth();
-    const currentYearNum = today.getFullYear();
 
-    // 1. Evaluate Net Pay Blur Control Lock Matrix (Only visible 13-16 and 28-2)
     let revealNetPay = false;
     if (today.getFullYear() === CURRENT_YEAR) {
         if ((currentDay >= 13 && currentDay <= 16) || (currentDay >= 28 || currentDay <= 2)) {
@@ -272,11 +325,7 @@ function evaluateDynamicLockAndBlurConstraints() {
 function verifyActionAllowedDateConstraints() {
     const today = new Date();
     const day = today.getDate();
-    // Allow action strictly on dates 13-16 or 28-2 of every month
-    if ((day >= 13 && day <= 16) || (day >= 28 || day <= 2)) {
-        return true;
-    }
-    return false;
+    return ((day >= 13 && day <= 16) || (day >= 28 || day <= 2));
 }
 
 // ==========================================================================
@@ -288,7 +337,7 @@ function renderActivePeriodCalendarGrid() {
     grid.innerHTML = "";
 
     const today = new Date();
-    today.setHours(0,0,0,0); // Normalize time to perform accurate direct day tracking comparisons
+    today.setHours(0,0,0,0);
 
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
@@ -303,12 +352,9 @@ function renderActivePeriodCalendarGrid() {
         let isLockedPastDate = false;
         let isFutureDate = false;
 
-        // Future prevention lock logic
         if (comparisonDate.getTime() > today.getTime()) {
             isFutureDate = true;
-        } 
-        // Historical standard calculation cycle lock fallback rules configuration
-        else if (year < today.getFullYear()) {
+        } else if (year < today.getFullYear()) {
             isLockedPastDate = true;
         } else if (year === today.getFullYear() && dateObj.getMonth() < today.getMonth()) {
             if (!(dateObj.getMonth() === today.getMonth() - 1 && dateObj.getDate() >= 29)) {
@@ -327,10 +373,7 @@ function renderActivePeriodCalendarGrid() {
             cell.classList.add("node-locked");
         }
 
-        cell.innerHTML = `
-            <span class="day-num">${day}</span>
-            <span class="day-lbl">${dayOfWeekStr}</span>
-        `;
+        cell.innerHTML = `<span class="day-num">${day}</span><span class="day-lbl">${dayOfWeekStr}</span>`;
 
         if (isLockedPastDate || isFutureDate) {
             const iconSpan = document.createElement('span');
@@ -343,18 +386,15 @@ function renderActivePeriodCalendarGrid() {
             cell.style.backgroundColor = document.documentElement.style.getPropertyValue('--primary') || "var(--primary)";
             cell.style.color = "#000000";
             cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
-            if ((isLockedPastDate || isFutureDate) && cell.querySelector('.lock-corner-icon')) {
-                cell.querySelector('.lock-corner-icon').style.color = "#000000";
-            }
         }
 
         cell.onclick = () => {
             if (isFutureDate) {
-                alert("UNABLE TO LOG ATTENDANCE: THIS CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
+                showToast("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
                 return;
             }
             if (isLockedPastDate) {
-                alert("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
+                showToast("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
             launchTimeTransactionModal(dateKey, false);
@@ -426,8 +466,7 @@ function evaluateLunchBreakConstraints() {
     const out1 = document.getElementById('modalTimeOut1').value;
     if (out1) {
         const out1Mins = timeStringToMinutes(out1);
-        const noonMins = timeStringToMinutes("12:59");
-        if (out1Mins < noonMins) {
+        if (out1Mins < timeStringToMinutes("12:59")) {
             document.getElementById('modalTimeIn2').value = "";
             document.getElementById('modalTimeOut2').value = "";
         }
@@ -441,7 +480,6 @@ function closeTimeTransactionModal() {
 function runRealtimeMetricsDeductionEngine() {
     const schedIn = salarySettings.timeIn || "08:00";
     const schedOut = salarySettings.timeOut || "17:00";
-    
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
     const out2 = document.getElementById('modalTimeOut2').value;
@@ -461,8 +499,6 @@ function runRealtimeMetricsDeductionEngine() {
         const actualOutMins = timeStringToMinutes(effectiveFinalOut);
         if (actualOutMins < schedOutMins) {
             undertimeMinutes += (schedOutMins - actualOutMins);
-            
-            // Real-time verification protection: Exclude unpaid break bounds
             if (salarySettings.hasLunchBreak !== false) {
                 const lunchStartMins = timeStringToMinutes("12:00");
                 const lunchEndMins = timeStringToMinutes("13:00");
@@ -490,12 +526,11 @@ function commitModalDayStateToLocalBuffer() {
     const out1 = document.getElementById('modalTimeOut1').value;
 
     if (!in1 || !out1) {
-        alert("CORE TIMELINE IN & OUT VALUES REQUIRED.");
+        showToast("CORE TIMELINE IN & OUT VALUES REQUIRED.");
         return;
     }
 
     const hasOT = document.getElementById('chkEnableOT').checked;
-
     timelineBuffer[currentTargetDateString] = {
         filled: true,
         in1: in1,
@@ -510,6 +545,7 @@ function commitModalDayStateToLocalBuffer() {
     closeTimeTransactionModal();
     renderActivePeriodCalendarGrid();
     recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
 }
 
 function clearModalDayState() {
@@ -519,6 +555,7 @@ function clearModalDayState() {
     closeTimeTransactionModal();
     renderActivePeriodCalendarGrid();
     recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
 }
 
 // ==========================================================================
@@ -536,7 +573,8 @@ function recomputeGlobalFinancials() {
 
     let aggLates = 0;
     let aggUndertime = 0;
-    let aggGross = 0;
+    let aggDailyGrossOnly = 0; 
+    let aggOtGrossOnly = 0;    
     let aggDed = 0;
     let aggNet = 0;
 
@@ -553,7 +591,8 @@ function recomputeGlobalFinancials() {
         const dateKey = `${year}-${month}-${day}`;
         const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
-        let dayGross = 0;
+        let dayBasicGross = 0;
+        let dayOtGross = 0;
         let dayDed = 0;
         let dayLateMins = 0;
         let dayUndertimeMins = 0;
@@ -568,7 +607,7 @@ function recomputeGlobalFinancials() {
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
             actualDaysWorkedCounter++;
             totalBasicEarnings += dailyRate;
-            dayGross += dailyRate;
+            dayBasicGross = dailyRate;
 
             const rec = timelineBuffer[dateKey];
             tIn1 = rec.in1 || "-";
@@ -586,16 +625,13 @@ function recomputeGlobalFinancials() {
             
             if (actOutMins < schedOutMins) {
                 dayUndertimeMins = (schedOutMins - actOutMins);
-                
-                // CRITICAL STRUCTURAL FIX: Protect lunch break from being captured in undertime
                 if (salarySettings.hasLunchBreak !== false) {
                     const lunchStartMins = timeStringToMinutes("12:00");
                     const lunchEndMins = timeStringToMinutes("13:00");
-                    
                     if (actOutMins <= lunchStartMins) {
-                        dayUndertimeMins -= 60; // Knock out the full 12-1 session
+                        dayUndertimeMins -= 60;
                     } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
-                        dayUndertimeMins -= (lunchEndMins - actOutMins); // Truncate partial overlap
+                        dayUndertimeMins -= (lunchEndMins - actOutMins);
                     }
                 }
             }
@@ -606,60 +642,52 @@ function recomputeGlobalFinancials() {
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
-
                 const oInMins = timeStringToMinutes(rec.inOT);
                 const oOutMins = timeStringToMinutes(rec.outOT);
-
                 if (oOutMins > oInMins) {
                     const otMins = oOutMins - oInMins;
-                    const otPay = otMins * minuteRate;
-
-                    totalOvertimePay += otPay;
-                    dayGross += otPay;
+                    dayOtGross = otMins * minuteRate;
+                    totalOvertimePay += dayOtGross;
                 }
             }
         }
             
-        let dayNet = dayGross - dayDed;
+        let dayNet = (dayBasicGross + dayOtGross) - dayDed;
 
         aggLates += dayLateMins;
         aggUndertime += dayUndertimeMins;
-        aggGross += dayGross;
+        aggDailyGrossOnly += dayBasicGross;
+        aggOtGrossOnly += dayOtGross;
         aggDed += dayDed;
         aggNet += dayNet;
 
+        // UI View: Separated into distinct rows for Daily Gross & OT Gross values
         uiTableRowsHtml += `
-            <tr>
-                <td>${dateKey}</td>
-                <td>${dayOfWeekStr.toUpperCase()}</td>
-                <td>${tIn1}</td>
-                <td>${tOut1}</td>
-                <td>${tIn2}</td>
-                <td>${tOut2}</td>
-                <td>${otIn}</td>
-                <td>${otOut}</td>
-                <td style="color: #94a3b8;">${dayLateMins}</td>
-                <td style="color: #94a3b8;">${dayUndertimeMins}</td>
-                <td style="text-align: right; color: ${dayGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayGross)}</td>
-                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
-                <td style="text-align: right; color: #38bdf8;">₱${formatCurrency(dayNet)}</td>
+            <tr style="border-bottom: 1px dashed #334155;">
+                <td rowspan="2" style="vertical-align:middle; font-weight:bold; color:#f8fafc;">${dateKey}</td>
+                <td rowspan="2" style="vertical-align:middle;">${dayOfWeekStr.toUpperCase()}</td>
+                <td rowspan="2" style="vertical-align:middle;">${tIn1}</td>
+                <td rowspan="2" style="vertical-align:middle;">${tOut1}</td>
+                <td rowspan="2" style="vertical-align:middle;">${tIn2}</td>
+                <td rowspan="2" style="vertical-align:middle;">${tOut2}</td>
+                <td rowspan="2" style="vertical-align:middle;">${otIn}</td>
+                <td rowspan="2" style="vertical-align:middle;">${otOut}</td>
+                <td rowspan="2" style="vertical-align:middle; color:#94a3b8;">${dayLateMins}</td>
+                <td rowspan="2" style="vertical-align:middle; color:#94a3b8;">${dayUndertimeMins}</td>
+                <td style="color:#e2e8f0; text-align:right;">DAILY: ₱${formatCurrency(dayBasicGross)}</td>
+                <td rowspan="2" style="vertical-align:middle; text-align:right; color:${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
+                <td rowspan="2" style="vertical-align:middle; text-align:right; color:#38bdf8; font-weight:bold;">₱${formatCurrency(dayNet)}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #334155;">
+                <td style="color:#38bdf8; text-align:right; font-size:10px;">OT: ₱${formatCurrency(dayOtGross)}</td>
             </tr>
         `;
 
         structuralDailyArrayLogs.push({
-            date: dateKey,
-            dayStr: dayOfWeekStr.toUpperCase(),
-            in1: tIn1,
-            out1: tOut1,
-            in2: tIn2,
-            out2: tOut2,
-            inOT: otIn,
-            outOT: otOut,
-            lates: dayLateMins,
-            undertime: dayUndertimeMins,
-            gross: dayGross,
-            deductions: dayDed,
-            net: dayNet
+            date: dateKey, dayStr: dayOfWeekStr.toUpperCase(),
+            in1: tIn1, out1: tOut1, in2: tIn2, out2: tOut2, inOT: otIn, outOT: otOut,
+            lates: dayLateMins, undertime: dayUndertimeMins,
+            dailyGross: dayBasicGross, otGross: dayOtGross, deductions: dayDed, net: dayNet
         });
     });
 
@@ -668,7 +696,7 @@ function recomputeGlobalFinancials() {
 
     document.getElementById('totalLates').innerText = aggLates;
     document.getElementById('totalUndertime').innerText = aggUndertime;
-    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggGross)}`;
+    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGrossOnly + aggOtGrossOnly)}`;
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
@@ -687,13 +715,6 @@ function recomputeGlobalFinancials() {
 
     document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
     document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
-    
-    // UI update for newly injected structured OT rows if present dynamically in DOM elements
-    const uiOtGrossField = document.getElementById('breakdownOTGross');
-    if(uiOtGrossField) {
-        uiOtGrossField.innerText = `₱${formatCurrency(totalOvertimePay)}`;
-    }
-
     document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
     document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
 
@@ -708,12 +729,11 @@ function recomputeGlobalFinancials() {
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
         sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
-        actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggGross, aggDed, aggNet
+        actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGrossOnly, aggOtGrossOnly, aggDed, aggNet
     });
 }
 
-async function commitTimelineTransactionToCloud() {
-    showGlobalEngineLoader();
+async function commitTimelineTransactionToCloud(isAutoSave = false) {
     const selectedPeriodKey = document.getElementById('periodSelector').value; 
     try {
         const payload = {
@@ -726,18 +746,22 @@ async function commitTimelineTransactionToCloud() {
             inputReimbursements: document.getElementById('inputReimbursements').value,
             updatedAt: Date.now()
         };
-        // Explicit unique identifier persistence to avoid cascading overlap anomalies across calendar ranges
         await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
-        alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY FOR THIS PAYROLL WINDOW.");
+        hasUnsavedChanges = false;
+        
+        if(isAutoSave) {
+            showToast("CHANGES SAVED AUTOMATICALLY");
+        } else {
+            showToast("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
+        }
     } catch (err) {
         console.error("Sync failure: ", err);
-    } finally {
-        hideGlobalEngineLoader();
+        showToast("CLOUD SYNC ERROR ENCOUNTERED");
     }
 }
 
 // ==========================================================================
-// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF)
+// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF WITH TWO ROWS PER ENTRY)
 // ==========================================================================
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
@@ -749,20 +773,23 @@ function generateCommercialReceiptLayout(m) {
     let dailyRowsHtml = "";
     m.structuralDailyArrayLogs.forEach(row => {
         dailyRowsHtml += `
-            <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 4px; font-weight:700;">${row.date}</td>
-                <td style="padding: 4px;">${row.dayStr}</td>
-                <td style="padding: 4px;">${row.in1}</td>
-                <td style="padding: 4px;">${row.out1}</td>
-                <td style="padding: 4px;">${row.in2}</td>
-                <td style="padding: 4px;">${row.out2}</td>
-                <td style="padding: 4px;">${row.inOT}</td>
-                <td style="padding: 4px;">${row.outOT}</td>
-                <td style="padding: 4px;">${row.lates}</td>
-                <td style="padding: 4px;">${row.undertime}</td>
-                <td style="padding: 4px; text-align: right;">₱${formatCurrency(row.gross)}</td>
-                <td style="padding: 4px; text-align: right; color:#c00;">₱${formatCurrency(row.deductions)}</td>
-                <td style="padding: 4px; text-align: right; color:#00f;">₱${formatCurrency(row.net)}</td>
+            <tr style="border-bottom: 1px dashed #aaa;">
+                <td rowspan="2" style="padding: 4px; font-weight:700; vertical-align:middle;">${row.date}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.dayStr}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.in1}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.out1}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.in2}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.out2}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.inOT}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.outOT}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.lates}</td>
+                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.undertime}</td>
+                <td style="padding: 2px 4px; text-align: right; font-weight:500;">DAILY: ₱${formatCurrency(row.dailyGross)}</td>
+                <td rowspan="2" style="padding: 4px; text-align: right; color:#c00; vertical-align:middle;">₱${formatCurrency(row.deductions)}</td>
+                <td rowspan="2" style="padding: 4px; text-align: right; color:#00f; font-weight:bold; vertical-align:middle;">₱${formatCurrency(row.net)}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #000;">
+                <td style="padding: 2px 4px; text-align: right; color:#2563eb; font-size:7.5px;">OT: ₱${formatCurrency(row.otGross)}</td>
             </tr>
         `;
     });
@@ -800,7 +827,7 @@ function generateCommercialReceiptLayout(m) {
                             <th style="padding:4px; text-align:left;">OT OUT</th>
                             <th style="padding:4px; text-align:left;">LATE</th>
                             <th style="padding:4px; text-align:left;">UT</th>
-                            <th style="padding:4px; text-align:right;">GROSS</th>
+                            <th style="padding:4px; text-align:right;">GROSS DATA RUN</th>
                             <th style="padding:4px; text-align:right;">DED.</th>
                             <th style="padding:4px; text-align:right;">NET</th>
                         </tr>
@@ -811,19 +838,19 @@ function generateCommercialReceiptLayout(m) {
                             <td colspan="8" style="padding:4px;">TOTAL:</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
-                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggGross)}</td>
-                            <td style="padding:4px; text-align:right; color:#c00;">₱${formatCurrency(m.aggDed)}</td>
-                            <td style="padding:4px; text-align:right; color:#00f;">₱${formatCurrency(m.aggNet)}</td>
+                            <td style="padding:4px; text-align:right;">DAILY: ₱${formatCurrency(m.aggDailyGrossOnly)}<br><span style="color:#2563eb; font-size:7.5px;">OT: ₱${formatCurrency(m.aggOtGrossOnly)}</span></td>
+                            <td style="padding:4px; text-align:right; color:#c00; vertical-align:middle;">₱${formatCurrency(m.aggDed)}</td>
+                            <td style="padding:4px; text-align:right; color:#00f; vertical-align:middle;">₱${formatCurrency(m.aggNet)}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
+                        <tr><td style="padding:2px 0;">Basic Baseline Run</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
                         <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
                         <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run Total</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
                         <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
                         <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
                         <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
@@ -847,7 +874,7 @@ function generateCommercialReceiptLayout(m) {
 
 function triggerPrintPreviewPipeline() {
     if(!verifyActionAllowedDateConstraints()){
-        alert("ACCESS DENIED: PRINT/PDF GENERATION PIPELINE RESTRICTED OUTSIDE CYCLE CLOSURE WINDOWS (DATES 13-16 OR 28-2).");
+        showToast("ACCESS DENIED: PRINT/PDF GENERATION PIPELINE RESTRICTED OUTSIDE CYCLE CLOSURE WINDOWS (DATES 13-16 OR 28-2).");
         return;
     }
     window.print();
@@ -855,7 +882,7 @@ function triggerPrintPreviewPipeline() {
 
 function triggerCSVExportPipeline() {
     if(!verifyActionAllowedDateConstraints()){
-        alert("ACCESS DENIED: CSV EXPORT STREAM TERMINATED. SYSTEM RESTRICTED OUTSIDE ALLOTTED PAYROLL DATES (DATES 13-16 OR 28-2).");
+        showToast("ACCESS DENIED: CSV EXPORT STREAM TERMINATED. SYSTEM RESTRICTED OUTSIDE ALLOTTED PAYROLL DATES (DATES 13-16 OR 28-2).");
         return;
     }
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
@@ -871,8 +898,9 @@ function triggerCSVExportPipeline() {
     csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
     csvRows.push([]);
     
+    // Explicit columns separating Daily Gross and OT Gross vectors natively inside metrics headers
     csvRows.push([
-        `\"DATE\"`, `\"DAY\"`, `\"TIME IN 1\"`, `\"TIME OUT 1\"`, `\"TIME IN 2\"`, `\"TIME OUT 2\"`, `\"OT IN\"`, `\"OT OUT\"`, `\"LATES (MINS)\"`, `\"UNDERTIME (MINS)\"`, `\"GROSS DAY VALUE\"`, `\"DEDUCTION DAY CUT\"`, `\"DAILY NET\"`
+        `\"DATE\"`, `\"DAY\"`, `\"TIME IN 1\"`, `\"TIME OUT 1\"`, `\"TIME IN 2\"`, `\"TIME OUT 2\"`, `\"OT IN\"`, `\"OT OUT\"`, `\"LATES (MINS)\"`, `\"UNDERTIME (MINS)\"`, `\"DAILY GROSS\"`, `\"OT GROSS\"`, `\"DEDUCTION DAY CUT\"`, `\"DAILY NET\"`
     ]);
     
     const hourlyRate = dailyRateValue / 8;
@@ -880,7 +908,7 @@ function triggerCSVExportPipeline() {
     const schedInMins = timeStringToMinutes(salarySettings.timeIn || "08:00");
     const schedOutMins = timeStringToMinutes(salarySettings.timeOut || "17:00");
 
-    let sumLates = 0, sumUT = 0, sumGross = 0, sumDed = 0, sumNet = 0;
+    let sumLates = 0, sumUT = 0, sumDailyGross = 0, sumOtGross = 0, sumDed = 0, sumNet = 0;
 
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
@@ -893,7 +921,8 @@ function triggerCSVExportPipeline() {
             const rec = timelineBuffer[dateKey];
             let lateMins = 0;
             let utMins = 0;
-            let dayGross = dailyRateValue;
+            let dayDailyGross = dailyRateValue;
+            let dayOtGross = 0;
 
             if (timeStringToMinutes(rec.in1) > schedInMins) lateMins = timeStringToMinutes(rec.in1) - schedInMins;
             
@@ -917,27 +946,28 @@ function triggerCSVExportPipeline() {
 
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 const otMins = timeStringToMinutes(rec.outOT) - timeStringToMinutes(rec.inOT);
-                if (otMins >= 30) dayGross += (otMins * minuteRate);
+                if (otMins > 0) dayOtGross = (otMins * minuteRate);
             }
 
-            let dayNet = dayGross - dayDed;
+            let dayNet = (dayDailyGross + dayOtGross) - dayDed;
 
             sumLates += lateMins;
             sumUT += utMins;
-            sumGross += dayGross;
+            sumDailyGross += dayDailyGross;
+            sumOtGross += dayOtGross;
             sumDed += dayDed;
             sumNet += dayNet;
 
             csvRows.push([
-                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.in2 || '-'}\"`, `\"${rec.out2 || '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, formatCurrency(dayGross), formatCurrency(dayDed), formatCurrency(dayNet)
+                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.in2 || '-'}\"`, `\"${rec.out2 || '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, formatCurrency(dayDailyGross), formatCurrency(dayOtGross), formatCurrency(dayDed), formatCurrency(dayNet)
             ]);
         } else {
-            csvRows.push([`\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, 0, 0, `0.00`, `0.00`, `0.00`]);
+            csvRows.push([`\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, 0, 0, `0.00`, `0.00`, `0.00`, `0.00`]);
         }
     });
 
     csvRows.push([
-        `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, formatCurrency(sumGross), formatCurrency(sumDed), formatCurrency(sumNet)
+        `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, formatCurrency(sumDailyGross), formatCurrency(sumOtGross), formatCurrency(sumDed), formatCurrency(sumNet)
     ]);
     
     csvRows.push([]);
@@ -978,16 +1008,25 @@ document.addEventListener("DOMContentLoaded", () => {
         window.lucide.createIcons();
     }
 
-    // Dynamic Input Value Streams Remapping Listeners
-    document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
-    document.getElementById('inputDoublePay').addEventListener('input', recomputeGlobalFinancials);
-    document.getElementById('inputReimbursements').addEventListener('input', recomputeGlobalFinancials);
-    document.getElementById('inputSSS').addEventListener('input', recomputeGlobalFinancials);
-    document.getElementById('inputPHIC').addEventListener('input', recomputeGlobalFinancials);
-    document.getElementById('inputHDMF').addEventListener('input', recomputeGlobalFinancials);
-    document.getElementById('inputAdvances').addEventListener('input', recomputeGlobalFinancials);
+    // Unsaved Changes Page/Tab Exit Interceptor
+    window.addEventListener('beforeunload', (e) => {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = 'YOU HAVE UNSAVED TIMELINE ENTRIES. ARE YOU SURE YOU WANT TO DISCARD AND EXIT?';
+        }
+    });
 
-    // Modal Real-time Listener Events Actions
+    document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
+    
+    // Inputs linking directly to auto save tracking matrix
+    const watchedInputs = ['inputDoublePay', 'inputReimbursements', 'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances'];
+    watchedInputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            recomputeGlobalFinancials();
+            markChangeAndQueueAutoSave();
+        });
+    });
+
     document.getElementById('modalTimeIn1').addEventListener('change', runRealtimeMetricsDeductionEngine);
     document.getElementById('modalTimeOut1').addEventListener('change', () => {
         evaluateLunchBreakConstraints();
@@ -997,8 +1036,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
     document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
 
-    // Core Controls Action Listeners
-    document.getElementById('btnSaveToCloud').addEventListener('click', commitTimelineTransactionToCloud);
+    document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
     document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
     document.getElementById('btnExportCSV').addEventListener('click', triggerCSVExportPipeline);
     
