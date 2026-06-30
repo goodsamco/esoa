@@ -553,7 +553,7 @@
         let debounceTimer = null;
         let setupComplete = false;
 
-        // --- TOAST NOTIFICATION CONTROLLER ---
+           // --- TOAST NOTIFICATION CONTROLLER ---
         function triggerToast(message, isWorking = false) {
             const toast = document.getElementById('toastHub');
             const txt = document.getElementById('toastText');
@@ -575,4 +575,172 @@
             document.getElementById('toastHub').classList.remove('active');
         }
 
- 
+        function toggleDeptCustom(value) {
+            const customInput = document.getElementById('departmentCustom');
+            if (value === 'Custom') {
+                customInput.style.display = 'block';
+                customInput.setAttribute('required', 'true');
+            } else {
+                customInput.style.display = 'none';
+                customInput.removeAttribute('required');
+            }
+        }
+
+        // --- VISUAL SETUP & BACKGROUND FIX HANDLING ---
+        async function fetchIdentityAndTheme() {
+            try {
+                const accountRef = doc(db, "accounts", userId);
+                const accountSnap = await getDoc(accountRef);
+
+                if (accountSnap.exists()) {
+                    const accountData = accountSnap.data();
+
+                    const customProfileName = accountData.customName || localStorage.getItem("userName") || "UNKNOWN USER";
+                    document.getElementById('userDisplayName').innerText = customProfileName.toUpperCase();
+                    
+                    if (accountData.avatarUrl) {
+                        document.getElementById('userDisplayAvatar').src = accountData.avatarUrl;
+                    }
+
+                    // robust, type-checked runtime handling for background profiles
+                    const bgMode = accountData.bgMode || "color";
+                    const bgValue = accountData.bgValue || "#0b0f1a";
+
+                    if (bgMode === "image") {
+                        // Support for dynamic premium runtime assets mapping if present, otherwise treat as clean url string
+                        const assetMap = window.premium3dAssets || {};
+                        const realImg = assetMap[bgValue] || bgValue;
+                        
+                        document.body.style.backgroundColor = "transparent";
+                        document.body.style.backgroundImage = `url('${realImg}')`;
+                        document.body.style.backgroundSize = "cover";
+                        document.body.style.backgroundPosition = "center";
+                        document.body.style.backgroundRepeat = "no-repeat";
+                        document.body.style.backgroundAttachment = "fixed";
+                    } else {
+                        document.body.style.backgroundImage = "none";
+                        document.body.style.backgroundColor = bgValue;
+                    }
+
+                    if (accountData.btnValue) {
+                        document.documentElement.style.setProperty('--primary', accountData.btnValue);
+                    }
+                }
+
+                const settingsRef = doc(db, "salary_settings", userId);
+                const settingsSnap = await getDoc(settingsRef);
+
+                if (settingsSnap.exists()) {
+                    const data = settingsSnap.data();
+                    document.getElementById('lastName').value = (data.lastName || '').toUpperCase();
+                    document.getElementById('firstName').value = (data.firstName || '').toUpperCase();
+                    document.getElementById('middleInitial').value = (data.middleInitial || '').toUpperCase();
+                    document.getElementById('emailAddress').value = data.emailAddress || '';
+                    document.getElementById('dailyRate').value = data.dailyRate || '';
+                    document.getElementById('position').value = (data.position || '').toUpperCase();
+                    document.getElementById('timeIn').value = data.timeIn || '08:00';
+                    document.getElementById('timeOut').value = data.timeOut || '17:00';
+                    document.getElementById('hasLunchBreak').checked = data.hasLunchBreak !== false;
+
+                    if (data.department === 'Admin' || data.department === 'Finance') {
+                        document.getElementById('departmentSelect').value = data.department;
+                    } else if (data.department) {
+                        document.getElementById('departmentSelect').value = 'Custom';
+                        toggleDeptCustom('Custom');
+                        document.getElementById('departmentCustom').value = data.department.toUpperCase();
+                    }
+
+                    if (data.dutyDays && Array.isArray(data.dutyDays)) {
+                        data.dutyDays.forEach(day => {
+                            const chip = document.querySelector(`.day-chip input[value="${day}"]`);
+                            if (chip) chip.checked = true;
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("System configuration parsing failure:", err);
+            } finally {
+                // Kill loading display screen once all tasks yield
+                document.getElementById('globalEngineLoader').classList.add('hidden');
+                setupComplete = true;
+            }
+        }
+
+        // --- BACKGROUND AUTOMATED DISPATCH TRANSACTION ---
+        async function autoSaveSystemSettings() {
+            if (!setupComplete) return;
+
+            triggerToast("Saving settings...", true);
+
+            const deptSelect = document.getElementById('departmentSelect').value;
+            const finalDept = deptSelect === 'Custom' ? document.getElementById('departmentCustom').value.trim() : deptSelect;
+
+            const selectedDays = [];
+            document.querySelectorAll('.day-matrix input[type="checkbox"]:checked').forEach(cb => {
+                selectedDays.push(cb.value);
+            });
+
+            const payload = {
+                lastName: document.getElementById('lastName').value.trim().toUpperCase(),
+                firstName: document.getElementById('firstName').value.trim().toUpperCase(),
+                middleInitial: document.getElementById('middleInitial').value.trim().toUpperCase(),
+                emailAddress: document.getElementById('emailAddress').value.trim(),
+                dailyRate: parseFloat(document.getElementById('dailyRate').value) || 0,
+                position: document.getElementById('position').value.trim().toUpperCase(),
+                department: finalDept.toUpperCase(),
+                dutyDays: selectedDays,
+                timeIn: document.getElementById('timeIn').value,
+                timeOut: document.getElementById('timeOut').value,
+                hasLunchBreak: document.getElementById('hasLunchBreak').checked,
+                updatedAt: Date.now()
+            };
+
+            try {
+                await setDoc(doc(db, "salary_settings", userId), payload, { merge: true });
+                triggerToast("Settings synced successfully!", false);
+            } catch (error) {
+                console.error("Background data synchronization error:", error);
+                triggerToast("Failed auto-sync operation.", false);
+            }
+        }
+
+        // --- DEBOUNCE DELAY IMPLEMENTATION HUB ---
+        function queueSyncPipeline() {
+            if (!setupComplete) return;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                autoSaveSystemSettings();
+            }, 1000); // 1 Second Wait Threshold Rule applied natively
+        }
+
+        // --- EVENT ATTACHMENT DECK ---
+        window.onload = () => {
+            fetchIdentityAndTheme();
+            if (window.lucide) window.lucide.createIcons();
+
+            // Intercept and bind mutation actions across input landscape
+            const formElements = document.querySelectorAll('#settingsForm input, #settingsForm select');
+            formElements.forEach(elem => {
+                if (elem.id !== 'departmentSelect') {
+                    elem.addEventListener('input', queueSyncPipeline);
+                }
+                elem.addEventListener('change', queueSyncPipeline);
+            });
+
+            // Special UI condition modifiers
+            document.getElementById('departmentSelect').addEventListener('change', (e) => {
+                toggleDeptCustom(e.target.value);
+                queueSyncPipeline();
+            });
+
+            document.getElementById('lunchBreakRow').addEventListener('click', (e) => {
+                if (e.target.id !== 'hasLunchBreak') {
+                    const cb = document.getElementById('hasLunchBreak');
+                    cb.checked = !cb.checked;
+                    queueSyncPipeline();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
