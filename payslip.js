@@ -89,7 +89,7 @@ function showGlobalEngineLoader() {
         loader.innerHTML = `
             <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:monospace;">
                 <div style="width:50px; height:50px; border:5px solid #333; border-top:5px solid #38bdf8; border-radius:50%; animation:spinEngine 1s linear infinite; margin-bottom:15px;"></div>
-                <div style="letter-spacing:2px; font-size:12px; font-weight:bold;">COMPILING PAYROLL MATRIX...</div>
+                <div style="letter-spacing:2px; font-size:12px; font-weight:bold;">LOADING...</div>
             </div>
             <style>@keyframes spinEngine { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
         `;
@@ -630,7 +630,7 @@ function recomputeGlobalFinancials() {
                     const lunchEndMins = timeStringToMinutes("13:00");
                     if (actOutMins <= lunchStartMins) {
                         dayUndertimeMins -= 60;
-                    } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
+                    } else if (actOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
                         dayUndertimeMins -= (lunchEndMins - actOutMins);
                     }
                 }
@@ -661,25 +661,23 @@ function recomputeGlobalFinancials() {
         aggDed += dayDed;
         aggNet += dayNet;
 
-        // UI View: Separated into distinct rows for Daily Gross & OT Gross values
+        // UI View: Rendered inside side-by-side columns matching the header format
         uiTableRowsHtml += `
-            <tr style="border-bottom: 1px dashed #334155;">
-                <td rowspan="2" style="vertical-align:middle; font-weight:bold; color:#f8fafc;">${dateKey}</td>
-                <td rowspan="2" style="vertical-align:middle;">${dayOfWeekStr.toUpperCase()}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tIn1}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tOut1}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tIn2}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tOut2}</td>
-                <td rowspan="2" style="vertical-align:middle;">${otIn}</td>
-                <td rowspan="2" style="vertical-align:middle;">${otOut}</td>
-                <td rowspan="2" style="vertical-align:middle; color:#94a3b8;">${dayLateMins}</td>
-                <td rowspan="2" style="vertical-align:middle; color:#94a3b8;">${dayUndertimeMins}</td>
-                <td style="color:#e2e8f0; text-align:right;">DAILY: ₱${formatCurrency(dayBasicGross)}</td>
-                <td rowspan="2" style="vertical-align:middle; text-align:right; color:${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
-                <td rowspan="2" style="vertical-align:middle; text-align:right; color:#38bdf8; font-weight:bold;">₱${formatCurrency(dayNet)}</td>
-            </tr>
             <tr style="border-bottom: 1px solid #334155;">
-                <td style="color:#38bdf8; text-align:right; font-size:10px;">OT: ₱${formatCurrency(dayOtGross)}</td>
+                <td style="font-weight:bold; color:#f8fafc;">${dateKey}</td>
+                <td>${dayOfWeekStr.toUpperCase()}</td>
+                <td>${tIn1}</td>
+                <td>${tOut1}</td>
+                <td>${tIn2}</td>
+                <td>${tOut2}</td>
+                <td>${otIn}</td>
+                <td>${otOut}</td>
+                <td style="color:#94a3b8;">${dayLateMins}</td>
+                <td style="color:#94a3b8;">${dayUndertimeMins}</td>
+                <td style="color:#e2e8f0; text-align:right;">₱${formatCurrency(dayBasicGross)}</td>
+                <td style="color:#38bdf8; text-align:right;">₱${formatCurrency(dayOtGross)}</td>
+                <td style="text-align:right; color:${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
+                <td style="text-align:right; color:#38bdf8; font-weight:bold;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
 
@@ -699,6 +697,12 @@ function recomputeGlobalFinancials() {
     document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGrossOnly + aggOtGrossOnly)}`;
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
+
+    // Add elements dynamically for the individual column summaries if they exist in your DOM layout
+    const totalDailyGrossEl = document.getElementById('totalDailyGrossOnly');
+    if (totalDailyGrossEl) totalDailyGrossEl.innerText = `₱${formatCurrency(aggDailyGrossOnly)}`;
+    const totalOtGrossEl = document.getElementById('totalOtGrossOnly');
+    if (totalOtGrossEl) totalOtGrossEl.innerText = `₱${formatCurrency(aggOtGrossOnly)}`;
 
     const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
     const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
@@ -761,7 +765,7 @@ async function commitTimelineTransactionToCloud(isAutoSave = false) {
 }
 
 // ==========================================================================
-// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF WITH TWO ROWS PER ENTRY)
+// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF WITH SEPARATE VERTICAL COLUMNS)
 // ==========================================================================
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
@@ -773,23 +777,21 @@ function generateCommercialReceiptLayout(m) {
     let dailyRowsHtml = "";
     m.structuralDailyArrayLogs.forEach(row => {
         dailyRowsHtml += `
-            <tr style="border-bottom: 1px dashed #aaa;">
-                <td rowspan="2" style="padding: 4px; font-weight:700; vertical-align:middle;">${row.date}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.dayStr}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.in1}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.out1}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.in2}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.out2}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.inOT}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.outOT}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.lates}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.undertime}</td>
-                <td style="padding: 2px 4px; text-align: right; font-weight:500;">DAILY: ₱${formatCurrency(row.dailyGross)}</td>
-                <td rowspan="2" style="padding: 4px; text-align: right; color:#c00; vertical-align:middle;">₱${formatCurrency(row.deductions)}</td>
-                <td rowspan="2" style="padding: 4px; text-align: right; color:#00f; font-weight:bold; vertical-align:middle;">₱${formatCurrency(row.net)}</td>
-            </tr>
             <tr style="border-bottom: 1px solid #000;">
-                <td style="padding: 2px 4px; text-align: right; color:#2563eb; font-size:7.5px;">OT: ₱${formatCurrency(row.otGross)}</td>
+                <td style="padding: 4px; font-weight:700;">${row.date}</td>
+                <td style="padding: 4px;">${row.dayStr}</td>
+                <td style="padding: 4px;">${row.in1}</td>
+                <td style="padding: 4px;">${row.out1}</td>
+                <td style="padding: 4px;">${row.in2}</td>
+                <td style="padding: 4px;">${row.out2}</td>
+                <td style="padding: 4px;">${row.inOT}</td>
+                <td style="padding: 4px;">${row.outOT}</td>
+                <td style="padding: 4px;">${row.lates}</td>
+                <td style="padding: 4px;">${row.undertime}</td>
+                <td style="padding: 4px; text-align: right;">₱${formatCurrency(row.dailyGross)}</td>
+                <td style="padding: 4px; text-align: right; color:#2563eb;">₱${formatCurrency(row.otGross)}</td>
+                <td style="padding: 4px; text-align: right; color:#c00;">₱${formatCurrency(row.deductions)}</td>
+                <td style="padding: 4px; text-align: right; color:#00f; font-weight:bold;">₱${formatCurrency(row.net)}</td>
             </tr>
         `;
     });
@@ -827,7 +829,8 @@ function generateCommercialReceiptLayout(m) {
                             <th style="padding:4px; text-align:left;">OT OUT</th>
                             <th style="padding:4px; text-align:left;">LATE</th>
                             <th style="padding:4px; text-align:left;">UT</th>
-                            <th style="padding:4px; text-align:right;">GROSS DATA RUN</th>
+                            <th style="padding:4px; text-align:right;">DAILY GROSS</th>
+                            <th style="padding:4px; text-align:right;">OT GROSS</th>
                             <th style="padding:4px; text-align:right;">DED.</th>
                             <th style="padding:4px; text-align:right;">NET</th>
                         </tr>
@@ -835,20 +838,21 @@ function generateCommercialReceiptLayout(m) {
                     <tbody>
                         ${dailyRowsHtml}
                         <tr style="border-top:2px solid #000; font-weight:bold; background:#eee;">
-                            <td colspan="8" style="padding:4px;">TOTAL:</td>
+                            <td colspan="8" style="padding:4px;">TOTALS:</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
-                            <td style="padding:4px; text-align:right;">DAILY: ₱${formatCurrency(m.aggDailyGrossOnly)}<br><span style="color:#2563eb; font-size:7.5px;">OT: ₱${formatCurrency(m.aggOtGrossOnly)}</span></td>
-                            <td style="padding:4px; text-align:right; color:#c00; vertical-align:middle;">₱${formatCurrency(m.aggDed)}</td>
-                            <td style="padding:4px; text-align:right; color:#00f; vertical-align:middle;">₱${formatCurrency(m.aggNet)}</td>
+                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggDailyGrossOnly)}</td>
+                            <td style="padding:4px; text-align:right; color:#2563eb;">₱${formatCurrency(m.aggOtGrossOnly)}</td>
+                            <td style="padding:4px; text-align:right; color:#c00;">₱${formatCurrency(m.aggDed)}</td>
+                            <td style="padding:4px; text-align:right; color:#00f;">₱${formatCurrency(m.aggNet)}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic Baseline Run</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
-                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
+                        <tr><td style="padding:2px 0;">Basic Daily Gross Total</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
+                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">Overtime Gross Total</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
                         <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
                         <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run Total</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
                         <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
@@ -898,7 +902,7 @@ function triggerCSVExportPipeline() {
     csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
     csvRows.push([]);
     
-    // Explicit columns separating Daily Gross and OT Gross vectors natively inside metrics headers
+    // Explicit horizontal columns isolating both gross structures in structural CSV arrays
     csvRows.push([
         `\"DATE\"`, `\"DAY\"`, `\"TIME IN 1\"`, `\"TIME OUT 1\"`, `\"TIME IN 2\"`, `\"TIME OUT 2\"`, `\"OT IN\"`, `\"OT OUT\"`, `\"LATES (MINS)\"`, `\"UNDERTIME (MINS)\"`, `\"DAILY GROSS\"`, `\"OT GROSS\"`, `\"DEDUCTION DAY CUT\"`, `\"DAILY NET\"`
     ]);
@@ -972,7 +976,7 @@ function triggerCSVExportPipeline() {
     
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
-    csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"BASIC DAILY PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
     csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
