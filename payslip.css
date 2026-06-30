@@ -12,7 +12,7 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg);
+    background: var(--bg);
     color: var(--text-main);
     margin: 0;
     padding: 20px 10px 120px 10px;
