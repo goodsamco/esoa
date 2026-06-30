@@ -157,16 +157,14 @@ async function bootEngineCore() {
             userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
             // Replace the old RESTORE LAYOUT BACKGROUND VALUE DIRECTLY block with this:
-if (accountData.bgValue) {
-    if (accountData.bgMode === "image") {
-        document.documentElement.style.setProperty('--bg', `url('${accountData.bgValue}')`);
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundPosition = "center";
-        document.body.style.backgroundAttachment = "fixed";
-    } else {
-        document.documentElement.style.setProperty('--bg', accountData.bgValue);
-        document.body.style.backgroundImage = "none";
-    }
+if (data.bgMode === "image") {
+            const bgImg = premium3dAssets[data.bgValue] || data.bgValue;
+            document.body.style.backgroundImage = `url('${bgImg}')`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundAttachment = "fixed";
+        } else if (data.bgValue) {
+            document.body.style.backgroundImage = "none";
+            document.body.style.backgroundColor = data.bgValue;
 }
             if (accountData.btnValue) {
                 document.documentElement.style.setProperty('--primary', accountData.btnValue);
