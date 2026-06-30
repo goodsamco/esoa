@@ -89,7 +89,7 @@ function showGlobalEngineLoader() {
         loader.innerHTML = `
             <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:monospace;">
                 <div style="width:50px; height:50px; border:5px solid #333; border-top:5px solid #38bdf8; border-radius:50%; animation:spinEngine 1s linear infinite; margin-bottom:15px;"></div>
-                <div style="letter-spacing:2px; font-size:12px; font-weight:bold;">LOADING...</div>
+                <div style="letter-spacing:2px; font-size:12px; font-weight:bold;">COMPILING PAYROLL MATRIX...</div>
             </div>
             <style>@keyframes spinEngine { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
         `;
@@ -134,7 +134,6 @@ function injectExitGuardModal() {
     };
 }
 
-// Trigger Auto Save Engine Loop (1-Second Delay)
 function markChangeAndQueueAutoSave() {
     hasUnsavedChanges = true;
     clearTimeout(autoSaveTimer);
@@ -573,8 +572,8 @@ function recomputeGlobalFinancials() {
 
     let aggLates = 0;
     let aggUndertime = 0;
-    let aggDailyGrossOnly = 0; 
-    let aggOtGrossOnly = 0;    
+    let aggDailyGross = 0;
+    let aggOtGross = 0;
     let aggDed = 0;
     let aggNet = 0;
 
@@ -591,7 +590,7 @@ function recomputeGlobalFinancials() {
         const dateKey = `${year}-${month}-${day}`;
         const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
-        let dayBasicGross = 0;
+        let dayDailyGross = 0;
         let dayOtGross = 0;
         let dayDed = 0;
         let dayLateMins = 0;
@@ -607,7 +606,7 @@ function recomputeGlobalFinancials() {
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
             actualDaysWorkedCounter++;
             totalBasicEarnings += dailyRate;
-            dayBasicGross = dailyRate;
+            dayDailyGross = dailyRate;
 
             const rec = timelineBuffer[dateKey];
             tIn1 = rec.in1 || "-";
@@ -630,7 +629,7 @@ function recomputeGlobalFinancials() {
                     const lunchEndMins = timeStringToMinutes("13:00");
                     if (actOutMins <= lunchStartMins) {
                         dayUndertimeMins -= 60;
-                    } else if (actOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
+                    } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
                         dayUndertimeMins -= (lunchEndMins - actOutMins);
                     }
                 }
@@ -652,19 +651,19 @@ function recomputeGlobalFinancials() {
             }
         }
             
-        let dayNet = (dayBasicGross + dayOtGross) - dayDed;
+        let dayNet = (dayDailyGross + dayOtGross) - dayDed;
 
         aggLates += dayLateMins;
         aggUndertime += dayUndertimeMins;
-        aggDailyGrossOnly += dayBasicGross;
-        aggOtGrossOnly += dayOtGross;
+        aggDailyGross += dayDailyGross;
+        aggOtGross += dayOtGross;
         aggDed += dayDed;
         aggNet += dayNet;
 
-        // UI View: Rendered inside side-by-side columns matching the header format
+        // UI view layout retained exactly but separated horizontally into distinct Daily Gross & OT Gross columns
         uiTableRowsHtml += `
-            <tr style="border-bottom: 1px solid #334155;">
-                <td style="font-weight:bold; color:#f8fafc;">${dateKey}</td>
+            <tr>
+                <td>${dateKey}</td>
                 <td>${dayOfWeekStr.toUpperCase()}</td>
                 <td>${tIn1}</td>
                 <td>${tOut1}</td>
@@ -672,12 +671,12 @@ function recomputeGlobalFinancials() {
                 <td>${tOut2}</td>
                 <td>${otIn}</td>
                 <td>${otOut}</td>
-                <td style="color:#94a3b8;">${dayLateMins}</td>
-                <td style="color:#94a3b8;">${dayUndertimeMins}</td>
-                <td style="color:#e2e8f0; text-align:right;">₱${formatCurrency(dayBasicGross)}</td>
-                <td style="color:#38bdf8; text-align:right;">₱${formatCurrency(dayOtGross)}</td>
-                <td style="text-align:right; color:${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
-                <td style="text-align:right; color:#38bdf8; font-weight:bold;">₱${formatCurrency(dayNet)}</td>
+                <td style="color: #94a3b8;">${dayLateMins}</td>
+                <td style="color: #94a3b8;">${dayUndertimeMins}</td>
+                <td style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayDailyGross)}</td>
+                <td style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">₱${formatCurrency(dayOtGross)}</td>
+                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
+                <td style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
 
@@ -685,7 +684,7 @@ function recomputeGlobalFinancials() {
             date: dateKey, dayStr: dayOfWeekStr.toUpperCase(),
             in1: tIn1, out1: tOut1, in2: tIn2, out2: tOut2, inOT: otIn, outOT: otOut,
             lates: dayLateMins, undertime: dayUndertimeMins,
-            dailyGross: dayBasicGross, otGross: dayOtGross, deductions: dayDed, net: dayNet
+            dailyGross: dayDailyGross, otGross: dayOtGross, deductions: dayDed, net: dayNet
         });
     });
 
@@ -693,16 +692,16 @@ function recomputeGlobalFinancials() {
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
     document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = aggUndertime;
-    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGrossOnly + aggOtGrossOnly)}`;
+    document.getElementById('totalUndertime').innerText = !aggUndertime;
+    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGross + aggOtGross)}`;
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
-    // Add elements dynamically for the individual column summaries if they exist in your DOM layout
-    const totalDailyGrossEl = document.getElementById('totalDailyGrossOnly');
-    if (totalDailyGrossEl) totalDailyGrossEl.innerText = `₱${formatCurrency(aggDailyGrossOnly)}`;
-    const totalOtGrossEl = document.getElementById('totalOtGrossOnly');
-    if (totalOtGrossEl) totalOtGrossEl.innerText = `₱${formatCurrency(aggOtGrossOnly)}`;
+    // Handle column totals injections safely if separate DOM labels exist
+    const uiTotalDailyGrossField = document.getElementById('totalDailyGrossOnly');
+    if (uiTotalDailyGrossField) uiTotalDailyGrossField.innerText = `₱${formatCurrency(aggDailyGross)}`;
+    const uiTotalOtGrossField = document.getElementById('totalOtGrossOnly');
+    if (uiTotalOtGrossField) uiTotalOtGrossField.innerText = `₱${formatCurrency(aggOtGross)}`;
 
     const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
     const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
@@ -733,7 +732,7 @@ function recomputeGlobalFinancials() {
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
         sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
-        actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGrossOnly, aggOtGrossOnly, aggDed, aggNet
+        actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGross, aggOtGross, aggDed, aggNet
     });
 }
 
@@ -765,7 +764,7 @@ async function commitTimelineTransactionToCloud(isAutoSave = false) {
 }
 
 // ==========================================================================
-// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF WITH SEPARATE VERTICAL COLUMNS)
+// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF)
 // ==========================================================================
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
@@ -777,7 +776,7 @@ function generateCommercialReceiptLayout(m) {
     let dailyRowsHtml = "";
     m.structuralDailyArrayLogs.forEach(row => {
         dailyRowsHtml += `
-            <tr style="border-bottom: 1px solid #000;">
+            <tr style="border-bottom: 1px solid #ddd;">
                 <td style="padding: 4px; font-weight:700;">${row.date}</td>
                 <td style="padding: 4px;">${row.dayStr}</td>
                 <td style="padding: 4px;">${row.in1}</td>
@@ -791,7 +790,7 @@ function generateCommercialReceiptLayout(m) {
                 <td style="padding: 4px; text-align: right;">₱${formatCurrency(row.dailyGross)}</td>
                 <td style="padding: 4px; text-align: right; color:#2563eb;">₱${formatCurrency(row.otGross)}</td>
                 <td style="padding: 4px; text-align: right; color:#c00;">₱${formatCurrency(row.deductions)}</td>
-                <td style="padding: 4px; text-align: right; color:#00f; font-weight:bold;">₱${formatCurrency(row.net)}</td>
+                <td style="padding: 4px; text-align: right; color:#00f; font-weight: bold;">₱${formatCurrency(row.net)}</td>
             </tr>
         `;
     });
@@ -838,11 +837,11 @@ function generateCommercialReceiptLayout(m) {
                     <tbody>
                         ${dailyRowsHtml}
                         <tr style="border-top:2px solid #000; font-weight:bold; background:#eee;">
-                            <td colspan="8" style="padding:4px;">TOTALS:</td>
+                            <td colspan="8" style="padding:4px;">TOTAL:</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
-                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggDailyGrossOnly)}</td>
-                            <td style="padding:4px; text-align:right; color:#2563eb;">₱${formatCurrency(m.aggOtGrossOnly)}</td>
+                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggDailyGross)}</td>
+                            <td style="padding:4px; text-align:right; color:#2563eb;">₱${formatCurrency(m.aggOtGross)}</td>
                             <td style="padding:4px; text-align:right; color:#c00;">₱${formatCurrency(m.aggDed)}</td>
                             <td style="padding:4px; text-align:right; color:#00f;">₱${formatCurrency(m.aggNet)}</td>
                         </tr>
@@ -851,10 +850,10 @@ function generateCommercialReceiptLayout(m) {
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic Daily Gross Total</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
-                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">Overtime Gross Total</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
+                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
+                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
                         <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run Total</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
                         <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
                         <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
                         <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
@@ -902,7 +901,6 @@ function triggerCSVExportPipeline() {
     csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
     csvRows.push([]);
     
-    // Explicit horizontal columns isolating both gross structures in structural CSV arrays
     csvRows.push([
         `\"DATE\"`, `\"DAY\"`, `\"TIME IN 1\"`, `\"TIME OUT 1\"`, `\"TIME IN 2\"`, `\"TIME OUT 2\"`, `\"OT IN\"`, `\"OT OUT\"`, `\"LATES (MINS)\"`, `\"UNDERTIME (MINS)\"`, `\"DAILY GROSS\"`, `\"OT GROSS\"`, `\"DEDUCTION DAY CUT\"`, `\"DAILY NET\"`
     ]);
@@ -976,7 +974,7 @@ function triggerCSVExportPipeline() {
     
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
-    csvRows.push([`\"BASIC DAILY PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
     csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
@@ -1012,7 +1010,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.lucide.createIcons();
     }
 
-    // Unsaved Changes Page/Tab Exit Interceptor
     window.addEventListener('beforeunload', (e) => {
         if (hasUnsavedChanges) {
             e.preventDefault();
@@ -1022,7 +1019,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
     
-    // Inputs linking directly to auto save tracking matrix
     const watchedInputs = ['inputDoublePay', 'inputReimbursements', 'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances'];
     watchedInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', () => {
