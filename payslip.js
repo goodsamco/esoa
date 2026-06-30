@@ -146,8 +146,9 @@ function markChangeAndQueueAutoSave() {
 // 3. CORE INITIALIZATION ROUTINE ENGINE
 // ==========================================================================
 async function bootEngineCore() {
-    showGlobalEngineLoader();
+    showGlobalEngineLoader(); // Note: updated to lowercase 's' to match your catch/finally blocks
     injectExitGuardModal();
+    
     try {
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
@@ -156,14 +157,26 @@ async function bootEngineCore() {
             const accountData = accountSnap.data();
             userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
-            // Replace the old RESTORE LAYOUT BACKGROUND VALUE DIRECTLY block with this:
-if (configData.bgMode === "image") {
+            
+            // --- FIXED & OPTIMIZED BACKGROUND HANDLING ---
+            if (configData.bgMode === "image") {
                 const realImg = premium3dAssets[configData.bgValue] || configData.bgValue;
+                
+                // Clear any existing color so it doesn't bleed through transparent image assets
+                document.body.style.backgroundColor = "transparent"; 
                 document.body.style.backgroundImage = `url('${realImg}')`;
+                
+                // Essential properties to make sure the asset stretches and looks premium
+                document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundPosition = "center";
+                document.body.style.backgroundRepeat = "no-repeat";
             } else {
+                // Clear the image, fallback to a clean default color if bgValue is missing
                 document.body.style.backgroundImage = "none";
-                document.body.style.backgroundColor = configData.bgValue;
-}
+                document.body.style.backgroundColor = configData.bgValue || "#ffffff"; 
+            }
+            // ----------------------------------------------
+
             if (accountData.btnValue) {
                 document.documentElement.style.setProperty('--primary', accountData.btnValue);
                 const modalBox = document.getElementById('modalBoxContainer');
