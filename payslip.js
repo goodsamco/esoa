@@ -53,10 +53,34 @@ function timeStringToMinutes(timeStr) {
     return parseInt(p[0]) * 60 + parseInt(p[1]);
 }
 
+// Loading Spinner UI Utilities
+function showGlobalEngineLoader() {
+    let loader = document.getElementById('engineGlobalLoader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'engineGlobalLoader';
+        loader.innerHTML = `
+            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:monospace;">
+                <div style="width:50px; height:50px; border:5px solid #333; border-top:5px solid #38bdf8; border-radius:50%; animation:spinEngine 1s linear infinite; margin-bottom:15px;"></div>
+                <div style="letter-spacing:2px; font-size:12px; font-weight:bold;">COMPILING PAYROLL MATRIX...</div>
+            </div>
+            <style>@keyframes spinEngine { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+        `;
+        document.body.appendChild(loader);
+    }
+    loader.style.display = 'flex';
+}
+
+function hideGlobalEngineLoader() {
+    const loader = document.getElementById('engineGlobalLoader');
+    if (loader) loader.style.display = 'none';
+}
+
 // ==========================================================================
 // 3. CORE INITIALIZATION ROUTINE ENGINE
 // ==========================================================================
 async function bootEngineCore() {
+    showGlobalEngineLoader();
     try {
         // Fetch structural accounts profiling records
         const accountRef = doc(db, "accounts", userId);
@@ -96,26 +120,12 @@ async function bootEngineCore() {
 
         updateUIProfileElements();
         buildDropdownTargetIntervals();
-        processPeriodEngineChange();
-        
-        // Fetch active/cached historical cycles payload transaction structures
-        const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_current`));
-        if (transSnap.exists()) {
-            const loadedData = transSnap.data();
-            if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
-            if (loadedData.inputSSS) document.getElementById('inputSSS').value = loadedData.inputSSS;
-            if (loadedData.inputPHIC) document.getElementById('inputPHIC').value = loadedData.inputPHIC;
-            if (loadedData.inputHDMF) document.getElementById('inputHDMF').value = loadedData.inputHDMF;
-            if (loadedData.inputAdvances) document.getElementById('inputAdvances').value = loadedData.inputAdvances;
-            if (loadedData.inputDoublePay) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay;
-            if (loadedData.inputReimbursements) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements;
-        }
-        
-        renderActivePeriodCalendarGrid();
-        recomputeGlobalFinancials();
+        await fetchAndProcessSelectedPeriodPayload();
 
     } catch (err) {
         console.error("Setup initialization error: ", err);
+    } finally {
+        hideGlobalEngineLoader();
     }
 }
 
@@ -172,14 +182,16 @@ function buildDropdownTargetIntervals() {
     }
 }
 
-function processPeriodEngineChange() {
-    const val = document.getElementById('periodSelector').value;
-    const pieces = val.split('-');
+async function fetchAndProcessSelectedPeriodPayload() {
+    showGlobalEngineLoader();
+    const selectedPeriodKey = document.getElementById('periodSelector').value; 
+    const pieces = selectedPeriodKey.split('-');
     const year = parseInt(pieces[0]);
     const monthIdx = parseInt(pieces[1]) - 1;
     const day = parseInt(pieces[2]);
 
     activeDatesArray = [];
+    timelineBuffer = {};
 
     // Construct array of date entities corresponding to dynamic bi-weekly windows
     if (day === 15) {
@@ -201,37 +213,70 @@ function processPeriodEngineChange() {
     const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
 
-    evaluateLockExecutionConstraints(year, monthIdx, day);
+    // Reset fields prior to processing payload load safely
+    document.getElementById('inputSSS').value = "";
+    document.getElementById('inputPHIC').value = "";
+    document.getElementById('inputHDMF').value = "";
+    document.getElementById('inputAdvances').value = "";
+    document.getElementById('inputDoublePay').value = "";
+    document.getElementById('inputReimbursements').value = "";
+
+    try {
+        // Fetch active/cached historical cycles payload transaction structures keyed by period instance
+        const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`));
+        if (transSnap.exists()) {
+            const loadedData = transSnap.data();
+            if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
+            document.getElementById('inputSSS').value = loadedData.inputSSS || "";
+            document.getElementById('inputPHIC').value = loadedData.inputPHIC || "";
+            document.getElementById('inputHDMF').value = loadedData.inputHDMF || "";
+            document.getElementById('inputAdvances').value = loadedData.inputAdvances || "";
+            document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || "";
+            document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
+        }
+    } catch(e) {
+        console.error("Payload tracking data recovery error: ", e);
+    }
+
+    evaluateDynamicLockAndBlurConstraints();
     renderActivePeriodCalendarGrid();
     recomputeGlobalFinancials();
+    hideGlobalEngineLoader();
 }
 
-function evaluateLockExecutionConstraints(year, monthIdx, targetDay) {
+function evaluateDynamicLockAndBlurConstraints() {
     const today = new Date();
+    const currentDay = today.getDate();
     const currentMonthNum = today.getMonth();
     const currentYearNum = today.getFullYear();
 
-    let lockActive = true;
-
-    if (year === currentYearNum) {
-        if (monthIdx === currentMonthNum) {
-            lockActive = false;
-        } else if (monthIdx === currentMonthNum - 1 && targetDay > 15) {
-            lockActive = false;
-        } else if (monthIdx === currentMonthNum + 1 && targetDay === 15) {
-            lockActive = false;
+    // 1. Evaluate Net Pay Blur Control Lock Matrix (Only visible 13-16 and 28-2)
+    let revealNetPay = false;
+    if (today.getFullYear() === CURRENT_YEAR) {
+        if ((currentDay >= 13 && currentDay <= 16) || (currentDay >= 28 || currentDay <= 2)) {
+            revealNetPay = true;
         }
     }
-
+    
     const wrapper = document.getElementById('netPayWrapperDeck');
     const badge = document.getElementById('lockBadgeDisplay');
-    if (lockActive) {
+    if (!revealNetPay) {
         if (wrapper) wrapper.classList.add('blurred-lock');
         if (badge) badge.style.display = "inline-block";
     } else {
         if (wrapper) wrapper.classList.remove('blurred-lock');
         if (badge) badge.style.display = "none";
     }
+}
+
+function verifyActionAllowedDateConstraints() {
+    const today = new Date();
+    const day = today.getDate();
+    // Allow action strictly on dates 13-16 or 28-2 of every month
+    if ((day >= 13 && day <= 16) || (day >= 28 || day <= 2)) {
+        return true;
+    }
+    return false;
 }
 
 // ==========================================================================
@@ -243,8 +288,7 @@ function renderActivePeriodCalendarGrid() {
     grid.innerHTML = "";
 
     const today = new Date();
-    const currentMonthNum = today.getMonth();
-    const currentYearNum = today.getFullYear();
+    today.setHours(0,0,0,0); // Normalize time to perform accurate direct day tracking comparisons
 
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
@@ -253,18 +297,33 @@ function renderActivePeriodCalendarGrid() {
         const dateKey = `${year}-${month}-${day}`;
         const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
-        let isPastDate = false;
-        if (year < currentYearNum) {
-            isPastDate = true;
-        } else if (year === currentYearNum && dateObj.getMonth() < currentMonthNum) {
-            if (!(dateObj.getMonth() === currentMonthNum - 1 && dateObj.getDate() >= 29)) {
-                isPastDate = true;
+        const comparisonDate = new Date(dateObj);
+        comparisonDate.setHours(0,0,0,0);
+
+        let isLockedPastDate = false;
+        let isFutureDate = false;
+
+        // Future prevention lock logic
+        if (comparisonDate.getTime() > today.getTime()) {
+            isFutureDate = true;
+        } 
+        // Historical standard calculation cycle lock fallback rules configuration
+        else if (year < today.getFullYear()) {
+            isLockedPastDate = true;
+        } else if (year === today.getFullYear() && dateObj.getMonth() < today.getMonth()) {
+            if (!(dateObj.getMonth() === today.getMonth() - 1 && dateObj.getDate() >= 29)) {
+                isLockedPastDate = true;
             }
         }
 
         const cell = document.createElement('div');
         cell.className = "calendar-day-node";
-        if (isPastDate) {
+        
+        if (isFutureDate) {
+            cell.classList.add("node-future-locked");
+            cell.style.opacity = "0.4";
+            cell.style.cursor = "not-allowed";
+        } else if (isLockedPastDate) {
             cell.classList.add("node-locked");
         }
 
@@ -273,7 +332,7 @@ function renderActivePeriodCalendarGrid() {
             <span class="day-lbl">${dayOfWeekStr}</span>
         `;
 
-        if (isPastDate) {
+        if (isLockedPastDate || isFutureDate) {
             const iconSpan = document.createElement('span');
             iconSpan.className = "lock-corner-icon";
             iconSpan.innerHTML = `<i data-lucide="lock" style="width:10px;height:10px;"></i>`;
@@ -284,17 +343,21 @@ function renderActivePeriodCalendarGrid() {
             cell.style.backgroundColor = document.documentElement.style.getPropertyValue('--primary') || "var(--primary)";
             cell.style.color = "#000000";
             cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
-            if (isPastDate && cell.querySelector('.lock-corner-icon')) {
+            if ((isLockedPastDate || isFutureDate) && cell.querySelector('.lock-corner-icon')) {
                 cell.querySelector('.lock-corner-icon').style.color = "#000000";
             }
         }
 
         cell.onclick = () => {
-            if (isPastDate) {
+            if (isFutureDate) {
+                alert("UNABLE TO LOG ATTENDANCE: THIS CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
+                return;
+            }
+            if (isLockedPastDate) {
                 alert("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
-            launchTimeTransactionModal(dateKey, isPastDate);
+            launchTimeTransactionModal(dateKey, false);
         };
         grid.appendChild(cell);
     });
@@ -624,6 +687,13 @@ function recomputeGlobalFinancials() {
 
     document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
     document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
+    
+    // UI update for newly injected structured OT rows if present dynamically in DOM elements
+    const uiOtGrossField = document.getElementById('breakdownOTGross');
+    if(uiOtGrossField) {
+        uiOtGrossField.innerText = `₱${formatCurrency(totalOvertimePay)}`;
+    }
+
     document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
     document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
 
@@ -643,6 +713,8 @@ function recomputeGlobalFinancials() {
 }
 
 async function commitTimelineTransactionToCloud() {
+    showGlobalEngineLoader();
+    const selectedPeriodKey = document.getElementById('periodSelector').value; 
     try {
         const payload = {
             timelineBuffer: timelineBuffer,
@@ -654,10 +726,13 @@ async function commitTimelineTransactionToCloud() {
             inputReimbursements: document.getElementById('inputReimbursements').value,
             updatedAt: Date.now()
         };
-        await setDoc(doc(db, "salary_transactions", `${userId}_current`), payload, { merge: true });
-        alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
+        // Explicit unique identifier persistence to avoid cascading overlap anomalies across calendar ranges
+        await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
+        alert("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY FOR THIS PAYROLL WINDOW.");
     } catch (err) {
         console.error("Sync failure: ", err);
+    } finally {
+        hideGlobalEngineLoader();
     }
 }
 
@@ -746,7 +821,7 @@ function generateCommercialReceiptLayout(m) {
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
                         <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
-                        <tr><td style="padding:2px 0;">OT Pay</td><td style="text-align:right;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
+                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
                         <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
                         <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
                         <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
@@ -771,10 +846,18 @@ function generateCommercialReceiptLayout(m) {
 }
 
 function triggerPrintPreviewPipeline() {
+    if(!verifyActionAllowedDateConstraints()){
+        alert("ACCESS DENIED: PRINT/PDF GENERATION PIPELINE RESTRICTED OUTSIDE CYCLE CLOSURE WINDOWS (DATES 13-16 OR 28-2).");
+        return;
+    }
     window.print();
 }
 
 function triggerCSVExportPipeline() {
+    if(!verifyActionAllowedDateConstraints()){
+        alert("ACCESS DENIED: CSV EXPORT STREAM TERMINATED. SYSTEM RESTRICTED OUTSIDE ALLOTTED PAYROLL DATES (DATES 13-16 OR 28-2).");
+        return;
+    }
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
     
     let csvRows = [];
@@ -860,7 +943,7 @@ function triggerCSVExportPipeline() {
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
     csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"OVERTIME PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
     csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
     csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
     csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${document.getElementById('breakdownGross').innerText.replace('₱','')}\"`]);
@@ -896,7 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Dynamic Input Value Streams Remapping Listeners
-    document.getElementById('periodSelector').addEventListener('change', processPeriodEngineChange);
+    document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
     document.getElementById('inputDoublePay').addEventListener('input', recomputeGlobalFinancials);
     document.getElementById('inputReimbursements').addEventListener('input', recomputeGlobalFinancials);
     document.getElementById('inputSSS').addEventListener('input', recomputeGlobalFinancials);
