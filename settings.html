@@ -11,29 +11,29 @@
            1. DESIGN TOKENS & SYSTEM VARIABLES (DYNAMIC SYSTEM GLOBAL THEMING)
            ========================================================================== */
         :root {
-            --bg: #0b0f1a; /* Overridden by user's bgValue */
+            --bg: #0b0f1a; 
             --surface: rgba(255, 255, 255, 0.03);
-            --primary: #22c55e; /* Overridden by user's btnValue */
+            --primary: #22c55e; 
             --success: #ffee00;
             --text-main: #f1f5f9;
             --glass: rgba(255, 255, 255, 0.08);
             --border-glass: rgba(255, 255, 255, 0.12);
         }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg);/* Changed from background-color to support colors or url() patterns */
-    color: var(--text-main);
-    margin: 0;
-    padding: 40px 10px 140px 10px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    transition: background 0.4s ease;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 10px 140px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            transition: background 0.4s ease;
+        }
 
         /* ==========================================================================
            2. CORE LAYOUT CONTAINER
@@ -188,7 +188,6 @@ body {
             box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
         }
 
-        /* Isolated Bold Row Layout Highlight for Daily Rate Metric */
         .daily-rate-isolated-row {
             background: rgba(0, 0, 0, 0.25);
             border: 1.5px solid var(--border-glass);
@@ -210,7 +209,6 @@ body {
             color: var(--text-main);
         }
 
-        /* Day Selection Matrix */
         .day-matrix {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -254,7 +252,6 @@ body {
             font-weight: 800;
         }
 
-        /* Custom Checkbox Structural Deck */
         .checkbox-container-row {
             display: flex;
             align-items: center;
@@ -310,7 +307,6 @@ body {
             line-height: 1.4;
         }
 
-        /* Persistent Action Launcher Deck */
         .action-btn {
             width: 100%;
             height: 54px;
@@ -332,13 +328,112 @@ body {
             transform: translateY(-3px);
             box-shadow: 0 15px 30px rgba(255, 255, 255, 0.05);
         }
+
+        /* ==========================================================================
+           5. NEW WORKFLOW UI ARCHITECTURE: LOADERS & NOTIFICATION MECHANISMS
+           ========================================================================== */
+        .engine-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 15, 26, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .engine-loader-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .spinner-ring {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spinEngine 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spinEngine {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-status-text {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .toast-notification-hub {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--border-glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 14px 28px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10000;
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast-notification-hub.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+
+        .toast-body-text {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Async UI Loading Overlay -->
+    <div id="globalEngineLoader" class="engine-loader-overlay">
+        <div class="spinner-ring"></div>
+        <div class="loader-status-text">Synchronizing Remote Assets...</div>
+    </div>
+
+    <!-- UI Background Sync Toast Core Container -->
+    <div id="toastHub" class="toast-notification-hub">
+        <div id="toastDot" class="toast-indicator-dot"></div>
+        <div id="toastText" class="toast-body-text">Processing Session...</div>
+    </div>
+
     <div class="container">
         <div class="header-nav">
-            <button class="back-btn" onclick="window.location.href='customization.html'" title="RETURN TO ENGINE">
+            <button class="back-btn" onclick="window.location.href='payslip.html'" title="RETURN TO ENGINE">
                 <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
             </button>
             <h1>PROFILE CONFIGURATION</h1>
@@ -390,7 +485,7 @@ body {
 
             <div class="form-group">
                 <label>DEPARTMENT</label>
-                <select id="departmentSelect" onchange="toggleDeptCustom(this.value)">
+                <select id="departmentSelect">
                     <option value="Admin">ADMIN</option>
                     <option value="Finance">FINANCE</option>
                     <option value="Custom">OTHER (TYPE CUSTOM)</option>
@@ -424,13 +519,13 @@ body {
 
             <div class="form-group">
                 <label>REST PERIOD INTERMISSION</label>
-                <div class="checkbox-container-row" onclick="document.getElementById('hasLunchBreak').click();">
-                    <input type="checkbox" id="hasLunchBreak" checked onclick="event.stopPropagation();">
+                <div class="checkbox-container-row" id="lunchBreakRow">
+                    <input type="checkbox" id="hasLunchBreak" checked>
                     <span>INCLUDE LUNCH BREAK(12-1 PM)</span>
                 </div>
             </div>
 
-            <button type="button" class="action-btn" id="saveBtn" onclick="saveSystemSettings()">SAVE CONFIGURATIONS</button>
+            <button type="button" class="action-btn" id="saveBtn" onclick="window.location.href='payslip.html'">PROCEED TO PAYSLIP</button>
         </form>
     </div>
 
@@ -455,126 +550,29 @@ body {
         const userId = localStorage.getItem("userId");
         if (!userId) window.location.href = "login.html";
 
-        window.toggleDeptCustom = function(value) {
-            const customInput = document.getElementById('departmentCustom');
-            if (value === 'Custom') {
-                customInput.style.display = 'block';
-                customInput.setAttribute('required', 'true');
-            } else {
-                customInput.style.display = 'none';
-                customInput.removeAttribute('required');
-            }
-        };
+        let debounceTimer = null;
+        let setupComplete = false;
 
-        // Pull saved variables out of Account Identity Document nodes
-        async function fetchIdentityAndTheme() {
-            try {
-                // Targeting collection 'accounts' based on Global architecture specifications
-                const accountRef = doc(db, "accounts", userId);
-                const accountSnap = await getDoc(accountRef);
+        // --- TOAST NOTIFICATION CONTROLLER ---
+        function triggerToast(message, isWorking = false) {
+            const toast = document.getElementById('toastHub');
+            const txt = document.getElementById('toastText');
+            const dot = document.getElementById('toastDot');
 
-                if (accountSnap.exists()) {
-                    const accountData = accountSnap.data();
-
-                    // Map Account Profile Top Display Section
-                    const customProfileName = accountData.customName || localStorage.getItem("userName") || "UNKNOWN USER";
-                    document.getElementById('userDisplayName').innerText = customProfileName.toUpperCase();
-                    
-                    if (accountData.avatarUrl) {
-                        document.getElementById('userDisplayAvatar').src = accountData.avatarUrl;
-                    }
-
-                    // RESTORE LAYOUT BACKGROUND VALUE DIRECTLY
-                    // Replace the old RESTORE LAYOUT BACKGROUND VALUE DIRECTLY block with this:
-if (configData.bgMode === "image") {
-                const realImg = premium3dAssets[configData.bgValue] || configData.bgValue;
-                document.body.style.backgroundImage = `url('${realImg}')`;
-            } else {
-                document.body.style.backgroundImage = "none";
-                document.body.style.backgroundColor = configData.bgValue;
-        }
-
-                    // Dynamically set Primary Accent values using stored node properties
-                    if (accountData.btnValue) {
-                        document.documentElement.style.setProperty('--primary', accountData.btnValue);
-                    }
-                }
-
-                // Populate operational fields from salary metadata configurations
-                const settingsRef = doc(db, "salary_settings", userId);
-                const settingsSnap = await getDoc(settingsRef);
-
-                if (settingsSnap.exists()) {
-                    const data = settingsSnap.data();
-                    document.getElementById('lastName').value = (data.lastName || '').toUpperCase();
-                    document.getElementById('firstName').value = (data.firstName || '').toUpperCase();
-                    document.getElementById('middleInitial').value = (data.middleInitial || '').toUpperCase();
-                    document.getElementById('emailAddress').value = data.emailAddress || '';
-                    document.getElementById('dailyRate').value = data.dailyRate || '';
-                    document.getElementById('position').value = (data.position || '').toUpperCase();
-                    document.getElementById('timeIn').value = data.timeIn || '08:00';
-                    document.getElementById('timeOut').value = data.timeOut || '17:00';
-                    document.getElementById('hasLunchBreak').checked = data.hasLunchBreak !== false;
-
-                    if (data.department === 'Admin' || data.department === 'Finance') {
-                        document.getElementById('departmentSelect').value = data.department;
-                    } else if (data.department) {
-                        document.getElementById('departmentSelect').value = 'Custom';
-                        toggleDeptCustom('Custom');
-                        document.getElementById('departmentCustom').value = data.department.toUpperCase();
-                    }
-
-                    if (data.dutyDays && Array.isArray(data.dutyDays)) {
-                        data.dutyDays.forEach(day => {
-                            const chip = document.querySelector(`.day-chip input[value="${day}"]`);
-                            if (chip) chip.checked = true;
-                        });
-                    }
-                    document.getElementById('saveBtn').innerText = "UPDATE CONFIGURATIONS";
-                }
-            } catch (err) {
-                console.error("System configuration parsing failure:", err);
+            txt.innerText = message;
+            dot.style.backgroundColor = isWorking ? "#ffaa00" : "var(--primary)";
+            
+            toast.classList.add('active');
+            
+            if (!isWorking) {
+                setTimeout(() => {
+                    toast.classList.remove('active');
+                }, 2500);
             }
         }
 
-        window.saveSystemSettings = async function() {
-            const deptSelect = document.getElementById('departmentSelect').value;
-            const finalDept = deptSelect === 'Custom' ? document.getElementById('departmentCustom').value.trim() : deptSelect;
+        function hideToast() {
+            document.getElementById('toastHub').classList.remove('active');
+        }
 
-            const selectedDays = [];
-            document.querySelectorAll('.day-matrix input[type="checkbox"]:checked').forEach(cb => {
-                selectedDays.push(cb.value);
-            });
-
-            const payload = {
-                lastName: document.getElementById('lastName').value.trim().toUpperCase(),
-                firstName: document.getElementById('firstName').value.trim().toUpperCase(),
-                middleInitial: document.getElementById('middleInitial').value.trim().toUpperCase(),
-                emailAddress: document.getElementById('emailAddress').value.trim(),
-                dailyRate: parseFloat(document.getElementById('dailyRate').value) || 0,
-                position: document.getElementById('position').value.trim().toUpperCase(),
-                department: finalDept.toUpperCase(),
-                dutyDays: selectedDays,
-                timeIn: document.getElementById('timeIn').value,
-                timeOut: document.getElementById('timeOut').value,
-                hasLunchBreak: document.getElementById('hasLunchBreak').checked,
-                updatedAt: Date.now()
-            };
-
-            try {
-                await setDoc(doc(db, "salary_settings", userId), payload, { merge: true });
-                alert("PROFILE SETTINGS ACCURATELY SYNCED SUCCESSFULLY.");
-                window.location.href = "payslip.html";
-            } catch (error) {
-                console.error("Data synchronization error:", error);
-                alert("FAILED TRANSACTION SYNCHRONIZATION.");
-            }
-        };
-
-        window.onload = () => {
-            fetchIdentityAndTheme();
-            if (window.lucide) window.lucide.createIcons();
-        };
-    </script>
-</body>
-</html>
+ 
