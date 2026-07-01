@@ -166,7 +166,21 @@ async function bootEngineCore() {
             const accountData = accountSnap.data();
             userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
-            if (accountData.bgValue) document.documentElement.style.setProperty('--bg', accountData.bgValue);
+            
+            // --- UPDATED BACKGROUND HANDLING SYSTEM ---
+            if (accountData.bgMode === "image") {
+                const bgImg = accountData.bgValue;
+                document.body.style.backgroundImage = `url('${bgImg}')`;
+                document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundAttachment = "fixed";
+            } else if (accountData.bgValue) {
+                document.body.style.backgroundImage = "none";
+                document.body.style.backgroundColor = accountData.bgValue;
+                // Sync to custom properties if needed by stylesheets
+                document.documentElement.style.setProperty('--bg', accountData.bgValue);
+            }
+            // ------------------------------------------
+
             if (accountData.btnValue) {
                 document.documentElement.style.setProperty('--primary', accountData.btnValue);
                 const modalBox = document.getElementById('modalBoxContainer');
