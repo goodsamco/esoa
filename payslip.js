@@ -710,22 +710,29 @@ function toggleOvertimeSubSection() {
 function commitModalDayStateToLocalBuffer() {
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
+    const hasOT = document.getElementById('chkEnableOT').checked;
+    const inOT = document.getElementById('modalTimeInOT').value;
+    const outOT = document.getElementById('modalTimeOutOT').value;
 
+    // Check if daytime fields are empty or cleared
     if (!in1 || !out1) {
-        showToast("CORE TIMELINE IN & OUT VALUES REQUIRED.");
-        return;
+        // If daytime is cleared, we ONLY allow saving if overtime is explicitly checked and filled
+        if (!hasOT || !inOT || !outOT) {
+            showToast("CORE TIMELINE IN & OUT VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
+            return;
+        }
     }
 
-    const hasOT = document.getElementById('chkEnableOT').checked;
+    // Commits empty strings ("") for in1/out1/in2/out2 to the record if they were cleared by the user
     timelineBuffer[currentTargetDateString] = {
         filled: true,
-        in1: in1,
-        out1: out1,
+        in1: in1 || "",
+        out1: out1 || "",
         in2: document.getElementById('modalTimeIn2').value || "",
         out2: document.getElementById('modalTimeOut2').value || "",
         hasOT: hasOT,
-        inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
-        outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
+        inOT: hasOT ? inOT : "",
+        outOT: hasOT ? outOT : ""
     };
 
     closeTimeTransactionModal();
@@ -791,47 +798,57 @@ function recomputeGlobalFinancials() {
         let otOut = "-";
 
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-            actualDaysWorkedCounter++;
-            totalBasicEarnings += dailyRate;
-            dayDailyGross = dailyRate;
-
             const rec = timelineBuffer[dateKey];
             tIn1 = rec.in1 || "-";
             tOut1 = rec.out1 || "-";
             tIn2 = rec.in2 || "-";
             tOut2 = rec.out2 || "-";
 
-            const schedInMins = timeStringToMinutes(schedInStr);
-            const actInMins = timeStringToMinutes(rec.in1);
-            if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
+            // Process regular shift details only if core time fields exist
+            if (rec.in1 && rec.out1) {
+                actualDaysWorkedCounter++;
+                totalBasicEarnings += dailyRate;
+                dayDailyGross = dailyRate;
 
-            const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
-            const schedOutMins = timeStringToMinutes(schedOutStr);
-            const actOutMins = timeStringToMinutes(effectiveFinalOut);
-            
-            if (actOutMins < schedOutMins) {
-                dayUndertimeMins = (schedOutMins - actOutMins);
-                if (salarySettings.hasLunchBreak !== false) {
-                    const lunchStartMins = timeStringToMinutes("12:00");
-                    const lunchEndMins = timeStringToMinutes("13:00");
-                    if (actOutMins <= lunchStartMins) {
-                        dayUndertimeMins -= 60;
-                    } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
-                        dayUndertimeMins -= (lunchEndMins - actOutMins);
+                const schedInMins = timeStringToMinutes(schedInStr);
+                const actInMins = timeStringToMinutes(rec.in1);
+                if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
+
+                const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
+                const schedOutMins = timeStringToMinutes(schedOutStr);
+                const actOutMins = timeStringToMinutes(effectiveFinalOut);
+                
+                if (actOutMins < schedOutMins) {
+                    dayUndertimeMins = (schedOutMins - actOutMins);
+                    if (salarySettings.hasLunchBreak !== false) {
+                        const lunchStartMins = timeStringToMinutes("12:00");
+                        const lunchEndMins = timeStringToMinutes("13:00");
+                        if (actOutMins <= lunchStartMins) {
+                            dayUndertimeMins -= 60;
+                        } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
+                            dayUndertimeMins -= (lunchEndMins - actOutMins);
+                        }
                     }
                 }
+
+                dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
+                totalDeductionPenalties += dayDed;
             }
 
-            dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
-            totalDeductionPenalties += dayDed;
-
+            // Process Overtime independently (Handles midnight / next day wrap-around calculations)
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
-                const oInMins = timeStringToMinutes(rec.inOT);
-                const oOutMins = timeStringToMinutes(rec.outOT);
-                if (oOutMins > oInMins) {
-                    const otMins = oOutMins - oInMins;
+                let oInMins = timeStringToMinutes(rec.inOT);
+                let oOutMins = timeStringToMinutes(rec.outOT);
+                
+                // If out time rolls over into next day or hits midnight (00:00)
+                if (oOutMins <= oInMins) {
+                    oOutMins += 1440; // Inject structural 24-hour minute buffer
+                }
+                
+                const otMins = oOutMins - oInMins;
+                if (otMins > 0) {
                     dayOtGross = otMins * minuteRate;
                     totalOvertimePay += dayOtGross;
                 }
@@ -924,33 +941,6 @@ function recomputeGlobalFinancials() {
         sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
         actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGross, aggOtGross, aggDed, aggNet
     });
-}
-
-async function commitTimelineTransactionToCloud(isAutoSave = false) {
-    const selectedPeriodKey = document.getElementById('periodSelector').value; 
-    try {
-        const payload = {
-            timelineBuffer: timelineBuffer,
-            inputSSS: document.getElementById('inputSSS').value,
-            inputPHIC: document.getElementById('inputPHIC').value,
-            inputHDMF: document.getElementById('inputHDMF').value,
-            inputAdvances: document.getElementById('inputAdvances').value,
-            inputDoublePay: document.getElementById('inputDoublePay').value,
-            inputReimbursements: document.getElementById('inputReimbursements').value,
-            updatedAt: Date.now()
-        };
-        await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
-        hasUnsavedChanges = false;
-        
-        if(isAutoSave) {
-            showToast("CHANGES SAVED AUTOMATICALLY");
-        } else {
-            showToast("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
-        }
-    } catch (err) {
-        console.error("Sync failure: ", err);
-        showToast("CLOUD SYNC ERROR ENCOUNTERED");
-    }
 }
 
 // ==========================================================================
