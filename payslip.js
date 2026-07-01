@@ -159,22 +159,36 @@ async function bootEngineCore() {
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
             
             // --- FIXED & OPTIMIZED BACKGROUND HANDLING ---
-            if (configData.bgMode === "image") {
-                const realImg = premium3dAssets[configData.bgValue] || configData.bgValue;
-                
-                // Clear any existing color so it doesn't bleed through transparent image assets
-                document.body.style.backgroundColor = "transparent"; 
-                document.body.style.backgroundImage = `url('${realImg}')`;
-                
-                // Essential properties to make sure the asset stretches and looks premium
-                document.body.style.backgroundSize = "cover";
-                document.body.style.backgroundPosition = "center";
-                document.body.style.backgroundRepeat = "no-repeat";
-            } else {
-                // Clear the image, fallback to a clean default color if bgValue is missing
-                document.body.style.backgroundImage = "none";
-                document.body.style.backgroundColor = configData.bgValue || "#ffffff"; 
-            }
+if (accountData.bgValue) {
+    const bg = accountData.bgValue.trim();
+
+    // Detect if it's an image URL/path
+    const isImage =
+        bg.startsWith("http://") ||
+        bg.startsWith("https://") ||
+        bg.startsWith("data:image") ||
+        bg.startsWith("/") ||
+        bg.startsWith("./") ||
+        bg.startsWith("../") ||
+        /\.(jpg|jpeg|png|gif|webp|svg|avif)$/i.test(bg);
+
+    if (isImage) {
+        document.body.style.backgroundImage = `url('${bg}')`;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+        document.body.style.backgroundRepeat = "no-repeat";
+        document.body.style.backgroundColor = "transparent";
+
+        // Optional: also keep the CSS variable updated
+        document.documentElement.style.setProperty('--bg', `url('${bg}')`);
+    } else {
+        document.body.style.backgroundImage = "none";
+        document.body.style.backgroundColor = bg;
+
+        // Preserve existing behavior
+        document.documentElement.style.setProperty('--bg', bg);
+    }
+}
             // ----------------------------------------------
 
             if (accountData.btnValue) {
