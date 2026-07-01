@@ -356,7 +356,7 @@ select:focus, input:focus {
 
 /* ==========================================================================
    4. MODAL LAYER ARCHITECTURE
-   ========================================================================== */
+   ========================================================================== 
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -417,6 +417,86 @@ select:focus, input:focus {
 .nested-row-segment {
     background: rgba(0,0,0,0.15);
     border: 1px dashed var(--border-glass);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 14px;
+}
+*/
+
+/* ==========================================================================
+   4. MODAL LAYER ARCHITECTURE
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(5, 7, 12, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 14px;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    /* Sleek translucent background optimized for images and solid colors */
+    background: rgba(17, 22, 37, 0.45);
+    /* Creates a 25% transparent border using the user's color value */
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    padding: 22px;
+    /* Immersive drop shadow reflecting a 5% glow of the user's exact color theme */
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 
+                0 0 50px color-mix(in srgb, var(--primary) 5%, transparent);
+    box-sizing: border-box;
+}
+
+.realtime-stats-bar {
+    /* Subtle 6% background tint using the user's exact primary color */
+    background: color-mix(in srgb, var(--primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.realtime-stats-bar .stat-block .lbl {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.realtime-stats-bar .stat-block .val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-top: 2px;
+    /* Directly loads the user's primary color for the prominent numbers */
+    color: var(--primary);
+}
+
+.nested-row-segment {
+    background: rgba(0, 0, 0, 0.2);
+    /* 20% transparent dashed separation line matching the user color */
+    border: 1px dashed color-mix(in srgb, var(--primary) 20%, transparent);
     border-radius: 12px;
     padding: 12px;
     margin-top: 14px;
