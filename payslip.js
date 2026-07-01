@@ -303,8 +303,27 @@ function evaluateDynamicLockAndBlurConstraints() {
     const today = new Date();
     const currentDay = today.getDate();
 
+    const selector = document.getElementById('periodSelector');
+    if (!selector) return;
+
+    const selectedPeriodKey = selector.value; 
+    const pieces = selectedPeriodKey.split('-');
+    const periodDate = new Date(parseInt(pieces[0]), parseInt(pieces[1]) - 1, parseInt(pieces[2]));
+    
+    // Normalize hours to perform clean calendar date comparison
+    today.setHours(0,0,0,0);
+    periodDate.setHours(0,0,0,0);
+
     let revealNetPay = false;
-    if (today.getFullYear() === CURRENT_YEAR) {
+
+    // Check if it's a historical/past cycle
+    const isPastPayrollPeriod = periodDate.getTime() < today.getTime();
+
+    if (isPastPayrollPeriod) {
+        // Past records remain completely visible
+        revealNetPay = true;
+    } else {
+        // Upcoming payrolls are only visible during the 13th-16th or 28th-2nd window
         if ((currentDay >= 13 && currentDay <= 16) || (currentDay >= 28 || currentDay <= 2)) {
             revealNetPay = true;
         }
@@ -312,19 +331,58 @@ function evaluateDynamicLockAndBlurConstraints() {
     
     const wrapper = document.getElementById('netPayWrapperDeck');
     const badge = document.getElementById('lockBadgeDisplay');
+    
     if (!revealNetPay) {
-        if (wrapper) wrapper.classList.add('blurred-lock');
+        if (wrapper) {
+            wrapper.classList.add('blurred-lock');
+            wrapper.setAttribute('data-blurred', 'true'); // State flag for PDF/CSV pipelines
+        }
         if (badge) badge.style.display = "inline-block";
     } else {
-        if (wrapper) wrapper.classList.remove('blurred-lock');
+        if (wrapper) {
+            wrapper.classList.remove('blurred-lock');
+            wrapper.removeAttribute('data-blurred');
+        }
         if (badge) badge.style.display = "none";
     }
+
+    // Fully lock input fields if it is a past record and it is the 2nd day of the month or later
+    const inputFields = ['inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 'inputDoublePay', 'inputReimbursements'];
+    const shouldLockInputs = isPastPayrollPeriod && (currentDay >= 2);
+
+    inputFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (shouldLockInputs) {
+                el.setAttribute('disabled', 'true');
+            } else {
+                el.removeAttribute('disabled');
+            }
+        }
+    });
 }
 
 function verifyActionAllowedDateConstraints() {
     const today = new Date();
-    const day = today.getDate();
-    return ((day >= 13 && day <= 16) || (day >= 28 || day <= 2));
+    const currentDay = today.getDate();
+
+    const selector = document.getElementById('periodSelector');
+    if (!selector) return true;
+
+    const selectedPeriodKey = selector.value;
+    const pieces = selectedPeriodKey.split('-');
+    const periodDate = new Date(parseInt(pieces[0]), parseInt(pieces[1]) - 1, parseInt(pieces[2]));
+    
+    today.setHours(0,0,0,0);
+    periodDate.setHours(0,0,0,0);
+
+    // If it is a past record cycle and today is the 2nd day of the month or later, lock modifications completely
+    if (periodDate.getTime() < today.getTime() && currentDay >= 2) {
+        return false;
+    }
+
+    // Active/upcoming period cycles are always fillable/editable
+    return true;
 }
 
 // ==========================================================================
