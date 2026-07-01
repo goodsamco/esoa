@@ -149,7 +149,7 @@ let historicalOverrideActive = false;
 let historicalClickCounter = 0;
 let historicalAutoLockTimer = null;
 
-// Clean, global-safe UI notification engine
+// Clean, global-safe UI toast notification engine
 function showSystemToastNotification(message, duration = 4000) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -258,7 +258,7 @@ function buildDropdownTargetIntervals() {
         const targetDay = today.getDate() <= 15 ? 15 : new Date(CURRENT_YEAR, today.getMonth() + 1, 0).getDate();
         selector.value = `${CURRENT_YEAR}-${String(today.getMonth() + 1).padStart(2, '0')}-${targetDay}`;
     } else {
-        selector.value = `2026-06-30`;
+        selector.value = `2026-07-15`;
     }
 }
 
@@ -351,8 +351,10 @@ function evaluateDynamicLockAndBlurConstraints() {
     let revealNetPay = false;
 
     if (isPastPayrollPeriod) {
+        // Historical logs display amounts natively
         revealNetPay = true;
     } else {
+        // Upcoming Period constraint windows
         if (targetDay === 15) {
             if (currentDay >= 13 && currentDay <= 16) revealNetPay = true;
         } else {
@@ -362,19 +364,29 @@ function evaluateDynamicLockAndBlurConstraints() {
     
     const wrapper = document.getElementById('netPayWrapperDeck');
     const badge = document.getElementById('lockBadgeDisplay');
+    const trackingTable = document.getElementById('uiDailyBreakdownTable');
     
+    // Manage blurring across widgets and the daily metric breakdown table element
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
             wrapper.setAttribute('data-blurred', 'true');
         }
         if (badge) badge.style.display = "inline-block";
+        if (trackingTable) {
+            trackingTable.classList.add('blurred-lock');
+            trackingTable.setAttribute('data-blurred', 'true');
+        }
     } else {
         if (wrapper) {
             wrapper.classList.remove('blurred-lock');
             wrapper.removeAttribute('data-blurred');
         }
         if (badge) badge.style.display = "none";
+        if (trackingTable) {
+            trackingTable.classList.remove('blurred-lock');
+            trackingTable.removeAttribute('data-blurred');
+        }
     }
 
     const targetElementsToSecure = [
@@ -443,7 +455,7 @@ function setupNetPayOverrideListener() {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical values & active period dates unlocked for 2 minutes.");
+                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.");
                 evaluateDynamicLockAndBlurConstraints();
                 renderActivePeriodCalendarGrid(); 
                 renewHistoricalInactivityTimer();
@@ -457,7 +469,7 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        showSystemToastNotification("⏳ Session expired. Historical fields and calendar logs have re-locked.");
+        showSystemToastNotification("⏳ Session expired. Historical matrix logs and tracking charts re-locked.");
         resetHistoricalOverrideState();
     }, 120000); 
 }
@@ -495,6 +507,8 @@ function teardownInactivitySignalTracers() {
 
 window.addEventListener('beforeunload', resetHistoricalOverrideState);
 
+window.addEventListener('beforeunload', resetHistoricalOverrideState);
+
 // ==========================================================================
 // 4. MATRIX UI CALENDAR RENDER ENGINE
 // ==========================================================================
@@ -505,6 +519,18 @@ function renderActivePeriodCalendarGrid() {
 
     const today = new Date();
     today.setHours(0,0,0,0);
+
+    const selector = document.getElementById('periodSelector');
+    let isCurrentPeriodPast = false;
+    if (selector) {
+        const selectedPeriodKey = selector.value;
+        const pieces = selectedPeriodKey.split('-');
+        const periodDate = new Date(parseInt(pieces[0]), parseInt(pieces[1]) - 1, parseInt(pieces[2]));
+        periodDate.setHours(0,0,0,0);
+        if (periodDate.getTime() < today.getTime()) {
+            isCurrentPeriodPast = true;
+        }
+    }
 
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
@@ -521,12 +547,23 @@ function renderActivePeriodCalendarGrid() {
 
         if (comparisonDate.getTime() > today.getTime()) {
             isFutureDate = true;
+        } else if (isCurrentPeriodPast) {
+            // If the overall period chosen is historical, lock down days implicitly 
+            // unless overridden by the 10-click administrative session bypass
+            if (!historicalOverrideActive) {
+                isLockedPastDate = true;
+            }
         } else if (year < today.getFullYear()) {
             isLockedPastDate = true;
         } else if (year === today.getFullYear() && dateObj.getMonth() < today.getMonth()) {
             if (!(dateObj.getMonth() === today.getMonth() - 1 && dateObj.getDate() >= 29)) {
                 isLockedPastDate = true;
             }
+        }
+
+        // Final security check: If admin bypass is warm and running, open up all historical dates
+        if (historicalOverrideActive && isLockedPastDate) {
+            isLockedPastDate = false;
         }
 
         const cell = document.createElement('div');
@@ -552,22 +589,30 @@ function renderActivePeriodCalendarGrid() {
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
             cell.style.backgroundColor = document.documentElement.style.getPropertyValue('--primary') || "var(--primary)";
             cell.style.color = "#000000";
-            cell.querySelector('.day-lbl').style.color = "rgba(0,0,0,0.6)";
+            const lbl = cell.querySelector('.day-lbl');
+            if (lbl) lbl.style.color = "rgba(0,0,0,0.6)";
         }
 
         cell.onclick = () => {
             if (isFutureDate) {
-                showToast("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
+                showSystemToastNotification("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
                 return;
             }
             if (isLockedPastDate) {
-                showToast("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
+                showSystemToastNotification("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
+            
+            // If historical unlock is currently running, feed inactivity tracker on cell engagement
+            if (historicalOverrideActive) {
+                if (typeof renewHistoricalInactivityTimer === "function") renewHistoricalInactivityTimer();
+            }
+            
             launchTimeTransactionModal(dateKey, false);
         };
         grid.appendChild(cell);
     });
+    
     if (window.lucide) window.lucide.createIcons();
 }
 
