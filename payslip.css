@@ -356,13 +356,13 @@ select:focus, input:focus {
 
 /* ==========================================================================
    4. MODAL LAYER ARCHITECTURE
-   ========================================================================== 
+   ========================================================================== */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(5, 7, 12, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -421,143 +421,7 @@ select:focus, input:focus {
     padding: 12px;
     margin-top: 14px;
 }
-*/
 
-/* ==========================================================================
-   4. MODAL LAYER ARCHITECTURE
-   ========================================================================== */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    display: none; /* Managed in tandem with JS display state workflow */
-    justify-content: center;
-    align-items: center;
-    z-index: 4000;
-    
-    /* From eSOA: High-fidelity layout backdrop blur layer */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    background: rgba(0, 0, 0, 0);
-
-    /* Smoothly fades overlay across hardware-accelerated layers */
-    opacity: 0;
-    transition: 
-        opacity 0.22s ease, 
-        background-color 0.22s ease;
-    padding: 14px;
-}
-
-.modal-overlay.active {
-    display: flex;
-    opacity: 1;
-    background: rgba(5, 7, 12, 0.45); /* Soft darkened overlay shift */
-}
-
-.modal-box {
-    position: relative;
-    width: 90%;
-    max-width: 400px;
-    padding: 30px 24px;
-    text-align: center;
-    box-sizing: border-box;
-    max-height: 80vh;
-    overflow-y: auto;
-    border-radius: 24px;
-    
-    /* From eSOA: Minimalist transparent background architecture with NO color leak */
-    background: rgba(255, 255, 255, 0.04);
-    border: none; /* Removed all borders completely */
-    
-    /* Deep immersive shadow for organic layer separation over images/solid states */
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-    
-    /* Isolated performance properties mapping with native eSOA scaling animations */
-    opacity: 0;
-    transform: scale(0.92) translateY(15px);
-    will-change: transform, opacity; /* Hints GPU to separate this layer */
-    
-    transition:
-        opacity 0.22s ease,
-        transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modal-overlay.active .modal-box {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-}
-
-/* --- Realtime Log Metrics & Stats Header --- */
-.realtime-stats-bar {
-    background: rgba(255, 255, 255, 0.02); /* Clean neutral translucent tinting */
-    border: 1px solid rgba(255, 255, 255, 0.05); /* Soft neutral border separation */
-    border-radius: 16px;
-    padding: 12px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 18px;
-    text-align: center;
-}
-
-.realtime-stats-bar .stat-block .lbl {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.realtime-stats-bar .stat-block .val {
-    font-size: 0.95rem;
-    font-weight: 800;
-    margin-top: 2px;
-    color: var(--primary); /* Accents values dynamically with user color */
-}
-
-/* --- Form Fields & Log Input Elements (image_09c163.png) --- */
-.input-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.input-group label {
-    font-size: 0.65rem;
-    color: var(--primary); /* Labels cleanly pulled through with user color */
-    margin-left: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.modal-box input {
-    width: 100%;
-    background: #000;
-    border: 1px solid rgba(83, 83, 83, 0.2);
-    padding: 16px;
-    margin-top: 5px;
-    border-radius: 16px;
-    color: #fff;
-    font-size: 1.1rem;
-    box-sizing: border-box;
-    text-align: center;
-    font-weight: 700;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.modal-box input:focus {
-    border-color: var(--primary); /* Seamlessly highlights active field border on focus */
-}
-
-/* --- Container for Checkboxes/Nested Rows --- */
-.nested-row-segment {
-    background: rgba(255, 255, 255, 0.02); /* Clean transparent layout */
-    border: 1px dashed rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 12px;
-    margin-top: 14px;
-    text-align: left;
-}
 
 /* --- Modal Close Dismiss Triggers --- */
 .modal-close-btn {
