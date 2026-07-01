@@ -45,7 +45,7 @@ let autoSaveTimer = null;
 let hasUnsavedChanges = false;
 
 function formatCurrency(amount) {
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function timeStringToMinutes(timeStr) {
@@ -188,11 +188,11 @@ async function bootEngineCore() {
 }
 
 function updateUIProfileElements() {
-    document.getElementById('profSettingsNameDisplay').innerText = (userProfile.customName || "").toUpperCase();
-    document.getElementById('profNameDisplay').innerText = (userProfile.name || "").toUpperCase();
-    document.getElementById('profEmailDisplay').innerText = (userProfile.email || "").toUpperCase();
-    document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
-    document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
+    if (document.getElementById('profSettingsNameDisplay')) document.getElementById('profSettingsNameDisplay').innerText = (userProfile.customName || "").toUpperCase();
+    if (document.getElementById('profNameDisplay')) document.getElementById('profNameDisplay').innerText = (userProfile.name || "").toUpperCase();
+    if (document.getElementById('profEmailDisplay')) document.getElementById('profEmailDisplay').innerText = (userProfile.email || "").toUpperCase();
+    if (document.getElementById('profPosDisplay')) document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
+    if (document.getElementById('profDeptDisplay')) document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
     
     let rateElement = document.getElementById('profDailyRateDisplay');
     const formattedRate = `₱${formatCurrency(parseFloat(salarySettings.dailyRate) || 460)}`;
@@ -211,6 +211,7 @@ function updateUIProfileElements() {
 
 function buildDropdownTargetIntervals() {
     const selector = document.getElementById('periodSelector');
+    if (!selector) return;
     const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
     
     selector.innerHTML = "";
@@ -238,66 +239,74 @@ function buildDropdownTargetIntervals() {
 
 async function fetchAndProcessSelectedPeriodPayload() {
     if(hasUnsavedChanges) {
-        document.getElementById('exitGuardModalOverlay').style.display = 'flex';
+        const modal = document.getElementById('exitGuardModalOverlay');
+        if(modal) modal.style.display = 'flex';
         return;
     }
     showGlobalEngineLoader();
-    const selectedPeriodKey = document.getElementById('periodSelector').value; 
-    const pieces = selectedPeriodKey.split('-');
-    const year = parseInt(pieces[0]);
-    const monthIdx = parseInt(pieces[1]) - 1;
-    const day = parseInt(pieces[2]);
-
-    activeDatesArray = [];
-    timelineBuffer = {};
-
-    if (day === 15) {
-        let prevMonthDate = new Date(year, monthIdx - 1, 29);
-        let currentTarget = new Date(prevMonthDate);
-        while (currentTarget <= new Date(year, monthIdx, 13)) {
-            activeDatesArray.push(new Date(currentTarget));
-            currentTarget.setDate(currentTarget.getDate() + 1);
-        }
-    } else {
-        let currentTarget = new Date(year, monthIdx, 14);
-        while (currentTarget <= new Date(year, monthIdx, 28)) {
-            activeDatesArray.push(new Date(currentTarget));
-            currentTarget.setDate(currentTarget.getDate() + 1);
-        }
-    }
-
-    const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
-
-    document.getElementById('inputSSS').value = "";
-    document.getElementById('inputPHIC').value = "";
-    document.getElementById('inputHDMF').value = "";
-    document.getElementById('inputAdvances').value = "";
-    document.getElementById('inputDoublePay').value = "";
-    document.getElementById('inputReimbursements').value = "";
-
+    
     try {
+        const selector = document.getElementById('periodSelector');
+        if (!selector) return;
+        const selectedPeriodKey = selector.value; 
+        const pieces = selectedPeriodKey.split('-');
+        const year = parseInt(pieces[0]);
+        const monthIdx = parseInt(pieces[1]) - 1;
+        const day = parseInt(pieces[2]);
+
+        activeDatesArray = [];
+        timelineBuffer = {};
+
+        if (day === 15) {
+            let prevMonthDate = new Date(year, monthIdx - 1, 29);
+            let currentTarget = new Date(prevMonthDate);
+            while (currentTarget <= new Date(year, monthIdx, 13)) {
+                activeDatesArray.push(new Date(currentTarget));
+                currentTarget.setDate(currentTarget.getDate() + 1);
+            }
+        } else {
+            let currentTarget = new Date(year, monthIdx, 14);
+            while (currentTarget <= new Date(year, monthIdx, 28)) {
+                activeDatesArray.push(new Date(currentTarget));
+                currentTarget.setDate(currentTarget.getDate() + 1);
+            }
+        }
+
+        const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        
+        if (document.getElementById('payableRangeDisplay')) {
+            document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
+        }
+
+        if (document.getElementById('inputSSS')) document.getElementById('inputSSS').value = "";
+        if (document.getElementById('inputPHIC')) document.getElementById('inputPHIC').value = "";
+        if (document.getElementById('inputHDMF')) document.getElementById('inputHDMF').value = "";
+        if (document.getElementById('inputAdvances')) document.getElementById('inputAdvances').value = "";
+        if (document.getElementById('inputDoublePay')) document.getElementById('inputDoublePay').value = "";
+        if (document.getElementById('inputReimbursements')) document.getElementById('inputReimbursements').value = "";
+
         const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`));
         if (transSnap.exists()) {
             const loadedData = transSnap.data();
             if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
-            document.getElementById('inputSSS').value = loadedData.inputSSS || "";
-            document.getElementById('inputPHIC').value = loadedData.inputPHIC || "";
-            document.getElementById('inputHDMF').value = loadedData.inputHDMF || "";
-            document.getElementById('inputAdvances').value = loadedData.inputAdvances || "";
-            document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || "";
-            document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
+            if (document.getElementById('inputSSS')) document.getElementById('inputSSS').value = loadedData.inputSSS || "";
+            if (document.getElementById('inputPHIC')) document.getElementById('inputPHIC').value = loadedData.inputPHIC || "";
+            if (document.getElementById('inputHDMF')) document.getElementById('inputHDMF').value = loadedData.inputHDMF || "";
+            if (document.getElementById('inputAdvances')) document.getElementById('inputAdvances').value = loadedData.inputAdvances || "";
+            if (document.getElementById('inputDoublePay')) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || "";
+            if (document.getElementById('inputReimbursements')) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
         }
+        
+        evaluateDynamicLockAndBlurConstraints();
+        renderActivePeriodCalendarGrid();
+        recomputeGlobalFinancials();
+        hasUnsavedChanges = false;
     } catch(e) {
         console.error("Payload data recovery error: ", e);
+    } finally {
+        hideGlobalEngineLoader();
     }
-
-    evaluateDynamicLockAndBlurConstraints();
-    renderActivePeriodCalendarGrid();
-    recomputeGlobalFinancials();
-    hasUnsavedChanges = false;
-    hideGlobalEngineLoader();
 }
 
 function evaluateDynamicLockAndBlurConstraints() {
@@ -409,80 +418,84 @@ function renderActivePeriodCalendarGrid() {
 // ==========================================================================
 function launchTimeTransactionModal(dateKey, isPastDate = false) {
     currentTargetDateString = dateKey;
-    document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
+    if (document.getElementById('modalTargetDateHeader')) document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
     
-    document.getElementById('modalTimeIn1').value = "";
-    document.getElementById('modalTimeOut1').value = "";
-    document.getElementById('modalTimeIn2').value = "";
-    document.getElementById('modalTimeOut2').value = "";
-    document.getElementById('modalTimeInOT').value = "";
-    document.getElementById('modalTimeOutOT').value = "";
+    if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = "";
+    if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = "";
+    if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "";
+    if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = "";
+    if (document.getElementById('modalTimeInOT')) document.getElementById('modalTimeInOT').value = "";
+    if (document.getElementById('modalTimeOutOT')) document.getElementById('modalTimeOutOT').value = "";
     
-    document.getElementById('chkEnableOT').checked = false;
-    document.getElementById('otSubSectionDeck').style.display = "none";
+    if (document.getElementById('chkEnableOT')) document.getElementById('chkEnableOT').checked = false;
+    if (document.getElementById('otSubSectionDeck')) document.getElementById('otSubSectionDeck').style.display = "none";
 
     if (timelineBuffer[dateKey]) {
         const rec = timelineBuffer[dateKey];
-        document.getElementById('modalTimeIn1').value = rec.in1 || "";
-        document.getElementById('modalTimeOut1').value = rec.out1 || "";
-        document.getElementById('modalTimeIn2').value = rec.in2 || "";
-        document.getElementById('modalTimeOut2').value = rec.out2 || "";
+        if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = rec.in1 || "";
+        if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = rec.out1 || "";
+        if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = rec.in2 || "";
+        if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = rec.out2 || "";
         if (rec.hasOT) {
-            document.getElementById('chkEnableOT').checked = true;
-            document.getElementById('otSubSectionDeck').style.display = "block";
-            document.getElementById('modalTimeInOT').value = rec.inOT || "";
-            document.getElementById('modalTimeOutOT').value = rec.outOT || "";
+            if (document.getElementById('chkEnableOT')) document.getElementById('chkEnableOT').checked = true;
+            if (document.getElementById('otSubSectionDeck')) document.getElementById('otSubSectionDeck').style.display = "block";
+            if (document.getElementById('modalTimeInOT')) document.getElementById('modalTimeInOT').value = rec.inOT || "";
+            if (document.getElementById('modalTimeOutOT')) document.getElementById('modalTimeOutOT').value = rec.outOT || "";
         }
     } else {
         if (salarySettings.hasLunchBreak !== false) {
-            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            document.getElementById('modalTimeOut1').value = "12:00";
-            document.getElementById('modalTimeIn2').value = "13:00";
-            document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
+            if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = "12:00";
+            if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "13:00";
+            if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
         } else {
-            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
-            document.getElementById('modalTimeIn2').value = "";
-            document.getElementById('modalTimeOut2').value = "";
+            if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+            if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "";
+            if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = "";
         }
     }
 
-    const inputs = document.getElementById('modalBoxContainer').querySelectorAll('input, select');
-    if (isPastDate) {
-        inputs.forEach(el => el.setAttribute('disabled', 'true'));
-        document.getElementById('modalActionFooterDeck').style.display = "none";
-        document.getElementById('modalLockedWarningLabel').style.display = "block";
-    } else {
-        inputs.forEach(el => el.removeAttribute('disabled'));
-        document.getElementById('modalActionFooterDeck').style.display = "grid";
-        document.getElementById('modalLockedWarningLabel').style.display = "none";
+    const container = document.getElementById('modalBoxContainer');
+    if (container) {
+        const inputs = container.querySelectorAll('input, select');
+        if (isPastDate) {
+            inputs.forEach(el => el.setAttribute('disabled', 'true'));
+            if (document.getElementById('modalActionFooterDeck')) document.getElementById('modalActionFooterDeck').style.display = "none";
+            if (document.getElementById('modalLockedWarningLabel')) document.getElementById('modalLockedWarningLabel').style.display = "block";
+        } else {
+            inputs.forEach(el => el.removeAttribute('disabled'));
+            if (document.getElementById('modalActionFooterDeck')) document.getElementById('modalActionFooterDeck').style.display = "grid";
+            if (document.getElementById('modalLockedWarningLabel')) document.getElementById('modalLockedWarningLabel').style.display = "none";
+        }
     }
 
     runRealtimeMetricsDeductionEngine();
-    document.getElementById('timeConfigModalOverlay').classList.add('active');
+    if (document.getElementById('timeConfigModalOverlay')) document.getElementById('timeConfigModalOverlay').classList.add('active');
 }
 
 function evaluateLunchBreakConstraints() {
-    const out1 = document.getElementById('modalTimeOut1').value;
-    if (out1) {
-        const out1Mins = timeStringToMinutes(out1);
+    const out1El = document.getElementById('modalTimeOut1');
+    if (out1El && out1El.value) {
+        const out1Mins = timeStringToMinutes(out1El.value);
         if (out1Mins < timeStringToMinutes("12:59")) {
-            document.getElementById('modalTimeIn2').value = "";
-            document.getElementById('modalTimeOut2').value = "";
+            if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "";
+            if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = "";
         }
     }
 }
 
+// Rest of code missing wrapper safe close helper fix
 function closeTimeTransactionModal() {
-    document.getElementById('timeConfigModalOverlay').classList.remove('active');
+    if (document.getElementById('timeConfigModalOverlay')) document.getElementById('timeConfigModalOverlay').classList.remove('active');
 }
 
 function runRealtimeMetricsDeductionEngine() {
     const schedIn = salarySettings.timeIn || "08:00";
     const schedOut = salarySettings.timeOut || "17:00";
-    const in1 = document.getElementById('modalTimeIn1').value;
-    const out1 = document.getElementById('modalTimeOut1').value;
-    const out2 = document.getElementById('modalTimeOut2').value;
+    const in1 = document.getElementById('modalTimeIn1') ? document.getElementById('modalTimeIn1').value : "";
+    const out1 = document.getElementById('modalTimeOut1') ? document.getElementById('modalTimeOut1').value : "";
+    const out2 = document.getElementById('modalTimeOut2') ? document.getElementById('modalTimeOut2').value : "";
 
     let lateMinutes = 0;
     let undertimeMinutes = 0;
@@ -511,35 +524,36 @@ function runRealtimeMetricsDeductionEngine() {
         }
     }
 
-    document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
-    document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
+    if (document.getElementById('rtLateDisplay')) document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
+    if (document.getElementById('rtUndertimeDisplay')) document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
 }
 
 function toggleOvertimeSubSection() {
-    if(document.getElementById('chkEnableOT').disabled) return;
-    const checked = document.getElementById('chkEnableOT').checked;
-    document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
+    const otCheck = document.getElementById('chkEnableOT');
+    if(otCheck && otCheck.disabled) return;
+    const checked = otCheck ? otCheck.checked : false;
+    if (document.getElementById('otSubSectionDeck')) document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
 }
 
 function commitModalDayStateToLocalBuffer() {
-    const in1 = document.getElementById('modalTimeIn1').value;
-    const out1 = document.getElementById('modalTimeOut1').value;
+    const in1 = document.getElementById('modalTimeIn1') ? document.getElementById('modalTimeIn1').value : "";
+    const out1 = document.getElementById('modalTimeOut1') ? document.getElementById('modalTimeOut1').value : "";
 
     if (!in1 || !out1) {
         showToast("CORE TIMELINE IN & OUT VALUES REQUIRED.");
         return;
     }
 
-    const hasOT = document.getElementById('chkEnableOT').checked;
+    const hasOT = document.getElementById('chkEnableOT') ? document.getElementById('chkEnableOT').checked : false;
     timelineBuffer[currentTargetDateString] = {
         filled: true,
         in1: in1,
         out1: out1,
-        in2: document.getElementById('modalTimeIn2').value || "",
-        out2: document.getElementById('modalTimeOut2').value || "",
+        in2: (document.getElementById('modalTimeIn2') ? document.getElementById('modalTimeIn2').value : "") || "",
+        out2: (document.getElementById('modalTimeOut2') ? document.getElementById('modalTimeOut2').value : "") || "",
         hasOT: hasOT,
-        inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
-        outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
+        inOT: hasOT ? (document.getElementById('modalTimeInOT') ? document.getElementById('modalTimeInOT').value : "") : "",
+        outOT: hasOT ? (document.getElementById('modalTimeOutOT') ? document.getElementById('modalTimeOutOT').value : "") : ""
     };
 
     closeTimeTransactionModal();
@@ -630,7 +644,7 @@ function recomputeGlobalFinancials() {
                     const lunchEndMins = timeStringToMinutes("13:00");
                     if (actOutMins <= lunchStartMins) {
                         dayUndertimeMins -= 60;
-                    } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
+                    } else if (actOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
                         dayUndertimeMins -= (lunchEndMins - actOutMins);
                     }
                 }
@@ -661,7 +675,6 @@ function recomputeGlobalFinancials() {
         aggDed += dayDed;
         aggNet += dayNet;
 
-        // UI View: Separated into distinct rows for Daily Gross & OT Gross values
         uiTableRowsHtml += `
             <tr style="border-bottom: 1px dashed #334155;">
                 <td rowspan="2" style="vertical-align:middle; font-weight:bold; color:#f8fafc;">${dateKey}</td>
@@ -694,37 +707,37 @@ function recomputeGlobalFinancials() {
     const breakdownBody = document.getElementById('uiDailyBreakdownBody');
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
-    document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = aggUndertime;
-    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGrossOnly + aggOtGrossOnly)}`;
-    document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
-    document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
+    if (document.getElementById('totalLates')) document.getElementById('totalLates').innerText = aggLates;
+    if (document.getElementById('totalUndertime')) document.getElementById('totalUndertime').innerText = aggUndertime;
+    if (document.getElementById('totalGross')) document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGrossOnly + aggOtGrossOnly)}`;
+    if (document.getElementById('totalDed')) document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
+    if (document.getElementById('totalDailyNet')) document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
-    const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
-    const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
+    const doublePay = parseFloat(document.getElementById('inputDoublePay') ? document.getElementById('inputDoublePay').value : 0) || 0;
+    const reimbursements = parseFloat(document.getElementById('inputReimbursements') ? document.getElementById('inputReimbursements').value : 0) || 0;
     const totalIncentives = doublePay + reimbursements;
 
-    const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
-    const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
-    const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
-    const advances = parseFloat(document.getElementById('inputAdvances').value) || 0;
+    const sss = parseFloat(document.getElementById('inputSSS') ? document.getElementById('inputSSS').value : 0) || 0;
+    const phic = parseFloat(document.getElementById('inputPHIC') ? document.getElementById('inputPHIC').value : 0) || 0;
+    const hdmf = parseFloat(document.getElementById('inputHDMF') ? document.getElementById('inputHDMF').value : 0) || 0;
+    const advances = parseFloat(document.getElementById('inputAdvances') ? document.getElementById('inputAdvances').value : 0) || 0;
 
     const grossPay = totalBasicEarnings + totalOvertimePay + totalIncentives;
     const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
     const netPay = grossPay - totalDeductions;
 
-    document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
-    document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
-    document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
-    document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
+    if (document.getElementById('breakdownBasic')) document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
+    if (document.getElementById('breakdownOT')) document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
+    if (document.getElementById('breakdownIncentives')) document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
+    if (document.getElementById('breakdownGross')) document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
 
-    document.getElementById('breakdownSSS').innerText = `₱${formatCurrency(sss)}`;
-    document.getElementById('breakdownPHIC').innerText = `₱${formatCurrency(phic)}`;
-    document.getElementById('breakdownHDMF').innerText = `₱${formatCurrency(hdmf)}`;
-    document.getElementById('breakdownPenalties').innerText = `₱${formatCurrency(totalDeductionPenalties)}`;
-    document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
-    document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
-    document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
+    if (document.getElementById('breakdownSSS')) document.getElementById('breakdownSSS').innerText = `₱${formatCurrency(sss)}`;
+    if (document.getElementById('breakdownPHIC')) document.getElementById('breakdownPHIC').innerText = `₱${formatCurrency(phic)}`;
+    if (document.getElementById('breakdownHDMF')) document.getElementById('breakdownHDMF').innerText = `₱${formatCurrency(hdmf)}`;
+    if (document.getElementById('breakdownPenalties')) document.getElementById('breakdownPenalties').innerText = `₱${formatCurrency(totalDeductionPenalties)}`;
+    if (document.getElementById('breakdownAdvances')) document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
+    if (document.getElementById('breakdownTotalDed')) document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
+    if (document.getElementById('breakdownNet')) document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
 
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
@@ -734,16 +747,18 @@ function recomputeGlobalFinancials() {
 }
 
 async function commitTimelineTransactionToCloud(isAutoSave = false) {
-    const selectedPeriodKey = document.getElementById('periodSelector').value; 
+    const selector = document.getElementById('periodSelector');
+    if (!selector) return;
+    const selectedPeriodKey = selector.value; 
     try {
         const payload = {
             timelineBuffer: timelineBuffer,
-            inputSSS: document.getElementById('inputSSS').value,
-            inputPHIC: document.getElementById('inputPHIC').value,
-            inputHDMF: document.getElementById('inputHDMF').value,
-            inputAdvances: document.getElementById('inputAdvances').value,
-            inputDoublePay: document.getElementById('inputDoublePay').value,
-            inputReimbursements: document.getElementById('inputReimbursements').value,
+            inputSSS: document.getElementById('inputSSS') ? document.getElementById('inputSSS').value : "",
+            inputPHIC: document.getElementById('inputPHIC') ? document.getElementById('inputPHIC').value : "",
+            inputHDMF: document.getElementById('inputHDMF') ? document.getElementById('inputHDMF').value : "",
+            inputAdvances: document.getElementById('inputAdvances') ? document.getElementById('inputAdvances').value : "",
+            inputDoublePay: document.getElementById('inputDoublePay') ? document.getElementById('inputDoublePay').value : "",
+            inputReimbursements: document.getElementById('inputReimbursements') ? document.getElementById('inputReimbursements').value : "",
             updatedAt: Date.now()
         };
         await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
@@ -766,7 +781,7 @@ async function commitTimelineTransactionToCloud(isAutoSave = false) {
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
     if (!printContainer) return;
-    const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
+    const dateRangeLabel = document.getElementById('payableRangeDisplay') ? document.getElementById('payableRangeDisplay').value : "";
     const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
     const currentDailyRate = parseFloat(salarySettings.dailyRate) || 460;
 
@@ -793,6 +808,12 @@ function generateCommercialReceiptLayout(m) {
             </tr>
         `;
     });
+
+    const bBasicStr = document.getElementById('breakdownBasic') ? document.getElementById('breakdownBasic').innerText.replace('₱','') : "0.00";
+    const bOtStr = document.getElementById('breakdownOT') ? document.getElementById('breakdownOT').innerText.replace('₱','') : "0.00";
+    const bIncentiveStr = document.getElementById('breakdownIncentives') ? document.getElementById('breakdownIncentives').innerText.replace('₱','') : "0.00";
+    const bGrossStr = document.getElementById('breakdownGross') ? document.getElementById('breakdownGross').innerText.replace('₱','') : "0.00";
+    const bTotalDedStr = document.getElementById('breakdownTotalDed') ? document.getElementById('breakdownTotalDed').innerText.replace('₱','') : "0.00";
 
     printContainer.innerHTML = `
         <div class="print-sheet" style="font-size:9px; width:100%; max-width:1000px; margin:0 auto; padding:10px; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
@@ -847,16 +868,16 @@ function generateCommercialReceiptLayout(m) {
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic Baseline Run</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
-                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
-                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run Total</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
+                        <tr><td style="padding:2px 0;">Basic Baseline Run</td><td style="text-align:right;">₱${bBasicStr}</td></tr>
+                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${bOtStr}</td></tr>
+                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${bIncentiveStr}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run Total</td><td style="text-align:right;"><b>₱${bGrossStr}</b></td></tr>
                         <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
                         <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
                         <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
                         <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${formatCurrency(m.totalDeductionPenalties)}</td></tr>
                         <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Cash Advances Pay</td><td style="text-align:right;">₱${formatCurrency(m.advances)}</td></tr>
-                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>₱${formatCurrency(m.totalDeductions)}</b></td></tr>
+                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>₱${bTotalDedStr}</b></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -895,10 +916,9 @@ function triggerCSVExportPipeline() {
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
     csvRows.push([`\"DAILY RATE\"`,`\"PHP ${formatCurrency(dailyRateValue)}\"`]);
-    csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
+    csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay') ? document.getElementById('payableRangeDisplay').value : ''}\"`]);
     csvRows.push([]);
     
-    // Explicit columns separating Daily Gross and OT Gross vectors natively inside metrics headers
     csvRows.push([
         `\"DATE\"`, `\"DAY\"`, `\"TIME IN 1\"`, `\"TIME OUT 1\"`, `\"TIME IN 2\"`, `\"TIME OUT 2\"`, `\"OT IN\"`, `\"OT OUT\"`, `\"LATES (MINS)\"`, `\"UNDERTIME (MINS)\"`, `\"DAILY GROSS\"`, `\"OT GROSS\"`, `\"DEDUCTION DAY CUT\"`, `\"DAILY NET\"`
     ]);
@@ -970,23 +990,34 @@ function triggerCSVExportPipeline() {
         `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, formatCurrency(sumDailyGross), formatCurrency(sumOtGross), formatCurrency(sumDed), formatCurrency(sumNet)
     ]);
     
+    const bBasic = document.getElementById('breakdownBasic') ? document.getElementById('breakdownBasic').innerText.replace('₱','') : "0.00";
+    const bOT = document.getElementById('breakdownOT') ? document.getElementById('breakdownOT').innerText.replace('₱','') : "0.00";
+    const bGross = document.getElementById('breakdownGross') ? document.getElementById('breakdownGross').innerText.replace('₱','') : "0.00";
+    const bSSS = document.getElementById('breakdownSSS') ? document.getElementById('breakdownSSS').innerText.replace('₱','') : "0.00";
+    const bPHIC = document.getElementById('breakdownPHIC') ? document.getElementById('breakdownPHIC').innerText.replace('₱','') : "0.00";
+    const bHDMF = document.getElementById('breakdownHDMF') ? document.getElementById('breakdownHDMF').innerText.replace('₱','') : "0.00";
+    const bPenalties = document.getElementById('breakdownPenalties') ? document.getElementById('breakdownPenalties').innerText.replace('₱','') : "0.00";
+    const bAdvances = document.getElementById('breakdownAdvances') ? document.getElementById('breakdownAdvances').innerText.replace('₱','') : "0.00";
+    const bTotalDed = document.getElementById('breakdownTotalDed') ? document.getElementById('breakdownTotalDed').innerText.replace('₱','') : "0.00";
+    const bNet = document.getElementById('breakdownNet') ? document.getElementById('breakdownNet').innerText.replace('₱','') : "0.00";
+
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
-    csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
-    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
-    csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${document.getElementById('breakdownGross').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"BASIC PAY RUN\"`, `\"${bBasic}\"`]);
+    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${bOT}\"`]);
+    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay') ? document.getElementById('inputDoublePay').value : 0))}\"`]);
+    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements') ? document.getElementById('inputReimbursements').value : 0))}\"`]);
+    csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${bGross}\"`]);
     csvRows.push([]);
     csvRows.push([`\"DEDUCTION ACCOUNT ITEMS\"`]);
-    csvRows.push([`\"SSS CONTRIBUTION\"`, `\"${document.getElementById('breakdownSSS').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${document.getElementById('breakdownPHIC').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${document.getElementById('breakdownHDMF').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${document.getElementById('breakdownPenalties').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"CASH ADVANCES\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"SSS CONTRIBUTION\"`, `\"${bSSS}\"`]);
+    csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${bPHIC}\"`]);
+    csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${bHDMF}\"`]);
+    csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${bPenalties}\"`]);
+    csvRows.push([`\"CASH ADVANCES\"`, `\"${bAdvances}\"`]);
+    csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${bTotalDed}\"`]);
     csvRows.push([]);
-    csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${document.getElementById('breakdownNet').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${bNet}\"`]);
 
     const csvString = csvRows.map(e => e.join(",")).join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
@@ -1016,31 +1047,38 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
+    if (document.getElementById('periodSelector')) {
+        document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
+    }
     
     // Inputs linking directly to auto save tracking matrix
     const watchedInputs = ['inputDoublePay', 'inputReimbursements', 'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances'];
     watchedInputs.forEach(id => {
-        document.getElementById(id).addEventListener('input', () => {
-            recomputeGlobalFinancials();
-            markChangeAndQueueAutoSave();
+        const inputEl = document.getElementById(id);
+        if (inputEl) {
+            inputEl.addEventListener('input', () => {
+                recomputeGlobalFinancials();
+                markChangeAndQueueAutoSave();
+            });
+        }
+    });
+
+    if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').addEventListener('change', runRealtimeMetricsDeductionEngine);
+    if (document.getElementById('modalTimeOut1')) {
+        document.getElementById('modalTimeOut1').addEventListener('change', () => {
+            evaluateLunchBreakConstraints();
+            runRealtimeMetricsDeductionEngine();
         });
-    });
+    }
+    if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').addEventListener('change', runRealtimeMetricsDeductionEngine);
+    if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
+    if (document.getElementById('chkEnableOTWrapper')) document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
 
-    document.getElementById('modalTimeIn1').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    document.getElementById('modalTimeOut1').addEventListener('change', () => {
-        evaluateLunchBreakConstraints();
-        runRealtimeMetricsDeductionEngine();
-    });
-    document.getElementById('modalTimeIn2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
-
-    document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
-    document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
-    document.getElementById('btnExportCSV').addEventListener('click', triggerCSVExportPipeline);
+    if (document.getElementById('btnSaveToCloud')) document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
+    if (document.getElementById('btnPrintPreview')) document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
+    if (document.getElementById('btnExportCSV')) document.getElementById('btnExportCSV').addEventListener('click', triggerCSVExportPipeline);
     
-    document.getElementById('btnModalClose').addEventListener('click', closeTimeTransactionModal);
-    document.getElementById('btnModalApply').addEventListener('click', commitModalDayStateToLocalBuffer);
-    document.getElementById('btnModalClear').addEventListener('click', clearModalDayState);
+    if (document.getElementById('btnModalClose')) document.getElementById('btnModalClose').addEventListener('click', closeTimeTransactionModal);
+    if (document.getElementById('btnModalApply')) document.getElementById('btnModalApply').addEventListener('click', commitModalDayStateToLocalBuffer);
+    if (document.getElementById('btnModalClear')) document.getElementById('btnModalClear').addEventListener('click', clearModalDayState);
 });
