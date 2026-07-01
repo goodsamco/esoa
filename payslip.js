@@ -747,6 +747,167 @@ function clearModalDayState() {
 }
 
 // ==========================================================================
+// 5. TRANSACTIONS MODAL PROCESS ENGINE
+// ==========================================================================
+function launchTimeTransactionModal(dateKey, isPastDate = false) {
+    currentTargetDateString = dateKey;
+    document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
+    
+    document.getElementById('modalTimeIn1').value = "";
+    document.getElementById('modalTimeOut1').value = "";
+    document.getElementById('modalTimeIn2').value = "";
+    document.getElementById('modalTimeOut2').value = "";
+    document.getElementById('modalTimeInOT').value = "";
+    document.getElementById('modalTimeOutOT').value = "";
+    
+    document.getElementById('chkEnableOT').checked = false;
+    document.getElementById('otSubSectionDeck').style.display = "none";
+
+    if (timelineBuffer[dateKey]) {
+        const rec = timelineBuffer[dateKey];
+        document.getElementById('modalTimeIn1').value = rec.in1 || "";
+        document.getElementById('modalTimeOut1').value = rec.out1 || "";
+        document.getElementById('modalTimeIn2').value = rec.in2 || "";
+        document.getElementById('modalTimeOut2').value = rec.out2 || "";
+        if (rec.hasOT) {
+            document.getElementById('chkEnableOT').checked = true;
+            document.getElementById('otSubSectionDeck').style.display = "block";
+            document.getElementById('modalTimeInOT').value = rec.inOT || "";
+            document.getElementById('modalTimeOutOT').value = rec.outOT || "";
+        }
+    } else {
+        if (salarySettings.hasLunchBreak !== false) {
+            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            document.getElementById('modalTimeOut1').value = "12:00";
+            document.getElementById('modalTimeIn2').value = "13:00";
+            document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
+        } else {
+            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
+        }
+    }
+
+    const inputs = document.getElementById('modalBoxContainer').querySelectorAll('input, select');
+    if (isPastDate) {
+        inputs.forEach(el => el.setAttribute('disabled', 'true'));
+        document.getElementById('modalActionFooterDeck').style.display = "none";
+        document.getElementById('modalLockedWarningLabel').style.display = "block";
+    } else {
+        inputs.forEach(el => el.removeAttribute('disabled'));
+        document.getElementById('modalActionFooterDeck').style.display = "grid";
+        document.getElementById('modalLockedWarningLabel').style.display = "none";
+    }
+
+    runRealtimeMetricsDeductionEngine();
+    document.getElementById('timeConfigModalOverlay').classList.add('active');
+}
+
+function evaluateLunchBreakConstraints() {
+    const out1 = document.getElementById('modalTimeOut1').value;
+    if (out1) {
+        const out1Mins = timeStringToMinutes(out1);
+        if (out1Mins < timeStringToMinutes("12:59")) {
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
+        }
+    }
+}
+
+function closeTimeTransactionModal() {
+    document.getElementById('timeConfigModalOverlay').classList.remove('active');
+}
+
+function runRealtimeMetricsDeductionEngine() {
+    const schedIn = salarySettings.timeIn || "08:00";
+    const schedOut = salarySettings.timeOut || "17:00";
+    const in1 = document.getElementById('modalTimeIn1').value;
+    const out1 = document.getElementById('modalTimeOut1').value;
+    const out2 = document.getElementById('modalTimeOut2').value;
+
+    let lateMinutes = 0;
+    let undertimeMinutes = 0;
+
+    if (in1) {
+        const schedInMins = timeStringToMinutes(schedIn);
+        const actualInMins = timeStringToMinutes(in1);
+        if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
+    }
+
+    const effectiveFinalOut = out2 ? out2 : out1;
+    if (effectiveFinalOut) {
+        const schedOutMins = timeStringToMinutes(schedOut);
+        const actualOutMins = timeStringToMinutes(effectiveFinalOut);
+        if (actualOutMins < schedOutMins) {
+            undertimeMinutes += (schedOutMins - actualOutMins);
+            if (salarySettings.hasLunchBreak !== false) {
+                const lunchStartMins = timeStringToMinutes("12:00");
+                const lunchEndMins = timeStringToMinutes("13:00");
+                if (actualOutMins <= lunchStartMins) {
+                    undertimeMinutes -= 60;
+                } else if (actualOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
+                    undertimeMinutes -= (lunchEndMins - actualOutMins);
+                }
+            }
+        }
+    }
+
+    document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
+    document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
+}
+
+function toggleOvertimeSubSection() {
+    if(document.getElementById('chkEnableOT').disabled) return;
+    const checked = document.getElementById('chkEnableOT').checked;
+    document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
+}
+
+function commitModalDayStateToLocalBuffer() {
+    const in1 = document.getElementById('modalTimeIn1').value;
+    const out1 = document.getElementById('modalTimeOut1').value;
+    const hasOT = document.getElementById('chkEnableOT').checked;
+    const inOT = document.getElementById('modalTimeInOT').value;
+    const outOT = document.getElementById('modalTimeOutOT').value;
+
+    // Check if daytime fields are empty or cleared
+    if (!in1 || !out1) {
+        // If daytime is cleared, we ONLY allow saving if overtime is explicitly checked and filled
+        if (!hasOT || !inOT || !outOT) {
+            showToast("CORE TIMELINE IN & OUT VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
+            return;
+        }
+    }
+
+    // Commits empty strings ("") for in1/out1/in2/out2 to the record if they were cleared by the user
+    timelineBuffer[currentTargetDateString] = {
+        filled: true,
+        in1: in1 || "",
+        out1: out1 || "",
+        in2: document.getElementById('modalTimeIn2').value || "",
+        out2: document.getElementById('modalTimeOut2').value || "",
+        hasOT: hasOT,
+        inOT: hasOT ? inOT : "",
+        outOT: hasOT ? outOT : ""
+    };
+
+    closeTimeTransactionModal();
+    renderActivePeriodCalendarGrid();
+    recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
+}
+
+function clearModalDayState() {
+    if (timelineBuffer[currentTargetDateString]) {
+        delete timelineBuffer[currentTargetDateString];
+    }
+    closeTimeTransactionModal();
+    renderActivePeriodCalendarGrid();
+    recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
+}
+
+// ==========================================================================
 // 6. FINANCIAL RECOMPUTATION STREAM MODULE
 // ==========================================================================
 function recomputeGlobalFinancials() {
