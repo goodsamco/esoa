@@ -143,11 +143,16 @@ function markChangeAndQueueAutoSave() {
 }
 
 // ==========================================================================
-// 3. CORE INITIALIZATION ROUTINE ENGINE
+// 3. CORE INITIALIZATION ROUTINE ENGINE & OVERRIDE LIFECYCLE
 // ==========================================================================
+let historicalOverrideActive = false;
+let historicalClickCounter = 0;
+let historicalAutoLockTimer = null;
+
 async function bootEngineCore() {
     showGlobalEngineLoader();
     injectExitGuardModal();
+    setupNetPayOverrideListener(); // Attach the hidden click listener
     try {
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
@@ -240,6 +245,10 @@ async function fetchAndProcessSelectedPeriodPayload() {
         document.getElementById('exitGuardModalOverlay').style.display = 'flex';
         return;
     }
+    
+    // Clear temporary historical session state on switching periods
+    resetHistoricalOverrideState();
+    
     showGlobalEngineLoader();
     const selectedPeriodKey = document.getElementById('periodSelector').value; 
     const pieces = selectedPeriodKey.split('-');
@@ -314,7 +323,6 @@ function evaluateDynamicLockAndBlurConstraints() {
     
     const periodDate = new Date(year, monthIdx, targetDay);
     
-    // Reset temporal parameters for precise absolute calendar date checks
     today.setHours(0,0,0,0);
     periodDate.setHours(0,0,0,0);
 
@@ -322,20 +330,12 @@ function evaluateDynamicLockAndBlurConstraints() {
     let revealNetPay = false;
 
     if (isPastPayrollPeriod) {
-        // Historical logs are unlocked visually: values reveal fully
         revealNetPay = true;
     } else {
-        // Upcoming Period: Apply custom localized rules based on target endpoint type
         if (targetDay === 15) {
-            // Mid-month cycle: reveals only from the 13th to the 16th
-            if (currentDay >= 13 && currentDay <= 16) {
-                revealNetPay = true;
-            }
+            if (currentDay >= 13 && currentDay <= 16) revealNetPay = true;
         } else {
-            // End-month cycle: reveals only from 28th to 1st of the next month
-            if (currentDay >= 28 || currentDay === 1) {
-                revealNetPay = true;
-            }
+            if (currentDay >= 28 || currentDay === 1) revealNetPay = true;
         }
     }
     
@@ -356,8 +356,6 @@ function evaluateDynamicLockAndBlurConstraints() {
         if (badge) badge.style.display = "none";
     }
 
-    // STRICT PERMANENT RECORD SECURITY LAYER:
-    // Lock ALL auxiliary inputs, global incentives, deductions fields, and cloud action buttons if it is a past record
     const targetElementsToSecure = [
         'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 
         'inputDoublePay', 'inputReimbursements', 'btnSaveToCloud'
@@ -366,7 +364,8 @@ function evaluateDynamicLockAndBlurConstraints() {
     targetElementsToSecure.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            if (isPastPayrollPeriod) {
+            // Lock fields ONLY if it is a past period AND the manual override has not been activated
+            if (isPastPayrollPeriod && !historicalOverrideActive) {
                 el.setAttribute('disabled', 'true');
                 el.style.cursor = "not-allowed";
                 el.style.opacity = "0.6";
@@ -380,6 +379,12 @@ function evaluateDynamicLockAndBlurConstraints() {
 }
 
 function verifyActionAllowedDateConstraints() {
+    // If the administrator broke the lock via clicks, bypass validation checking entirely
+    if (historicalOverrideActive) {
+        renewHistoricalInactivityTimer();
+        return true;
+    }
+
     const today = new Date();
     const selector = document.getElementById('periodSelector');
     if (!selector) return true;
@@ -391,13 +396,92 @@ function verifyActionAllowedDateConstraints() {
     today.setHours(0,0,0,0);
     periodDate.setHours(0,0,0,0);
 
-    // Completely deny any background write/modification requests if checking a historical card cycle
     if (periodDate.getTime() < today.getTime()) {
         return false;
     }
 
     return true;
 }
+
+// ==========================================================================
+// BACKDOOR ADMINISTRATOR UNLOCK SYSTEM & INACTIVITY SAFETY WATCHERS
+// ==========================================================================
+function setupNetPayOverrideListener() {
+    const wrapper = document.getElementById('netPayWrapperDeck');
+    if (!wrapper) return;
+
+    // Remove existing event listener to avoid stacking execution binds
+    wrapper.removeAttribute('onclick'); 
+    wrapper.addEventListener('click', () => {
+        const today = new Date();
+        const selector = document.getElementById('periodSelector');
+        if (!selector) return;
+
+        const selectedPeriodKey = selector.value;
+        const pieces = selectedPeriodKey.split('-');
+        const periodDate = new Date(parseInt(pieces[0]), parseInt(pieces[1]) - 1, parseInt(pieces[2]));
+        
+        today.setHours(0,0,0,0);
+        periodDate.setHours(0,0,0,0);
+
+        // Click sequence only registers if the current active log selection is historical
+        if (periodDate.getTime() < today.getTime()) {
+            historicalClickCounter++;
+            if (historicalClickCounter >= 10 && !historicalOverrideActive) {
+                historicalOverrideActive = true;
+                alert("ADMIN OVERRIDE: Historical log fields unlocked. Changes permitted for 2 minutes.");
+                evaluateDynamicLockAndBlurConstraints();
+                renderActivePeriodCalendarGrid(); // Updates edit capability for days
+                renewHistoricalInactivityTimer();
+                setupInactivitySignalTracers();
+            }
+        }
+    });
+}
+
+function renewHistoricalInactivityTimer() {
+    if (!historicalOverrideActive) return;
+    clearTimeout(historicalAutoLockTimer);
+    historicalAutoLockTimer = setTimeout(() => {
+        alert("Session expired. Historical fields have re-locked automatically.");
+        resetHistoricalOverrideState();
+    }, 120000); // 2 Minutes (120,000 ms)
+}
+
+function resetHistoricalOverrideState() {
+    historicalOverrideActive = false;
+    historicalClickCounter = 0;
+    clearTimeout(historicalAutoLockTimer);
+    teardownInactivitySignalTracers();
+    evaluateDynamicLockAndBlurConstraints();
+    if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarDaysGridDeck')) {
+        renderActivePeriodCalendarGrid();
+    }
+}
+
+function setupInactivitySignalTracers() {
+    const targets = ['inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 'inputDoublePay', 'inputReimbursements'];
+    targets.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', renewHistoricalInactivityTimer);
+        }
+    });
+}
+
+function teardownInactivitySignalTracers() {
+    const targets = ['inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 'inputDoublePay', 'inputReimbursements'];
+    targets.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.removeEventListener('input', renewHistoricalInactivityTimer);
+        }
+    });
+}
+
+// Ensure the application automatically triggers cleanup when leaving the window/view state entirely
+window.addEventListener('beforeunload', resetHistoricalOverrideState);
+
 
 // ==========================================================================
 // 4. MATRIX UI CALENDAR RENDER ENGINE
