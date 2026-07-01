@@ -149,11 +149,33 @@ let historicalOverrideActive = false;
 let historicalClickCounter = 0;
 let historicalAutoLockTimer = null;
 
+// Clean, global-safe UI notification engine
+function showSystemToastNotification(message, duration = 4000) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
+    toast.innerText = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.style.opacity = "1", 50);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
 async function bootEngineCore() {
     showGlobalEngineLoader();
     injectExitGuardModal();
-    setupNetPayOverrideListener(); // Attach the hidden click listener
+    setupNetPayOverrideListener(); 
     try {
+        // Safe document resolution checking global db and userId properties
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
@@ -247,8 +269,8 @@ async function fetchAndProcessSelectedPeriodPayload() {
     }
     
     resetHistoricalOverrideState();
-    
     showGlobalEngineLoader();
+    
     const selectedPeriodKey = document.getElementById('periodSelector').value; 
     const pieces = selectedPeriodKey.split('-');
     const year = parseInt(pieces[0]);
@@ -400,29 +422,6 @@ function verifyActionAllowedDateConstraints() {
     return true;
 }
 
-// ==========================================================================
-// BACKDOOR ADMINISTRATOR UNLOCK SYSTEM & INACTIVITY SAFETY WATCHERS
-// ==========================================================================
-function showToast(message, duration = 4000) {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
-    toast.innerText = message;
-    container.appendChild(toast);
-    
-    setTimeout(() => toast.style.opacity = "1", 50);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-}
-
 function setupNetPayOverrideListener() {
     const wrapper = document.getElementById('netPayWrapperDeck');
     if (!wrapper) return;
@@ -444,9 +443,9 @@ function setupNetPayOverrideListener() {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                showToast("🔒 ADMIN OVERRIDE: Historical values & active period dates unlocked for 2 minutes.");
+                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical values & active period dates unlocked for 2 minutes.");
                 evaluateDynamicLockAndBlurConstraints();
-                renderActivePeriodCalendarGrid(); // Re-render unlocks calendar nodes dynamically
+                renderActivePeriodCalendarGrid(); 
                 renewHistoricalInactivityTimer();
                 setupInactivitySignalTracers();
             }
@@ -458,7 +457,7 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        showToast("⏳ Session expired. Historical fields and calendar logs have re-locked.");
+        showSystemToastNotification("⏳ Session expired. Historical fields and calendar logs have re-locked.");
         resetHistoricalOverrideState();
     }, 120000); 
 }
