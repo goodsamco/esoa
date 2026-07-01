@@ -146,9 +146,8 @@ function markChangeAndQueueAutoSave() {
 // 3. CORE INITIALIZATION ROUTINE ENGINE
 // ==========================================================================
 async function bootEngineCore() {
-    showGlobalEngineLoader(); // Note: updated to lowercase 's' to match your catch/finally blocks
+    showGlobalEngineLoader();
     injectExitGuardModal();
-    
     try {
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
@@ -157,28 +156,7 @@ async function bootEngineCore() {
             const accountData = accountSnap.data();
             userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
-            
-            // --- FIXED & OPTIMIZED BACKGROUND HANDLING ---
-if (accountData.bgValue) {
-    const bg = accountData.bgValue.trim();
-
-    const isImage =
-        bg.startsWith("http://") ||
-        bg.startsWith("https://") ||
-        bg.startsWith("data:image") ||
-        bg.startsWith("/") ||
-        bg.startsWith("./") ||
-        bg.startsWith("../") ||
-        /\.(jpg|jpeg|png|gif|webp|svg|avif)$/i.test(bg);
-
-    if (isImage) {
-        document.documentElement.style.setProperty("--bg", `url('${bg}')`);
-    } else {
-        document.documentElement.style.setProperty("--bg", bg);
-    }
-}
-            // ----------------------------------------------
-
+            if (accountData.bgValue) document.documentElement.style.setProperty('--bg', accountData.bgValue);
             if (accountData.btnValue) {
                 document.documentElement.style.setProperty('--primary', accountData.btnValue);
                 const modalBox = document.getElementById('modalBoxContainer');
