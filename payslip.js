@@ -837,8 +837,17 @@ function generateCommercialReceiptLayout(m) {
     const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
     const currentDailyRate = parseFloat(salarySettings.dailyRate) || 460;
 
+    // Check if values should be masked based on the active UI state attribute
+    const wrapper = document.getElementById('netPayWrapperDeck');
+    const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
+
     let dailyRowsHtml = "";
     m.structuralDailyArrayLogs.forEach(row => {
+        const displayDailyGross = isBlurred ? "HIDDEN" : `₱${formatCurrency(row.dailyGross)}`;
+        const displayOtGross = isBlurred ? "HIDDEN" : `₱${formatCurrency(row.otGross)}`;
+        const displayDeductions = isBlurred ? "HIDDEN" : `₱${formatCurrency(row.deductions)}`;
+        const displayNet = isBlurred ? "HIDDEN" : `₱${formatCurrency(row.net)}`;
+
         dailyRowsHtml += `
             <tr style="border-bottom: 1px solid #ddd;">
                 <td style="padding: 4px; font-weight:700;">${row.date}</td>
@@ -851,13 +860,30 @@ function generateCommercialReceiptLayout(m) {
                 <td style="padding: 4px;">${row.outOT}</td>
                 <td style="padding: 4px;">${row.lates}</td>
                 <td style="padding: 4px;">${row.undertime}</td>
-                <td style="padding: 4px; text-align: right;">₱${formatCurrency(row.dailyGross)}</td>
-                <td style="padding: 4px; text-align: right; color:#2563eb;">₱${formatCurrency(row.otGross)}</td>
-                <td style="padding: 4px; text-align: right; color:#c00;">₱${formatCurrency(row.deductions)}</td>
-                <td style="padding: 4px; text-align: right; color:#00f; font-weight: bold;">₱${formatCurrency(row.net)}</td>
+                <td style="padding: 4px; text-align: right;">${displayDailyGross}</td>
+                <td style="padding: 4px; text-align: right; color:#2563eb;">${displayOtGross}</td>
+                <td style="padding: 4px; text-align: right; color:#c00;">${displayDeductions}</td>
+                <td style="padding: 4px; text-align: right; color:#00f; font-weight: bold;">${displayNet}</td>
             </tr>
         `;
     });
+
+    const displayAggDailyGross = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.aggDailyGross)}`;
+    const displayAggOtGross = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.aggOtGross)}`;
+    const displayAggDed = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.aggDed)}`;
+    const displayAggNet = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.aggNet)}`;
+
+    const displayTotalBasic = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.totalBasicEarnings)}`;
+    const displayTotalOTPay = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.totalOvertimePay)}`;
+    const displayTotalIncentives = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.totalIncentives)}`;
+    const displayGrossPay = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.grossPay)}`;
+    const displaySSS = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.sss)}`;
+    const displayPHIC = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.phic)}`;
+    const displayHDMF = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.hdmf)}`;
+    const displayPenalties = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.totalDeductionPenalties)}`;
+    const displayAdvances = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.advances)}`;
+    const displayTotalDeductions = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.totalDeductions)}`;
+    const displayNetPay = isBlurred ? "HIDDEN" : `₱${formatCurrency(m.netPay)}`;
 
     printContainer.innerHTML = `
         <div class="print-sheet" style="font-size:9px; width:100%; max-width:1000px; margin:0 auto; padding:10px; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
@@ -904,31 +930,31 @@ function generateCommercialReceiptLayout(m) {
                             <td colspan="8" style="padding:4px;">TOTAL:</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
-                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggDailyGross)}</td>
-                            <td style="padding:4px; text-align:right; color:#2563eb;">₱${formatCurrency(m.aggOtGross)}</td>
-                            <td style="padding:4px; text-align:right; color:#c00;">₱${formatCurrency(m.aggDed)}</td>
-                            <td style="padding:4px; text-align:right; color:#00f;">₱${formatCurrency(m.aggNet)}</td>
+                            <td style="padding:4px; text-align:right;">${displayAggDailyGross}</td>
+                            <td style="padding:4px; text-align:right; color:#2563eb;">${displayAggOtGross}</td>
+                            <td style="padding:4px; text-align:right; color:#c00;">${displayAggDed}</td>
+                            <td style="padding:4px; text-align:right; color:#00f;">${displayAggNet}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
-                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
-                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
-                        <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
-                        <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
-                        <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
-                        <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${formatCurrency(m.totalDeductionPenalties)}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Cash Advances Pay</td><td style="text-align:right;">₱${formatCurrency(m.advances)}</td></tr>
-                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>₱${formatCurrency(m.totalDeductions)}</b></td></tr>
+                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">${displayTotalBasic}</td></tr>
+                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">${displayTotalOTPay}</td></tr>
+                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">${displayTotalIncentives}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>${displayGrossPay}</b></td></tr>
+                        <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">${displaySSS}</td></tr>
+                        <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">${displayPHIC}</td></tr>
+                        <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">${displayHDMF}</td></tr>
+                        <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">${displayPenalties}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Cash Advances Pay</td><td style="text-align:right;">${displayAdvances}</td></tr>
+                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>${displayTotalDeductions}</b></td></tr>
                     </tbody>
                 </table>
             </div>
             <div style="margin-top:15px; border:2px solid #000; padding:10px; text-align:center; background:#eee;">
-                <span style="font-weight:900; font-size:14px;">NET PAY: ₱${formatCurrency(m.netPay)}</span>
+                <span style="font-weight:900; font-size:14px;">NET PAY: ${displayNetPay}</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:10px;">
                 <div style="text-align:center;">________________________<br>Payroll Administrator</div>
@@ -940,20 +966,17 @@ function generateCommercialReceiptLayout(m) {
 }
 
 function triggerPrintPreviewPipeline() {
-    if(!verifyActionAllowedDateConstraints()){
-        showToast("ACCESS DENIED: PRINT/PDF GENERATION PIPELINE RESTRICTED OUTSIDE CYCLE CLOSURE WINDOWS (DATES 13-16 OR 28-2).");
-        return;
-    }
+    // Restrictions completely removed: Print capability is enabled at all times
     window.print();
 }
 
 function triggerCSVExportPipeline() {
-    if(!verifyActionAllowedDateConstraints()){
-        showToast("ACCESS DENIED: CSV EXPORT STREAM TERMINATED. SYSTEM RESTRICTED OUTSIDE ALLOTTED PAYROLL DATES (DATES 13-16 OR 28-2).");
-        return;
-    }
+    // Restrictions completely removed: CSV capability is enabled at all times
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
     
+    const wrapper = document.getElementById('netPayWrapperDeck');
+    const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
+
     let csvRows = [];
     csvRows.push([`\"PAYSLIP ENGINE AUDIT REPORT EXPORT\"`]);
     csvRows.push([`\"NAME\"`,`\"${userProfile.customName || ""}\"`]);
@@ -1024,35 +1047,45 @@ function triggerCSVExportPipeline() {
             sumDed += dayDed;
             sumNet += dayNet;
 
+            const csvDailyGrossValue = isBlurred ? "HIDDEN" : formatCurrency(dayDailyGross);
+            const csvOtGrossValue = isBlurred ? "HIDDEN" : formatCurrency(dayOtGross);
+            const csvDedValue = isBlurred ? "HIDDEN" : formatCurrency(dayDed);
+            const csvNetValue = isBlurred ? "HIDDEN" : formatCurrency(dayNet);
+
             csvRows.push([
-                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.in2 || '-'}\"`, `\"${rec.out2 || '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, formatCurrency(dayDailyGross), formatCurrency(dayOtGross), formatCurrency(dayDed), formatCurrency(dayNet)
+                `\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"${rec.in1}\"`, `\"${rec.out1}\"`, `\"${rec.in2 || '-'}\"`, `\"${rec.out2 || '-'}\"`, `\"${rec.hasOT ? rec.inOT : '-'}\"`, `\"${rec.hasOT ? rec.outOT : '-'}\"`, lateMins, utMins, csvDailyGrossValue, csvOtGrossValue, csvDedValue, csvNetValue
             ]);
         } else {
             csvRows.push([`\"${dateKey}\"`, `\"${dayOfWeekStr}\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, `\"-\"`, 0, 0, `0.00`, `0.00`, `0.00`, `0.00`]);
         }
     });
 
+    const csvTotalDailyGross = isBlurred ? "HIDDEN" : formatCurrency(sumDailyGross);
+    const csvTotalOtGross = isBlurred ? "HIDDEN" : formatCurrency(sumOtGross);
+    const csvTotalDed = isBlurred ? "HIDDEN" : formatCurrency(sumDed);
+    const csvTotalNet = isBlurred ? "HIDDEN" : formatCurrency(sumNet);
+
     csvRows.push([
-        `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, formatCurrency(sumDailyGross), formatCurrency(sumOtGross), formatCurrency(sumDed), formatCurrency(sumNet)
+        `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, csvTotalDailyGross, csvTotalOtGross, csvTotalDed, csvTotalNet
     ]);
     
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
-    csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
-    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
-    csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${document.getElementById('breakdownGross').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"BASIC PAY RUN\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${isBlurred ? "HIDDEN" : formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
+    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${isBlurred ? "HIDDEN" : formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
+    csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownGross').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
     csvRows.push([`\"DEDUCTION ACCOUNT ITEMS\"`]);
-    csvRows.push([`\"SSS CONTRIBUTION\"`, `\"${document.getElementById('breakdownSSS').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${document.getElementById('breakdownPHIC').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${document.getElementById('breakdownHDMF').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${document.getElementById('breakdownPenalties').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"CASH ADVANCES\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
-    csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"SSS CONTRIBUTION\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownSSS').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownPHIC').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownHDMF').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownPenalties').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"CASH ADVANCES\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownTotalDed').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
-    csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${document.getElementById('breakdownNet').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${isBlurred ? "HIDDEN" : document.getElementById('breakdownNet').innerText.replace('₱','')}\"`]);
 
     const csvString = csvRows.map(e => e.join(",")).join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
@@ -1063,7 +1096,6 @@ function triggerCSVExportPipeline() {
     link.click();
     document.body.removeChild(link);
 }
-
 // ==========================================================================
 // 8. MODERN DOM EVENT LISTENERS ATTACHMENTS
 // ==========================================================================
