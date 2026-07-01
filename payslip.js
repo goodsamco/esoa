@@ -692,8 +692,14 @@ function recomputeGlobalFinancials() {
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
     document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = !aggUndertime;
-    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGross + aggOtGross)}`;
+    document.getElementById('totalUndertime').innerText = aggUndertime; // Fixed the '!' typo
+    
+    // Added a safety check so it won't crash if totalGross doesn't exist in the HTML
+    const totalGrossEl = document.getElementById('totalGross');
+    if (totalGrossEl) {
+        totalGrossEl.innerText = `₱${formatCurrency(aggDailyGross + aggOtGross)}`;
+    }
+    
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
