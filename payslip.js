@@ -54,7 +54,7 @@ function timeStringToMinutes(timeStr) {
     return parseInt(p[0]) * 60 + parseInt(p[1]);
 }
 
-// Custom Top Toast System
+// Unified Custom Top Toast System
 function showToast(message, duration = 3000) {
     let container = document.getElementById('toastEngineContainer');
     if (!container) {
@@ -63,8 +63,12 @@ function showToast(message, duration = 3000) {
         container.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:100000; display:flex; flex-direction:column; gap:10px; pointer-events:none;";
         document.body.appendChild(container);
     }
+    
+    // Dynamically query user custom brand colors falling back to standard sky-blue configuration
+    const primaryAccentColor = document.documentElement.style.getPropertyValue('--primary').trim() || '#38bdf8';
+    
     const toast = document.createElement('div');
-    toast.style.cssText = "background:#1e293b; color:#38bdf8; padding:12px 24px; border-radius:8px; border:1px solid #38bdf8; font-family:monospace; font-size:12px; font-weight:bold; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(-20px); letter-spacing:1px;";
+    toast.style.cssText = `background:#1e293b; color:${primaryAccentColor}; padding:12px 24px; border-radius:8px; border:1px solid ${primaryAccentColor}; font-family:monospace; font-size:12px; font-weight:bold; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(-20px); letter-spacing:1px; text-align:center;`;
     toast.innerText = message.toUpperCase();
     container.appendChild(toast);
 
@@ -149,31 +153,12 @@ let historicalOverrideActive = false;
 let historicalClickCounter = 0;
 let historicalAutoLockTimer = null;
 
-function showSystemToastNotification(message, duration = 4000) {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
-    toast.innerText = message;
-    container.appendChild(toast);
-    
-    setTimeout(() => toast.style.opacity = "1", 50);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-}
-
 async function bootEngineCore() {
     showGlobalEngineLoader();
     injectExitGuardModal();
     setupNetPayOverrideListener(); 
     try {
+        // Safe document resolution checking global db and userId properties
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
@@ -362,14 +347,6 @@ function evaluateDynamicLockAndBlurConstraints() {
     const badge = document.getElementById('lockBadgeDisplay');
     const trackingTable = document.getElementById('uiDailyBreakdownTable');
     
-    // Comprehensive element matrix target covering all UI display fields, summaries, and sub-totals
-    const totalAmountElements = [
-        'totalGross', 'totalDed', 'totalDailyNet', 'totalDailyGrossOnly', 'totalOtGrossOnly',
-        'breakdownBasic', 'breakdownOT', 'breakdownIncentives', 'breakdownGross',
-        'breakdownSSS', 'breakdownPHIC', 'breakdownHDMF', 'breakdownPenalties', 
-        'breakdownAdvances', 'breakdownTotalDed', 'breakdownNet'
-    ];
-
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
@@ -380,10 +357,6 @@ function evaluateDynamicLockAndBlurConstraints() {
             trackingTable.classList.add('blurred-lock');
             trackingTable.setAttribute('data-blurred', 'true');
         }
-        totalAmountElements.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.classList.add('blurred-lock');
-        });
     } else {
         if (wrapper) {
             wrapper.classList.remove('blurred-lock');
@@ -394,10 +367,6 @@ function evaluateDynamicLockAndBlurConstraints() {
             trackingTable.classList.remove('blurred-lock');
             trackingTable.removeAttribute('data-blurred');
         }
-        totalAmountElements.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.classList.remove('blurred-lock');
-        });
     }
 
     const targetElementsToSecure = [
@@ -466,10 +435,9 @@ function setupNetPayOverrideListener() {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.");
+                showToast("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.", 4000);
                 evaluateDynamicLockAndBlurConstraints();
                 renderActivePeriodCalendarGrid(); 
-                recomputeGlobalFinancials(); // Refresh presentation layer
                 renewHistoricalInactivityTimer();
                 setupInactivitySignalTracers();
             }
@@ -481,7 +449,7 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        showSystemToastNotification("⏳ Session expired. Historical matrix logs and tracking charts re-locked.");
+        showToast("⏳ Session expired. Historical matrix logs and tracking charts re-locked.", 4000);
         resetHistoricalOverrideState();
     }, 120000); 
 }
@@ -492,7 +460,6 @@ function resetHistoricalOverrideState() {
     clearTimeout(historicalAutoLockTimer);
     teardownInactivitySignalTracers();
     evaluateDynamicLockAndBlurConstraints();
-    recomputeGlobalFinancials(); // Enforce blur state properties back down across UI fields
     if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarDaysGridDeck')) {
         renderActivePeriodCalendarGrid(); 
     }
@@ -603,16 +570,18 @@ function renderActivePeriodCalendarGrid() {
 
         cell.onclick = () => {
             if (isFutureDate) {
-                showSystemToastNotification("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
+                showToast("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
                 return;
             }
             if (isLockedPastDate) {
-                showSystemToastNotification("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
+                showToast("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
+            
             if (historicalOverrideActive) {
                 if (typeof renewHistoricalInactivityTimer === "function") renewHistoricalInactivityTimer();
             }
+            
             launchTimeTransactionModal(dateKey, false);
         };
         grid.appendChild(cell);
@@ -801,11 +770,6 @@ function recomputeGlobalFinancials() {
     let structuralDailyArrayLogs = [];
     let uiTableRowsHtml = "";
 
-    // Check configuration matrix status for absolute blur enforcement inside tracking lists
-    const wrapper = document.getElementById('netPayWrapperDeck');
-    const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
-    const amountBlurClassString = isBlurred ? "blurred-lock" : "";
-
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -883,7 +847,6 @@ function recomputeGlobalFinancials() {
         aggDed += dayDed;
         aggNet += dayNet;
 
-        // Injects amountBlurClassString into each individual currency breakdown cell row natively
         uiTableRowsHtml += `
             <tr>
                 <td>${dateKey}</td>
@@ -896,10 +859,10 @@ function recomputeGlobalFinancials() {
                 <td>${otOut}</td>
                 <td style="color: #94a3b8;">${dayLateMins}</td>
                 <td style="color: #94a3b8;">${dayUndertimeMins}</td>
-                <td class="${amountBlurClassString}" style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayDailyGross)}</td>
-                <td class="${amountBlurClassString}" style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">₱${formatCurrency(dayOtGross)}</td>
-                <td class="${amountBlurClassString}" style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
-                <td class="${amountBlurClassString}" style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
+                <td style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">${dayDailyGross > 0 ? '₱' : ''}${formatCurrency(dayDailyGross)}</td>
+                <td style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">${dayOtGross > 0 ? '₱' : ''}${formatCurrency(dayOtGross)}</td>
+                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">${dayDed > 0 ? '₱' : ''}${formatCurrency(dayDed)}</td>
+                <td style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
 
@@ -915,7 +878,7 @@ function recomputeGlobalFinancials() {
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
     document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = aggUndertime;
+    document.getElementById('totalUndertime').innerText = aggUndertime; 
     
     const totalGrossEl = document.getElementById('totalGross');
     if (totalGrossEl) {
@@ -955,21 +918,6 @@ function recomputeGlobalFinancials() {
     document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
     document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
     document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
-
-    // Re-verify class list arrays immediately on recalculations to prevent DOM race leaks
-    const totalAmountElements = [
-        'totalGross', 'totalDed', 'totalDailyNet', 'totalDailyGrossOnly', 'totalOtGrossOnly',
-        'breakdownBasic', 'breakdownOT', 'breakdownIncentives', 'breakdownGross',
-        'breakdownSSS', 'breakdownPHIC', 'breakdownHDMF', 'breakdownPenalties', 
-        'breakdownAdvances', 'breakdownTotalDed', 'breakdownNet'
-    ];
-    totalAmountElements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            if (isBlurred) el.classList.add('blurred-lock');
-            else el.classList.remove('blurred-lock');
-        }
-    });
 
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
