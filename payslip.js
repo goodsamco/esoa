@@ -1,167 +1,172 @@
-import { initializeApp } from \"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js\";
-import { getFirestore, doc, getDoc, setDoc } from \"https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js\";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==========================================================================
 // 1. FIREBASE ARCHITECTURE CONFIGURATION
 // ==========================================================================
 const firebaseConfig = {
-    apiKey: \"AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ\",
-    authDomain: \"svls-289ee.firebaseapp.com\",\n    databaseURL: \"https://svls-289ee-default-rtdb.firebaseio.com\",
-    projectId: \"svls-289ee\",
-    storageBucket: \"svls-289ee.firebasestorage.app\",
-    messagingSenderId: \"500705386198\",
-    appId: \"1:500705386198:web:96f189662bc2aa99cf7377\",
-    measurementId: \"G-5TNBMQ2HN5\"
+    apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+    authDomain: "svls-289ee.firebaseapp.com",
+    databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+    projectId: "svls-289ee",
+    storageBucket: "svls-289ee.firebasestorage.app",
+    messagingSenderId: "500705386198",
+    appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+    measurementId: "G-5TNBMQ2HN5"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const userId = localStorage.getItem(\"userId\");
+const userId = localStorage.getItem("userId");
 if (!userId) {
-    window.location.href = \"login.html\";
+    window.location.href = "login.html";
 }
 
 // ==========================================================================
-// 2. GLOBAL STATE MATRIX INITIALIZATION & OVERRIDE LIFE-MEMORIES
+// 2. GLOBAL STATE MATRIX INITIALIZATION
 // ==========================================================================
-let userProfile = { name: \"\", customName: \"\", email: \"\" };
-let salarySettings = {};
+let userProfile = {};
+let salarySettings = { 
+    dailyRate: 460, 
+    timeIn: "08:00", 
+    timeOut: "17:00", 
+    position: "Staff", 
+    department: "Operations", 
+    hasLunchBreak: true 
+};
+let timelineBuffer = {}; 
+let currentTargetDateString = ""; 
 let activeDatesArray = [];
-let timelineBuffer = {};
-let activeTargetDateKey = null;
-let autoSaveDebounceTracker = null;
-let hasUnsavedChanges = false;
-
-let historicalOverrideActive = false;
-let historicalClickCounter = 0;
-let historicalAutoLockTimer = null;
 const CURRENT_YEAR = 2026;
 
-// ==========================================================================
-// 2B. PIXEL-PERFECT UNIFIED TOAST ENGINE (SETTINGS.HTML PORT)
-// ==========================================================================
-function triggerToast(message, isWorking = false) {
-    let toast = document.getElementById('toastHub');
-    let txt = document.getElementById('toastText');
-    let dot = document.getElementById('toastDot');
+// Debounce & State Flags
+let autoSaveTimer = null;
+let hasUnsavedChanges = false;
 
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toastHub';
-        toast.className = 'toast-notification-hub';
-        
-        const inlineStyle = document.createElement('style');
-        inlineStyle.innerHTML = `
-            .toast-notification-hub {
-                position: fixed;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%) translateY(100px);
-                background: rgba(0, 0, 0, 0.85);
-                border: 1px solid var(--border-glass, rgba(255,255,255,0.12));
-                backdrop-filter: blur(15px);
-                -webkit-backdrop-filter: blur(15px);
-                padding: 14px 28px;
-                border-radius: 30px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                z-index: 10000;
-                opacity: 0;
-                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-                pointer-events: none;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            }
-            .toast-notification-hub.active {
-                transform: translateX(-50%) translateY(0);
-                opacity: 1;
-            }
-            .toast-indicator-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background-color: var(--primary, #22c55e);
-            }
-            .toast-body-text {
-                font-size: 0.72rem;
-                font-weight: 800;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: #f1f5f9;
-                font-family: 'Inter', sans-serif;
-            }
-            .blurred-lock {
-                filter: blur(5.5px) !important;
-                pointer-events: none !important;
-                user-select: none !important;
-            }
-        `;
-        document.head.appendChild(inlineStyle);
-
-        dot = document.createElement('div');
-        dot.id = 'toastDot';
-        dot.className = 'toast-indicator-dot';
-
-        txt = document.createElement('div');
-        txt.id = 'toastText';
-        txt.className = 'toast-body-text';
-
-        toast.appendChild(dot);
-        toast.appendChild(txt);
-        document.body.appendChild(toast);
-    }
-
-    txt.innerText = message;
-    dot.style.backgroundColor = isWorking ? "#ffaa00" : (document.documentElement.style.getPropertyValue('--primary') || "#22c55e");
-    
-    toast.classList.add('active');
-    
-    if (!isWorking) {
-        setTimeout(() => {
-            toast.classList.remove('active');
-        }, 2500);
-    }
+function formatCurrency(amount) {
+    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function hideToast() {
-    const toast = document.getElementById('toastHub');
-    if (toast) toast.classList.remove('active');
+function timeStringToMinutes(timeStr) {
+    if(!timeStr || timeStr === "-") return 0;
+    const p = timeStr.split(':');
+    return parseInt(p[0]) * 60 + parseInt(p[1]);
+}
+
+// Custom Top Toast System
+function showToast(message, duration = 3000) {
+    let container = document.getElementById('toastEngineContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastEngineContainer';
+        container.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:100000; display:flex; flex-direction:column; gap:10px; pointer-events:none;";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = "background:#1e293b; color:#38bdf8; padding:12px 24px; border-radius:8px; border:1px solid #38bdf8; font-family:monospace; font-size:12px; font-weight:bold; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(-20px); letter-spacing:1px;";
+    toast.innerText = message.toUpperCase();
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+    }, 50);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-20px)";
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// Loading Spinner Utilities
+function showGlobalEngineLoader() {
+    let loader = document.getElementById('engineGlobalLoader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'engineGlobalLoader';
+        loader.innerHTML = `
+            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:monospace;">
+                <div style="width:50px; height:50px; border:5px solid #333; border-top:5px solid #38bdf8; border-radius:50%; animation:spinEngine 1s linear infinite; margin-bottom:15px;"></div>
+                <div style="letter-spacing:2px; font-size:12px; font-weight:bold;">COMPILING PAYROLL MATRIX...</div>
+            </div>
+            <style>@keyframes spinEngine { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+        `;
+        document.body.appendChild(loader);
+    }
+    loader.style.display = 'flex';
+}
+
+function hideGlobalEngineLoader() {
+    const loader = document.getElementById('engineGlobalLoader');
+    if (loader) loader.style.display = 'none';
+}
+
+// Unsaved Changes Safety Modal UI
+function injectExitGuardModal() {
+    if(document.getElementById('exitGuardModalOverlay')) return;
+    const modal = document.createElement('div');
+    modal.id = 'exitGuardModalOverlay';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100001; display:none; align-items:center; justify-content:center; font-family:monospace;";
+    modal.innerHTML = `
+        <div style="background:#0f172a; border:2px solid #ef4444; padding:25px; width:90%; max-width:400px; border-radius:8px; color:#fff; text-align:center;">
+            <div style="color:#ef4444; font-size:14px; font-weight:bold; margin-bottom:15px; letter-spacing:1px;">UNSAVED CHANGES DETECTED</div>
+            <p style="font-size:11px; color:#94a3b8; margin-bottom:20px; line-height:1.5;">YOU HAVE UNCOMMITTED PAYROLL TRANSACTIONS. CHOOSE AN ACTION BEFORE LEAVING.</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button id="btnGuardSaveExit" style="background:#38bdf8; color:#000; border:none; padding:10px; font-weight:bold; cursor:pointer; font-family:monospace; font-size:11px; border-radius:4px;">SAVE & EXIT</button>
+                <button id="btnGuardDiscard" style="background:#334155; color:#fff; border:none; padding:10px; font-weight:bold; cursor:pointer; font-family:monospace; font-size:11px; border-radius:4px;">DISCARD</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('btnGuardSaveExit').onclick = async () => {
+        await commitTimelineTransactionToCloud(true);
+        hasUnsavedChanges = false;
+        modal.style.display = 'none';
+        showToast("DATA SECURED. EXIT PERMITTED.");
+    };
+    document.getElementById('btnGuardDiscard').onclick = () => {
+        hasUnsavedChanges = false;
+        modal.style.display = 'none';
+        showToast("CHANGES DISCARDED.");
+    };
+}
+
+function markChangeAndQueueAutoSave() {
+    hasUnsavedChanges = true;
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(async () => {
+        await commitTimelineTransactionToCloud(true);
+    }, 1000);
 }
 
 // ==========================================================================
 // 3. CORE INITIALIZATION ROUTINE ENGINE & OVERRIDE LIFECYCLE
 // ==========================================================================
-function formatCurrency(val) {
-    return parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+let historicalOverrideActive = false;
+let historicalClickCounter = 0;
+let historicalAutoLockTimer = null;
 
-function showGlobalEngineLoader() {
-    const loader = document.getElementById('globalEngineLoader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideGlobalEngineLoader() {
-    const loader = document.getElementById('globalEngineLoader');
-    if (loader) loader.style.display = 'none';
-}
-
-function injectExitGuardModal() {
-    if (document.getElementById('exitGuardModalOverlay')) return;
-    const modal = document.createElement('div');
-    modal.id = 'exitGuardModalOverlay';
-    modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:10001;";
-    modal.innerHTML = `
-        <div style=\"background:#1e293b;padding:24px;border-radius:16px;max-width:320px;text-align:center;border:1px solid rgba(255,255,255,0.1);\">
-            <h3 style=\"margin-top:0;font-size:1rem;font-weight:800;\">UNSAVED DATA CHANGED</h3>
-            <p style=\"font-size:0.8rem;color:#94a3b8;margin-bottom:20px;\">YOU HAVE MODIFIED LOGS WITHOUT COMMITING TO FIREBASE. DISCARD CHANGES?</p>
-            <div style=\"display:flex;gap:10px;justify-content:center;\">
-                <button onclick=\"hasUnsavedChanges=false;document.getElementById('exitGuardModalOverlay').style.display='none';fetchAndProcessSelectedPeriodPayload();\" style=\"background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.75rem;\">DISCARD</button>
-                <button onclick=\"document.getElementById('exitGuardModalOverlay').style.display='none';\" style=\"background:transparent;color:white;border:1px solid #475569;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.75rem;\">CANCEL</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
+function showSystemToastNotification(message, duration = 4000) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
+    toast.innerText = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.style.opacity = "1", 50);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
 }
 
 async function bootEngineCore() {
@@ -169,12 +174,12 @@ async function bootEngineCore() {
     injectExitGuardModal();
     setupNetPayOverrideListener(); 
     try {
-        const accountRef = doc(db, \"accounts\", userId);
+        const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
         if (accountSnap.exists()) {
             const accountData = accountSnap.data();
-            userProfile.name = accountData.username || localStorage.getItem(\"userName\") || userProfile.name;
+            userProfile.name = accountData.username || localStorage.getItem("userName") || userProfile.name;
             if (accountData.customName) userProfile.customName = accountData.customName.toUpperCase();
             if (accountData.bgValue) document.documentElement.style.setProperty('--bg', accountData.bgValue);
             if (accountData.btnValue) {
@@ -184,12 +189,12 @@ async function bootEngineCore() {
             }
         }
 
-        const settingsRef = doc(db, \"salary_settings\", userId);
+        const settingsRef = doc(db, "salary_settings", userId);
         const settingsSnap = await getDoc(settingsRef);
         if (settingsSnap.exists()) {
             salarySettings = settingsSnap.data();
             if (salarySettings.firstName && salarySettings.lastName) {
-                const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : \"\";
+                const mi = salarySettings.middleInitial ? ` ${salarySettings.middleInitial}.` : "";
                 userProfile.customName = `${salarySettings.firstName}${mi} ${salarySettings.lastName}`.toUpperCase();
             }
             if (salarySettings.emailAddress) userProfile.email = salarySettings.emailAddress;
@@ -200,18 +205,18 @@ async function bootEngineCore() {
         await fetchAndProcessSelectedPeriodPayload();
 
     } catch (err) {
-        console.error(\"Setup initialization error: \", err);
+        console.error("Setup initialization error: ", err);
     } finally {
         hideGlobalEngineLoader();
     }
 }
 
 function updateUIProfileElements() {
-    document.getElementById('profSettingsNameDisplay').innerText = (userProfile.customName || \"\").toUpperCase();
-    document.getElementById('profNameDisplay').innerText = (userProfile.name || \"\").toUpperCase();
-    document.getElementById('profEmailDisplay').innerText = (userProfile.email || \"\").toUpperCase();
-    document.getElementById('profPosDisplay').innerText = (salarySettings.position || \"Staff\").toUpperCase();
-    document.getElementById('profDeptDisplay').innerText = (salarySettings.department || \"Operations\").toUpperCase();
+    document.getElementById('profSettingsNameDisplay').innerText = (userProfile.customName || "").toUpperCase();
+    document.getElementById('profNameDisplay').innerText = (userProfile.name || "").toUpperCase();
+    document.getElementById('profEmailDisplay').innerText = (userProfile.email || "").toUpperCase();
+    document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
+    document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
     
     let rateElement = document.getElementById('profDailyRateDisplay');
     const formattedRate = `₱${formatCurrency(parseFloat(salarySettings.dailyRate) || 460)}`;
@@ -221,8 +226,8 @@ function updateUIProfileElements() {
         const badgeDeck = document.querySelector('.profile-badge-deck');
         if (badgeDeck) {
             const newMetaRow = document.createElement('div');
-            newMetaRow.className = \"profile-meta-row\";
-            newMetaRow.innerHTML = `<span class=\"lbl\">DAILY RATE</span><span class=\"val\" id=\"profDailyRateDisplay\">${formattedRate}</span>`;
+            newMetaRow.className = "profile-meta-row";
+            newMetaRow.innerHTML = `<span class="lbl">DAILY RATE</span><span class="val" id="profDailyRateDisplay">${formattedRate}</span>`;
             badgeDeck.appendChild(newMetaRow);
         }
     }
@@ -230,9 +235,9 @@ function updateUIProfileElements() {
 
 function buildDropdownTargetIntervals() {
     const selector = document.getElementById('periodSelector');
-    const months = [\"JANUARY\", \"FEBRUARY\", \"MARCH\", \"APRIL\", \"MAY\", \"JUNE\", \"JULY\", \"AUGUST\", \"SEPTEMBER\", \"OCTOBER\", \"NOVEMBER\", \"DECEMBER\"];
+    const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
     
-    selector.innerHTML = \"\";
+    selector.innerHTML = "";
     months.forEach((m, idx) => {
         let opt15 = document.createElement('option');
         opt15.value = `${CURRENT_YEAR}-${String(idx+1).padStart(2,'0')}-15`;
@@ -292,27 +297,27 @@ async function fetchAndProcessSelectedPeriodPayload() {
     const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
 
-    document.getElementById('inputSSS').value = \"\";
-    document.getElementById('inputPHIC').value = \"\";
-    document.getElementById('inputHDMF').value = \"\";
-    document.getElementById('inputAdvances').value = \"\";
-    document.getElementById('inputDoublePay').value = \"\";
-    document.getElementById('inputReimbursements').value = \"\";
+    document.getElementById('inputSSS').value = "";
+    document.getElementById('inputPHIC').value = "";
+    document.getElementById('inputHDMF').value = "";
+    document.getElementById('inputAdvances').value = "";
+    document.getElementById('inputDoublePay').value = "";
+    document.getElementById('inputReimbursements').value = "";
 
     try {
-        const transSnap = await getDoc(doc(db, \"salary_transactions\", `${userId}_${selectedPeriodKey}`));
+        const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`));
         if (transSnap.exists()) {
             const loadedData = transSnap.data();
             if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
-            document.getElementById('inputSSS').value = loadedData.inputSSS || \"\";
-            document.getElementById('inputPHIC').value = loadedData.inputPHIC || \"\";
-            document.getElementById('inputHDMF').value = loadedData.inputHDMF || \"\";
-            document.getElementById('inputAdvances').value = loadedData.inputAdvances || \"\";
-            document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || \"\";
-            document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || \"\";
+            document.getElementById('inputSSS').value = loadedData.inputSSS || "";
+            document.getElementById('inputPHIC').value = loadedData.inputPHIC || "";
+            document.getElementById('inputHDMF').value = loadedData.inputHDMF || "";
+            document.getElementById('inputAdvances').value = loadedData.inputAdvances || "";
+            document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || "";
+            document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
         }
     } catch(e) {
-        console.error(\"Payload data recovery error: \", e);
+        console.error("Payload data recovery error: ", e);
     }
 
     evaluateDynamicLockAndBlurConstraints();
@@ -356,40 +361,27 @@ function evaluateDynamicLockAndBlurConstraints() {
     const wrapper = document.getElementById('netPayWrapperDeck');
     const badge = document.getElementById('lockBadgeDisplay');
     const trackingTable = document.getElementById('uiDailyBreakdownTable');
-
-    const numericTotalFields = [
-        document.getElementById('totalDailyGrossOnly'),
-        document.getElementById('totalOtGrossOnly'),
-        document.getElementById('totalDed'),
-        document.getElementById('totalDailyNet')
-    ];
     
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
             wrapper.setAttribute('data-blurred', 'true');
         }
-        if (badge) badge.style.display = \"inline-block\";
+        if (badge) badge.style.display = "inline-block";
         if (trackingTable) {
             trackingTable.classList.add('blurred-lock');
             trackingTable.setAttribute('data-blurred', 'true');
         }
-        numericTotalFields.forEach(field => {
-            if (field) field.classList.add('blurred-lock');
-        });
     } else {
         if (wrapper) {
             wrapper.classList.remove('blurred-lock');
             wrapper.removeAttribute('data-blurred');
         }
-        if (badge) badge.style.display = \"none\";
+        if (badge) badge.style.display = "none";
         if (trackingTable) {
             trackingTable.classList.remove('blurred-lock');
             trackingTable.removeAttribute('data-blurred');
         }
-        numericTotalFields.forEach(field => {
-            if (field) field.classList.remove('blurred-lock');
-        });
     }
 
     const targetElementsToSecure = [
@@ -402,12 +394,12 @@ function evaluateDynamicLockAndBlurConstraints() {
         if (el) {
             if (isPastPayrollPeriod && !historicalOverrideActive) {
                 el.setAttribute('disabled', 'true');
-                el.style.cursor = \"not-allowed\";
-                el.style.opacity = \"0.6\";
+                el.style.cursor = "not-allowed";
+                el.style.opacity = "0.6";
             } else {
                 el.removeAttribute('disabled');
-                el.style.cursor = \"\";
-                el.style.opacity = \"\";
+                el.style.cursor = "";
+                el.style.opacity = "";
             }
         }
     });
@@ -458,7 +450,7 @@ function setupNetPayOverrideListener() {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                triggerToast(\"🔒 ADMIN OVERRIDE: HISTORICAL MATRIX SETTINGS UNLOCKED.\", false);
+                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.");
                 evaluateDynamicLockAndBlurConstraints();
                 renderActivePeriodCalendarGrid(); 
                 renewHistoricalInactivityTimer();
@@ -472,7 +464,7 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        triggerToast(\"⏳ SECURITY OVERRIDE EXPIRED. RECORDS RE-LOCKED.\", true);
+        showSystemToastNotification("⏳ Session expired. Historical matrix logs and tracking charts re-locked.");
         resetHistoricalOverrideState();
     }, 120000); 
 }
@@ -483,11 +475,12 @@ function resetHistoricalOverrideState() {
     clearTimeout(historicalAutoLockTimer);
     teardownInactivitySignalTracers();
     evaluateDynamicLockAndBlurConstraints();
-    if (typeof renderActivePeriodCalendarGrid === \"function\" && document.getElementById('calendarNodeGrid')) {
+    if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarDaysGridDeck')) {
         renderActivePeriodCalendarGrid(); 
     }
 }
 
+// Fixed function declaration naming error
 function setupInactivitySignalTracers() {
     const targets = ['inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 'inputDoublePay', 'inputReimbursements'];
     targets.forEach(id => {
@@ -508,13 +501,15 @@ function teardownInactivitySignalTracers() {
     });
 }
 
+window.addEventListener('beforeunload', resetHistoricalOverrideState);
+
 // ==========================================================================
 // 4. MATRIX UI CALENDAR RENDER ENGINE
 // ==========================================================================
 function renderActivePeriodCalendarGrid() {
     const grid = document.getElementById('calendarNodeGrid');
     if (!grid) return;
-    grid.innerHTML = \"\";
+    grid.innerHTML = "";
 
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -563,44 +558,44 @@ function renderActivePeriodCalendarGrid() {
         }
 
         const cell = document.createElement('div');
-        cell.className = \"calendar-day-node\";
+        cell.className = "calendar-day-node";
         
         if (isFutureDate) {
-            cell.classList.add(\"node-future-locked\");
-            cell.style.opacity = \"0.4\";
-            cell.style.cursor = \"not-allowed\";
+            cell.classList.add("node-future-locked");
+            cell.style.opacity = "0.4";
+            cell.style.cursor = "not-allowed";
         } else if (isLockedPastDate) {
-            cell.classList.add(\"node-locked\");
+            cell.classList.add("node-locked");
         }
 
-        cell.innerHTML = `<span class=\"day-num\">${day}</span><span class=\"day-lbl\">${dayOfWeekStr}</span>`;
+        cell.innerHTML = `<span class="day-num">${day}</span><span class="day-lbl">${dayOfWeekStr}</span>`;
 
         if (isLockedPastDate || isFutureDate) {
             const iconSpan = document.createElement('span');
-            iconSpan.className = \"lock-corner-icon\";
-            iconSpan.innerHTML = `<i data-lucide=\"lock\" style=\"width:10px;height:10px;\"></i>`;
+            iconSpan.className = "lock-corner-icon";
+            iconSpan.innerHTML = `<i data-lucide="lock" style="width:10px;height:10px;"></i>`;
             cell.appendChild(iconSpan);
         }
 
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
-            cell.style.backgroundColor = document.documentElement.style.getPropertyValue('--primary') || \"var(--primary)\";
-            cell.style.color = \"#000000\";
+            cell.style.backgroundColor = document.documentElement.style.getPropertyValue('--primary') || "var(--primary)";
+            cell.style.color = "#000000";
             const lbl = cell.querySelector('.day-lbl');
-            if (lbl) lbl.style.color = \"rgba(0,0,0,0.6)\";
+            if (lbl) lbl.style.color = "rgba(0,0,0,0.6)";
         }
 
         cell.onclick = () => {
             if (isFutureDate) {
-                triggerToast(\"CHRONOLOGICAL ERROR: FUTURE DATE SELECTION DENIED.\", false);
+                showSystemToastNotification("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
                 return;
             }
             if (isLockedPastDate) {
-                triggerToast(\"HISTORICAL ERROR: CARD TRANSACTION ROW IS SECURED.\", false);
+                showSystemToastNotification("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
             
-            if (historicalOverrideActive && typeof renewHistoricalInactivityTimer === \"function\") {
-                renewHistoricalInactivityTimer();
+            if (historicalOverrideActive) {
+                if (typeof renewHistoricalInactivityTimer === "function") renewHistoricalInactivityTimer();
             }
             
             launchTimeTransactionModal(dateKey, false);
@@ -612,311 +607,311 @@ function renderActivePeriodCalendarGrid() {
 }
 
 // ==========================================================================
-// 5. MATHS ENGINE & TIME CALCULATION ALGORITHMS
+// 5. TRANSACTIONS MODAL PROCESS ENGINE
 // ==========================================================================
-function parseTimeToMinutes(tStr) {
-    if (!tStr) return null;
-    const parts = tStr.split(':');
-    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-}
+function launchTimeTransactionModal(dateKey, isPastDate = false) {
+    currentTargetDateString = dateKey;
+    document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
+    
+    document.getElementById('modalTimeIn1').value = "";
+    document.getElementById('modalTimeOut1').value = "";
+    document.getElementById('modalTimeIn2').value = "";
+    document.getElementById('modalTimeOut2').value = "";
+    document.getElementById('modalTimeInOT').value = "";
+    document.getElementById('modalTimeOutOT').value = "";
+    
+    // Safety matching with optional chains in case HTML uses slightly alternative naming
+    const otCheck = document.getElementById('chkEnableOT') || document.getElementById('chkEnableOTWrapper');
+    if (otCheck) otCheck.checked = false;
+    
+    const otDeck = document.getElementById('otSubSectionDeck');
+    if (otDeck) otDeck.style.display = "none";
 
-function calculateMinutesDifference(start, end) {
-    if (start === null || end === null || end < start) return 0;
-    return end - start;
+    if (timelineBuffer[dateKey]) {
+        const rec = timelineBuffer[dateKey];
+        document.getElementById('modalTimeIn1').value = rec.in1 || "";
+        document.getElementById('modalTimeOut1').value = rec.out1 || "";
+        document.getElementById('modalTimeIn2').value = rec.in2 || "";
+        document.getElementById('modalTimeOut2').value = rec.out2 || "";
+        if (rec.hasOT) {
+            if (otCheck) otCheck.checked = true;
+            if (otDeck) otDeck.style.display = "block";
+            document.getElementById('modalTimeInOT').value = rec.inOT || "";
+            document.getElementById('modalTimeOutOT').value = rec.outOT || "";
+        }
+    } else {
+        if (salarySettings.hasLunchBreak !== false) {
+            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            document.getElementById('modalTimeOut1').value = "12:00";
+            document.getElementById('modalTimeIn2').value = "13:00";
+            document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
+        } else {
+            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
+        }
+    }
+
+    const modalBox = document.getElementById('modalBoxContainer');
+    if (modalBox) {
+        const inputs = modalBox.querySelectorAll('input, select');
+        if (isPastDate) {
+            inputs.forEach(el => el.setAttribute('disabled', 'true'));
+            document.getElementById('modalActionFooterDeck').style.display = "none";
+            document.getElementById('modalLockedWarningLabel').style.display = "block";
+        } else {
+            inputs.forEach(el => el.removeAttribute('disabled'));
+            document.getElementById('modalActionFooterDeck').style.display = "grid";
+            document.getElementById('modalLockedWarningLabel').style.display = "none";
+        }
+    }
+
+    runRealtimeMetricsDeductionEngine();
+    document.getElementById('timeConfigModalOverlay').classList.add('active');
 }
 
 function evaluateLunchBreakConstraints() {
-    const hasLunch = salarySettings.hasLunchBreak !== false;
-    const tOut1 = parseTimeToMinutes(document.getElementById('modalTimeOut1').value);
-    
-    if (hasLunch && tOut1 !== null) {
-        const baseLunchStart = 12 * 60; 
-        if (tOut1 > baseLunchStart) {
-            // Cap out automatic parameters matching rules
+    const out1 = document.getElementById('modalTimeOut1').value;
+    if (out1) {
+        const out1Mins = timeStringToMinutes(out1);
+        if (out1Mins < timeStringToMinutes("12:59")) {
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
         }
     }
 }
 
-function runRealtimeMetricsDeductionEngine() {
-    const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
-    const minPerHour = dailyRate / 8 / 60;
-
-    const in1 = parseTimeToMinutes(document.getElementById('modalTimeIn1').value);
-    const out1 = parseTimeToMinutes(document.getElementById('modalTimeOut1').value);
-    const in2 = parseTimeToMinutes(document.getElementById('modalTimeIn2').value);
-    const out2 = parseTimeToMinutes(document.getElementById('modalTimeOut2').value);
-
-    let lates = 0;
-    let undertime = 0;
-    let totalWorkedMinutes = 0;
-
-    const schedIn1 = 8 * 60;  
-    const schedOut1 = 12 * 60;
-    const schedIn2 = 13 * 60; 
-    const schedOut2 = 17 * 60;
-
-    // Shift 1
-    if (in1 !== null && out1 !== null) {
-        if (in1 > schedIn1) lates += (in1 - schedIn1);
-        if (out1 < schedOut1) undertime += (schedOut1 - out1);
-        totalWorkedMinutes += calculateMinutesDifference(Math.max(in1, schedIn1), Math.min(out1, schedOut1));
-    }
-    // Shift 2
-    if (in2 !== null && out2 !== null) {
-        if (in2 > schedIn2) lates += (in2 - schedIn2);
-        if (out2 < schedOut2) undertime += (schedOut2 - out2);
-        totalWorkedMinutes += calculateMinutesDifference(Math.max(in2, schedIn2), Math.min(out2, schedOut2));
-    }
-
-    document.getElementById('modalCalcLates').value = lates;
-    document.getElementById('modalCalcUndertime').value = undertime;
-
-    let grossPay = (totalWorkedMinutes / 480) * dailyRate;
-    if (grossPay > dailyRate) grossPay = dailyRate;
-    
-    let deduction = (lates + undertime) * minPerHour;
-    let netPay = grossPay - deduction;
-    if (netPay < 0) netPay = 0;
-
-    document.getElementById('modalCalcGross').value = formatCurrency(grossPay);
-    document.getElementById('modalCalcDeduction').value = formatCurrency(deduction);
-    document.getElementById('modalCalcNet').value = formatCurrency(netPay);
+function closeTimeTransactionModal() {
+    document.getElementById('timeConfigModalOverlay').classList.remove('active');
 }
 
+function runRealtimeMetricsDeductionEngine() {
+    const schedIn = salarySettings.timeIn || "08:00";
+    const schedOut = salarySettings.timeOut || "17:00";
+    const in1 = document.getElementById('modalTimeIn1').value;
+    const out1 = document.getElementById('modalTimeOut1').value;
+    const out2 = document.getElementById('modalTimeOut2').value;
+    let lateMinutes = 0;
+    let undertimeMinutes = 0;
+
+    if (in1) {
+        const schedInMins = timeStringToMinutes(schedIn);
+        const actualInMins = timeStringToMinutes(in1);
+        if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
+    }
+    const effectiveFinalOut = out2 ? out2 : out1;
+    if (effectiveFinalOut) {
+        const schedOutMins = timeStringToMinutes(schedOut);
+        const actualOutMins = timeStringToMinutes(effectiveFinalOut);
+        if (actualOutMins < schedOutMins) {
+            undertimeMinutes += (schedOutMins - actualOutMins);
+            if (salarySettings.hasLunchBreak !== false) {
+                const lunchStartMins = timeStringToMinutes("12:00");
+                const lunchEndMins = timeStringToMinutes("13:00");
+                if (actualOutMins <= lunchStartMins) {
+                    undertimeMinutes -= 60;
+                } else if (actualOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
+                    undertimeMinutes -= (lunchEndMins - actualOutMins);
+                }
+            }
+        }
+    }
+    document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
+    document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
+}
+
+function toggleOvertimeSubSection() {
+    const otCheck = document.getElementById('chkEnableOT') || document.getElementById('chkEnableOTWrapper');
+    if(!otCheck || otCheck.disabled) return;
+    document.getElementById('otSubSectionDeck').style.display = otCheck.checked ? "block" : "none";
+}
+
+function commitModalDayStateToLocalBuffer() {
+    const in1 = document.getElementById('modalTimeIn1').value;
+    const out1 = document.getElementById('modalTimeOut1').value;
+    if (!in1 || !out1) {
+        showToast("CORE TIMELINE IN & OUT VALUES REQUIRED.");
+        return;
+    }
+    const otCheck = document.getElementById('chkEnableOT') || document.getElementById('chkEnableOTWrapper');
+    const hasOT = otCheck ? otCheck.checked : false;
+
+    timelineBuffer[currentTargetDateString] = {
+        filled: true,
+        in1: in1,
+        out1: out1,
+        in2: document.getElementById('modalTimeIn2').value || "",
+        out2: document.getElementById('modalTimeOut2').value || "",
+        hasOT: hasOT,
+        inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
+        outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
+    };
+    closeTimeTransactionModal();
+    renderActivePeriodCalendarGrid();
+    recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
+}
+
+function clearModalDayState() {
+    if (timelineBuffer[currentTargetDateString]) {
+        delete timelineBuffer[currentTargetDateString];
+    }
+    closeTimeTransactionModal();
+    renderActivePeriodCalendarGrid();
+    recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
+}
+
+// ==========================================================================
+// 6. FINANCIAL RECOMPUTATION STREAM MODULE
+// ==========================================================================
 function recomputeGlobalFinancials() {
-    let totalLates = 0;
-    let totalUndertime = 0;
-    let accumulatedDailyGross = 0;
-    let accumulatedOtGross = 0;
-    let accumulatedDeductions = 0;
-    let accumulatedDailyNet = 0;
-
-    const tableBody = document.getElementById('uiDailyBreakdownBody');
-    if (!tableBody) return;
-    tableBody.innerHTML = \"\";
-
     const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
-    const minPerHour = dailyRate / 8 / 60;
-    const otRatePerHour = parseFloat(salarySettings.overtimeRate) || 60;
+    const hourlyRate = dailyRate / 8;
+    const minuteRate = hourlyRate / 60;
+    
+    let totalBasicEarnings = 0;
+    let totalOvertimePay = 0;
+    let totalDeductionPenalties = 0;
+    let actualDaysWorkedCounter = 0;
+    
+    let aggLates = 0;
+    let aggUndertime = 0;
+    
+    const schedInStr = salarySettings.timeIn || "08:00";
+    const schedOutStr = salarySettings.timeOut || "17:00";
+    const schedInMins = timeStringToMinutes(schedInStr);
+    const schedOutMins = timeStringToMinutes(schedOutStr);
+
+    let uiTableRowsHtml = "";
 
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
         const day = String(dateObj.getDate()).padStart(2, '0');
         const dateKey = `${year}-${month}-${day}`;
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
-        let rowData = timelineBuffer[dateKey] || {
-            in1: \"\", out1: \"\", in2: \"\", out2: \"\", otIn: \"\", otOut: \"\", 
-            lates: 0, undertime: 0, otMins: 0, gross: 0, otGross: 0, ded: 0, net: 0, filled: false
-        };
+        let dayDailyGross = 0;
+        let dayOtGross = 0;
+        let dayDed = 0;
+        let dayLateMins = 0;
+        let dayUndertimeMins = 0;
 
-        if (rowData.filled) {
-            totalLates += parseInt(rowData.lates) || 0;
-            totalUndertime += parseInt(rowData.undertime) || 0;
-            accumulatedDailyGross += parseFloat(rowData.gross) || 0;
-            accumulatedOtGross += parseFloat(rowData.otGross) || 0;
-            accumulatedDeductions += parseFloat(rowData.ded) || 0;
-            accumulatedDailyNet += parseFloat(rowData.net) || 0;
+        let tIn1 = "-";
+        let tOut1 = "-";
+        let tIn2 = "-";
+        let tOut2 = "-";
+        let otIn = "-";
+        let otOut = "-";
+
+        if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
+            actualDaysWorkedCounter++;
+            totalBasicEarnings += dailyRate;
+            dayDailyGross = dailyRate;
+
+            const rec = timelineBuffer[dateKey];
+            tIn1 = rec.in1 || "-";
+            tOut1 = rec.out1 || "-";
+            tIn2 = rec.in2 || "-";
+            tOut2 = rec.out2 || "-";
+
+            // Late calculations
+            if (rec.in1) {
+                const actualInMins = timeStringToMinutes(rec.in1);
+                if (actualInMins > schedInMins) {
+                    dayLateMins = (actualInMins - schedInMins);
+                }
+            }
+
+            // Undertime calculations
+            const finalOutStr = rec.out2 ? rec.out2 : rec.out1;
+            if (finalOutStr) {
+                const actualOutMins = timeStringToMinutes(finalOutStr);
+                if (actualOutMins < schedOutMins) {
+                    dayUndertimeMins = (schedOutMins - actualOutMins);
+                    if (salarySettings.hasLunchBreak !== false) {
+                        const lunchStart = timeStringToMinutes("12:00");
+                        const lunchEnd = timeStringToMinutes("13:00");
+                        if (actualOutMins <= lunchStart) {
+                            dayUndertimeMins -= 60;
+                        } else if (actualOutMins > lunchStart && actualOutMins < lunchEnd) {
+                            dayUndertimeMins -= (lunchEnd - actualOutMins);
+                        }
+                    }
+                }
+            }
+
+            // Overtime calculations
+            if (rec.hasOT && rec.inOT && rec.outOT) {
+                otIn = rec.inOT;
+                otOut = rec.outOT;
+                const otInM = timeStringToMinutes(rec.inOT);
+                const otOutM = timeStringToMinutes(rec.outOT);
+                if (otOutM > otInM) {
+                    const otHours = (otOutM - otInM) / 60;
+                    dayOtGross = otHours * hourlyRate * 1.25; 
+                }
+            }
+
+            dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
+            
+            aggLates += dayLateMins;
+            aggUndertime += dayUndertimeMins;
+            totalOvertimePay += dayOtGross;
+            totalDeductionPenalties += dayDed;
         }
 
-        const tr = document.createElement('tr');
-        if (rowData.filled) tr.style.background = \"rgba(255,255,255,0.01)\";
+        const dayNet = dayDailyGross + dayOtGross - dayDed;
 
-        // Admin session tracking inside matrix lines
-        tr.onclick = () => {
-            const selector = document.getElementById('periodSelector');
-            let periodIsPast = false;
-            if (selector) {
-                const pDate = new Date(selector.value);
-                pDate.setHours(0,0,0,0);
-                const nDate = new Date();
-                nDate.setHours(0,0,0,0);
-                if (pDate.getTime() < nDate.getTime()) periodIsPast = true;
-            }
-            if (periodIsPast && !historicalOverrideActive) {
-                triggerToast(\"HISTORICAL SECURE ERROR: COMPONENT IS READ ONLY.\");
-                return;
-            }
-            launchTimeTransactionModal(dateKey, false);
-        };
-
-        tr.innerHTML = `
-            <td>${month}/${day}</td>
-            <td style=\"color:#64748b;\">${dayName}</td>
-            <td>${rowData.in1 || '-'}</td>
-            <td>${rowData.out1 || '-'}</td>
-            <td>${rowData.in2 || '-'}</td>
-            <td>${rowData.out2 || '-'}</td>
-            <td>${rowData.otIn || '-'}</td>
-            <td>${rowData.otOut || '-'}</td>
-            <td style=\"color:${rowData.lates > 0 ? '#ef4444':'#64748b'};\">${rowData.lates || 0}</td>
-            <td style=\"color:${rowData.undertime > 0 ? '#ef4444':'#64748b'};\">${rowData.undertime || 0}</td>
-            <td style=\"text-align:right;\">₱${formatCurrency(rowData.gross)}</td>
-            <td style=\"text-align:right;color:#38bdf8;\">₱${formatCurrency(rowData.otGross)}</td>
-            <td style=\"text-align:right;color:#ef4444;\">₱${formatCurrency(rowData.ded)}</td>
-            <td style=\"text-align:right;font-weight:700;color:var(--primary);\">₱${formatCurrency(rowData.net)}</td>
+        uiTableRowsHtml += `
+            <tr>
+                <td style="font-weight:bold; color:var(--primary);">${day} <span style="font-size:9px; color:#64748b;">${dayOfWeekStr}</span></td>
+                <td><span class="time-block">${tIn1}</span></td>
+                <td><span class="time-block">${tOut1}</span></td>
+                <td><span class="time-block">${tIn2}</span></td>
+                <td><span class="time-block">${tOut2}</span></td>
+                <td><span class="time-block">${otIn}</span></td>
+                <td><span class="time-block">${otOut}</span></td>
+                <td style="color:#ef4444;">-${formatCurrency(dayDed)}</td>
+                <td style="font-weight:bold; color:#f1f5f9;">₱${formatCurrency(dayNet)}</td>
+            </tr>
         `;
-        tableBody.appendChild(tr);
     });
 
-    document.getElementById('totalLates').innerText = totalLates;
-    document.getElementById('totalUndertime').innerText = totalUndertime;
-    document.getElementById('totalDailyGrossOnly').innerText = `₱${formatCurrency(accumulatedDailyGross)}`;
-    document.getElementById('totalOtGrossOnly').innerText = `₱${formatCurrency(accumulatedOtGross)}`;
-    document.getElementById('totalDed').innerText = `₱${formatCurrency(accumulatedDeductions)}`;
-    document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(accumulatedDailyNet)}`;
+    const breakdownBody = document.getElementById('breakdownTableBody');
+    if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
-    // Process External Structural Modifiers
-    const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
-    const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
-    const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
-    const adv = parseFloat(document.getElementById('inputAdvances').value) || 0;
-    const dbPay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
-    const reim = parseFloat(document.getElementById('inputReimbursements').value) || 0;
+    // Fixed stat summaries inputs
+    const inputSSS = parseFloat(document.getElementById('inputSSS').value) || 0;
+    const inputPHIC = parseFloat(document.getElementById('inputPHIC').value) || 0;
+    const inputHDMF = parseFloat(document.getElementById('inputHDMF').value) || 0;
+    const inputAdvances = parseFloat(document.getElementById('inputAdvances').value) || 0;
+    const inputDoublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
+    const inputReimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
 
-    const totalStatDeductions = sss + phic + hdmf + adv;
-    const totalEarnings = accumulatedDailyNet + dbPay + reim;
-    const ultimateNetPay = totalEarnings - totalStatDeductions;
+    const totalStatutoryDeductions = inputSSS + inputPHIC + inputHDMF + inputAdvances;
+    const grandDeductions = totalDeductionPenalties + totalStatutoryDeductions;
+    const grossSalary = totalBasicEarnings + totalOvertimePay + inputDoublePay + inputReimbursements;
+    const netPay = grossSalary - grandDeductions;
 
-    document.getElementById('renderGrossIncomeValue').innerText = `₱${formatCurrency(accumulatedDailyGross + accumulatedOtGross)}`;
-    document.getElementById('renderStatDeductionValue').innerText = `₱${formatCurrency(totalStatDeductions)}`;
-    document.getElementById('renderNetTakeHomePayValue').innerText = `₱${formatCurrency(ultimateNetPay < 0 ? 0 : ultimateNetPay)}`;
+    document.getElementById('lblDaysWorked').innerText = `${actualDaysWorkedCounter} DAYS`;
+    document.getElementById('lblTotalLateMins').innerText = `${aggLates} MINS`;
+    document.getElementById('lblTotalUndertimeMins').innerText = `${aggUndertime} MINS`;
+
+    document.getElementById('lblBasicSalaryEarnings').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
+    document.getElementById('lblOvertimePayEarnings').innerText = `₱${formatCurrency(totalOvertimePay)}`;
+    document.getElementById('lblDeductionPenalties').innerText = `₱${formatCurrency(totalDeductionPenalties)}`;
+    document.getElementById('lblNetPayDisplay').innerText = `₱${formatCurrency(netPay)}`;
 }
 
-// ==========================================================================
-// 6. MODAL INTERACTION CONTROL ROOM LAYER
-// ==========================================================================
-function launchTimeTransactionModal(dateKey, readOnly = false) {
-    activeTargetDateKey = dateKey;
-    const modal = document.getElementById('modalBoxContainer');
-    const overlay = document.getElementById('modalOverlayWrapper');
-    if (!modal || !overlay) return;
-
-    const pieces = dateKey.split('-');
-    document.getElementById('modalTargetDateTitle').innerText = `${pieces[1]}/${pieces[2]}/${pieces[0]}`;
-
-    let data = timelineBuffer[dateKey] || {
-        in1:\"\", out1:\"\", in2:\"\", out2:\"\", otIn:\"\", otOut:\"\", lates:0, undertime:0, gross:0, otGross:0, ded:0, net:0, filled:false, hasOT:false
-    };
-
-    document.getElementById('modalTimeIn1').value = data.in1 || \"\";
-    document.getElementById('modalTimeOut1').value = data.out1 || \"\";
-    document.getElementById('modalTimeIn2').value = data.in2 || \"\";
-    document.getElementById('modalTimeOut2').value = data.out2 || \"\";
-    document.getElementById('modalTimeInOT').value = data.otIn || \"\";
-    document.getElementById('modalTimeOutOT').value = data.otOut || \"\";
-
-    const chkOt = document.getElementById('chkEnableOT');
-    const otBlock = document.getElementById('modalOvertimeInputSubSection');
-    if (data.hasOT) {
-        chkOt.checked = true;
-        if (otBlock) otBlock.style.display = \"grid\";
-    } else {
-        chkOt.checked = false;
-        if (otBlock) otBlock.style.display = \"none\";
-    }
-
-    document.getElementById('modalCalcLates').value = data.lates || 0;
-    document.getElementById('modalCalcUndertime').value = data.undertime || 0;
-    document.getElementById('modalCalcGross').value = formatCurrency(data.gross);
-    document.getElementById('modalCalcDeduction').value = formatCurrency(data.ded);
-    document.getElementById('modalCalcNet').value = formatCurrency(data.net);
-
-    overlay.style.display = \"flex\";
-    modal.style.display = \"block\";
-}
-
-function closeTimeTransactionModal() {
-    const modal = document.getElementById('modalBoxContainer');
-    const overlay = document.getElementById('modalOverlayWrapper');
-    if (modal) modal.style.display = \"none\";
-    if (overlay) overlay.style.display = \"none\";
-    activeTargetDateKey = null;
-}
-
-function toggleOvertimeSubSection() {
-    const chk = document.getElementById('chkEnableOT');
-    const sub = document.getElementById('modalOvertimeInputSubSection');
-    if (!sub) return;
-    sub.style.display = chk.checked ? \"grid\" : \"none\";
-}
-
-function commitModalDayStateToLocalBuffer() {
-    if (!activeTargetDateKey) return;
-
-    const in1 = document.getElementById('modalTimeIn1').value;
-    const out1 = document.getElementById('modalTimeOut1').value;
-    const in2 = document.getElementById('modalTimeIn2').value;
-    const out2 = document.getElementById('modalTimeOut2').value;
-    const otIn = document.getElementById('modalTimeInOT').value;
-    const otOut = document.getElementById('modalTimeOutOT').value;
-    const hasOT = document.getElementById('chkEnableOT').checked;
-
-    let lates = parseInt(document.getElementById('modalCalcLates').value) || 0;
-    let undertime = parseInt(document.getElementById('modalCalcUndertime').value) || 0;
-    
-    let gross = parseFloat(document.getElementById('modalCalcGross').value.replace(/,/g, '')) || 0;
-    let ded = parseFloat(document.getElementById('modalCalcDeduction').value.replace(/,/g, '')) || 0;
-    let net = parseFloat(document.getElementById('modalCalcNet').value.replace(/,/g, '')) || 0;
-
-    let otMins = 0;
-    let otGross = 0;
-
-    if (hasOT && otIn && otOut) {
-        const oInMin = parseTimeToMinutes(otIn);
-        const oOutMin = parseTimeToMinutes(otOut);
-        if (oOutMin > oInMin) {
-            otMins = oOutMin - oInMin;
-            const otRatePerHour = parseFloat(salarySettings.overtimeRate) || 60;
-            otGross = (otMins / 60) * otRatePerHour;
-        }
-    }
-
-    net += otGross;
-
-    timelineBuffer[activeTargetDateKey] = {
-        in1, out1, in2, out2, otIn, otOut, hasOT, lates, undertime, otMins, gross, otGross, ded, net, filled: true
-    };
-
-    hasUnsavedChanges = true;
-    closeTimeTransactionModal();
-    recomputeGlobalFinancials();
-    renderActivePeriodCalendarGrid();
-    markChangeAndQueueAutoSave();
-}
-
-function clearModalDayState() {
-    if (!activeTargetDateKey) return;
-    delete timelineBuffer[activeTargetDateKey];
-    hasUnsavedChanges = true;
-    closeTimeTransactionModal();
-    recomputeGlobalFinancials();
-    renderActivePeriodCalendarGrid();
-    markChangeAndQueueAutoSave();
-}
-
-// ==========================================================================
-// 7. DATA RECOVERY TRANSMISSION SYNC & EXPORTS
-// ==========================================================================
-function markChangeAndQueueAutoSave() {
-    clearTimeout(autoSaveDebounceTracker);
-    autoSaveDebounceTracker = setTimeout(() => {
-        commitTimelineTransactionToCloud(true);
-    }, 5000); 
-}
-
-async function commitTimelineTransactionToCloud(isBackground = false) {
-    if (!isBackground) showGlobalEngineLoader();
-    else triggerToast(\"SYNCING PAYROLL CONFIG...\", true);
-
+async function commitTimelineTransactionToCloud(isAutoSave = false) {
+    if (!verifyActionAllowedDateConstraints()) return;
     const selectedPeriodKey = document.getElementById('periodSelector').value;
-    const txId = `${userId}_${selectedPeriodKey}`;
 
     const payload = {
-        userId,
-        periodKey: selectedPeriodKey,
-        timelineBuffer,
+        timelineBuffer: timelineBuffer,
         inputSSS: document.getElementById('inputSSS').value,
         inputPHIC: document.getElementById('inputPHIC').value,
         inputHDMF: document.getElementById('inputHDMF').value,
@@ -927,140 +922,78 @@ async function commitTimelineTransactionToCloud(isBackground = false) {
     };
 
     try {
-        await setDoc(doc(db, \"salary_transactions\", txId), payload);
+        await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
         hasUnsavedChanges = false;
-        triggerToast(\"FIREBASE RUNTIME SYNCHRONIZED.\", false);
+        if (!isAutoSave) {
+            showToast("PAYROLL RECORD MATRIX SYNCHRONIZED SUCCESSFUL.");
+        }
     } catch (err) {
-        console.error(\"Transaction Sync Error: \", err);
-        triggerToast(\"SYNCHRONIZATION ERROR CAUGHT.\", false);
-    } finally {
-        if (!isBackground) hideGlobalEngineLoader();
+        console.error("Cloud vault synchronization fault: ", err);
+        showToast("VAULT TRANSYNC REJECTED.");
     }
-}
-
-function triggerCSVExportPipeline() {
-    let csv = \"DATE,DAY,IN1,OUT1,IN2,OUT2,OT IN,OT OUT,LATES,UNDERTIME,GROSS,OT GROSS,DEDUCTION,NET\\n\";
-    activeDatesArray.forEach(dateObj => {
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        const dateKey = `${year}-${month}-${day}`;
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-
-        let d = timelineBuffer[dateKey] || { in1:\"\", out1:\"\", in2:\"\", out2:\"\", otIn:\"\", otOut:\"\", lates:0, undertime:0, gross:0, otGross:0, ded:0, net:0 };
-        csv += `${month}/${day},${dayName},${d.in1},${d.out1},${d.in2},${d.out2},${d.otIn},${d.otOut},${d.lates},${d.undertime},${d.gross},${d.otGross},${d.ded},${d.net}\\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement(\"a\");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute(\"download\", `PAYSLIP_BREAKDOWN_${userId}_${document.getElementById('periodSelector').value}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
 function triggerPrintPreviewPipeline() {
-    let printContainer = document.getElementById('print-render-matrix');
-    if (!printContainer) {
-        printContainer = document.createElement('div');
-        printContainer.id = 'print-render-matrix';
-        document.body.appendChild(printContainer);
-    }
+    window.print();
+}
 
-    const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-    let tableRowsHtml = \"\";
+function triggerCSVExportPipeline() {
+    let csv = "Day,Time In 1,Time Out 1,Time In 2,Time Out 2,OT In,OT Out\n";
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
         const day = String(dateObj.getDate()).padStart(2, '0');
         const dateKey = `${year}-${month}-${day}`;
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-        let d = timelineBuffer[dateKey] || { in1:\"-\", out1:\"-\", in2:\"-\", out2:\"-\", otIn:\"-\", otOut:\"-\", lates:0, undertime:0, gross:0, otGross:0, ded:0, net:0 };
-
-        tableRowsHtml += `
-            <tr>
-                <td>${month}/${day} (${dayName})</td>
-                <td>${d.in1 || '-'}</td><td>${d.out1 || '-'}</td>
-                <td>${d.in2 || '-'}</td><td>${d.out2 || '-'}</td>
-                <td>${d.otIn || '-'}</td><td>${d.otOut || '-'}</td>
-                <td>${d.lates || 0}</td><td>${d.undertime || 0}</td>
-                <td>₱${formatCurrency(d.gross)}</td>
-                <td>₱${formatCurrency(d.otGross)}</td>
-                <td>₱${formatCurrency(d.ded)}</td>
-                <td>₱${formatCurrency(d.net)}</td>
-            </tr>
-        `;
+        if (timelineBuffer[dateKey]) {
+            const r = timelineBuffer[dateKey];
+            csv += `${day},${r.in1||''},${r.out1||''},${r.in2||''},${r.out2||''},${r.inOT||''},${r.outOT||''}\n`;
+        } else {
+            csv += `${day},,,,,,\n`;
+        }
     });
-
-    printContainer.innerHTML = `
-        <div style=\"font-family:sans-serif; padding:20px; color:#000;\">
-            <h2 style=\"margin:0; text-transform:uppercase;\">OFFICIAL PAYSLIP TIMELINE MATRIX</h2>
-            <p style=\"font-size:12px; margin:4px 0 20px 0;\">PAYABLE DURATION COVERED: <strong>${startStr} - ${endStr}</strong></p>
-            
-            <div style=\"margin-bottom:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:13px;\">
-                <div>
-                    <div>EMPLOYEE IDENTIFIER: <strong>${(userProfile.customName || userProfile.name).toUpperCase()}</strong></div>
-                    <div>DEPARTMENT COMPARTMENT: <strong>${(salarySettings.department || 'Operations').toUpperCase()}</strong></div>
-                </div>
-                <div style=\"text-align:right;\">
-                    <div>GROSS SUM: <strong>${document.getElementById('renderGrossIncomeValue').innerText}</strong></div>
-                    <div>STATUTORY TOTAL DEDUCTIONS: <strong>${document.getElementById('renderStatDeductionValue').innerText}</strong></div>
-                    <div style=\"font-size:15px; margin-top:4px;\">ULTIMATE NET TAKE HOME: <strong>${document.getElementById('renderNetTakeHomePayValue').innerText}</strong></div>
-                </div>
-            </div>
-
-            <table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"width:100%; border-collapse:collapse; font-size:11px; text-align:left;\">
-                <thead>
-                    <tr style=\"background:#f2f2f2;\">
-                        <th>DATE</th><th>IN1</th><th>OUT1</th><th>IN2</th><th>OUT2</th><th>OT IN</th><th>OT OUT</th><th>LATE</th><th>UT</th><th>GROSS</th><th>OT GROSS</th><th>DED</th><th>NET</th>
-                    </tr>
-                </thead>
-                <tbody>${tableRowsHtml}</tbody>
-            </table>
-        </div>
-    `;
-
-    window.print();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `Payroll_Report_${document.getElementById('periodSelector').value}.csv`);
+    a.click();
 }
 
 // ==========================================================================
-// 8. LIFECYCLE MAP WINDOW EVENT LISTENERS
+// 7. GLOBAL CONTEXT EVENT BINDING ARRAYS
 // ==========================================================================
-document.addEventListener(\"DOMContentLoaded\", () => {
+document.addEventListener("DOMContentLoaded", () => {
+    // Run Main Core Initializer
     bootEngineCore();
 
-    document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
-
-    const watchedInputs = ['inputDoublePay', 'inputReimbursements', 'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances'];
+    const watchedInputs = ['inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 'inputDoublePay', 'inputReimbursements'];
     watchedInputs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', () => {
-                recomputeGlobalFinancials();
-                markChangeAndQueueAutoSave();
-            });
-        }
+        document.getElementById(id)?.addEventListener('input', () => {
+            recomputeGlobalFinancials();
+            markChangeAndQueueAutoSave();
+        });
     });
 
-    document.getElementById('modalTimeIn1').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    document.getElementById('modalTimeOut1').addEventListener('change', () => {
+    document.getElementById('periodSelector')?.addEventListener('change', fetchAndProcessSelectedPeriodPayload);
+
+    document.getElementById('modalTimeIn1')?.addEventListener('change', runRealtimeMetricsDeductionEngine);
+    document.getElementById('modalTimeOut1')?.addEventListener('change', () => {
         evaluateLunchBreakConstraints();
         runRealtimeMetricsDeductionEngine();
     });
-    document.getElementById('modalTimeIn2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
-
-    document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
-    document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
-    document.getElementById('btnExportCSV').addEventListener('click', triggerCSVExportPipeline);
+    document.getElementById('modalTimeIn2')?.addEventListener('change', runRealtimeMetricsDeductionEngine);
+    document.getElementById('modalTimeOut2')?.addEventListener('change', runRealtimeMetricsDeductionEngine);
     
-    document.getElementById('btnModalClose').addEventListener('click', closeTimeTransactionModal);
-    document.getElementById('btnModalApply').addEventListener('click', commitModalDayStateToLocalBuffer);
-    document.getElementById('btnModalClear').addEventListener('click', clearModalDayState);
-});
+    // Fallback selectors check for alternative naming variations in the HTML markup
+    const otTrigger = document.getElementById('chkEnableOTWrapper') || document.getElementById('chkEnableOT');
+    otTrigger?.addEventListener('click', toggleOvertimeSubSection);
+    otTrigger?.addEventListener('change', toggleOvertimeSubSection);
 
-window.addEventListener('beforeunload', resetHistoricalOverrideState);
+    document.getElementById('btnSaveToCloud')?.addEventListener('click', () => commitTimelineTransactionToCloud(false));
+    document.getElementById('btnPrintPreview')?.addEventListener('click', triggerPrintPreviewPipeline);
+    document.getElementById('btnExportCSV')?.addEventListener('click', triggerCSVExportPipeline);
+    
+    document.getElementById('btnModalClose')?.addEventListener('click', closeTimeTransactionModal);
+    document.getElementById('btnModalApply')?.addEventListener('click', commitModalDayStateToLocalBuffer);
+    document.getElementById('btnModalClear')?.addEventListener('click', clearModalDayState);
+});
