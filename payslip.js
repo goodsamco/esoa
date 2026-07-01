@@ -692,7 +692,7 @@ function recomputeGlobalFinancials() {
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
     document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = aggUndertime; // FIXED: Removed logic '!' symbol
+    document.getElementById('totalUndertime').innerText = !aggUndertime;
     document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGross + aggOtGross)}`;
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
@@ -1034,9 +1034,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById('modalTimeIn2').addEventListener('change', runRealtimeMetricsDeductionEngine);
     document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    
-    // FIXED: Direct connection to input field click/change rather than non-existent wrapper
-    document.getElementById('chkEnableOT').addEventListener('change', toggleOvertimeSubSection);
+    document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
 
     document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
     document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
