@@ -246,7 +246,6 @@ async function fetchAndProcessSelectedPeriodPayload() {
         return;
     }
     
-    // Clear temporary historical session state on switching periods
     resetHistoricalOverrideState();
     
     showGlobalEngineLoader();
@@ -364,7 +363,6 @@ function evaluateDynamicLockAndBlurConstraints() {
     targetElementsToSecure.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            // Lock fields ONLY if it is a past period AND the manual override has not been activated
             if (isPastPayrollPeriod && !historicalOverrideActive) {
                 el.setAttribute('disabled', 'true');
                 el.style.cursor = "not-allowed";
@@ -379,7 +377,6 @@ function evaluateDynamicLockAndBlurConstraints() {
 }
 
 function verifyActionAllowedDateConstraints() {
-    // If the administrator broke the lock via clicks, bypass validation checking entirely
     if (historicalOverrideActive) {
         renewHistoricalInactivityTimer();
         return true;
@@ -406,11 +403,30 @@ function verifyActionAllowedDateConstraints() {
 // ==========================================================================
 // BACKDOOR ADMINISTRATOR UNLOCK SYSTEM & INACTIVITY SAFETY WATCHERS
 // ==========================================================================
+function showToast(message, duration = 4000) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
+    toast.innerText = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.style.opacity = "1", 50);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
 function setupNetPayOverrideListener() {
     const wrapper = document.getElementById('netPayWrapperDeck');
     if (!wrapper) return;
 
-    // Remove existing event listener to avoid stacking execution binds
     wrapper.removeAttribute('onclick'); 
     wrapper.addEventListener('click', () => {
         const today = new Date();
@@ -424,14 +440,13 @@ function setupNetPayOverrideListener() {
         today.setHours(0,0,0,0);
         periodDate.setHours(0,0,0,0);
 
-        // Click sequence only registers if the current active log selection is historical
         if (periodDate.getTime() < today.getTime()) {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                alert("ADMIN OVERRIDE: Historical log fields unlocked. Changes permitted for 2 minutes.");
+                showToast("🔒 ADMIN OVERRIDE: Historical values & active period dates unlocked for 2 minutes.");
                 evaluateDynamicLockAndBlurConstraints();
-                renderActivePeriodCalendarGrid(); // Updates edit capability for days
+                renderActivePeriodCalendarGrid(); // Re-render unlocks calendar nodes dynamically
                 renewHistoricalInactivityTimer();
                 setupInactivitySignalTracers();
             }
@@ -443,9 +458,9 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        alert("Session expired. Historical fields have re-locked automatically.");
+        showToast("⏳ Session expired. Historical fields and calendar logs have re-locked.");
         resetHistoricalOverrideState();
-    }, 120000); // 2 Minutes (120,000 ms)
+    }, 120000); 
 }
 
 function resetHistoricalOverrideState() {
@@ -455,7 +470,7 @@ function resetHistoricalOverrideState() {
     teardownInactivitySignalTracers();
     evaluateDynamicLockAndBlurConstraints();
     if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarDaysGridDeck')) {
-        renderActivePeriodCalendarGrid();
+        renderActivePeriodCalendarGrid(); 
     }
 }
 
@@ -479,9 +494,7 @@ function teardownInactivitySignalTracers() {
     });
 }
 
-// Ensure the application automatically triggers cleanup when leaving the window/view state entirely
 window.addEventListener('beforeunload', resetHistoricalOverrideState);
-
 
 // ==========================================================================
 // 4. MATRIX UI CALENDAR RENDER ENGINE
