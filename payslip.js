@@ -520,6 +520,9 @@ function toggleOvertimeSubSection() {
     document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
 }
 
+// ==========================================================================
+// 6. FINANCIAL RECOMPUTATION STREAM MODULE
+// ==========================================================================
 function commitModalDayStateToLocalBuffer() {
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
@@ -557,9 +560,6 @@ function clearModalDayState() {
     markChangeAndQueueAutoSave();
 }
 
-// ==========================================================================
-// 6. FINANCIAL RECOMPUTATION STREAM MODULE
-// ==========================================================================
 function recomputeGlobalFinancials() {
     const dailyRate = parseFloat(salarySettings.dailyRate) || 460;
     const hourlyRate = dailyRate / 8;
@@ -660,7 +660,6 @@ function recomputeGlobalFinancials() {
         aggDed += dayDed;
         aggNet += dayNet;
 
-        // UI view layout retained exactly but separated horizontally into distinct Daily Gross & OT Gross columns
         uiTableRowsHtml += `
             <tr>
                 <td>${dateKey}</td>
@@ -692,12 +691,11 @@ function recomputeGlobalFinancials() {
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
     document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = !aggUndertime;
+    document.getElementById('totalUndertime').innerText = aggUndertime;
     document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGross + aggOtGross)}`;
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
-    // Handle column totals injections safely if separate DOM labels exist
     const uiTotalDailyGrossField = document.getElementById('totalDailyGrossOnly');
     if (uiTotalDailyGrossField) uiTotalDailyGrossField.innerText = `₱${formatCurrency(aggDailyGross)}`;
     const uiTotalOtGrossField = document.getElementById('totalOtGrossOnly');
