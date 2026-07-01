@@ -620,7 +620,7 @@ function launchTimeTransactionModal(dateKey, isPastDate = false) {
             document.getElementById('modalTimeOutOT').value = rec.outOT || "";
         }
     } else {
-        // TRULY SET NO TIME BY DEFAULT: Removed 08:00/17:00 placeholders entirely
+        // TRULY NO TIME BY DEFAULT: Fresh or untouched days open completely blank
         document.getElementById('modalTimeIn1').value = "";
         document.getElementById('modalTimeOut1').value = "";
         document.getElementById('modalTimeIn2').value = "";
@@ -708,7 +708,7 @@ function commitModalDayStateToLocalBuffer() {
     const inOT = document.getElementById('modalTimeInOT').value;
     const outOT = document.getElementById('modalTimeOutOT').value;
 
-    // Modified validation: Allows saving empty daytime entries if valid Overtime is logged
+    // Allows saving empty or missing daytime hours if a valid Overtime row is captured
     if (!in1 || !out1) {
         if (!hasOT || !inOT || !outOT) {
             showToast("CORE TIMELINE VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
@@ -734,7 +734,19 @@ function commitModalDayStateToLocalBuffer() {
 }
 
 function clearModalDayState() {
-    // Wipes all input values clean from the window so they can be saved as blank or updated
+    // Purges the entire day's object permanently from the local buffer database
+    if (timelineBuffer[currentTargetDateString]) {
+        delete timelineBuffer[currentTargetDateString];
+    }
+    closeTimeTransactionModal();
+    renderActivePeriodCalendarGrid();
+    recomputeGlobalFinancials();
+    markChangeAndQueueAutoSave();
+    showToast("LOGS DELETED FROM DATABASE FOR THIS DATE.");
+}
+
+function resetModalFields() {
+    // Only resets input fields visually in the window without removing the entry from the database
     document.getElementById('modalTimeIn1').value = "";
     document.getElementById('modalTimeOut1').value = "";
     document.getElementById('modalTimeIn2').value = "";
@@ -745,9 +757,8 @@ function clearModalDayState() {
     document.getElementById('otSubSectionDeck').style.display = "none";
     
     runRealtimeMetricsDeductionEngine();
-    showToast("MODAL SHIFT TIMINGS CLEARED.");
+    showToast("MODAL INPUTS RESET.");
 }
-
 // ==========================================================================
 // 6. FINANCIAL RECOMPUTATION STREAM MODULE
 // ==========================================================================
@@ -801,7 +812,7 @@ function recomputeGlobalFinancials() {
             tIn2 = rec.in2 || "-";
             tOut2 = rec.out2 || "-";
 
-            // ONLY process regular core calculations if daytime logs are structurally filled
+            // ONLY handle financial arithmetic for shifts if daylight timing configurations exist
             if (rec.in1 && rec.out1) {
                 actualDaysWorkedCounter++;
                 totalBasicEarnings += dailyRate;
@@ -822,7 +833,7 @@ function recomputeGlobalFinancials() {
                         const lunchEndMins = timeStringToMinutes("13:00");
                         if (actOutMins <= lunchStartMins) {
                             dayUndertimeMins -= 60;
-                        } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
+                        } else if (actOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
                             dayUndertimeMins -= (lunchEndMins - actOutMins);
                         }
                     }
@@ -832,14 +843,14 @@ function recomputeGlobalFinancials() {
                 totalDeductionPenalties += dayDed;
             }
 
-            // Process Overtime independently (Allows logs containing OT-Only information)
+            // Independent Overtime Calculator Stream (Permits OT-Only input values)
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
                 const oInMins = timeStringToMinutes(rec.inOT);
                 let oOutMins = timeStringToMinutes(rec.outOT);
                 
-                // Handles cross-midnight rollover calculations automatically
+                // Night shift rollover safety addition
                 if (oOutMins <= oInMins) {
                     oOutMins += 1440;
                 }
