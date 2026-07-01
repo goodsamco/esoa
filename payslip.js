@@ -2,25 +2,108 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==========================================================================
-// 1. FIREBASE ARCHITECTURE CONFIGURATION
+// GLOBALS & RECOVERY LIFECYCLE MEMORY CACHE
 // ==========================================================================
-const firebaseConfig = {
-    apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
-    authDomain: "svls-289ee.firebaseapp.com",
-    databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
-    projectId: "svls-289ee",
-    storageBucket: "svls-289ee.firebasestorage.app",
-    messagingSenderId: "500705386198",
-    appId: "1:500705386198:web:96f189662bc2aa99cf7377",
-    measurementId: "G-5TNBMQ2HN5"
-};
+let historicalOverrideActive = false;
+let historicalClickCounter = 0;
+let historicalAutoLockTimer = null;
+let activeDatesArray = [];
+let timelineBuffer = {};
+let hasUnsavedChanges = false;
+let salarySettings = {};
+let userProfile = { name: "", customName: "", email: "" };
+const CURRENT_YEAR = 2026;
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// ==========================================================================
+// 1. UNIFIED SYSTEM TOAST NOTIFICATION HUB (SETTINGS.HTML TRANSKIPT)
+// ==========================================================================
+function triggerToast(message, isWorking = false) {
+    let toast = document.getElementById('toastHub');
+    let txt = document.getElementById('toastText');
+    let dot = document.getElementById('toastDot');
 
-const userId = localStorage.getItem("userId");
-if (!userId) {
-    window.location.href = "login.html";
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toastHub';
+        toast.className = 'toast-notification-hub';
+        
+        // Dynamically injecting your explicit CSS layout from Settings
+        const inlineStyle = document.createElement('style');
+        inlineStyle.innerHTML = `
+            .toast-notification-hub {
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%) translateY(100px);
+                background: rgba(0, 0, 0, 0.85);
+                border: 1px solid var(--border-glass, rgba(255,255,255,0.12));
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                padding: 14px 28px;
+                border-radius: 30px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 10000;
+                opacity: 0;
+                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+                pointer-events: none;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+            .toast-notification-hub.active {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            .toast-indicator-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background-color: var(--primary, #22c55e);
+            }
+            .toast-body-text {
+                font-size: 0.72rem;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: #f1f5f9;
+                font-family: 'Inter', sans-serif;
+            }
+            .blurred-lock {
+                filter: blur(5.5px) !important;
+                pointer-events: none !important;
+                user-select: none !important;
+            }
+        `;
+        document.head.appendChild(inlineStyle);
+
+        dot = document.createElement('div');
+        dot.id = 'toastDot';
+        dot.className = 'toast-indicator-dot';
+
+        txt = document.createElement('div');
+        txt.id = 'toastText';
+        txt.className = 'toast-body-text';
+
+        toast.appendChild(dot);
+        toast.appendChild(txt);
+        document.body.appendChild(toast);
+    }
+
+    txt.innerText = message;
+    dot.style.backgroundColor = isWorking ? "#ffaa00" : (document.documentElement.style.getPropertyValue('--primary') || "#22c55e");
+    
+    toast.classList.add('active');
+    
+    if (!isWorking) {
+        setTimeout(() => {
+            toast.classList.remove('active');
+        }, 2500);
+    }
+}
+
+function hideToast() {
+    const toast = document.getElementById('toastHub');
+    if (toast) toast.classList.remove('active');
 }
 
 // ==========================================================================
@@ -143,39 +226,13 @@ function markChangeAndQueueAutoSave() {
 }
 
 // ==========================================================================
-// 3. CORE INITIALIZATION ROUTINE ENGINE & OVERRIDE LIFECYCLE
+// 3. CORE INITIALIZATION ROUTINE ENGINE
 // ==========================================================================
-let historicalOverrideActive = false;
-let historicalClickCounter = 0;
-let historicalAutoLockTimer = null;
-
-// Clean, global-safe UI toast notification engine
-function showSystemToastNotification(message, duration = 4000) {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
-    toast.innerText = message;
-    container.appendChild(toast);
-    
-    setTimeout(() => toast.style.opacity = "1", 50);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-}
-
 async function bootEngineCore() {
     showGlobalEngineLoader();
     injectExitGuardModal();
     setupNetPayOverrideListener(); 
     try {
-        // Safe document resolution checking global db and userId properties
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
@@ -351,10 +408,8 @@ function evaluateDynamicLockAndBlurConstraints() {
     let revealNetPay = false;
 
     if (isPastPayrollPeriod) {
-        // Historical logs display amounts natively
         revealNetPay = true;
     } else {
-        // Upcoming Period constraint windows
         if (targetDay === 15) {
             if (currentDay >= 13 && currentDay <= 16) revealNetPay = true;
         } else {
@@ -365,8 +420,15 @@ function evaluateDynamicLockAndBlurConstraints() {
     const wrapper = document.getElementById('netPayWrapperDeck');
     const badge = document.getElementById('lockBadgeDisplay');
     const trackingTable = document.getElementById('uiDailyBreakdownTable');
+
+    // ALL target totals to be locked or blurred globally inside the DOM tree landscape
+    const numericTotalFields = [
+        document.getElementById('totalDailyGrossOnly'),
+        document.getElementById('totalOtGrossOnly'),
+        document.getElementById('totalDed'),
+        document.getElementById('totalDailyNet')
+    ];
     
-    // Manage blurring across widgets and the daily metric breakdown table element
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
@@ -377,6 +439,9 @@ function evaluateDynamicLockAndBlurConstraints() {
             trackingTable.classList.add('blurred-lock');
             trackingTable.setAttribute('data-blurred', 'true');
         }
+        numericTotalFields.forEach(field => {
+            if (field) field.classList.add('blurred-lock');
+        });
     } else {
         if (wrapper) {
             wrapper.classList.remove('blurred-lock');
@@ -387,6 +452,9 @@ function evaluateDynamicLockAndBlurConstraints() {
             trackingTable.classList.remove('blurred-lock');
             trackingTable.removeAttribute('data-blurred');
         }
+        numericTotalFields.forEach(field => {
+            if (field) field.classList.remove('blurred-lock');
+        });
     }
 
     const targetElementsToSecure = [
@@ -455,7 +523,7 @@ function setupNetPayOverrideListener() {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.");
+                triggerToast("🔒 ADMIN OVERRIDE: HISTORICAL MATRIX SETTINGS UNLOCKED.", false);
                 evaluateDynamicLockAndBlurConstraints();
                 renderActivePeriodCalendarGrid(); 
                 renewHistoricalInactivityTimer();
@@ -469,7 +537,7 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        showSystemToastNotification("⏳ Session expired. Historical matrix logs and tracking charts re-locked.");
+        triggerToast("⏳ SECURITY OVERRIDE EXPIRED. RECORDS RE-LOCKED.", true);
         resetHistoricalOverrideState();
     }, 120000); 
 }
@@ -480,7 +548,7 @@ function resetHistoricalOverrideState() {
     clearTimeout(historicalAutoLockTimer);
     teardownInactivitySignalTracers();
     evaluateDynamicLockAndBlurConstraints();
-    if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarDaysGridDeck')) {
+    if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarNodeGrid')) {
         renderActivePeriodCalendarGrid(); 
     }
 }
@@ -504,10 +572,6 @@ function teardownInactivitySignalTracers() {
         }
     });
 }
-
-window.addEventListener('beforeunload', resetHistoricalOverrideState);
-
-window.addEventListener('beforeunload', resetHistoricalOverrideState);
 
 // ==========================================================================
 // 4. MATRIX UI CALENDAR RENDER ENGINE
@@ -548,8 +612,6 @@ function renderActivePeriodCalendarGrid() {
         if (comparisonDate.getTime() > today.getTime()) {
             isFutureDate = true;
         } else if (isCurrentPeriodPast) {
-            // If the overall period chosen is historical, lock down days implicitly 
-            // unless overridden by the 10-click administrative session bypass
             if (!historicalOverrideActive) {
                 isLockedPastDate = true;
             }
@@ -561,7 +623,6 @@ function renderActivePeriodCalendarGrid() {
             }
         }
 
-        // Final security check: If admin bypass is warm and running, open up all historical dates
         if (historicalOverrideActive && isLockedPastDate) {
             isLockedPastDate = false;
         }
@@ -595,17 +656,16 @@ function renderActivePeriodCalendarGrid() {
 
         cell.onclick = () => {
             if (isFutureDate) {
-                showSystemToastNotification("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
+                triggerToast("CHRONOLOGICAL ERROR: FUTURE DATE SELECTION DENIED.", false);
                 return;
             }
             if (isLockedPastDate) {
-                showSystemToastNotification("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
+                triggerToast("HISTORICAL ERROR: CARD TRANSACTION ROW IS SECURED.", false);
                 return;
             }
             
-            // If historical unlock is currently running, feed inactivity tracker on cell engagement
-            if (historicalOverrideActive) {
-                if (typeof renewHistoricalInactivityTimer === "function") renewHistoricalInactivityTimer();
+            if (historicalOverrideActive && typeof renewHistoricalInactivityTimer === "function") {
+                renewHistoricalInactivityTimer();
             }
             
             launchTimeTransactionModal(dateKey, false);
@@ -615,6 +675,8 @@ function renderActivePeriodCalendarGrid() {
     
     if (window.lucide) window.lucide.createIcons();
 }
+
+window.addEventListener('beforeunload', resetHistoricalOverrideState);
 
 // ==========================================================================
 // 5. TRANSACTIONS MODAL PROCESS ENGINE
