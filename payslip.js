@@ -620,17 +620,11 @@ function launchTimeTransactionModal(dateKey, isPastDate = false) {
             document.getElementById('modalTimeOutOT').value = rec.outOT || "";
         }
     } else {
-        if (salarySettings.hasLunchBreak !== false) {
-            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            document.getElementById('modalTimeOut1').value = "12:00";
-            document.getElementById('modalTimeIn2').value = "13:00";
-            document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
-        } else {
-            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
-            document.getElementById('modalTimeIn2').value = "";
-            document.getElementById('modalTimeOut2').value = "";
-        }
+        // TRULY SET NO TIME BY DEFAULT: Removed 08:00/17:00 placeholders entirely
+        document.getElementById('modalTimeIn1').value = "";
+        document.getElementById('modalTimeOut1').value = "";
+        document.getElementById('modalTimeIn2').value = "";
+        document.getElementById('modalTimeOut2').value = "";
     }
 
     const inputs = document.getElementById('modalBoxContainer').querySelectorAll('input, select');
@@ -714,16 +708,14 @@ function commitModalDayStateToLocalBuffer() {
     const inOT = document.getElementById('modalTimeInOT').value;
     const outOT = document.getElementById('modalTimeOutOT').value;
 
-    // Check if daytime fields are empty or cleared
+    // Modified validation: Allows saving empty daytime entries if valid Overtime is logged
     if (!in1 || !out1) {
-        // If daytime is cleared, we ONLY allow saving if overtime is explicitly checked and filled
         if (!hasOT || !inOT || !outOT) {
-            showToast("CORE TIMELINE IN & OUT VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
+            showToast("CORE TIMELINE VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
             return;
         }
     }
 
-    // Commits empty strings ("") for in1/out1/in2/out2 to the record if they were cleared by the user
     timelineBuffer[currentTargetDateString] = {
         filled: true,
         in1: in1 || "",
@@ -742,13 +734,18 @@ function commitModalDayStateToLocalBuffer() {
 }
 
 function clearModalDayState() {
-    if (timelineBuffer[currentTargetDateString]) {
-        delete timelineBuffer[currentTargetDateString];
-    }
-    closeTimeTransactionModal();
-    renderActivePeriodCalendarGrid();
-    recomputeGlobalFinancials();
-    markChangeAndQueueAutoSave();
+    // Wipes all input values clean from the window so they can be saved as blank or updated
+    document.getElementById('modalTimeIn1').value = "";
+    document.getElementById('modalTimeOut1').value = "";
+    document.getElementById('modalTimeIn2').value = "";
+    document.getElementById('modalTimeOut2').value = "";
+    document.getElementById('modalTimeInOT').value = "";
+    document.getElementById('modalTimeOutOT').value = "";
+    document.getElementById('chkEnableOT').checked = false;
+    document.getElementById('otSubSectionDeck').style.display = "none";
+    
+    runRealtimeMetricsDeductionEngine();
+    showToast("MODAL SHIFT TIMINGS CLEARED.");
 }
 
 // ==========================================================================
@@ -804,7 +801,7 @@ function recomputeGlobalFinancials() {
             tIn2 = rec.in2 || "-";
             tOut2 = rec.out2 || "-";
 
-            // Process regular shift details only if core time fields exist
+            // ONLY process regular core calculations if daytime logs are structurally filled
             if (rec.in1 && rec.out1) {
                 actualDaysWorkedCounter++;
                 totalBasicEarnings += dailyRate;
@@ -835,16 +832,16 @@ function recomputeGlobalFinancials() {
                 totalDeductionPenalties += dayDed;
             }
 
-            // Process Overtime independently (Handles midnight / next day wrap-around calculations)
+            // Process Overtime independently (Allows logs containing OT-Only information)
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
-                let oInMins = timeStringToMinutes(rec.inOT);
+                const oInMins = timeStringToMinutes(rec.inOT);
                 let oOutMins = timeStringToMinutes(rec.outOT);
                 
-                // If out time rolls over into next day or hits midnight (00:00)
+                // Handles cross-midnight rollover calculations automatically
                 if (oOutMins <= oInMins) {
-                    oOutMins += 1440; // Inject structural 24-hour minute buffer
+                    oOutMins += 1440;
                 }
                 
                 const otMins = oOutMins - oInMins;
@@ -885,7 +882,7 @@ function recomputeGlobalFinancials() {
 
         structuralDailyArrayLogs.push({
             date: dateKey, dayStr: dayOfWeekStr.toUpperCase(),
-            in1: tIn1, out1: tOut1, in2: tIn2, out2: tOut2, inOT: otIn, outOT: otOut,
+            in1: tIn1, out1: tOut1, in2: tIn2, out2: tOut2, inOT: otIn, outOT: outOut,
             lates: dayLateMins, undertime: dayUndertimeMins,
             dailyGross: dayDailyGross, otGross: dayOtGross, deductions: dayDed, net: dayNet
         });
