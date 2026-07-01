@@ -54,7 +54,7 @@ function timeStringToMinutes(timeStr) {
     return parseInt(p[0]) * 60 + parseInt(p[1]);
 }
 
-// Unified Custom Top Toast System
+// Custom Top Toast System
 function showToast(message, duration = 3000) {
     let container = document.getElementById('toastEngineContainer');
     if (!container) {
@@ -63,12 +63,8 @@ function showToast(message, duration = 3000) {
         container.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:100000; display:flex; flex-direction:column; gap:10px; pointer-events:none;";
         document.body.appendChild(container);
     }
-    
-    // Dynamically query user custom brand colors falling back to standard sky-blue configuration
-    const primaryAccentColor = document.documentElement.style.getPropertyValue('--primary').trim() || '#38bdf8';
-    
     const toast = document.createElement('div');
-    toast.style.cssText = `background:#1e293b; color:${primaryAccentColor}; padding:12px 24px; border-radius:8px; border:1px solid ${primaryAccentColor}; font-family:monospace; font-size:12px; font-weight:bold; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(-20px); letter-spacing:1px; text-align:center;`;
+    toast.style.cssText = "background:#1e293b; color:#38bdf8; padding:12px 24px; border-radius:8px; border:1px solid #38bdf8; font-family:monospace; font-size:12px; font-weight:bold; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5); transition:all 0.3s ease; opacity:0; transform:translateY(-20px); letter-spacing:1px;";
     toast.innerText = message.toUpperCase();
     container.appendChild(toast);
 
@@ -152,6 +148,27 @@ function markChangeAndQueueAutoSave() {
 let historicalOverrideActive = false;
 let historicalClickCounter = 0;
 let historicalAutoLockTimer = null;
+
+// Clean, global-safe UI toast notification engine
+function showSystemToastNotification(message, duration = 4000) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = "background:#333; color:#fff; padding:12px 24px; border-radius:4px; font-family:sans-serif; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity 0.3s ease; border-left:4px solid var(--primary, #2563eb);";
+    toast.innerText = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.style.opacity = "1", 50);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
 
 async function bootEngineCore() {
     showGlobalEngineLoader();
@@ -334,8 +351,10 @@ function evaluateDynamicLockAndBlurConstraints() {
     let revealNetPay = false;
 
     if (isPastPayrollPeriod) {
+        // Historical logs display amounts natively
         revealNetPay = true;
     } else {
+        // Upcoming Period constraint windows
         if (targetDay === 15) {
             if (currentDay >= 13 && currentDay <= 16) revealNetPay = true;
         } else {
@@ -347,6 +366,15 @@ function evaluateDynamicLockAndBlurConstraints() {
     const badge = document.getElementById('lockBadgeDisplay');
     const trackingTable = document.getElementById('uiDailyBreakdownTable');
     
+    // Array of all amount totals in the UI to sync up with the blur constraints
+    const totalAmountElements = [
+        'totalGross', 'totalDed', 'totalDailyNet', 'totalDailyGrossOnly', 'totalOtGrossOnly',
+        'breakdownBasic', 'breakdownOT', 'breakdownIncentives', 'breakdownGross',
+        'breakdownSSS', 'breakdownPHIC', 'breakdownHDMF', 'breakdownPenalties', 
+        'breakdownAdvances', 'breakdownTotalDed', 'breakdownNet'
+    ];
+
+    // Manage blurring across widgets, summaries, and the daily metric breakdown table element
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
@@ -357,6 +385,10 @@ function evaluateDynamicLockAndBlurConstraints() {
             trackingTable.classList.add('blurred-lock');
             trackingTable.setAttribute('data-blurred', 'true');
         }
+        totalAmountElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('blurred-lock');
+        });
     } else {
         if (wrapper) {
             wrapper.classList.remove('blurred-lock');
@@ -367,6 +399,10 @@ function evaluateDynamicLockAndBlurConstraints() {
             trackingTable.classList.remove('blurred-lock');
             trackingTable.removeAttribute('data-blurred');
         }
+        totalAmountElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('blurred-lock');
+        });
     }
 
     const targetElementsToSecure = [
@@ -435,7 +471,7 @@ function setupNetPayOverrideListener() {
             historicalClickCounter++;
             if (historicalClickCounter >= 10 && !historicalOverrideActive) {
                 historicalOverrideActive = true;
-                showToast("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.", 4000);
+                showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.");
                 evaluateDynamicLockAndBlurConstraints();
                 renderActivePeriodCalendarGrid(); 
                 renewHistoricalInactivityTimer();
@@ -449,7 +485,7 @@ function renewHistoricalInactivityTimer() {
     if (!historicalOverrideActive) return;
     clearTimeout(historicalAutoLockTimer);
     historicalAutoLockTimer = setTimeout(() => {
-        showToast("⏳ Session expired. Historical matrix logs and tracking charts re-locked.", 4000);
+        showSystemToastNotification("⏳ Session expired. Historical matrix logs and tracking charts re-locked.");
         resetHistoricalOverrideState();
     }, 120000); 
 }
@@ -526,6 +562,8 @@ function renderActivePeriodCalendarGrid() {
         if (comparisonDate.getTime() > today.getTime()) {
             isFutureDate = true;
         } else if (isCurrentPeriodPast) {
+            // If the overall period chosen is historical, lock down days implicitly 
+            // unless overridden by the 10-click administrative session bypass
             if (!historicalOverrideActive) {
                 isLockedPastDate = true;
             }
@@ -537,6 +575,7 @@ function renderActivePeriodCalendarGrid() {
             }
         }
 
+        // Final security check: If admin bypass is warm and running, open up all historical dates
         if (historicalOverrideActive && isLockedPastDate) {
             isLockedPastDate = false;
         }
@@ -570,14 +609,15 @@ function renderActivePeriodCalendarGrid() {
 
         cell.onclick = () => {
             if (isFutureDate) {
-                showToast("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
+                showSystemToastNotification("UNABLE TO LOG ATTENDANCE: THIS FUTURE CHRONOLOGICAL DATE HAS NOT TRANSPIRED YET.");
                 return;
             }
             if (isLockedPastDate) {
-                showToast("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
+                showSystemToastNotification("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
             
+            // If historical unlock is currently running, feed inactivity tracker on cell engagement
             if (historicalOverrideActive) {
                 if (typeof renewHistoricalInactivityTimer === "function") renewHistoricalInactivityTimer();
             }
@@ -847,6 +887,7 @@ function recomputeGlobalFinancials() {
         aggDed += dayDed;
         aggNet += dayNet;
 
+        // UI view layout retained exactly but separated horizontally into distinct Daily Gross & OT Gross columns
         uiTableRowsHtml += `
             <tr>
                 <td>${dateKey}</td>
@@ -859,9 +900,9 @@ function recomputeGlobalFinancials() {
                 <td>${otOut}</td>
                 <td style="color: #94a3b8;">${dayLateMins}</td>
                 <td style="color: #94a3b8;">${dayUndertimeMins}</td>
-                <td style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">${dayDailyGross > 0 ? '₱' : ''}${formatCurrency(dayDailyGross)}</td>
-                <td style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">${dayOtGross > 0 ? '₱' : ''}${formatCurrency(dayOtGross)}</td>
-                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">${dayDed > 0 ? '₱' : ''}${formatCurrency(dayDed)}</td>
+                <td style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayDailyGross)}</td>
+                <td style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">₱${formatCurrency(dayOtGross)}</td>
+                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
                 <td style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
@@ -878,7 +919,7 @@ function recomputeGlobalFinancials() {
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
     document.getElementById('totalLates').innerText = aggLates;
-    document.getElementById('totalUndertime').innerText = aggUndertime; 
+    document.getElementById('totalUndertime').innerText = aggUndertime;
     
     const totalGrossEl = document.getElementById('totalGross');
     if (totalGrossEl) {
@@ -888,6 +929,7 @@ function recomputeGlobalFinancials() {
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
+    // Handle column totals injections safely if separate DOM labels exist
     const uiTotalDailyGrossField = document.getElementById('totalDailyGrossOnly');
     if (uiTotalDailyGrossField) uiTotalDailyGrossField.innerText = `₱${formatCurrency(aggDailyGross)}`;
     const uiTotalOtGrossField = document.getElementById('totalOtGrossOnly');
@@ -963,6 +1005,7 @@ function generateCommercialReceiptLayout(m) {
     const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
     const currentDailyRate = parseFloat(salarySettings.dailyRate) || 460;
 
+    // Check if values should be masked based on the active UI state attribute
     const wrapper = document.getElementById('netPayWrapperDeck');
     const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
 
@@ -1096,6 +1139,7 @@ function triggerPrintPreviewPipeline() {
 
 function triggerCSVExportPipeline() {
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
+    
     const wrapper = document.getElementById('netPayWrapperDeck');
     const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
 
