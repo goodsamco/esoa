@@ -45,7 +45,7 @@ let autoSaveTimer = null;
 let hasUnsavedChanges = false;
 
 function formatCurrency(amount) {
-    return (amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function timeStringToMinutes(timeStr) {
@@ -134,7 +134,6 @@ function injectExitGuardModal() {
     };
 }
 
-// Trigger Auto Save Engine Loop (1-Second Delay)
 function markChangeAndQueueAutoSave() {
     hasUnsavedChanges = true;
     clearTimeout(autoSaveTimer);
@@ -188,11 +187,11 @@ async function bootEngineCore() {
 }
 
 function updateUIProfileElements() {
-    if (document.getElementById('profSettingsNameDisplay')) document.getElementById('profSettingsNameDisplay').innerText = (userProfile.customName || "").toUpperCase();
-    if (document.getElementById('profNameDisplay')) document.getElementById('profNameDisplay').innerText = (userProfile.name || "").toUpperCase();
-    if (document.getElementById('profEmailDisplay')) document.getElementById('profEmailDisplay').innerText = (userProfile.email || "").toUpperCase();
-    if (document.getElementById('profPosDisplay')) document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
-    if (document.getElementById('profDeptDisplay')) document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
+    document.getElementById('profSettingsNameDisplay').innerText = (userProfile.customName || "").toUpperCase();
+    document.getElementById('profNameDisplay').innerText = (userProfile.name || "").toUpperCase();
+    document.getElementById('profEmailDisplay').innerText = (userProfile.email || "").toUpperCase();
+    document.getElementById('profPosDisplay').innerText = (salarySettings.position || "Staff").toUpperCase();
+    document.getElementById('profDeptDisplay').innerText = (salarySettings.department || "Operations").toUpperCase();
     
     let rateElement = document.getElementById('profDailyRateDisplay');
     const formattedRate = `₱${formatCurrency(parseFloat(salarySettings.dailyRate) || 460)}`;
@@ -211,7 +210,6 @@ function updateUIProfileElements() {
 
 function buildDropdownTargetIntervals() {
     const selector = document.getElementById('periodSelector');
-    if (!selector) return;
     const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
     
     selector.innerHTML = "";
@@ -239,74 +237,66 @@ function buildDropdownTargetIntervals() {
 
 async function fetchAndProcessSelectedPeriodPayload() {
     if(hasUnsavedChanges) {
-        const modal = document.getElementById('exitGuardModalOverlay');
-        if(modal) modal.style.display = 'flex';
+        document.getElementById('exitGuardModalOverlay').style.display = 'flex';
         return;
     }
     showGlobalEngineLoader();
-    
+    const selectedPeriodKey = document.getElementById('periodSelector').value; 
+    const pieces = selectedPeriodKey.split('-');
+    const year = parseInt(pieces[0]);
+    const monthIdx = parseInt(pieces[1]) - 1;
+    const day = parseInt(pieces[2]);
+
+    activeDatesArray = [];
+    timelineBuffer = {};
+
+    if (day === 15) {
+        let prevMonthDate = new Date(year, monthIdx - 1, 29);
+        let currentTarget = new Date(prevMonthDate);
+        while (currentTarget <= new Date(year, monthIdx, 13)) {
+            activeDatesArray.push(new Date(currentTarget));
+            currentTarget.setDate(currentTarget.getDate() + 1);
+        }
+    } else {
+        let currentTarget = new Date(year, monthIdx, 14);
+        while (currentTarget <= new Date(year, monthIdx, 28)) {
+            activeDatesArray.push(new Date(currentTarget));
+            currentTarget.setDate(currentTarget.getDate() + 1);
+        }
+    }
+
+    const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
+
+    document.getElementById('inputSSS').value = "";
+    document.getElementById('inputPHIC').value = "";
+    document.getElementById('inputHDMF').value = "";
+    document.getElementById('inputAdvances').value = "";
+    document.getElementById('inputDoublePay').value = "";
+    document.getElementById('inputReimbursements').value = "";
+
     try {
-        const selector = document.getElementById('periodSelector');
-        if (!selector) return;
-        const selectedPeriodKey = selector.value; 
-        const pieces = selectedPeriodKey.split('-');
-        const year = parseInt(pieces[0]);
-        const monthIdx = parseInt(pieces[1]) - 1;
-        const day = parseInt(pieces[2]);
-
-        activeDatesArray = [];
-        timelineBuffer = {};
-
-        if (day === 15) {
-            let prevMonthDate = new Date(year, monthIdx - 1, 29);
-            let currentTarget = new Date(prevMonthDate);
-            while (currentTarget <= new Date(year, monthIdx, 13)) {
-                activeDatesArray.push(new Date(currentTarget));
-                currentTarget.setDate(currentTarget.getDate() + 1);
-            }
-        } else {
-            let currentTarget = new Date(year, monthIdx, 14);
-            while (currentTarget <= new Date(year, monthIdx, 28)) {
-                activeDatesArray.push(new Date(currentTarget));
-                currentTarget.setDate(currentTarget.getDate() + 1);
-            }
-        }
-
-        const startStr = activeDatesArray[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        const endStr = activeDatesArray[activeDatesArray.length - 1].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        
-        if (document.getElementById('payableRangeDisplay')) {
-            document.getElementById('payableRangeDisplay').value = `${startStr} - ${endStr}`;
-        }
-
-        if (document.getElementById('inputSSS')) document.getElementById('inputSSS').value = "";
-        if (document.getElementById('inputPHIC')) document.getElementById('inputPHIC').value = "";
-        if (document.getElementById('inputHDMF')) document.getElementById('inputHDMF').value = "";
-        if (document.getElementById('inputAdvances')) document.getElementById('inputAdvances').value = "";
-        if (document.getElementById('inputDoublePay')) document.getElementById('inputDoublePay').value = "";
-        if (document.getElementById('inputReimbursements')) document.getElementById('inputReimbursements').value = "";
-
         const transSnap = await getDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`));
         if (transSnap.exists()) {
             const loadedData = transSnap.data();
             if (loadedData.timelineBuffer) timelineBuffer = loadedData.timelineBuffer;
-            if (document.getElementById('inputSSS')) document.getElementById('inputSSS').value = loadedData.inputSSS || "";
-            if (document.getElementById('inputPHIC')) document.getElementById('inputPHIC').value = loadedData.inputPHIC || "";
-            if (document.getElementById('inputHDMF')) document.getElementById('inputHDMF').value = loadedData.inputHDMF || "";
-            if (document.getElementById('inputAdvances')) document.getElementById('inputAdvances').value = loadedData.inputAdvances || "";
-            if (document.getElementById('inputDoublePay')) document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || "";
-            if (document.getElementById('inputReimbursements')) document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
+            document.getElementById('inputSSS').value = loadedData.inputSSS || "";
+            document.getElementById('inputPHIC').value = loadedData.inputPHIC || "";
+            document.getElementById('inputHDMF').value = loadedData.inputHDMF || "";
+            document.getElementById('inputAdvances').value = loadedData.inputAdvances || "";
+            document.getElementById('inputDoublePay').value = loadedData.inputDoublePay || "";
+            document.getElementById('inputReimbursements').value = loadedData.inputReimbursements || "";
         }
-        
-        evaluateDynamicLockAndBlurConstraints();
-        renderActivePeriodCalendarGrid();
-        recomputeGlobalFinancials();
-        hasUnsavedChanges = false;
     } catch(e) {
         console.error("Payload data recovery error: ", e);
-    } finally {
-        hideGlobalEngineLoader();
     }
+
+    evaluateDynamicLockAndBlurConstraints();
+    renderActivePeriodCalendarGrid();
+    recomputeGlobalFinancials();
+    hasUnsavedChanges = false;
+    hideGlobalEngineLoader();
 }
 
 function evaluateDynamicLockAndBlurConstraints() {
@@ -418,84 +408,80 @@ function renderActivePeriodCalendarGrid() {
 // ==========================================================================
 function launchTimeTransactionModal(dateKey, isPastDate = false) {
     currentTargetDateString = dateKey;
-    if (document.getElementById('modalTargetDateHeader')) document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
+    document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
     
-    if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = "";
-    if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = "";
-    if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "";
-    if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = "";
-    if (document.getElementById('modalTimeInOT')) document.getElementById('modalTimeInOT').value = "";
-    if (document.getElementById('modalTimeOutOT')) document.getElementById('modalTimeOutOT').value = "";
+    document.getElementById('modalTimeIn1').value = "";
+    document.getElementById('modalTimeOut1').value = "";
+    document.getElementById('modalTimeIn2').value = "";
+    document.getElementById('modalTimeOut2').value = "";
+    document.getElementById('modalTimeInOT').value = "";
+    document.getElementById('modalTimeOutOT').value = "";
     
-    if (document.getElementById('chkEnableOT')) document.getElementById('chkEnableOT').checked = false;
-    if (document.getElementById('otSubSectionDeck')) document.getElementById('otSubSectionDeck').style.display = "none";
+    document.getElementById('chkEnableOT').checked = false;
+    document.getElementById('otSubSectionDeck').style.display = "none";
 
     if (timelineBuffer[dateKey]) {
         const rec = timelineBuffer[dateKey];
-        if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = rec.in1 || "";
-        if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = rec.out1 || "";
-        if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = rec.in2 || "";
-        if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = rec.out2 || "";
+        document.getElementById('modalTimeIn1').value = rec.in1 || "";
+        document.getElementById('modalTimeOut1').value = rec.out1 || "";
+        document.getElementById('modalTimeIn2').value = rec.in2 || "";
+        document.getElementById('modalTimeOut2').value = rec.out2 || "";
         if (rec.hasOT) {
-            if (document.getElementById('chkEnableOT')) document.getElementById('chkEnableOT').checked = true;
-            if (document.getElementById('otSubSectionDeck')) document.getElementById('otSubSectionDeck').style.display = "block";
-            if (document.getElementById('modalTimeInOT')) document.getElementById('modalTimeInOT').value = rec.inOT || "";
-            if (document.getElementById('modalTimeOutOT')) document.getElementById('modalTimeOutOT').value = rec.outOT || "";
+            document.getElementById('chkEnableOT').checked = true;
+            document.getElementById('otSubSectionDeck').style.display = "block";
+            document.getElementById('modalTimeInOT').value = rec.inOT || "";
+            document.getElementById('modalTimeOutOT').value = rec.outOT || "";
         }
     } else {
         if (salarySettings.hasLunchBreak !== false) {
-            if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = "12:00";
-            if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "13:00";
-            if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
+            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            document.getElementById('modalTimeOut1').value = "12:00";
+            document.getElementById('modalTimeIn2').value = "13:00";
+            document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
         } else {
-            if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            if (document.getElementById('modalTimeOut1')) document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
-            if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "";
-            if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = "";
+            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
+            document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
         }
     }
 
-    const container = document.getElementById('modalBoxContainer');
-    if (container) {
-        const inputs = container.querySelectorAll('input, select');
-        if (isPastDate) {
-            inputs.forEach(el => el.setAttribute('disabled', 'true'));
-            if (document.getElementById('modalActionFooterDeck')) document.getElementById('modalActionFooterDeck').style.display = "none";
-            if (document.getElementById('modalLockedWarningLabel')) document.getElementById('modalLockedWarningLabel').style.display = "block";
-        } else {
-            inputs.forEach(el => el.removeAttribute('disabled'));
-            if (document.getElementById('modalActionFooterDeck')) document.getElementById('modalActionFooterDeck').style.display = "grid";
-            if (document.getElementById('modalLockedWarningLabel')) document.getElementById('modalLockedWarningLabel').style.display = "none";
-        }
+    const inputs = document.getElementById('modalBoxContainer').querySelectorAll('input, select');
+    if (isPastDate) {
+        inputs.forEach(el => el.setAttribute('disabled', 'true'));
+        document.getElementById('modalActionFooterDeck').style.display = "none";
+        document.getElementById('modalLockedWarningLabel').style.display = "block";
+    } else {
+        inputs.forEach(el => el.removeAttribute('disabled'));
+        document.getElementById('modalActionFooterDeck').style.display = "grid";
+        document.getElementById('modalLockedWarningLabel').style.display = "none";
     }
 
     runRealtimeMetricsDeductionEngine();
-    if (document.getElementById('timeConfigModalOverlay')) document.getElementById('timeConfigModalOverlay').classList.add('active');
+    document.getElementById('timeConfigModalOverlay').classList.add('active');
 }
 
 function evaluateLunchBreakConstraints() {
-    const out1El = document.getElementById('modalTimeOut1');
-    if (out1El && out1El.value) {
-        const out1Mins = timeStringToMinutes(out1El.value);
+    const out1 = document.getElementById('modalTimeOut1').value;
+    if (out1) {
+        const out1Mins = timeStringToMinutes(out1);
         if (out1Mins < timeStringToMinutes("12:59")) {
-            if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').value = "";
-            if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').value = "";
+            document.getElementById('modalTimeIn2').value = "";
+            document.getElementById('modalTimeOut2').value = "";
         }
     }
 }
 
-// Rest of code missing wrapper safe close helper fix
 function closeTimeTransactionModal() {
-    if (document.getElementById('timeConfigModalOverlay')) document.getElementById('timeConfigModalOverlay').classList.remove('active');
+    document.getElementById('timeConfigModalOverlay').classList.remove('active');
 }
 
 function runRealtimeMetricsDeductionEngine() {
     const schedIn = salarySettings.timeIn || "08:00";
     const schedOut = salarySettings.timeOut || "17:00";
-    const in1 = document.getElementById('modalTimeIn1') ? document.getElementById('modalTimeIn1').value : "";
-    const out1 = document.getElementById('modalTimeOut1') ? document.getElementById('modalTimeOut1').value : "";
-    const out2 = document.getElementById('modalTimeOut2') ? document.getElementById('modalTimeOut2').value : "";
+    const in1 = document.getElementById('modalTimeIn1').value;
+    const out1 = document.getElementById('modalTimeOut1').value;
+    const out2 = document.getElementById('modalTimeOut2').value;
 
     let lateMinutes = 0;
     let undertimeMinutes = 0;
@@ -524,36 +510,35 @@ function runRealtimeMetricsDeductionEngine() {
         }
     }
 
-    if (document.getElementById('rtLateDisplay')) document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
-    if (document.getElementById('rtUndertimeDisplay')) document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
+    document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
+    document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
 }
 
 function toggleOvertimeSubSection() {
-    const otCheck = document.getElementById('chkEnableOT');
-    if(otCheck && otCheck.disabled) return;
-    const checked = otCheck ? otCheck.checked : false;
-    if (document.getElementById('otSubSectionDeck')) document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
+    if(document.getElementById('chkEnableOT').disabled) return;
+    const checked = document.getElementById('chkEnableOT').checked;
+    document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
 }
 
 function commitModalDayStateToLocalBuffer() {
-    const in1 = document.getElementById('modalTimeIn1') ? document.getElementById('modalTimeIn1').value : "";
-    const out1 = document.getElementById('modalTimeOut1') ? document.getElementById('modalTimeOut1').value : "";
+    const in1 = document.getElementById('modalTimeIn1').value;
+    const out1 = document.getElementById('modalTimeOut1').value;
 
     if (!in1 || !out1) {
         showToast("CORE TIMELINE IN & OUT VALUES REQUIRED.");
         return;
     }
 
-    const hasOT = document.getElementById('chkEnableOT') ? document.getElementById('chkEnableOT').checked : false;
+    const hasOT = document.getElementById('chkEnableOT').checked;
     timelineBuffer[currentTargetDateString] = {
         filled: true,
         in1: in1,
         out1: out1,
-        in2: (document.getElementById('modalTimeIn2') ? document.getElementById('modalTimeIn2').value : "") || "",
-        out2: (document.getElementById('modalTimeOut2') ? document.getElementById('modalTimeOut2').value : "") || "",
+        in2: document.getElementById('modalTimeIn2').value || "",
+        out2: document.getElementById('modalTimeOut2').value || "",
         hasOT: hasOT,
-        inOT: hasOT ? (document.getElementById('modalTimeInOT') ? document.getElementById('modalTimeInOT').value : "") : "",
-        outOT: hasOT ? (document.getElementById('modalTimeOutOT') ? document.getElementById('modalTimeOutOT').value : "") : ""
+        inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
+        outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
     };
 
     closeTimeTransactionModal();
@@ -587,8 +572,8 @@ function recomputeGlobalFinancials() {
 
     let aggLates = 0;
     let aggUndertime = 0;
-    let aggDailyGrossOnly = 0; 
-    let aggOtGrossOnly = 0;    
+    let aggDailyGross = 0;
+    let aggOtGross = 0;
     let aggDed = 0;
     let aggNet = 0;
 
@@ -605,7 +590,7 @@ function recomputeGlobalFinancials() {
         const dateKey = `${year}-${month}-${day}`;
         const dayOfWeekStr = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
 
-        let dayBasicGross = 0;
+        let dayDailyGross = 0;
         let dayOtGross = 0;
         let dayDed = 0;
         let dayLateMins = 0;
@@ -621,7 +606,7 @@ function recomputeGlobalFinancials() {
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
             actualDaysWorkedCounter++;
             totalBasicEarnings += dailyRate;
-            dayBasicGross = dailyRate;
+            dayDailyGross = dailyRate;
 
             const rec = timelineBuffer[dateKey];
             tIn1 = rec.in1 || "-";
@@ -644,7 +629,7 @@ function recomputeGlobalFinancials() {
                     const lunchEndMins = timeStringToMinutes("13:00");
                     if (actOutMins <= lunchStartMins) {
                         dayUndertimeMins -= 60;
-                    } else if (actOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
+                    } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
                         dayUndertimeMins -= (lunchEndMins - actOutMins);
                     }
                 }
@@ -666,33 +651,32 @@ function recomputeGlobalFinancials() {
             }
         }
             
-        let dayNet = (dayBasicGross + dayOtGross) - dayDed;
+        let dayNet = (dayDailyGross + dayOtGross) - dayDed;
 
         aggLates += dayLateMins;
         aggUndertime += dayUndertimeMins;
-        aggDailyGrossOnly += dayBasicGross;
-        aggOtGrossOnly += dayOtGross;
+        aggDailyGross += dayDailyGross;
+        aggOtGross += dayOtGross;
         aggDed += dayDed;
         aggNet += dayNet;
 
+        // UI view layout retained exactly but separated horizontally into distinct Daily Gross & OT Gross columns
         uiTableRowsHtml += `
-            <tr style="border-bottom: 1px dashed #334155;">
-                <td rowspan="2" style="vertical-align:middle; font-weight:bold; color:#f8fafc;">${dateKey}</td>
-                <td rowspan="2" style="vertical-align:middle;">${dayOfWeekStr.toUpperCase()}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tIn1}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tOut1}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tIn2}</td>
-                <td rowspan="2" style="vertical-align:middle;">${tOut2}</td>
-                <td rowspan="2" style="vertical-align:middle;">${otIn}</td>
-                <td rowspan="2" style="vertical-align:middle;">${otOut}</td>
-                <td rowspan="2" style="vertical-align:middle; color:#94a3b8;">${dayLateMins}</td>
-                <td rowspan="2" style="vertical-align:middle; color:#94a3b8;">${dayUndertimeMins}</td>
-                <td style="color:#e2e8f0; text-align:right;">DAILY: ₱${formatCurrency(dayBasicGross)}</td>
-                <td rowspan="2" style="vertical-align:middle; text-align:right; color:${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
-                <td rowspan="2" style="vertical-align:middle; text-align:right; color:#38bdf8; font-weight:bold;">₱${formatCurrency(dayNet)}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #334155;">
-                <td style="color:#38bdf8; text-align:right; font-size:10px;">OT: ₱${formatCurrency(dayOtGross)}</td>
+            <tr>
+                <td>${dateKey}</td>
+                <td>${dayOfWeekStr.toUpperCase()}</td>
+                <td>${tIn1}</td>
+                <td>${tOut1}</td>
+                <td>${tIn2}</td>
+                <td>${tOut2}</td>
+                <td>${otIn}</td>
+                <td>${otOut}</td>
+                <td style="color: #94a3b8;">${dayLateMins}</td>
+                <td style="color: #94a3b8;">${dayUndertimeMins}</td>
+                <td style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayDailyGross)}</td>
+                <td style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">₱${formatCurrency(dayOtGross)}</td>
+                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
+                <td style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
 
@@ -700,65 +684,69 @@ function recomputeGlobalFinancials() {
             date: dateKey, dayStr: dayOfWeekStr.toUpperCase(),
             in1: tIn1, out1: tOut1, in2: tIn2, out2: tOut2, inOT: otIn, outOT: otOut,
             lates: dayLateMins, undertime: dayUndertimeMins,
-            dailyGross: dayBasicGross, otGross: dayOtGross, deductions: dayDed, net: dayNet
+            dailyGross: dayDailyGross, otGross: dayOtGross, deductions: dayDed, net: dayNet
         });
     });
 
     const breakdownBody = document.getElementById('uiDailyBreakdownBody');
     if (breakdownBody) breakdownBody.innerHTML = uiTableRowsHtml;
 
-    if (document.getElementById('totalLates')) document.getElementById('totalLates').innerText = aggLates;
-    if (document.getElementById('totalUndertime')) document.getElementById('totalUndertime').innerText = aggUndertime;
-    if (document.getElementById('totalGross')) document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGrossOnly + aggOtGrossOnly)}`;
-    if (document.getElementById('totalDed')) document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
-    if (document.getElementById('totalDailyNet')) document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
+    document.getElementById('totalLates').innerText = aggLates;
+    document.getElementById('totalUndertime').innerText = !aggUndertime;
+    document.getElementById('totalGross').innerText = `₱${formatCurrency(aggDailyGross + aggOtGross)}`;
+    document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
+    document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
-    const doublePay = parseFloat(document.getElementById('inputDoublePay') ? document.getElementById('inputDoublePay').value : 0) || 0;
-    const reimbursements = parseFloat(document.getElementById('inputReimbursements') ? document.getElementById('inputReimbursements').value : 0) || 0;
+    // Handle column totals injections safely if separate DOM labels exist
+    const uiTotalDailyGrossField = document.getElementById('totalDailyGrossOnly');
+    if (uiTotalDailyGrossField) uiTotalDailyGrossField.innerText = `₱${formatCurrency(aggDailyGross)}`;
+    const uiTotalOtGrossField = document.getElementById('totalOtGrossOnly');
+    if (uiTotalOtGrossField) uiTotalOtGrossField.innerText = `₱${formatCurrency(aggOtGross)}`;
+
+    const doublePay = parseFloat(document.getElementById('inputDoublePay').value) || 0;
+    const reimbursements = parseFloat(document.getElementById('inputReimbursements').value) || 0;
     const totalIncentives = doublePay + reimbursements;
 
-    const sss = parseFloat(document.getElementById('inputSSS') ? document.getElementById('inputSSS').value : 0) || 0;
-    const phic = parseFloat(document.getElementById('inputPHIC') ? document.getElementById('inputPHIC').value : 0) || 0;
-    const hdmf = parseFloat(document.getElementById('inputHDMF') ? document.getElementById('inputHDMF').value : 0) || 0;
-    const advances = parseFloat(document.getElementById('inputAdvances') ? document.getElementById('inputAdvances').value : 0) || 0;
+    const sss = parseFloat(document.getElementById('inputSSS').value) || 0;
+    const phic = parseFloat(document.getElementById('inputPHIC').value) || 0;
+    const hdmf = parseFloat(document.getElementById('inputHDMF').value) || 0;
+    const advances = parseFloat(document.getElementById('inputAdvances').value) || 0;
 
     const grossPay = totalBasicEarnings + totalOvertimePay + totalIncentives;
     const totalDeductions = sss + phic + hdmf + totalDeductionPenalties + advances;
     const netPay = grossPay - totalDeductions;
 
-    if (document.getElementById('breakdownBasic')) document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
-    if (document.getElementById('breakdownOT')) document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
-    if (document.getElementById('breakdownIncentives')) document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
-    if (document.getElementById('breakdownGross')) document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
+    document.getElementById('breakdownBasic').innerText = `₱${formatCurrency(totalBasicEarnings)}`;
+    document.getElementById('breakdownOT').innerText = `₱${formatCurrency(totalOvertimePay)}`;
+    document.getElementById('breakdownIncentives').innerText = `₱${formatCurrency(totalIncentives)}`;
+    document.getElementById('breakdownGross').innerText = `₱${formatCurrency(grossPay)}`;
 
-    if (document.getElementById('breakdownSSS')) document.getElementById('breakdownSSS').innerText = `₱${formatCurrency(sss)}`;
-    if (document.getElementById('breakdownPHIC')) document.getElementById('breakdownPHIC').innerText = `₱${formatCurrency(phic)}`;
-    if (document.getElementById('breakdownHDMF')) document.getElementById('breakdownHDMF').innerText = `₱${formatCurrency(hdmf)}`;
-    if (document.getElementById('breakdownPenalties')) document.getElementById('breakdownPenalties').innerText = `₱${formatCurrency(totalDeductionPenalties)}`;
-    if (document.getElementById('breakdownAdvances')) document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
-    if (document.getElementById('breakdownTotalDed')) document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
-    if (document.getElementById('breakdownNet')) document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
+    document.getElementById('breakdownSSS').innerText = `₱${formatCurrency(sss)}`;
+    document.getElementById('breakdownPHIC').innerText = `₱${formatCurrency(phic)}`;
+    document.getElementById('breakdownHDMF').innerText = `₱${formatCurrency(hdmf)}`;
+    document.getElementById('breakdownPenalties').innerText = `₱${formatCurrency(totalDeductionPenalties)}`;
+    document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
+    document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
+    document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
 
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
         sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
-        actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGrossOnly, aggOtGrossOnly, aggDed, aggNet
+        actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGross, aggOtGross, aggDed, aggNet
     });
 }
 
 async function commitTimelineTransactionToCloud(isAutoSave = false) {
-    const selector = document.getElementById('periodSelector');
-    if (!selector) return;
-    const selectedPeriodKey = selector.value; 
+    const selectedPeriodKey = document.getElementById('periodSelector').value; 
     try {
         const payload = {
             timelineBuffer: timelineBuffer,
-            inputSSS: document.getElementById('inputSSS') ? document.getElementById('inputSSS').value : "",
-            inputPHIC: document.getElementById('inputPHIC') ? document.getElementById('inputPHIC').value : "",
-            inputHDMF: document.getElementById('inputHDMF') ? document.getElementById('inputHDMF').value : "",
-            inputAdvances: document.getElementById('inputAdvances') ? document.getElementById('inputAdvances').value : "",
-            inputDoublePay: document.getElementById('inputDoublePay') ? document.getElementById('inputDoublePay').value : "",
-            inputReimbursements: document.getElementById('inputReimbursements') ? document.getElementById('inputReimbursements').value : "",
+            inputSSS: document.getElementById('inputSSS').value,
+            inputPHIC: document.getElementById('inputPHIC').value,
+            inputHDMF: document.getElementById('inputHDMF').value,
+            inputAdvances: document.getElementById('inputAdvances').value,
+            inputDoublePay: document.getElementById('inputDoublePay').value,
+            inputReimbursements: document.getElementById('inputReimbursements').value,
             updatedAt: Date.now()
         };
         await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
@@ -776,44 +764,36 @@ async function commitTimelineTransactionToCloud(isAutoSave = false) {
 }
 
 // ==========================================================================
-// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF WITH TWO ROWS PER ENTRY)
+// 7. COMPACT MATRIX RENDERING (FOR PRINTING/PDF)
 // ==========================================================================
 function generateCommercialReceiptLayout(m) {
     const printContainer = document.getElementById('print-render-matrix');
     if (!printContainer) return;
-    const dateRangeLabel = document.getElementById('payableRangeDisplay') ? document.getElementById('payableRangeDisplay').value : "";
+    const dateRangeLabel = document.getElementById('payableRangeDisplay').value;
     const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
     const currentDailyRate = parseFloat(salarySettings.dailyRate) || 460;
 
     let dailyRowsHtml = "";
     m.structuralDailyArrayLogs.forEach(row => {
         dailyRowsHtml += `
-            <tr style="border-bottom: 1px dashed #aaa;">
-                <td rowspan="2" style="padding: 4px; font-weight:700; vertical-align:middle;">${row.date}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.dayStr}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.in1}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.out1}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.in2}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.out2}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.inOT}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.outOT}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.lates}</td>
-                <td rowspan="2" style="padding: 4px; vertical-align:middle;">${row.undertime}</td>
-                <td style="padding: 2px 4px; text-align: right; font-weight:500;">DAILY: ₱${formatCurrency(row.dailyGross)}</td>
-                <td rowspan="2" style="padding: 4px; text-align: right; color:#c00; vertical-align:middle;">₱${formatCurrency(row.deductions)}</td>
-                <td rowspan="2" style="padding: 4px; text-align: right; color:#00f; font-weight:bold; vertical-align:middle;">₱${formatCurrency(row.net)}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #000;">
-                <td style="padding: 2px 4px; text-align: right; color:#2563eb; font-size:7.5px;">OT: ₱${formatCurrency(row.otGross)}</td>
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 4px; font-weight:700;">${row.date}</td>
+                <td style="padding: 4px;">${row.dayStr}</td>
+                <td style="padding: 4px;">${row.in1}</td>
+                <td style="padding: 4px;">${row.out1}</td>
+                <td style="padding: 4px;">${row.in2}</td>
+                <td style="padding: 4px;">${row.out2}</td>
+                <td style="padding: 4px;">${row.inOT}</td>
+                <td style="padding: 4px;">${row.outOT}</td>
+                <td style="padding: 4px;">${row.lates}</td>
+                <td style="padding: 4px;">${row.undertime}</td>
+                <td style="padding: 4px; text-align: right;">₱${formatCurrency(row.dailyGross)}</td>
+                <td style="padding: 4px; text-align: right; color:#2563eb;">₱${formatCurrency(row.otGross)}</td>
+                <td style="padding: 4px; text-align: right; color:#c00;">₱${formatCurrency(row.deductions)}</td>
+                <td style="padding: 4px; text-align: right; color:#00f; font-weight: bold;">₱${formatCurrency(row.net)}</td>
             </tr>
         `;
     });
-
-    const bBasicStr = document.getElementById('breakdownBasic') ? document.getElementById('breakdownBasic').innerText.replace('₱','') : "0.00";
-    const bOtStr = document.getElementById('breakdownOT') ? document.getElementById('breakdownOT').innerText.replace('₱','') : "0.00";
-    const bIncentiveStr = document.getElementById('breakdownIncentives') ? document.getElementById('breakdownIncentives').innerText.replace('₱','') : "0.00";
-    const bGrossStr = document.getElementById('breakdownGross') ? document.getElementById('breakdownGross').innerText.replace('₱','') : "0.00";
-    const bTotalDedStr = document.getElementById('breakdownTotalDed') ? document.getElementById('breakdownTotalDed').innerText.replace('₱','') : "0.00";
 
     printContainer.innerHTML = `
         <div class="print-sheet" style="font-size:9px; width:100%; max-width:1000px; margin:0 auto; padding:10px; font-family:monospace; color:#000 !important; background:#fff !important; box-sizing:border-box;">
@@ -848,7 +828,8 @@ function generateCommercialReceiptLayout(m) {
                             <th style="padding:4px; text-align:left;">OT OUT</th>
                             <th style="padding:4px; text-align:left;">LATE</th>
                             <th style="padding:4px; text-align:left;">UT</th>
-                            <th style="padding:4px; text-align:right;">GROSS DATA RUN</th>
+                            <th style="padding:4px; text-align:right;">DAILY GROSS</th>
+                            <th style="padding:4px; text-align:right;">OT GROSS</th>
                             <th style="padding:4px; text-align:right;">DED.</th>
                             <th style="padding:4px; text-align:right;">NET</th>
                         </tr>
@@ -859,25 +840,26 @@ function generateCommercialReceiptLayout(m) {
                             <td colspan="8" style="padding:4px;">TOTAL:</td>
                             <td style="padding:4px;">${m.aggLates}</td>
                             <td style="padding:4px;">${m.aggUndertime}</td>
-                            <td style="padding:4px; text-align:right;">DAILY: ₱${formatCurrency(m.aggDailyGrossOnly)}<br><span style="color:#2563eb; font-size:7.5px;">OT: ₱${formatCurrency(m.aggOtGrossOnly)}</span></td>
-                            <td style="padding:4px; text-align:right; color:#c00; vertical-align:middle;">₱${formatCurrency(m.aggDed)}</td>
-                            <td style="padding:4px; text-align:right; color:#00f; vertical-align:middle;">₱${formatCurrency(m.aggNet)}</td>
+                            <td style="padding:4px; text-align:right;">₱${formatCurrency(m.aggDailyGross)}</td>
+                            <td style="padding:4px; text-align:right; color:#2563eb;">₱${formatCurrency(m.aggOtGross)}</td>
+                            <td style="padding:4px; text-align:right; color:#c00;">₱${formatCurrency(m.aggDed)}</td>
+                            <td style="padding:4px; text-align:right; color:#00f;">₱${formatCurrency(m.aggNet)}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table style="width:100%; font-size:9px; border-collapse:collapse;">
                     <thead><tr style="border-bottom:1px solid #000;"><th colspan="2" style="text-align:left; padding-bottom:4px;">SUMMARY</th></tr></thead>
                     <tbody>
-                        <tr><td style="padding:2px 0;">Basic Baseline Run</td><td style="text-align:right;">₱${bBasicStr}</td></tr>
-                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${bOtStr}</td></tr>
-                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${bIncentiveStr}</td></tr>
-                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run Total</td><td style="text-align:right;"><b>₱${bGrossStr}</b></td></tr>
+                        <tr><td style="padding:2px 0;">Basic</td><td style="text-align:right;">₱${formatCurrency(m.totalBasicEarnings)}</td></tr>
+                        <tr style="background:#f1f5f9;"><td style="padding:2px 0; font-weight:bold;">OT Gross</td><td style="text-align:right; font-weight:bold;">₱${formatCurrency(m.totalOvertimePay)}</td></tr>
+                        <tr><td style="padding:2px 0;">Incentives</td><td style="text-align:right;">₱${formatCurrency(m.totalIncentives)}</td></tr>
+                        <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Gross Run</td><td style="text-align:right;"><b>₱${formatCurrency(m.grossPay)}</b></td></tr>
                         <tr><td style="padding:2px 0;">SSS</td><td style="text-align:right;">₱${formatCurrency(m.sss)}</td></tr>
                         <tr><td style="padding:2px 0;">PhilHealth</td><td style="text-align:right;">₱${formatCurrency(m.phic)}</td></tr>
                         <tr><td style="padding:2px 0;">HDMF</td><td style="text-align:right;">₱${formatCurrency(m.hdmf)}</td></tr>
                         <tr><td style="padding:2px 0;">Late/UT Cut</td><td style="text-align:right;">₱${formatCurrency(m.totalDeductionPenalties)}</td></tr>
                         <tr style="border-bottom:1px solid #000;"><td style="padding:2px 0;">Cash Advances Pay</td><td style="text-align:right;">₱${formatCurrency(m.advances)}</td></tr>
-                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>₱${bTotalDedStr}</b></td></tr>
+                        <tr><td style="padding:4px 0;"><b>TOTAL DEDUCTION</b></td><td style="text-align:right; color:#c00;"><b>₱${formatCurrency(m.totalDeductions)}</b></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -916,7 +898,7 @@ function triggerCSVExportPipeline() {
     csvRows.push([`\"POSITION\"`,`\"${(salarySettings.position || 'Staff').toUpperCase()}\"`]);
     csvRows.push([`\"DEPARTMENT\"`,`\"${(salarySettings.department || 'Operations').toUpperCase()}\"`]);
     csvRows.push([`\"DAILY RATE\"`,`\"PHP ${formatCurrency(dailyRateValue)}\"`]);
-    csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay') ? document.getElementById('payableRangeDisplay').value : ''}\"`]);
+    csvRows.push([`\"PERIOD RANGE\"`,`\"${document.getElementById('payableRangeDisplay').value}\"`]);
     csvRows.push([]);
     
     csvRows.push([
@@ -990,34 +972,23 @@ function triggerCSVExportPipeline() {
         `\"TOTALS\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, `\"\"`, sumLates, sumUT, formatCurrency(sumDailyGross), formatCurrency(sumOtGross), formatCurrency(sumDed), formatCurrency(sumNet)
     ]);
     
-    const bBasic = document.getElementById('breakdownBasic') ? document.getElementById('breakdownBasic').innerText.replace('₱','') : "0.00";
-    const bOT = document.getElementById('breakdownOT') ? document.getElementById('breakdownOT').innerText.replace('₱','') : "0.00";
-    const bGross = document.getElementById('breakdownGross') ? document.getElementById('breakdownGross').innerText.replace('₱','') : "0.00";
-    const bSSS = document.getElementById('breakdownSSS') ? document.getElementById('breakdownSSS').innerText.replace('₱','') : "0.00";
-    const bPHIC = document.getElementById('breakdownPHIC') ? document.getElementById('breakdownPHIC').innerText.replace('₱','') : "0.00";
-    const bHDMF = document.getElementById('breakdownHDMF') ? document.getElementById('breakdownHDMF').innerText.replace('₱','') : "0.00";
-    const bPenalties = document.getElementById('breakdownPenalties') ? document.getElementById('breakdownPenalties').innerText.replace('₱','') : "0.00";
-    const bAdvances = document.getElementById('breakdownAdvances') ? document.getElementById('breakdownAdvances').innerText.replace('₱','') : "0.00";
-    const bTotalDed = document.getElementById('breakdownTotalDed') ? document.getElementById('breakdownTotalDed').innerText.replace('₱','') : "0.00";
-    const bNet = document.getElementById('breakdownNet') ? document.getElementById('breakdownNet').innerText.replace('₱','') : "0.00";
-
     csvRows.push([]);
     csvRows.push([`\"FINANCIAL STREAM ENTRIES SUMMARY\"`]);
-    csvRows.push([`\"BASIC PAY RUN\"`, `\"${bBasic}\"`]);
-    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${bOT}\"`]);
-    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay') ? document.getElementById('inputDoublePay').value : 0))}\"`]);
-    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements') ? document.getElementById('inputReimbursements').value : 0))}\"`]);
-    csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${bGross}\"`]);
+    csvRows.push([`\"BASIC PAY RUN\"`, `\"${document.getElementById('breakdownBasic').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"OVERTIME GROSS PAY\"`, `\"${document.getElementById('breakdownOT').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"DOUBLE PAY INCENTIVE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputDoublePay').value || 0))}\"`]);
+    csvRows.push([`\"REIMBURSEMENTS ALLOWANCE\"`, `\"${formatCurrency(parseFloat(document.getElementById('inputReimbursements').value || 0))}\"`]);
+    csvRows.push([`\"TOTAL GROSS RUN\"`, `\"${document.getElementById('breakdownGross').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
     csvRows.push([`\"DEDUCTION ACCOUNT ITEMS\"`]);
-    csvRows.push([`\"SSS CONTRIBUTION\"`, `\"${bSSS}\"`]);
-    csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${bPHIC}\"`]);
-    csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${bHDMF}\"`]);
-    csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${bPenalties}\"`]);
-    csvRows.push([`\"CASH ADVANCES\"`, `\"${bAdvances}\"`]);
-    csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${bTotalDed}\"`]);
+    csvRows.push([`\"SSS CONTRIBUTION\"`, `\"${document.getElementById('breakdownSSS').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"PHIC MEDICAL PREMIUM\"`, `\"${document.getElementById('breakdownPHIC').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"HDMF FUND CONTRIB\"`, `\"${document.getElementById('breakdownHDMF').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"ATTENDANCE PENALTIES\"`, `\"${document.getElementById('breakdownPenalties').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"CASH ADVANCES\"`, `\"${document.getElementById('breakdownAdvances').innerText.replace('₱','')}\"`]);
+    csvRows.push([`\"TOTAL DEDUCTIONS\"`, `\"${document.getElementById('breakdownTotalDed').innerText.replace('₱','')}\"`]);
     csvRows.push([]);
-    csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${bNet}\"`]);
+    csvRows.push([`\"NET DISBURSABLE PAYOUT\"`, `\"${document.getElementById('breakdownNet').innerText.replace('₱','')}\"`]);
 
     const csvString = csvRows.map(e => e.join(",")).join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
@@ -1039,7 +1010,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.lucide.createIcons();
     }
 
-    // Unsaved Changes Page/Tab Exit Interceptor
     window.addEventListener('beforeunload', (e) => {
         if (hasUnsavedChanges) {
             e.preventDefault();
@@ -1047,38 +1017,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    if (document.getElementById('periodSelector')) {
-        document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
-    }
+    document.getElementById('periodSelector').addEventListener('change', fetchAndProcessSelectedPeriodPayload);
     
-    // Inputs linking directly to auto save tracking matrix
     const watchedInputs = ['inputDoublePay', 'inputReimbursements', 'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances'];
     watchedInputs.forEach(id => {
-        const inputEl = document.getElementById(id);
-        if (inputEl) {
-            inputEl.addEventListener('input', () => {
-                recomputeGlobalFinancials();
-                markChangeAndQueueAutoSave();
-            });
-        }
+        document.getElementById(id).addEventListener('input', () => {
+            recomputeGlobalFinancials();
+            markChangeAndQueueAutoSave();
+        });
     });
 
-    if (document.getElementById('modalTimeIn1')) document.getElementById('modalTimeIn1').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    if (document.getElementById('modalTimeOut1')) {
-        document.getElementById('modalTimeOut1').addEventListener('change', () => {
-            evaluateLunchBreakConstraints();
-            runRealtimeMetricsDeductionEngine();
-        });
-    }
-    if (document.getElementById('modalTimeIn2')) document.getElementById('modalTimeIn2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    if (document.getElementById('modalTimeOut2')) document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
-    if (document.getElementById('chkEnableOTWrapper')) document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
+    document.getElementById('modalTimeIn1').addEventListener('change', runRealtimeMetricsDeductionEngine);
+    document.getElementById('modalTimeOut1').addEventListener('change', () => {
+        evaluateLunchBreakConstraints();
+        runRealtimeMetricsDeductionEngine();
+    });
+    document.getElementById('modalTimeIn2').addEventListener('change', runRealtimeMetricsDeductionEngine);
+    document.getElementById('modalTimeOut2').addEventListener('change', runRealtimeMetricsDeductionEngine);
+    document.getElementById('chkEnableOTWrapper').addEventListener('click', toggleOvertimeSubSection);
 
-    if (document.getElementById('btnSaveToCloud')) document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
-    if (document.getElementById('btnPrintPreview')) document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
-    if (document.getElementById('btnExportCSV')) document.getElementById('btnExportCSV').addEventListener('click', triggerCSVExportPipeline);
+    document.getElementById('btnSaveToCloud').addEventListener('click', () => commitTimelineTransactionToCloud(false));
+    document.getElementById('btnPrintPreview').addEventListener('click', triggerPrintPreviewPipeline);
+    document.getElementById('btnExportCSV').addEventListener('click', triggerCSVExportPipeline);
     
-    if (document.getElementById('btnModalClose')) document.getElementById('btnModalClose').addEventListener('click', closeTimeTransactionModal);
-    if (document.getElementById('btnModalApply')) document.getElementById('btnModalApply').addEventListener('click', commitModalDayStateToLocalBuffer);
-    if (document.getElementById('btnModalClear')) document.getElementById('btnModalClear').addEventListener('click', clearModalDayState);
+    document.getElementById('btnModalClose').addEventListener('click', closeTimeTransactionModal);
+    document.getElementById('btnModalApply').addEventListener('click', commitModalDayStateToLocalBuffer);
+    document.getElementById('btnModalClear').addEventListener('click', clearModalDayState);
 });
