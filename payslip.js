@@ -162,7 +162,6 @@ async function bootEngineCore() {
 if (accountData.bgValue) {
     const bg = accountData.bgValue.trim();
 
-    // Detect if it's an image URL/path
     const isImage =
         bg.startsWith("http://") ||
         bg.startsWith("https://") ||
@@ -173,20 +172,9 @@ if (accountData.bgValue) {
         /\.(jpg|jpeg|png|gif|webp|svg|avif)$/i.test(bg);
 
     if (isImage) {
-        document.body.style.backgroundImage = `url('${bg}')`;
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundPosition = "center";
-        document.body.style.backgroundRepeat = "no-repeat";
-        document.body.style.backgroundColor = "transparent";
-
-        // Optional: also keep the CSS variable updated
-        document.documentElement.style.setProperty('--bg', `url('${bg}')`);
+        document.documentElement.style.setProperty("--bg", `url('${bg}')`);
     } else {
-        document.body.style.backgroundImage = "none";
-        document.body.style.backgroundColor = bg;
-
-        // Preserve existing behavior
-        document.documentElement.style.setProperty('--bg', bg);
+        document.documentElement.style.setProperty("--bg", bg);
     }
 }
             // ----------------------------------------------
