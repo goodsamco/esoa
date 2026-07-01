@@ -554,12 +554,12 @@ select:focus, input:focus {
 /* --- Container for Checkboxes/Nested Rows --- */
 .nested-row-segment {
     background: rgba(0, 0, 0, 0.2);
+    /* 20% transparent dashed separation line matching the user brand accent */
     border: 1px dashed color-mix(in srgb, var(--primary) 20%, transparent);
     border-radius: 12px;
     padding: 12px;
     margin-top: 14px;
-    display: flex;
-    align-items: center;
+    text-align: left; /* Restores identical text/label block alignment inside the element */
 }
 
 /* --- Modal Close & Native Dismiss Triggers --- */
