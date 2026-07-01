@@ -308,24 +308,34 @@ function evaluateDynamicLockAndBlurConstraints() {
 
     const selectedPeriodKey = selector.value; 
     const pieces = selectedPeriodKey.split('-');
-    const periodDate = new Date(parseInt(pieces[0]), parseInt(pieces[1]) - 1, parseInt(pieces[2]));
+    const year = parseInt(pieces[0]);
+    const monthIdx = parseInt(pieces[1]) - 1;
+    const targetDay = parseInt(pieces[2]);
     
-    // Normalize hours to perform clean calendar date comparison
+    const periodDate = new Date(year, monthIdx, targetDay);
+    
+    // Reset temporal parameters for precise absolute calendar date checks
     today.setHours(0,0,0,0);
     periodDate.setHours(0,0,0,0);
 
+    const isPastPayrollPeriod = periodDate.getTime() < today.getTime();
     let revealNetPay = false;
 
-    // Check if it's a historical/past cycle
-    const isPastPayrollPeriod = periodDate.getTime() < today.getTime();
-
     if (isPastPayrollPeriod) {
-        // Past records remain completely visible
+        // Historical logs are unlocked visually: values reveal fully
         revealNetPay = true;
     } else {
-        // Upcoming payrolls are only visible during the 13th-16th or 28th-2nd window
-        if ((currentDay >= 13 && currentDay <= 16) || (currentDay >= 28 || currentDay <= 2)) {
-            revealNetPay = true;
+        // Upcoming Period: Apply custom localized rules based on target endpoint type
+        if (targetDay === 15) {
+            // Mid-month cycle: reveals only from the 13th to the 16th
+            if (currentDay >= 13 && currentDay <= 16) {
+                revealNetPay = true;
+            }
+        } else {
+            // End-month cycle: reveals only from 28th to 1st of the next month
+            if (currentDay >= 28 || currentDay === 1) {
+                revealNetPay = true;
+            }
         }
     }
     
@@ -335,7 +345,7 @@ function evaluateDynamicLockAndBlurConstraints() {
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
-            wrapper.setAttribute('data-blurred', 'true'); // State flag for PDF/CSV pipelines
+            wrapper.setAttribute('data-blurred', 'true');
         }
         if (badge) badge.style.display = "inline-block";
     } else {
@@ -346,17 +356,24 @@ function evaluateDynamicLockAndBlurConstraints() {
         if (badge) badge.style.display = "none";
     }
 
-    // Fully lock input fields if it is a past record and it is the 2nd day of the month or later
-    const inputFields = ['inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 'inputDoublePay', 'inputReimbursements'];
-    const shouldLockInputs = isPastPayrollPeriod && (currentDay >= 2);
+    // STRICT PERMANENT RECORD SECURITY LAYER:
+    // Lock ALL auxiliary inputs, global incentives, deductions fields, and cloud action buttons if it is a past record
+    const targetElementsToSecure = [
+        'inputSSS', 'inputPHIC', 'inputHDMF', 'inputAdvances', 
+        'inputDoublePay', 'inputReimbursements', 'btnSaveToCloud'
+    ];
 
-    inputFields.forEach(id => {
+    targetElementsToSecure.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            if (shouldLockInputs) {
+            if (isPastPayrollPeriod) {
                 el.setAttribute('disabled', 'true');
+                el.style.cursor = "not-allowed";
+                el.style.opacity = "0.6";
             } else {
                 el.removeAttribute('disabled');
+                el.style.cursor = "";
+                el.style.opacity = "";
             }
         }
     });
@@ -364,8 +381,6 @@ function evaluateDynamicLockAndBlurConstraints() {
 
 function verifyActionAllowedDateConstraints() {
     const today = new Date();
-    const currentDay = today.getDate();
-
     const selector = document.getElementById('periodSelector');
     if (!selector) return true;
 
@@ -376,12 +391,11 @@ function verifyActionAllowedDateConstraints() {
     today.setHours(0,0,0,0);
     periodDate.setHours(0,0,0,0);
 
-    // If it is a past record cycle and today is the 2nd day of the month or later, lock modifications completely
-    if (periodDate.getTime() < today.getTime() && currentDay >= 2) {
+    // Completely deny any background write/modification requests if checking a historical card cycle
+    if (periodDate.getTime() < today.getTime()) {
         return false;
     }
 
-    // Active/upcoming period cycles are always fillable/editable
     return true;
 }
 
