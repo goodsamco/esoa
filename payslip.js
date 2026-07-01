@@ -826,8 +826,8 @@ function generateCommercialReceiptLayout(m) {
                             <th style="padding:4px; text-align:left;">OUT 2</th>
                             <th style="padding:4px; text-align:left;">OT IN</th>
                             <th style="padding:4px; text-align:left;">OT OUT</th>
-                            <th style="padding:4px; text-align:left;">LATE(mins)</th>
-                            <th style="padding:4px; text-align:left;">UT(mins)</th>
+                            <th style="padding:4px; text-align:left;">LATE</th>
+                            <th style="padding:4px; text-align:left;">UT</th>
                             <th style="padding:4px; text-align:right;">DAILY GROSS</th>
                             <th style="padding:4px; text-align:right;">OT GROSS</th>
                             <th style="padding:4px; text-align:right;">DED.</th>
