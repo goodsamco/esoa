@@ -590,9 +590,6 @@ function renderActivePeriodCalendarGrid() {
     if (window.lucide) window.lucide.createIcons();
 }
 
-// ==========================================================================
-// 5. TRANSACTIONS MODAL PROCESS ENGINE
-// ==========================================================================
 function launchTimeTransactionModal(dateKey, isPastDate = false) {
     currentTargetDateString = dateKey;
     document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
@@ -714,7 +711,7 @@ function commitModalDayStateToLocalBuffer() {
     const inOT = document.getElementById('modalTimeInOT').value;
     const outOT = document.getElementById('modalTimeOutOT').value;
 
-    // Modified to allow saving if core timeline is empty BUT valid OT is enabled
+    // Modified to support an empty daily core shift if OT parameters are valid
     if (!in1 || !out1) {
         if (!hasOT || !inOT || !outOT) {
             showToast("CORE TIMELINE VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
@@ -802,7 +799,7 @@ function recomputeGlobalFinancials() {
             tIn2 = rec.in2 || "-";
             tOut2 = rec.out2 || "-";
 
-            // Process Regular Shift Base Pay & Penalties only if logged
+            // Process regular shift details only if core time fields exist
             if (rec.in1 && rec.out1) {
                 actualDaysWorkedCounter++;
                 totalBasicEarnings += dailyRate;
@@ -823,7 +820,7 @@ function recomputeGlobalFinancials() {
                         const lunchEndMins = timeStringToMinutes("13:00");
                         if (actOutMins <= lunchStartMins) {
                             dayUndertimeMins -= 60;
-                        } else if (actOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
+                        } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
                             dayUndertimeMins -= (lunchEndMins - actOutMins);
                         }
                     }
@@ -833,16 +830,16 @@ function recomputeGlobalFinancials() {
                 totalDeductionPenalties += dayDed;
             }
 
-            // Process Overtime Independent of Core Shift (Handles up to 12:00 AM / Next day rollover)
+            // Process Overtime independently (Handles midnight / next day wrap-around calculations)
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
                 let oInMins = timeStringToMinutes(rec.inOT);
                 let oOutMins = timeStringToMinutes(rec.outOT);
                 
-                // If out time rolls over into next day or matches midnight (00:00)
+                // If out time rolls over into next day or hits midnight (00:00)
                 if (oOutMins <= oInMins) {
-                    oOutMins += 1440; // Add 24 hours structural minute buffer
+                    oOutMins += 1440; // Inject structural 24-hour minute buffer
                 }
                 
                 const otMins = oOutMins - oInMins;
