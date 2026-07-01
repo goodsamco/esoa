@@ -434,12 +434,12 @@ select:focus, input:focus {
     align-items: center;
     z-index: 4000;
     
-    /* 1. Ultra-smooth fixed blur architectural background layer */
+    /* From eSOA: Premium fixed layout backdrop blur layering */
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     background: rgba(0, 0, 0, 0);
 
-    /* 2. Isolated transition targets for maximum performance */
+    /* Animate opacity and background color smoothly across hardware layers */
     opacity: 0;
     transition: 
         opacity 0.22s ease, 
@@ -447,7 +447,6 @@ select:focus, input:focus {
     padding: 14px;
 }
 
-/* Activated state matching eSOA display workflow */
 .modal-overlay.active {
     display: flex;
     opacity: 1;
@@ -456,40 +455,95 @@ select:focus, input:focus {
 
 .modal-box {
     position: relative;
-    width: 100%;
-    max-width: 420px;
-    padding: 22px;
+    width: 90%;
+    max-width: 400px;
+    padding: 30px 24px;
+    text-align: center;
     box-sizing: border-box;
-    max-height: 85vh;
+    max-height: 80vh;
     overflow-y: auto;
     border-radius: 24px;
     
-    /* Transparent sleek architecture utilizing the user's custom theme properties */
+    /* Translucent architecture utilizing user's dynamic custom properties */
     background: rgba(17, 22, 37, 0.45);
     border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
     
     /* Immersive drop shadow reflecting a 5% glow of the user's exact primary color */
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 
                 0 0 50px color-mix(in srgb, var(--primary) 5%, transparent);
     
-    /* 3. Keep hardware performance scaling mechanics completely isolated */
+    /* Keep performance properties entirely isolated via GPU hint-layers */
     opacity: 0;
     transform: scale(0.92) translateY(15px);
-    will-change: transform, opacity; /* Hints GPU to separate this layer */
+    will-change: transform, opacity;
     
     transition:
         opacity 0.22s ease,
-        transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); /* Premium slight spring pop effect */
+        transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Active transition trigger mapping */
 .modal-overlay.active .modal-box {
     opacity: 1;
     transform: scale(1) translateY(0);
 }
 
+/* --- eSOA Styled Sub-elements Integrated with User Brand Colors --- */
+
+.list-item {
+    padding: 16px;
+    margin: 8px 0;
+    border-radius: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s ease;
+    color: var(--text-main);
+    background: rgba(82, 82, 82, 0.02);
+    border: 1px solid rgba(116, 116, 116, 0.05);
+}
+
+.list-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 0.65rem;
+    color: var(--primary);
+    margin-left: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.modal-box input {
+    width: 100%;
+    background: #000;
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    padding: 16px;
+    margin-top: 5px;
+    border-radius: 16px;
+    color: #fff;
+    font-size: 1.3rem;
+    box-sizing: border-box;
+    text-align: center;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.modal-box input:focus {
+    border-color: var(--primary);
+}
+
+/* --- Layout Stats Matrix & Result Container Architecture --- */
+
 .realtime-stats-bar {
-    /* Subtle background layout tinting using user's exact active color value */
     background: color-mix(in srgb, var(--primary) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
     border-radius: 12px;
@@ -513,17 +567,57 @@ select:focus, input:focus {
     font-size: 0.95rem;
     font-weight: 800;
     margin-top: 2px;
-    /* Directly loads the user's primary color value for quantitative stat readouts */
     color: var(--primary);
 }
 
 .nested-row-segment {
     background: rgba(0, 0, 0, 0.2);
-    /* 20% transparent dashed separation line matching the user brand accent */
     border: 1px dashed color-mix(in srgb, var(--primary) 20%, transparent);
     border-radius: 12px;
     padding: 12px;
     margin-top: 14px;
+}
+
+.modal-result {
+    margin: 25px 0;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-radius: 20px;
+    border: 1px dashed var(--primary);
+}
+
+#finalDiscount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.modal-copy-zone {
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background: var(--primary);
+    color: #000;
+    border-radius: 16px;
+    font-weight: 800;
+    transition: background 0.2s, color 0.2s;
+}
+
+.modal-copy-zone.success-state {
+    background: var(--primary);
+    color: #fff;
+}
+
+.modal-close-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
 }
 
 /* ==========================================================================
