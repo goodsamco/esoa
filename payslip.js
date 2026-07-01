@@ -149,7 +149,6 @@ let historicalOverrideActive = false;
 let historicalClickCounter = 0;
 let historicalAutoLockTimer = null;
 
-// Clean, global-safe UI toast notification engine
 function showSystemToastNotification(message, duration = 4000) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -175,7 +174,6 @@ async function bootEngineCore() {
     injectExitGuardModal();
     setupNetPayOverrideListener(); 
     try {
-        // Safe document resolution checking global db and userId properties
         const accountRef = doc(db, "accounts", userId);
         const accountSnap = await getDoc(accountRef);
 
@@ -351,10 +349,8 @@ function evaluateDynamicLockAndBlurConstraints() {
     let revealNetPay = false;
 
     if (isPastPayrollPeriod) {
-        // Historical logs display amounts natively
         revealNetPay = true;
     } else {
-        // Upcoming Period constraint windows
         if (targetDay === 15) {
             if (currentDay >= 13 && currentDay <= 16) revealNetPay = true;
         } else {
@@ -366,7 +362,7 @@ function evaluateDynamicLockAndBlurConstraints() {
     const badge = document.getElementById('lockBadgeDisplay');
     const trackingTable = document.getElementById('uiDailyBreakdownTable');
     
-    // Array of all amount totals in the UI to sync up with the blur constraints
+    // Comprehensive element matrix target covering all UI display fields, summaries, and sub-totals
     const totalAmountElements = [
         'totalGross', 'totalDed', 'totalDailyNet', 'totalDailyGrossOnly', 'totalOtGrossOnly',
         'breakdownBasic', 'breakdownOT', 'breakdownIncentives', 'breakdownGross',
@@ -374,7 +370,6 @@ function evaluateDynamicLockAndBlurConstraints() {
         'breakdownAdvances', 'breakdownTotalDed', 'breakdownNet'
     ];
 
-    // Manage blurring across widgets, summaries, and the daily metric breakdown table element
     if (!revealNetPay) {
         if (wrapper) {
             wrapper.classList.add('blurred-lock');
@@ -474,6 +469,7 @@ function setupNetPayOverrideListener() {
                 showSystemToastNotification("🔒 ADMIN OVERRIDE: Historical data fields & daily logs unlocked for 2 minutes.");
                 evaluateDynamicLockAndBlurConstraints();
                 renderActivePeriodCalendarGrid(); 
+                recomputeGlobalFinancials(); // Refresh presentation layer
                 renewHistoricalInactivityTimer();
                 setupInactivitySignalTracers();
             }
@@ -496,6 +492,7 @@ function resetHistoricalOverrideState() {
     clearTimeout(historicalAutoLockTimer);
     teardownInactivitySignalTracers();
     evaluateDynamicLockAndBlurConstraints();
+    recomputeGlobalFinancials(); // Enforce blur state properties back down across UI fields
     if (typeof renderActivePeriodCalendarGrid === "function" && document.getElementById('calendarDaysGridDeck')) {
         renderActivePeriodCalendarGrid(); 
     }
@@ -562,8 +559,6 @@ function renderActivePeriodCalendarGrid() {
         if (comparisonDate.getTime() > today.getTime()) {
             isFutureDate = true;
         } else if (isCurrentPeriodPast) {
-            // If the overall period chosen is historical, lock down days implicitly 
-            // unless overridden by the 10-click administrative session bypass
             if (!historicalOverrideActive) {
                 isLockedPastDate = true;
             }
@@ -575,7 +570,6 @@ function renderActivePeriodCalendarGrid() {
             }
         }
 
-        // Final security check: If admin bypass is warm and running, open up all historical dates
         if (historicalOverrideActive && isLockedPastDate) {
             isLockedPastDate = false;
         }
@@ -616,12 +610,9 @@ function renderActivePeriodCalendarGrid() {
                 showSystemToastNotification("THIS HISTORICAL RECORD CYCLE IS LOCKED AND UNFILLABLE.");
                 return;
             }
-            
-            // If historical unlock is currently running, feed inactivity tracker on cell engagement
             if (historicalOverrideActive) {
                 if (typeof renewHistoricalInactivityTimer === "function") renewHistoricalInactivityTimer();
             }
-            
             launchTimeTransactionModal(dateKey, false);
         };
         grid.appendChild(cell);
@@ -810,6 +801,11 @@ function recomputeGlobalFinancials() {
     let structuralDailyArrayLogs = [];
     let uiTableRowsHtml = "";
 
+    // Check configuration matrix status for absolute blur enforcement inside tracking lists
+    const wrapper = document.getElementById('netPayWrapperDeck');
+    const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
+    const amountBlurClassString = isBlurred ? "blurred-lock" : "";
+
     activeDatesArray.forEach(dateObj => {
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -887,7 +883,7 @@ function recomputeGlobalFinancials() {
         aggDed += dayDed;
         aggNet += dayNet;
 
-        // UI view layout retained exactly but separated horizontally into distinct Daily Gross & OT Gross columns
+        // Injects amountBlurClassString into each individual currency breakdown cell row natively
         uiTableRowsHtml += `
             <tr>
                 <td>${dateKey}</td>
@@ -900,10 +896,10 @@ function recomputeGlobalFinancials() {
                 <td>${otOut}</td>
                 <td style="color: #94a3b8;">${dayLateMins}</td>
                 <td style="color: #94a3b8;">${dayUndertimeMins}</td>
-                <td style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayDailyGross)}</td>
-                <td style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">₱${formatCurrency(dayOtGross)}</td>
-                <td style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
-                <td style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
+                <td class="${amountBlurClassString}" style="text-align: right; color: ${dayDailyGross > 0 ? '#fff' : '#64748b'};">₱${formatCurrency(dayDailyGross)}</td>
+                <td class="${amountBlurClassString}" style="text-align: right; color: ${dayOtGross > 0 ? '#38bdf8' : '#64748b'};">₱${formatCurrency(dayOtGross)}</td>
+                <td class="${amountBlurClassString}" style="text-align: right; color: ${dayDed > 0 ? '#ef4444' : '#64748b'};">₱${formatCurrency(dayDed)}</td>
+                <td class="${amountBlurClassString}" style="text-align: right; color: #38bdf8; font-weight: bold;">₱${formatCurrency(dayNet)}</td>
             </tr>
         `;
 
@@ -929,7 +925,6 @@ function recomputeGlobalFinancials() {
     document.getElementById('totalDed').innerText = `₱${formatCurrency(aggDed)}`;
     document.getElementById('totalDailyNet').innerText = `₱${formatCurrency(aggNet)}`;
 
-    // Handle column totals injections safely if separate DOM labels exist
     const uiTotalDailyGrossField = document.getElementById('totalDailyGrossOnly');
     if (uiTotalDailyGrossField) uiTotalDailyGrossField.innerText = `₱${formatCurrency(aggDailyGross)}`;
     const uiTotalOtGrossField = document.getElementById('totalOtGrossOnly');
@@ -960,6 +955,21 @@ function recomputeGlobalFinancials() {
     document.getElementById('breakdownAdvances').innerText = `₱${formatCurrency(advances)}`;
     document.getElementById('breakdownTotalDed').innerText = `₱${formatCurrency(totalDeductions)}`;
     document.getElementById('breakdownNet').innerText = `₱${formatCurrency(netPay)}`;
+
+    // Re-verify class list arrays immediately on recalculations to prevent DOM race leaks
+    const totalAmountElements = [
+        'totalGross', 'totalDed', 'totalDailyNet', 'totalDailyGrossOnly', 'totalOtGrossOnly',
+        'breakdownBasic', 'breakdownOT', 'breakdownIncentives', 'breakdownGross',
+        'breakdownSSS', 'breakdownPHIC', 'breakdownHDMF', 'breakdownPenalties', 
+        'breakdownAdvances', 'breakdownTotalDed', 'breakdownNet'
+    ];
+    totalAmountElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (isBlurred) el.classList.add('blurred-lock');
+            else el.classList.remove('blurred-lock');
+        }
+    });
 
     generateCommercialReceiptLayout({
         totalBasicEarnings, totalOvertimePay, totalIncentives, doublePay, reimbursements, grossPay,
@@ -1005,7 +1015,6 @@ function generateCommercialReceiptLayout(m) {
     const timestampStr = new Date().toLocaleString('en-US', { hour12: true });
     const currentDailyRate = parseFloat(salarySettings.dailyRate) || 460;
 
-    // Check if values should be masked based on the active UI state attribute
     const wrapper = document.getElementById('netPayWrapperDeck');
     const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
 
@@ -1139,7 +1148,6 @@ function triggerPrintPreviewPipeline() {
 
 function triggerCSVExportPipeline() {
     const dailyRateValue = parseFloat(salarySettings.dailyRate) || 460;
-    
     const wrapper = document.getElementById('netPayWrapperDeck');
     const isBlurred = wrapper && wrapper.getAttribute('data-blurred') === 'true';
 
