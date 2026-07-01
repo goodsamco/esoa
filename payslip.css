@@ -429,17 +429,17 @@ select:focus, input:focus {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    display: none; /* Handled in tandem with JS display state */
+    display: none; /* Managed in tandem with JS display workflow */
     justify-content: center;
     align-items: center;
     z-index: 4000;
     
-    /* From eSOA: Premium fixed layout backdrop blur layering */
+    /* From eSOA (image_09c11e.png): Premium fixed backdrop blur layering */
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     background: rgba(0, 0, 0, 0);
 
-    /* Animate opacity and background color smoothly across hardware layers */
+    /* Smoothly fades background across hardware-accelerated layers */
     opacity: 0;
     transition: 
         opacity 0.22s ease, 
@@ -464,15 +464,15 @@ select:focus, input:focus {
     overflow-y: auto;
     border-radius: 24px;
     
-    /* Translucent architecture utilizing user's dynamic custom properties */
+    /* From eSOA: Translucent glassmorphism using the user's custom --primary accent colors */
     background: rgba(17, 22, 37, 0.45);
     border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
     
-    /* Immersive drop shadow reflecting a 5% glow of the user's exact primary color */
+    /* High-fidelity drop shadow with a soft ambient theme glow */
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 
                 0 0 50px color-mix(in srgb, var(--primary) 5%, transparent);
     
-    /* Keep performance properties entirely isolated via GPU hint-layers */
+    /* Isolated performance properties mapping with native eSOA animations */
     opacity: 0;
     transform: scale(0.92) translateY(15px);
     will-change: transform, opacity;
@@ -487,63 +487,9 @@ select:focus, input:focus {
     transform: scale(1) translateY(0);
 }
 
-/* --- eSOA Styled Sub-elements Integrated with User Brand Colors --- */
-
-.list-item {
-    padding: 16px;
-    margin: 8px 0;
-    border-radius: 16px;
-    text-align: left;
-    cursor: pointer;
-    transition: 0.2s ease;
-    color: var(--text-main);
-    background: rgba(82, 82, 82, 0.02);
-    border: 1px solid rgba(116, 116, 116, 0.05);
-}
-
-.list-item:hover {
-    background-color: rgba(255, 255, 255, 0.04);
-    border-color: var(--primary);
-    color: #fff;
-}
-
-.input-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.input-group label {
-    font-size: 0.65rem;
-    color: var(--primary);
-    margin-left: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.modal-box input {
-    width: 100%;
-    background: #000;
-    border: 1px solid rgba(83, 83, 83, 0.2);
-    padding: 16px;
-    margin-top: 5px;
-    border-radius: 16px;
-    color: #fff;
-    font-size: 1.3rem;
-    box-sizing: border-box;
-    text-align: center;
-    font-weight: 700;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.modal-box input:focus {
-    border-color: var(--primary);
-}
-
-/* --- Layout Stats Matrix & Result Container Architecture --- */
-
+/* --- Realtime Log Metrics & Stats Header --- */
 .realtime-stats-bar {
+    /* Uses color-mix to seamlessly pass down the dynamic hex code for layout tinting */
     background: color-mix(in srgb, var(--primary) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
     border-radius: 12px;
@@ -567,49 +513,56 @@ select:focus, input:focus {
     font-size: 0.95rem;
     font-weight: 800;
     margin-top: 2px;
-    color: var(--primary);
+    color: var(--primary); /* Pops out late/undertime values with user color */
 }
 
+/* --- Form Fields & Log Input Elements (image_09c163.png) --- */
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 0.65rem;
+    color: var(--primary);
+    margin-left: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.modal-box input {
+    width: 100%;
+    background: #000;
+    border: 1px solid rgba(83, 83, 83, 0.2);
+    padding: 16px;
+    margin-top: 5px;
+    border-radius: 16px;
+    color: #fff;
+    font-size: 1.1rem;
+    box-sizing: border-box;
+    text-align: center;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.modal-box input:focus {
+    border-color: var(--primary);
+}
+
+/* --- Container for Checkboxes/Nested Rows --- */
 .nested-row-segment {
     background: rgba(0, 0, 0, 0.2);
     border: 1px dashed color-mix(in srgb, var(--primary) 20%, transparent);
     border-radius: 12px;
     padding: 12px;
     margin-top: 14px;
-}
-
-.modal-result {
-    margin: 25px 0;
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.04);
-    border-radius: 20px;
-    border: 1px dashed var(--primary);
-}
-
-#finalDiscount {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--primary);
-}
-
-.modal-copy-zone {
-    height: 60px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    cursor: pointer;
-    background: var(--primary);
-    color: #000;
-    border-radius: 16px;
-    font-weight: 800;
-    transition: background 0.2s, color 0.2s;
 }
 
-.modal-copy-zone.success-state {
-    background: var(--primary);
-    color: #fff;
-}
-
+/* --- Modal Close & Native Dismiss Triggers --- */
 .modal-close-btn {
     margin-top: 20px;
     background: transparent;
@@ -618,6 +571,11 @@ select:focus, input:focus {
     cursor: pointer;
     font-size: 0.8rem;
     text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+    color: var(--primary);
 }
 
 /* ==========================================================================
