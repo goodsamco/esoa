@@ -590,162 +590,6 @@ function renderActivePeriodCalendarGrid() {
     if (window.lucide) window.lucide.createIcons();
 }
 
-function launchTimeTransactionModal(dateKey, isPastDate = false) {
-    currentTargetDateString = dateKey;
-    document.getElementById('modalTargetDateHeader').innerText = `LOGS FOR ${dateKey}`;
-    
-    document.getElementById('modalTimeIn1').value = "";
-    document.getElementById('modalTimeOut1').value = "";
-    document.getElementById('modalTimeIn2').value = "";
-    document.getElementById('modalTimeOut2').value = "";
-    document.getElementById('modalTimeInOT').value = "";
-    document.getElementById('modalTimeOutOT').value = "";
-    
-    document.getElementById('chkEnableOT').checked = false;
-    document.getElementById('otSubSectionDeck').style.display = "none";
-
-    if (timelineBuffer[dateKey]) {
-        const rec = timelineBuffer[dateKey];
-        document.getElementById('modalTimeIn1').value = rec.in1 || "";
-        document.getElementById('modalTimeOut1').value = rec.out1 || "";
-        document.getElementById('modalTimeIn2').value = rec.in2 || "";
-        document.getElementById('modalTimeOut2').value = rec.out2 || "";
-        if (rec.hasOT) {
-            document.getElementById('chkEnableOT').checked = true;
-            document.getElementById('otSubSectionDeck').style.display = "block";
-            document.getElementById('modalTimeInOT').value = rec.inOT || "";
-            document.getElementById('modalTimeOutOT').value = rec.outOT || "";
-        }
-    } else {
-        if (salarySettings.hasLunchBreak !== false) {
-            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            document.getElementById('modalTimeOut1').value = "12:00";
-            document.getElementById('modalTimeIn2').value = "13:00";
-            document.getElementById('modalTimeOut2').value = salarySettings.timeOut || "17:00";
-        } else {
-            document.getElementById('modalTimeIn1').value = salarySettings.timeIn || "08:00";
-            document.getElementById('modalTimeOut1').value = salarySettings.timeOut || "17:00";
-            document.getElementById('modalTimeIn2').value = "";
-            document.getElementById('modalTimeOut2').value = "";
-        }
-    }
-
-    const inputs = document.getElementById('modalBoxContainer').querySelectorAll('input, select');
-    if (isPastDate) {
-        inputs.forEach(el => el.setAttribute('disabled', 'true'));
-        document.getElementById('modalActionFooterDeck').style.display = "none";
-        document.getElementById('modalLockedWarningLabel').style.display = "block";
-    } else {
-        inputs.forEach(el => el.removeAttribute('disabled'));
-        document.getElementById('modalActionFooterDeck').style.display = "grid";
-        document.getElementById('modalLockedWarningLabel').style.display = "none";
-    }
-
-    runRealtimeMetricsDeductionEngine();
-    document.getElementById('timeConfigModalOverlay').classList.add('active');
-}
-
-function evaluateLunchBreakConstraints() {
-    const out1 = document.getElementById('modalTimeOut1').value;
-    if (out1) {
-        const out1Mins = timeStringToMinutes(out1);
-        if (out1Mins < timeStringToMinutes("12:59")) {
-            document.getElementById('modalTimeIn2').value = "";
-            document.getElementById('modalTimeOut2').value = "";
-        }
-    }
-}
-
-function closeTimeTransactionModal() {
-    document.getElementById('timeConfigModalOverlay').classList.remove('active');
-}
-
-function runRealtimeMetricsDeductionEngine() {
-    const schedIn = salarySettings.timeIn || "08:00";
-    const schedOut = salarySettings.timeOut || "17:00";
-    const in1 = document.getElementById('modalTimeIn1').value;
-    const out1 = document.getElementById('modalTimeOut1').value;
-    const out2 = document.getElementById('modalTimeOut2').value;
-
-    let lateMinutes = 0;
-    let undertimeMinutes = 0;
-
-    if (in1) {
-        const schedInMins = timeStringToMinutes(schedIn);
-        const actualInMins = timeStringToMinutes(in1);
-        if (actualInMins > schedInMins) lateMinutes += (actualInMins - schedInMins);
-    }
-
-    const effectiveFinalOut = out2 ? out2 : out1;
-    if (effectiveFinalOut) {
-        const schedOutMins = timeStringToMinutes(schedOut);
-        const actualOutMins = timeStringToMinutes(effectiveFinalOut);
-        if (actualOutMins < schedOutMins) {
-            undertimeMinutes += (schedOutMins - actualOutMins);
-            if (salarySettings.hasLunchBreak !== false) {
-                const lunchStartMins = timeStringToMinutes("12:00");
-                const lunchEndMins = timeStringToMinutes("13:00");
-                if (actualOutMins <= lunchStartMins) {
-                    undertimeMinutes -= 60;
-                } else if (actualOutMins > lunchStartMins && actualOutMins < lunchEndMins) {
-                    undertimeMinutes -= (lunchEndMins - actualOutMins);
-                }
-            }
-        }
-    }
-
-    document.getElementById('rtLateDisplay').innerText = `${lateMinutes} MINS`;
-    document.getElementById('rtUndertimeDisplay').innerText = `${undertimeMinutes} MINS`;
-}
-
-function toggleOvertimeSubSection() {
-    if(document.getElementById('chkEnableOT').disabled) return;
-    const checked = document.getElementById('chkEnableOT').checked;
-    document.getElementById('otSubSectionDeck').style.display = checked ? "block" : "none";
-}
-
-function commitModalDayStateToLocalBuffer() {
-    const in1 = document.getElementById('modalTimeIn1').value;
-    const out1 = document.getElementById('modalTimeOut1').value;
-    const hasOT = document.getElementById('chkEnableOT').checked;
-    const inOT = document.getElementById('modalTimeInOT').value;
-    const outOT = document.getElementById('modalTimeOutOT').value;
-
-    // Modified to support an empty daily core shift if OT parameters are valid
-    if (!in1 || !out1) {
-        if (!hasOT || !inOT || !outOT) {
-            showToast("CORE TIMELINE VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
-            return;
-        }
-    }
-
-    timelineBuffer[currentTargetDateString] = {
-        filled: true,
-        in1: in1 || "",
-        out1: out1 || "",
-        in2: document.getElementById('modalTimeIn2').value || "",
-        out2: document.getElementById('modalTimeOut2').value || "",
-        hasOT: hasOT,
-        inOT: hasOT ? inOT : "",
-        outOT: hasOT ? outOT : ""
-    };
-
-    closeTimeTransactionModal();
-    renderActivePeriodCalendarGrid();
-    recomputeGlobalFinancials();
-    markChangeAndQueueAutoSave();
-}
-
-function clearModalDayState() {
-    if (timelineBuffer[currentTargetDateString]) {
-        delete timelineBuffer[currentTargetDateString];
-    }
-    closeTimeTransactionModal();
-    renderActivePeriodCalendarGrid();
-    recomputeGlobalFinancials();
-    markChangeAndQueueAutoSave();
-}
-
 // ==========================================================================
 // 5. TRANSACTIONS MODAL PROCESS ENGINE
 // ==========================================================================
@@ -866,29 +710,22 @@ function toggleOvertimeSubSection() {
 function commitModalDayStateToLocalBuffer() {
     const in1 = document.getElementById('modalTimeIn1').value;
     const out1 = document.getElementById('modalTimeOut1').value;
-    const hasOT = document.getElementById('chkEnableOT').checked;
-    const inOT = document.getElementById('modalTimeInOT').value;
-    const outOT = document.getElementById('modalTimeOutOT').value;
 
-    // Check if daytime fields are empty or cleared
     if (!in1 || !out1) {
-        // If daytime is cleared, we ONLY allow saving if overtime is explicitly checked and filled
-        if (!hasOT || !inOT || !outOT) {
-            showToast("CORE TIMELINE IN & OUT VALUES OR VALID OVERTIME LOGS ARE REQUIRED.");
-            return;
-        }
+        showToast("CORE TIMELINE IN & OUT VALUES REQUIRED.");
+        return;
     }
 
-    // Commits empty strings ("") for in1/out1/in2/out2 to the record if they were cleared by the user
+    const hasOT = document.getElementById('chkEnableOT').checked;
     timelineBuffer[currentTargetDateString] = {
         filled: true,
-        in1: in1 || "",
-        out1: out1 || "",
+        in1: in1,
+        out1: out1,
         in2: document.getElementById('modalTimeIn2').value || "",
         out2: document.getElementById('modalTimeOut2').value || "",
         hasOT: hasOT,
-        inOT: hasOT ? inOT : "",
-        outOT: hasOT ? outOT : ""
+        inOT: hasOT ? document.getElementById('modalTimeInOT').value : "",
+        outOT: hasOT ? document.getElementById('modalTimeOutOT').value : ""
     };
 
     closeTimeTransactionModal();
@@ -954,57 +791,47 @@ function recomputeGlobalFinancials() {
         let otOut = "-";
 
         if (timelineBuffer[dateKey] && timelineBuffer[dateKey].filled) {
+            actualDaysWorkedCounter++;
+            totalBasicEarnings += dailyRate;
+            dayDailyGross = dailyRate;
+
             const rec = timelineBuffer[dateKey];
             tIn1 = rec.in1 || "-";
             tOut1 = rec.out1 || "-";
             tIn2 = rec.in2 || "-";
             tOut2 = rec.out2 || "-";
 
-            // Process regular shift details only if core time fields exist
-            if (rec.in1 && rec.out1) {
-                actualDaysWorkedCounter++;
-                totalBasicEarnings += dailyRate;
-                dayDailyGross = dailyRate;
+            const schedInMins = timeStringToMinutes(schedInStr);
+            const actInMins = timeStringToMinutes(rec.in1);
+            if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
 
-                const schedInMins = timeStringToMinutes(schedInStr);
-                const actInMins = timeStringToMinutes(rec.in1);
-                if (actInMins > schedInMins) dayLateMins = (actInMins - schedInMins);
-
-                const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
-                const schedOutMins = timeStringToMinutes(schedOutStr);
-                const actOutMins = timeStringToMinutes(effectiveFinalOut);
-                
-                if (actOutMins < schedOutMins) {
-                    dayUndertimeMins = (schedOutMins - actOutMins);
-                    if (salarySettings.hasLunchBreak !== false) {
-                        const lunchStartMins = timeStringToMinutes("12:00");
-                        const lunchEndMins = timeStringToMinutes("13:00");
-                        if (actOutMins <= lunchStartMins) {
-                            dayUndertimeMins -= 60;
-                        } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
-                            dayUndertimeMins -= (lunchEndMins - actOutMins);
-                        }
+            const effectiveFinalOut = rec.out2 ? rec.out2 : rec.out1;
+            const schedOutMins = timeStringToMinutes(schedOutStr);
+            const actOutMins = timeStringToMinutes(effectiveFinalOut);
+            
+            if (actOutMins < schedOutMins) {
+                dayUndertimeMins = (schedOutMins - actOutMins);
+                if (salarySettings.hasLunchBreak !== false) {
+                    const lunchStartMins = timeStringToMinutes("12:00");
+                    const lunchEndMins = timeStringToMinutes("13:00");
+                    if (actOutMins <= lunchStartMins) {
+                        dayUndertimeMins -= 60;
+                    } else if (actOutMins > lunchStartMins && actOutMins < lunchEndMins) {
+                        dayUndertimeMins -= (lunchEndMins - actOutMins);
                     }
                 }
-
-                dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
-                totalDeductionPenalties += dayDed;
             }
 
-            // Process Overtime independently (Handles midnight / next day wrap-around calculations)
+            dayDed = (dayLateMins + dayUndertimeMins) * minuteRate;
+            totalDeductionPenalties += dayDed;
+
             if (rec.hasOT && rec.inOT && rec.outOT) {
                 otIn = rec.inOT;
                 otOut = rec.outOT;
-                let oInMins = timeStringToMinutes(rec.inOT);
-                let oOutMins = timeStringToMinutes(rec.outOT);
-                
-                // If out time rolls over into next day or hits midnight (00:00)
-                if (oOutMins <= oInMins) {
-                    oOutMins += 1440; // Inject structural 24-hour minute buffer
-                }
-                
-                const otMins = oOutMins - oInMins;
-                if (otMins > 0) {
+                const oInMins = timeStringToMinutes(rec.inOT);
+                const oOutMins = timeStringToMinutes(rec.outOT);
+                if (oOutMins > oInMins) {
+                    const otMins = oOutMins - oInMins;
                     dayOtGross = otMins * minuteRate;
                     totalOvertimePay += dayOtGross;
                 }
@@ -1097,6 +924,33 @@ function recomputeGlobalFinancials() {
         sss, phic, hdmf, totalDeductionPenalties, advances, totalDeductions, netPay,
         actualDaysWorkedCounter, structuralDailyArrayLogs, aggLates, aggUndertime, aggDailyGross, aggOtGross, aggDed, aggNet
     });
+}
+
+async function commitTimelineTransactionToCloud(isAutoSave = false) {
+    const selectedPeriodKey = document.getElementById('periodSelector').value; 
+    try {
+        const payload = {
+            timelineBuffer: timelineBuffer,
+            inputSSS: document.getElementById('inputSSS').value,
+            inputPHIC: document.getElementById('inputPHIC').value,
+            inputHDMF: document.getElementById('inputHDMF').value,
+            inputAdvances: document.getElementById('inputAdvances').value,
+            inputDoublePay: document.getElementById('inputDoublePay').value,
+            inputReimbursements: document.getElementById('inputReimbursements').value,
+            updatedAt: Date.now()
+        };
+        await setDoc(doc(db, "salary_transactions", `${userId}_${selectedPeriodKey}`), payload, { merge: true });
+        hasUnsavedChanges = false;
+        
+        if(isAutoSave) {
+            showToast("CHANGES SAVED AUTOMATICALLY");
+        } else {
+            showToast("TRANSACTIONS COMPILED AND SECURED SUCCESSFULLY.");
+        }
+    } catch (err) {
+        console.error("Sync failure: ", err);
+        showToast("CLOUD SYNC ERROR ENCOUNTERED");
+    }
 }
 
 // ==========================================================================
