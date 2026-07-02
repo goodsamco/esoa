@@ -1283,7 +1283,7 @@ window.closeChatSession = function () {
 };
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
-   ========================================================================== */
+   ========================================================================== 
 let textTimeout; 
 let currentFocusedIndex = 0;
 let allRows = []; 
@@ -1291,7 +1291,8 @@ let highlighter = null;
 let container = null; 
 let magnetBtn = null;
 
-const extraItems = { 
+const extraItems = {
+   doc: [""]
     lab: ["CHEMISTRY: TRIGLYCERIDES", "CHEMISTRY: HDL", "CHEMISTRY: DIRECT LDL"], 
     supply: ["NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE", "NEBULIZING KIT WITH MASK (PEDIA)", "OXYGEN CANNULA (ADULT)", "OXYGEN CANNULA (PEDIA)", "SYRINGE DISPOSABLE 1 CC", "SYRINGE DISPOSABLE ( 5.0 CC)"], 
     others: ["HM-AMLODIPINE", "HM-OMEPRAZOLE", "HM-COLCHICINE", "HM-SAMBONG", "HM-CEFIXIME", "HM-ACETYLCYSTEINE", "MEDICAL OXYGEN", "HBsAg", "DENGUE DUO", "SERUM ELECTROLYTES", "FECALYSIS", "H-PYLORI", "ECG", "TYPHIDOT", "TSH", "T3", "T4", "FT3", "FT4"] 
@@ -1372,7 +1373,175 @@ window.openList = function (cat) {
     });
     window.toggleModal('listModal', true);
 };
+*/
 
+/* ==========================================================================
+   7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
+   ========================================================================== */
+let textTimeout;
+let currentFocusedIndex = 0;
+let allRows = [];
+let highlighter = null;
+let container = null;
+let magnetBtn = null;
+
+const extraItems = {
+    doc: [
+        {
+            label: "PEDREGOSA, BONNIE",
+            value: "150121518751"
+        },
+        {
+            label: "CLAROS, DARWIN",
+            value: "150125752315"
+        },
+        {
+            label: "GAITANO, BERNICE LYNN",
+            value: "110019469615"
+        },
+        {
+            label: "SAROMINES, PEE JAY",
+            value: "110024655125"
+        }
+    ],
+
+    lab: [
+        "CHEMISTRY: TRIGLYCERIDES",
+        "CHEMISTRY: HDL",
+        "CHEMISTRY: DIRECT LDL"
+    ],
+
+    supply: [
+        "NEBULIZING KIT COMPLETE SET W/T-PIECE & MOUTHPIECE",
+        "NEBULIZING KIT WITH MASK (PEDIA)",
+        "OXYGEN CANNULA (ADULT)",
+        "OXYGEN CANNULA (PEDIA)",
+        "SYRINGE DISPOSABLE 1 CC",
+        "SYRINGE DISPOSABLE (5.0 CC)"
+    ],
+
+    others: [
+        "HM-AMLODIPINE",
+        "HM-OMEPRAZOLE",
+        "HM-COLCHICINE",
+        "HM-SAMBONG",
+        "HM-CEFIXIME",
+        "HM-ACETYLCYSTEINE",
+        "MEDICAL OXYGEN",
+        "HBsAg",
+        "DENGUE DUO",
+        "SERUM ELECTROLYTES",
+        "FECALYSIS",
+        "H-PYLORI",
+        "ECG",
+        "TYPHIDOT",
+        "TSH",
+        "T3",
+        "T4",
+        "FT3",
+        "FT4"
+    ]
+};
+
+// Initialization Execution Lifecycles
+window.addEventListener('DOMContentLoaded', () => {
+    allRows = document.querySelectorAll('.item-row');
+    highlighter = document.getElementById('highlighter');
+    container = document.getElementById('mainContainer');
+    magnetBtn = document.getElementById('magnetBtn');
+
+    // NEW: Active Navigation Sliders logic hooks for the transparent layout buttons
+    const hubContainer = document.getElementById('peerActiveHub');
+    const prevBtn = document.querySelector('.scroll-nav-btn.prev');
+    const nextBtn = document.querySelector('.scroll-nav-btn.next');
+
+    if (prevBtn && nextBtn && hubContainer) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hubContainer.scrollBy({ left: -150, behavior: 'smooth' });
+        });
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hubContainer.scrollBy({ left: 150, behavior: 'smooth' });
+        });
+    }
+
+    // PRESERVED: 100% of your original structural timing and copy lifecycles
+    setTimeout(() => updateFocus(0), 100);
+
+    allRows.forEach((row, idx) => {
+        row.addEventListener('click', () =>
+            executeCopy(row, row.getAttribute('data-val'), idx)
+        );
+    });
+
+    if (window.lucide) window.lucide.createIcons();
+    startIdle();
+});
+
+window.toggleModal = function (id, show) {
+    const modal = document.getElementById(id);
+
+    if (show) {
+        document.getElementById('hospCharges').value = '';
+        document.getElementById('caseRate').value = '';
+        document.getElementById('finalDiscount').innerText = '0.00';
+
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+    } else {
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 400);
+    }
+};
+
+window.closeOutside = function (e, id) {
+    if (e.target.id === id) window.toggleModal(id, false);
+};
+
+window.calcSr = function () {
+    const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
+    const rate = parseFloat(document.getElementById('caseRate').value) || 0;
+
+    document.getElementById('finalDiscount').innerText =
+        (charges - ((charges * 0.20) + rate)).toFixed(2);
+};
+
+window.copyModalValue = function () {
+    const val = document.getElementById('finalDiscount').innerText;
+
+    navigator.clipboard.writeText(val).then(() => {
+        flashMagnet();
+        window.toggleModal('srModal', false);
+    });
+};
+
+window.openList = function (cat) {
+    const listCont = document.getElementById('listContainer');
+    listCont.innerHTML = '';
+
+    document.getElementById('listTitle').innerText = cat.toUpperCase();
+
+    extraItems[cat].forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+
+        const label = typeof item === 'string' ? item : item.label;
+        const value = typeof item === 'string' ? item : item.value;
+
+        div.innerText = label;
+
+        div.onclick = () => {
+            navigator.clipboard.writeText(value);
+            window.toggleModal('listModal', false);
+            flashMagnet();
+        };
+
+        listCont.appendChild(div);
+    });
+
+    window.toggleModal('listModal', true);
+};
 /* ==========================================================================
    8. HIGHLIGHTER, MAGNETIC ENGINE & INTERACTION ANIMATIONS
    ========================================================================== */
