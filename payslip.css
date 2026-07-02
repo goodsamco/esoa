@@ -379,19 +379,26 @@ select:focus, input:focus {
 }
 
 .modal-box {
-    background: #111625;
-    border: 1px solid var(--border-glass);
+    /* Changed background to fully transparent blur */
+    background: rgba(255, 255, 255, 0.05); 
+    /* Removed the border */
+    border: none; 
+    
     width: 100%;
     max-width: 420px;
     border-radius: 20px;
     padding: 22px;
     box-shadow: 0 30px 70px rgba(0,0,0,0.6);
     box-sizing: border-box;
+    /* Ensure the backdrop blur affects what is behind the box */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .realtime-stats-bar {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border-glass);
+    /* Remove or change this border if you want a cleaner look */
+    background: rgba(255, 255, 255, 0.05);
+    border: none; 
     border-radius: 12px;
     padding: 12px;
     display: grid;
@@ -415,8 +422,9 @@ select:focus, input:focus {
 }
 
 .nested-row-segment {
-    background: rgba(0,0,0,0.15);
-    border: 1px dashed var(--border-glass);
+    background: rgba(255, 255, 255, 0.05);
+    /* Remove dashed border */
+    border: none; 
     border-radius: 12px;
     padding: 12px;
     margin-top: 14px;
