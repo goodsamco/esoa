@@ -1386,7 +1386,7 @@ let container = null;
 let magnetBtn = null;
 
 const extraItems = {
-    doc: [
+    surgeons: [
         {
             label: "PEDREGOSA, BONNIE",
             value: "150121518751"
