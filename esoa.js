@@ -1461,7 +1461,7 @@ const extraItems = {
         "OXYGEN CANNULA (ADULT)",
         "OXYGEN CANNULA (PEDIA)",
         "SYRINGE DISPOSABLE 1 CC",
-        "SYRINGE DISPOSABLE (5.0 CC)"
+        "SYRINGE DISPOSABLE ( 5.0 CC)"
     ],
 
     others: [
