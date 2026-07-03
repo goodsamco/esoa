@@ -804,11 +804,34 @@ function bindBackgroundGcListener() {
     });
 }
 
-
 /* ==========================================================================
    6. REALTIME REACTION-ENABLED CHAT PLATFORM LOGIC WITH EMBEDDED EMOJI PICKER
    ========================================================================== */
 let activeReplyPayload = null; 
+
+// 🔥 Helper utility to handle the dynamic auto-growing textarea calculation
+function handleTextareaAutoGrow(inputEl) {
+    if (!inputEl) return;
+    // Reset baseline height explicitly to accurately capture the structural scrollHeight
+    inputEl.style.height = '34px'; 
+    const currentScrollHeight = inputEl.scrollHeight;
+
+    if (currentScrollHeight >= 150) {
+        inputEl.style.height = '150px';
+        inputEl.style.overflowY = 'auto'; // Show scrollbar at limit
+    } else {
+        inputEl.style.height = `${currentScrollHeight}px`;
+        inputEl.style.overflowY = 'hidden'; // Hide scrollbar while growing
+    }
+}
+
+// 🔥 Helper utility to reset textarea back to baseline defaults
+function resetTextareaDimensions(inputEl) {
+    if (!inputEl) return;
+    inputEl.value = '';
+    inputEl.style.height = '34px';
+    inputEl.style.overflowY = 'hidden';
+}
 
 function formatMessageTimestamp(timestamp) {
     if (!timestamp) return '';
@@ -844,12 +867,22 @@ function initGroupChatChannel() {
     document.getElementById('chatTargetName').innerText = `Group Chat`;
     document.getElementById('chatScroller').innerHTML = '';
     document.getElementById('chatDock').style.display = 'flex';
+    
+    const input = document.getElementById('chatMsgInput');
+    resetTextareaDimensions(input);
     clearActiveReplyRow();
 
     const gcContainer = document.getElementById('gc-hub-node');
     if (gcContainer) gcContainer.classList.remove('has-unread');
 
     cleanupTransientListeners();
+
+    // Attach auto-grow logic to group chat typing sequences
+    if (input) {
+        input.oninput = () => {
+            handleTextareaAutoGrow(input);
+        };
+    }
 
     const chatRouteRef = ref(rtdb, `group_chat/messages`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
@@ -863,6 +896,9 @@ function initGroupChatChannel() {
 function initTransientChatChannel(partnerId, partnerName) {
     isGroupChat = false;
     selectedActiveChatPartnerId = partnerId;
+    
+    const input = document.getElementById('chatMsgInput');
+    resetTextareaDimensions(input);
     clearActiveReplyRow();
     
     const cleanName = partnerName ? partnerName.split(' ')[0] : "Operator";
@@ -878,14 +914,18 @@ function initTransientChatChannel(partnerId, partnerName) {
     cleanupTransientListeners();
 
     const channelSessionKey = userId < partnerId ? `${userId}_${partnerId}` : `${partnerId}_${userId}`;
-    const input = document.getElementById('chatMsgInput');
 
-    input.oninput = () => {
-        const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
-        set(typingRef, true);
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
-    };
+    if (input) {
+        input.oninput = () => {
+            // Combine typing presence logic and text field calculation layout sequences
+            handleTextareaAutoGrow(input);
+
+            const typingRef = ref(rtdb, `typing/${channelSessionKey}/${userId}`);
+            set(typingRef, true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => { set(typingRef, false); }, 1500);
+        };
+    }
     
     const chatRouteRef = ref(rtdb, `sessions/${channelSessionKey}`);
     transientChatListenerRemoveHook = onChildAdded(chatRouteRef, (childSnap) => {
@@ -927,7 +967,8 @@ window.sendChatPayload = function () {
     const newMsgRef = push(chatRouteRef);
     set(newMsgRef, payload);
 
-    input.value = '';
+    // Reset value and snap the bounding heights clean back to 34px state
+    resetTextareaDimensions(input);
     clearActiveReplyRow();
 
     if (!isGroupChat) {
@@ -1120,7 +1161,6 @@ function toggleReactionPicker(msgId, wrapper, originalMsg) {
     wrapper.appendChild(tray);
 }
 
-// 🔥 Updated: Spawns the native emoji panel with auto-close click handler
 function toggleNativeEmojiPanel(msgId, wrapper, tray) {
     const activePanel = document.getElementById(`emoji-panel-${msgId}`);
     if (activePanel) {
@@ -1153,7 +1193,6 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
 
     wrapper.appendChild(panel);
 
-    // 🔥 Added: Global window click detection listener to dismiss panel on click-away
     const closePanelHandler = (event) => {
         if (!panel.contains(event.target) && !tray.contains(event.target)) {
             panel.remove();
@@ -1161,7 +1200,6 @@ function toggleNativeEmojiPanel(msgId, wrapper, tray) {
         }
     };
     
-    // Defer execution slightly to prevent immediate intercept of the current activation click event
     setTimeout(() => {
         document.addEventListener('click', closePanelHandler);
     }, 0);
@@ -1259,7 +1297,7 @@ function syncReactionsDisplay(msgId, fallbackName) {
                 pill.innerHTML = `<span>${emo}</span><span class="reaction-count">${summary[emo].count}</span>`;
             } else {
                 pill.innerHTML = `<span>${emo}</span>`;
-            }                                                                                    
+            }                                                                                                                    
             pill.onclick = (e) => {
                 e.stopPropagation();
                 submitReaction(msgId, emo);
@@ -1276,11 +1314,17 @@ window.closeChatSession = function () {
         const channelSessionKey = userId < selectedActiveChatPartnerId ? `${userId}_${selectedActiveChatPartnerId}` : `${selectedActiveChatPartnerId}_${userId}`;
         set(ref(rtdb, `typing/${channelSessionKey}/${userId}`), false);
     }
+    
+    const input = document.getElementById('chatMsgInput');
+    resetTextareaDimensions(input);
     clearActiveReplyRow();
+    
     document.getElementById('chatDock').style.display = 'none';
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
 };
+
+
 /* ==========================================================================
    7. CORE UTILITY METRICS (DISCOUNTS, LIST TRAY POPOVERS)
    ========================================================================== 
