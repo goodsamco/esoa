@@ -770,7 +770,7 @@ body.copy-flash {
     /* 🔥 FIX: Keeps the button from growing/stretching vertically or horizontally */
     height: 34px; 
     flex-shrink: 0; 
-}
+} 
 
 /* ==========================================================================
    8. CORE LAYOUT CONTAINERS & GRID LINES
