@@ -729,7 +729,7 @@ body.copy-flash {
     border-radius: 8px;
     color: white;
     padding: 8px;
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     outline: none;
 }
 
@@ -741,12 +741,12 @@ body.copy-flash {
     border-radius: 8px;
     color: white;
     padding: 8px;
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     line-height: 1.2rem;
     outline: none;
     
     resize: none;
-    height: 34px;
+    height: 35px;
     max-height: 150px; /* The stopping point */
     font-family: inherit;
     box-sizing: border-box;
