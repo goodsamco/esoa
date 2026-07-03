@@ -1322,7 +1322,7 @@ window.closeChatSession = function () {
     document.getElementById('chatDock').style.display = 'none';
     cleanupTransientListeners();
     selectedActiveChatPartnerId = null;
-};
+}; 
 
 
 /* ==========================================================================
