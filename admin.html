@@ -329,7 +329,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -353,7 +353,6 @@
 
     const cachedUserDirectory = {};
 
-    // --- POPULATE AND SYNC ACCOUNT IDENTITIES ---
     function syncUserDirectory() {
         const q = query(collection(db, "accounts"));
         onSnapshot(q, (snapshot) => {
@@ -436,8 +435,8 @@
                 const cacheProfile = cachedUserDirectory[reqData.accountId] || { displayName: reqData.currentUsername, avatarUrl: "" };
                 const avatarStyle = resolveAvatarStyle(cacheProfile.avatarUrl);
 
-                let displayType = reqData.requestType.toUpperCase();
-                let displayValue = reqData.newValue;
+                let displayType = reqData.requestType ? reqData.requestType.toUpperCase() : "REQUEST";
+                let displayValue = reqData.newValue || "";
                 if (reqData.requestType === 'password') displayValue = "•••••••• (Hidden)";
 
                 const card = document.createElement('div');
@@ -462,7 +461,6 @@
                 container.appendChild(card);
             });
 
-            // Handle Update Approval Execution
             container.querySelectorAll('.req-approve').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const reqId = e.target.getAttribute('data-id');
@@ -476,9 +474,7 @@
                         if (requestType === "name") updatePayload.name = newValue;
                         if (requestType === "username") updatePayload.username = newValue;
 
-                        // 1. Process profile modification into targeted accounts doc
                         await updateDoc(doc(db, "accounts", accountId), updatePayload);
-                        // 2. Clear out update request ticket from view safely
                         await updateDoc(doc(db, "update_requests", reqId), { status: "approved" });
                     } catch (err) {
                         alert("Failed to modify record: " + err.message);
@@ -486,7 +482,6 @@
                 });
             });
 
-            // Handle Update Disapproval Action
             container.querySelectorAll('.req-deny').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const reqId = e.target.getAttribute('data-id');
@@ -564,7 +559,6 @@
             const masterData = snapshot.val() || {};
             const rawAggregatedMessages = [];
 
-            // 1. Group Chat Logs
             if (masterData.group_chat && masterData.group_chat.messages) {
                 Object.keys(masterData.group_chat.messages).forEach(mId => {
                     const item = masterData.group_chat.messages[mId];
@@ -580,7 +574,6 @@
                 });
             }
 
-            // 2. Private Sessions Logs
             if (masterData.sessions) {
                 Object.keys(masterData.sessions).forEach(sessionKey => {
                     const track = masterData.sessions[sessionKey];
@@ -654,4 +647,4 @@
     };
 </script>
 </body>
-</html> 
+</html>
