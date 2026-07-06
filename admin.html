@@ -197,6 +197,7 @@
 
         .btn-approve {
             background: var(--primary);
+            color: #000;
         }
 
         .btn-disable {
@@ -330,7 +331,7 @@
                 const data = uDoc.data();
                 cachedUserDirectory[uDoc.id] = {
                     displayName: data.customName || data.name || `@${data.username}`,
-                    avatarUrl: data.avatarUrl || ""
+                    avatarUrl: data.avatarUrl || data.profilePic || ""
                 };
             });
         });
@@ -358,7 +359,8 @@
 
             snapshot.forEach((userDoc) => {
                 const data = userDoc.data();
-                const avatarStyle = resolveAvatarStyle(data.avatarUrl);
+                const avatarUrl = data.avatarUrl || data.profilePic;
+                const avatarStyle = resolveAvatarStyle(avatarUrl);
 
                 const card = document.createElement('div');
                 card.className = "user-card";
@@ -366,7 +368,7 @@
                     <div class="identity-block">
                         <div class="avatar-node" ${avatarStyle}></div>
                         <div class="user-info">
-                            <div class="name">${data.name || data.customName}</div>
+                            <div class="name">${data.name || data.customName || data.username}</div>
                             <div class="username">@${data.username}</div>
                         </div>
                     </div>
@@ -383,6 +385,7 @@
                 });
             });
         } catch (err) {
+            console.error(err);
             container.innerHTML = `<div class="empty-state" style="color:var(--danger)">Error loading profiles.</div>`;
         }
     }
@@ -390,20 +393,21 @@
     // --- TAB 2: ACTIVE STATUS & ACCESS CONTROL ---
     function listenToUserActivity() {
         const container = document.getElementById('activeUserList');
-        const q = query(collection(db, "accounts"), where("status", "!=", "pending"));
+        const q = query(collection(db, "accounts"));
 
         onSnapshot(q, (snapshot) => {
             container.innerHTML = "";
-            if (snapshot.empty) {
-                container.innerHTML = `<div class="empty-state">No verified accounts found.</div>`;
-                return;
-            }
+            let count = 0;
 
             snapshot.forEach((userDoc) => {
                 const data = userDoc.data();
+                if (data.status === "pending") return; // Filter approved/active statuses dynamically
+                count++;
+
                 const isOnline = data.isOnline === true; 
                 const isEsoaDisabled = data.esoaDisabled === true;
-                const avatarStyle = resolveAvatarStyle(data.avatarUrl);
+                const avatarUrl = data.avatarUrl || data.profilePic;
+                const avatarStyle = resolveAvatarStyle(avatarUrl);
 
                 const card = document.createElement('div');
                 card.className = "user-card";
@@ -412,7 +416,7 @@
                         <div class="avatar-node" ${avatarStyle}></div>
                         <div class="user-info">
                             <div class="name">
-                                ${data.customName || data.name} 
+                                ${data.customName || data.name || data.username} 
                                 <span class="status-badge ${isOnline ? 'active' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
                             </div>
                             <div class="username">@${data.username} ${isEsoaDisabled ? '<span style="color:var(--danger); font-size:0.75rem;">(eSOA Disabled)</span>' : ''}</div>
@@ -424,6 +428,11 @@
                 `;
                 container.appendChild(card);
             });
+
+            if (count === 0) {
+                container.innerHTML = `<div class="empty-state">No verified accounts found.</div>`;
+                return;
+            }
 
             container.querySelectorAll('#activeUserList .btn-disable, #activeUserList .btn-enable').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
@@ -541,5 +550,4 @@
     };
 </script>
 </body>
-            </html>
-            
+</html>
