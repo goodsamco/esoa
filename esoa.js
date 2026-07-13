@@ -1547,8 +1547,12 @@ window.calcSr = function () {
     const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
     const rate = parseFloat(document.getElementById('caseRate').value) || 0;
 
+    // Gross up the charges by dividing by 0.8 to account for the 20% deduction
+    const grossedUpCharges = charges / 0.80;
+
+    // Apply the calculation
     document.getElementById('finalDiscount').innerText =
-        (charges - ((charges * 0.20) + rate)).toFixed(2);
+        (grossedUpCharges - ((grossedUpCharges * 0.20) + rate)).toFixed(2);
 };
 
 window.copyModalValue = function () {
