@@ -1546,13 +1546,20 @@ window.closeOutside = function (e, id) {
 window.calcSr = function () {
     const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
     const rate = parseFloat(document.getElementById('caseRate').value) || 0;
+    let result;
 
-    // Gross up the charges by dividing by 0.8 to account for the 20% deduction
-    const grossedUpCharges = charges / 0.80;
+    if (rate > 0) {
+        // Scenario 1: Charges + PHIC
+        // Apply 20% discount first, then subtract the case rate
+        result = (charges * 0.80) - rate;
+    } else {
+        // Scenario 2: Charges only
+        // Gross up to reverse the 20% deduction
+        const grossedUpCharges = charges / 0.80;
+        result = grossedUpCharges - (grossedUpCharges * 0.20);
+    }
 
-    // Apply the calculation
-    document.getElementById('finalDiscount').innerText =
-        (grossedUpCharges - ((grossedUpCharges * 0.20) + rate)).toFixed(2);
+    document.getElementById('finalDiscount').innerText = result.toFixed(2);
 };
 
 window.copyModalValue = function () {
