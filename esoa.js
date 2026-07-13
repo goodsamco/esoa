@@ -1546,17 +1546,15 @@ window.closeOutside = function (e, id) {
 window.calcSr = function () {
     const charges = parseFloat(document.getElementById('hospCharges').value) || 0;
     const rate = parseFloat(document.getElementById('caseRate').value) || 0;
+
     let result;
 
     if (rate > 0) {
-        // Scenario 1: Charges + PHIC
-        // Apply 20% discount first, then subtract the case rate
-        result = (charges * 0.80) - rate;
+        // Hospital Charges + PhilHealth
+        result = charges - (charges * 0.20) - rate;
     } else {
-        // Scenario 2: Charges only
-        // Gross up to reverse the 20% deduction
-        const grossedUpCharges = charges / 0.80;
-        result = grossedUpCharges - (grossedUpCharges * 0.20);
+        // Hospital Charges only - Gross up
+        result = charges / 0.80;
     }
 
     document.getElementById('finalDiscount').innerText = result.toFixed(2);
