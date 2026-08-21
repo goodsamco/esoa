@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iOS Clinical Launchpad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00e676;
+            --primary-glow: rgba(0, 230, 118, 0.35);
+            --glass-bg: rgba(22, 24, 28, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-main: #ffffff;
+            --text-sub: #a1a1aa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #08090a;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 230, 118, 0.12), transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(0, 162, 255, 0.08), transparent 50%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Phone Container Frame */
+        .phone-shell {
+            width: 100%;
+            max-width: 410px;
+            height: 840px;
+            max-height: 94vh;
+            background: rgba(12, 14, 18, 0.7);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            perspective: 1000px;
+            overflow-y: auto;
+        }
+
+        .phone-shell::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Status Header with Live Time and Profile */
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        .clock-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .profile-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-avatar-node {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+            cursor: pointer;
+            box-shadow: 0 0 12px var(--primary-glow);
+            transition: transform 0.2s ease;
+        }
+
+        .profile-avatar-node:active {
+            transform: scale(0.92);
+        }
+
+        /* Greeting Section */
+        .greeting-section {
+            margin-bottom: 24px;
+            padding-left: 4px;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 0.2s;
+        }
+
+        .greeting-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub-greeting {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        /* Grid Headers */
+        .section-divider {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-sub);
+            margin: 16px 0 12px 4px;
+        }
+
+        /* Application Grid Layouts */
+        .home-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px 14px;
+            align-content: start;
+        }
+
+        /* iOS Fly-in Animation Base */
+        .app-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-main);
+            opacity: 0;
+            transform: scale(2.8) translateZ(120px);
+            filter: blur(12px);
+            animation: iosSettle 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .app-tile {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 22px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .app-tile img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+        }
+
+        .app-item:not(.disabled):active .app-tile {
+            transform: scale(0.88);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .app-label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin-top: 7px;
+            letter-spacing: -0.2px;
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        /* Disabled Tile Override Mechanics */
+        .app-item.disabled {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .app-item.disabled .app-tile {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+            opacity: 0.35;
+        }
+
+        .app-item.disabled .app-tile img {
+            filter: grayscale(100%);
+        }
+
+        .app-item.disabled .app-label {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Entrance Animations */
+        @keyframes iosSettle {
+            0% {
+                opacity: 0;
+                transform: scale(2.8) translateZ(120px);
+                filter: blur(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateZ(0);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    // Authentication Guard Check
+    const activeUserId = localStorage.getItem("userId");
+    if (!activeUserId) {
+        window.location.href = "login.html";
+    }
+</script>
+
+<div class="phone-shell">
+    <div class="status-header">
+        <div class="clock-display" id="liveClock">00:00 AM</div>
+        <div class="profile-container">
+            <img id="userDisplayAvatar" class="profile-avatar-node" src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User Avatar" onclick="window.location.href='customization.html'">
+        </div>
+    </div>
+
+    <div class="greeting-section">
+        <div class="greeting-text">Hello, <span id="userDisplayName">Operator</span></div>
+        <div class="sub-greeting">Welcome back to your workspace</div>
+    </div>
+
+    <div class="home-grid">
+        <a href="esoa.html" class="app-item" style="animation-delay: 0.05s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:receipt.svg?color=%2300e676" alt="eSOA">
+            </div>
+            <span class="app-label">eSOA</span>
+        </a>
+
+        <a href="icd10.html" class="app-item" style="animation-delay: 0.1s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:stethoscope.svg?color=%2300e676" alt="ICD-10">
+            </div>
+            <span class="app-label">ICD-10</span>
+        </a>
+
+        <a href="cf4.html" class="app-item" style="animation-delay: 0.15s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:credit-card.svg?color=%2300e676" alt="CF4">
+            </div>
+            <span class="app-label">CF4 Form</span>
+        </a>
+
+        <a href="customization.html" class="app-item" style="animation-delay: 0.2s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:user.svg?color=%2300e676" alt="Profile">
+            </div>
+            <span class="app-label">Profile</span>
+        </a>
+
+        <a href="payslip.html" class="app-item" style="animation-delay: 0.25s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:wallet.svg?color=%2300e676" alt="Payslip">
+            </div>
+            <span class="app-label">Payslip</span>
+        </a>
+    </div>
+
+    <div class="section-divider">Inactive Applications</div>
+
+    <div class="home-grid">
+        <div class="app-item disabled" style="animation-delay: 0.3s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:user-check.svg?color=%23ffffff" alt="Disabled">
+            </div>
+            <span class="app-label">Senior Disc.</span>
+        </div>
+
+        <div class="app-item disabled" style="animation-delay: 0.35s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:bar-chart-3.svg?color=%23ffffff" alt="Disabled">
+            </div>
+            <span class="app-label">Analytics</span>
+        </div>
+
+        <div class="app-item disabled" style="animation-delay: 0.4s;">
+            <div class="app-tile">
+                <img src="https://api.iconify.design/lucide:folder-heart.svg?color=%23ffffff" alt="Disabled">
+            </div>
+            <span class="app-label">Records</span>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="esoa.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    let db;
+    let rtdb;
+    let userDocRef;
+
+    const userId = localStorage.getItem("userId");
+
+    const premium3dAssets = {
+        'avatar-m1': 'https://global.discourse-cdn.com/monzo/original/3X/8/6/866e6d84e8c756b19050fbe2ca0932858118614c.jpg',
+        'avatar-f1': 'https://i.pinimg.com/474x/0e/d0/0d/0ed00d2ea51a4a714536d9b5d103827d.jpg'
+    };
+
+    try {
+        const firebaseConfig = {
+            apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+            authDomain: "svls-289ee.firebaseapp.com",
+            databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+            projectId: "svls-289ee",
+            storageBucket: "svls-289ee.firebasestorage.app",
+            messagingSenderId: "500705386198",
+            appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+            measurementId: "G-5TNBMQ2HN5"
+        };
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        rtdb = getDatabase(app);
+    } catch(e) {
+        console.warn("RTDB environment connection local fallback initiated.");
+    }
+
+    // Live Database Synchronization
+    if (userId && db) {
+        userDocRef = doc(db, "accounts", userId);
+        onSnapshot(userDocRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                const currentUserName = data.customName || "Operator";
+                const currentUserAvatarRaw = data.avatarUrl || "avatar-m1";
+
+                document.getElementById('userDisplayName').innerText = currentUserName.split(' ')[0];
+                document.getElementById('userDisplayAvatar').src = premium3dAssets[currentUserAvatarRaw] || currentUserAvatarRaw;
+
+                if (data.bgValue) document.body.style.backgroundColor = data.bgValue;
+                if (data.btnValue) document.documentElement.style.setProperty('--primary', data.btnValue);
+
+                if (rtdb) {
+                    set(ref(rtdb, 'presence/' + userId), {
+                        uid: userId, 
+                        name: currentUserName, 
+                        avatar: currentUserAvatarRaw, 
+                        timestamp: Date.now()
+                    });
+                }
+            }
+        });
+    }
+
+    // Live Time Engine
+    function updateClock() {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        document.getElementById('liveClock').innerText = `${hours}:${minutes} ${ampm}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
