@@ -460,7 +460,7 @@
 
     <div class="fixed-back-deck">
     <div class="floating-action-circle"
-         onclick="window.location.href='esoa.html'"
+         onclick="window.location.href='home.html'"
          title="Return to Core Engine">
         <i data-lucide="arrow-left"></i>
     </div>
@@ -850,7 +850,7 @@ document.getElementById('btnSaveConfig').addEventListener('click', async () => {
                 localStorage.setItem("statusNoteColor", payload.statusNoteColor); // Added to localStorage
                 localStorage.setItem("fontFamily", payload.fontFamily);
 
-                showStudioModal("Preferences Saved Successfully!", "Your dynamic configuration matrix values have updated seamlessly.", false, "esoa.html");
+                showStudioModal("Preferences Saved Successfully!", "Your dynamic configuration matrix values have updated seamlessly.", false, "home.html");
 
             } catch (err) {
                 showStudioModal("Error Saving Preferences", err.message, true);
