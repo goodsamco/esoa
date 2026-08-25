@@ -2,36 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monochrome Combat 2D</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>2D MONOCHROME ARENA - TACTICAL COMBAT</title>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Embedded Inline Vector Avatars for Guaranteed Sprite Fallbacks -->
+  <svg style="display: none;">
+    <defs>
+      <!-- Player 1 Vector Avatar -->
+      <g id="svgAvatarP1">
+        <rect x="10" y="4" width="12" height="12" fill="#ffffff" />
+        <rect x="16" y="8" width="6" height="3" fill="#050505" />
+        <rect x="8" y="18" width="16" height="16" fill="#ffffff" />
+        <rect x="10" y="36" width="5" height="12" fill="#ffffff" />
+        <rect x="17" y="36" width="5" height="12" fill="#ffffff" />
+      </g>
+      <!-- Player 2 / Bot Vector Avatar -->
+      <g id="svgAvatarP2">
+        <rect x="10" y="4" width="12" height="12" fill="#8c8c8c" />
+        <rect x="10" y="8" width="6" height="3" fill="#050505" />
+        <rect x="8" y="18" width="16" height="16" fill="#8c8c8c" />
+        <rect x="10" y="36" width="5" height="12" fill="#8c8c8c" />
+        <rect x="17" y="36" width="5" height="12" fill="#8c8c8c" />
+      </g>
+    </defs>
+  </svg>
 </head>
 <body>
 
-  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer"></div>
 
   <!-- LOADING OVERLAY -->
   <div id="loadingOverlay" class="screen overlay hidden">
     <div class="loader"></div>
-    <div id="loadingText">INITIALIZING SYSTEM...</div>
+    <div id="loadingText" class="subtitle">CONNECTING OPERATOR DATABASE...</div>
   </div>
 
-  <!-- MAIN MENU SCREEN -->
+  <!-- 1. MAIN MENU SCREEN -->
   <div id="mainMenuScreen" class="screen">
     <div class="menu-container">
-      <h1 class="game-title">MONO<span>COMBAT</span></h1>
-      <p class="subtitle">Monochrome Arena Escalation</p>
+      <h1 class="game-title"><span>MONO</span> ARENA</h1>
+      <div class="subtitle">TACTICAL 2D COMBAT SYSTEM</div>
 
-      <!-- USER PROFILE & AVATAR CARD -->
+      <!-- User Profile Summary Widget -->
       <div class="user-card-widget">
-        <div class="avatar-box" id="hudAvatar">
-          <!-- Monochromatic SVG Silhouette Avatar -->
-          <svg class="avatar-svg" viewBox="0 0 100 100" width="48" height="48">
-            <circle cx="50" cy="32" r="18" fill="#ffffff" />
-            <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#ffffff" />
-            <rect x="38" y="28" w="24" h="6" fill="#000000" />
+        <div class="avatar-box">
+          <svg width="32" height="48" viewBox="0 0 32 48">
+            <use href="#svgAvatarP1" />
           </svg>
         </div>
         <div class="user-info">
@@ -42,190 +62,187 @@
           <div class="xp-bar-container">
             <div id="userXpFill" class="xp-bar-fill"></div>
           </div>
-          <div class="xp-text" id="userXpText">0 / 1000 XP</div>
-        </div>
-        <div class="currency-display" id="userCurrency">🪙 0</div>
-      </div>
-
-      <!-- MAIN MENU ACTIONS -->
-      <div class="menu-actions">
-        <button id="btnSinglePlayer" class="btn primary-btn">SINGLE PLAYER (VS AI)</button>
-        <button id="btnMultiplayer" class="btn secondary-btn">ONLINE MATCH</button>
-        <button id="btnShop" class="btn shop-btn">ARMORY & SHOP</button>
-        <button id="btnProfile" class="btn outline-btn">OPERATOR PROFILE</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- WEAPON & POWER SHOP MODAL -->
-  <div id="shopModal" class="screen hidden">
-    <div class="modal-box shop-box">
-      <div class="modal-header">
-        <h2>ARMORY & SHOP</h2>
-        <div class="currency-display" id="shopCurrency">🪙 0</div>
-      </div>
-      
-      <!-- ITEM SECTIONS -->
-      <div class="shop-grid" id="shopGridContainer">
-        <!-- Dynamically injected via JavaScript -->
-      </div>
-      
-      <button id="btnCloseShop" class="btn outline-btn full-width">RETURN TO MENU</button>
-    </div>
-  </div>
-
-  <!-- OPERATOR PROFILE MODAL -->
-  <div id="profileModal" class="screen hidden">
-    <div class="modal-box">
-      <h2>OPERATOR PROFILE</h2>
-      
-      <!-- AVATAR PREVIEW -->
-      <div class="profile-avatar-preview">
-        <svg class="avatar-svg-large" viewBox="0 0 100 100" width="80" height="80">
-          <circle cx="50" cy="32" r="18" fill="#ffffff" />
-          <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#ffffff" />
-          <rect x="38" y="28" w="24" h="6" fill="#000000" />
-        </svg>
-      </div>
-
-      <!-- STATISTICS GRID -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-label">MATCHES</span>
-          <span id="statMatches" class="stat-val">0</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">WINS</span>
-          <span id="statWins" class="stat-val">0</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">KILLS</span>
-          <span id="statKills" class="stat-val">0</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">DEATHS</span>
-          <span id="statDeaths" class="stat-val">0</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">BEST STREAK</span>
-          <span id="statBestStreak" class="stat-val">0</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">ACCURACY</span>
-          <span id="statAccuracy" class="stat-val">0%</span>
-        </div>
-      </div>
-      <button id="closeProfileBtn" class="btn primary-btn full-width">CLOSE</button>
-    </div>
-  </div>
-
-  <!-- MULTIPLAYER LOBBY SCREEN -->
-  <div id="lobbyScreen" class="screen hidden">
-    <div class="lobby-container">
-      <h2>ONLINE LOBBY</h2>
-      <div id="roomBrowser">
-        <div class="lobby-actions">
-          <button id="btnCreateRoom" class="btn primary-btn">CREATE ROOM</button>
-          <div class="join-code-box">
-            <input type="text" id="joinRoomCodeInput" placeholder="ROOM CODE" maxlength="6" />
-            <button id="btnJoinByCode" class="btn secondary-btn">JOIN</button>
+          <div class="user-name-line">
+            <span id="userXpText" class="xp-text">0 / 1000 XP</span>
+            <span id="userCurrency" class="currency-display">🪙 0</span>
           </div>
         </div>
-        <div id="roomList" class="room-list">
-          <!-- Active public rooms listed here -->
-        </div>
       </div>
 
-      <div id="activeRoomView" class="hidden">
-        <h3 id="roomCodeDisplay">ROOM: ------</h3>
-        <div id="playerLobbyList" class="player-lobby-list">
-          <!-- Player slots dynamically populated -->
-        </div>
-        <button id="btnStartMatch" class="btn primary-btn hidden">START MATCH</button>
+      <!-- Main Navigation Actions -->
+      <div class="menu-actions">
+        <button id="btnSinglePlayer" class="btn primary-btn full-width">SINGLE PLAYER (VS AI)</button>
+        <button id="btnLobby" class="btn secondary-btn full-width">ONLINE MATCHMAKING</button>
+        <button id="btnShop" class="btn shop-btn full-width">ARMORY & SHOP</button>
+        <button id="btnProfile" class="btn outline-btn full-width">OPERATOR DOSSIER</button>
       </div>
-
-      <button id="btnLobbyBack" class="btn outline-btn">LEAVE LOBBY</button>
     </div>
   </div>
 
-  <!-- GAME CONTAINER AND FIGHTING GAME HUD -->
-  <div id="gameContainer" class="screen hidden">
-    <!-- FIGHTING-GAME-INSPIRED MONOCHROME HUD HEADER -->
-    <header class="fight-hud">
-      <!-- LEFT SIDE: PLAYER 1 PROFILE & METERS -->
+  <!-- 2. MULTIPLAYER LOBBY SCREEN -->
+  <div id="lobbyScreen" class="screen hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>NETWORK LOBBY</h2>
+        <button id="btnCloseLobby" class="btn outline-btn" style="padding: 4px 10px;">X</button>
+      </div>
+
+      <div class="menu-actions">
+        <button id="btnCreateRoom" class="btn primary-btn full-width">HOST QUICK MATCH</button>
+        <div style="margin: 15px 0; border-bottom: 1px dashed var(--mono-border);"></div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="inputRoomCode" placeholder="ROOM CODE..." style="flex-grow: 1; padding: 10px; background: var(--mono-black); border: 1px solid var(--mono-border); color: #fff; font-family: var(--font-mono); text-transform: uppercase;" />
+          <button id="btnJoinRoom" class="btn secondary-btn">JOIN MATCH</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. GAMEPLAY CONTAINER & FIGHTING HUD -->
+  <div id="gameContainer" class="screen hidden" style="padding: 0; background: transparent;">
+    
+    <!-- FIGHTING-GAME HUD HEADER -->
+    <div class="fight-hud">
+      <!-- Player 1 Side (Left) -->
       <div class="hud-side left-side">
         <div class="avatar-frame">
-          <svg viewBox="0 0 100 100" width="40" height="40">
-            <circle cx="50" cy="32" r="18" fill="#ffffff" />
-            <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#ffffff" />
-            <rect x="38" y="28" w="24" h="6" fill="#000000" />
+          <svg width="28" height="42" viewBox="0 0 32 48">
+            <use href="#svgAvatarP1" />
           </svg>
         </div>
         <div class="bars-container">
-          <div class="hud-username" id="hudP1Name">PLAYER 1</div>
+          <div id="hudP1Name" class="hud-username">P1_OPERATOR</div>
           <div class="meter health-meter">
-            <div class="meter-fill" id="hudP1HealthFill" style="width: 100%;"></div>
+            <div id="hudP1HealthFill" class="meter-fill" style="width: 100%;"></div>
           </div>
           <div class="meter shield-meter">
-            <div class="meter-fill" id="hudP1ShieldFill" style="width: 100%;"></div>
+            <div id="hudP1ShieldFill" class="meter-fill" style="width: 100%;"></div>
           </div>
           <div class="weapon-indicator">
-            WEAPON: <span id="hudP1Weapon">PISTOL</span> | AMMO: <span id="hudP1Ammo">12/90</span>
+            <span id="hudP1Weapon">PISTOL</span> [<span id="hudP1Ammo">12/12</span>]
           </div>
         </div>
       </div>
 
-      <!-- CENTER: MATCH TIMER, SCORE, KILL STREAK & POWER SLOT -->
+      <!-- Match Center Indicators -->
       <div class="hud-center">
-        <div class="hud-timer" id="hudMatchTimer">03:00</div>
+        <div id="hudMatchTimer" class="hud-timer">03:00</div>
         <div class="center-stats">
-          <span>KILLS: <strong id="hudP1Kills">0</strong></span>
+          <span>KILLS: <strong id="hudP1Kills">0</strong></span> | 
           <span>SCORE: <strong id="hudP1Score">0</strong></span>
         </div>
         <div id="hudKillStreakBanner" class="killstreak-banner hidden">DOUBLE KILL</div>
-        <div id="hudPowerSlot" class="power-slot empty">POWER: NONE [E]</div>
+        <div id="hudPowerSlot" class="power-slot">POWER: NONE [E]</div>
       </div>
 
-      <!-- RIGHT SIDE: OPPONENT PROFILE & METERS -->
+      <!-- Opponent / Player 2 Side (Right) -->
       <div class="hud-side right-side">
-        <div class="bars-container">
-          <div class="hud-username" id="hudP2Name">BOT_01</div>
-          <div class="meter health-meter">
-            <div class="meter-fill" id="hudP2HealthFill" style="width: 100%;"></div>
-          </div>
-          <div class="meter shield-meter">
-            <div class="meter-fill" id="hudP2ShieldFill" style="width: 100%;"></div>
-          </div>
-          <div class="weapon-indicator">
-            WEAPON: <span id="hudP2Weapon">PISTOL</span> | SCORE: <span id="hudP2Score">0</span>
-          </div>
-        </div>
         <div class="avatar-frame">
-          <svg viewBox="0 0 100 100" width="40" height="40">
-            <circle cx="50" cy="32" r="18" fill="#888888" />
-            <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#888888" />
-            <rect x="38" y="28" w="24" h="6" fill="#000000" />
+          <svg width="28" height="42" viewBox="0 0 32 48">
+            <use href="#svgAvatarP2" />
           </svg>
         </div>
+        <div class="bars-container">
+          <div id="hudP2Name" class="hud-username">BOT_UNIT</div>
+          <div class="meter health-meter">
+            <div id="hudP2HealthFill" class="meter-fill" style="width: 100%;"></div>
+          </div>
+          <div class="meter shield-meter">
+            <div id="hudP2ShieldFill" class="meter-fill" style="width: 100%;"></div>
+          </div>
+          <div class="weapon-indicator">
+            SCORE: <strong id="hudP2Score">0</strong>
+          </div>
+        </div>
       </div>
-    </header>
 
-    <!-- MONOCHROME CANVAS VIEWPORT -->
+      <!-- Quick Pause / Exit Button Trigger -->
+      <button id="btnInGamePause" class="btn outline-btn" style="pointer-events: auto; position: absolute; top: 105px; right: 20px; padding: 6px 14px;">[ESC] PAUSE</button>
+    </div>
+
+    <!-- Phaser 3 Mount Points -->
     <div id="phaserRenderCanvas"></div>
   </div>
 
-  <!-- MATCH RESULTS SCREEN -->
-  <div id="matchResultsScreen" class="screen hidden">
+  <!-- 4. PAUSE / QUIT OVERLAY MODAL -->
+  <div id="pauseModal" class="screen overlay hidden">
+    <div class="modal-box" style="text-align: center; width: 380px;">
+      <h2 style="margin-bottom: 10px;">COMBAT PAUSED</h2>
+      <div class="subtitle">SELECT AN OPTION</div>
+      <div class="menu-actions" style="margin-top: 20px;">
+        <button id="btnResumeGame" class="btn primary-btn full-width">RESUME MATCH</button>
+        <button id="btnQuitMatch" class="btn shop-btn full-width">ABANDON & QUIT MATCH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. SHOP & ARMORY MODAL -->
+  <div id="shopModal" class="screen hidden">
+    <div class="modal-box shop-box">
+      <div class="modal-header">
+        <h2>TACTICAL ARMORY</h2>
+        <div>
+          <span id="shopCurrency" class="currency-display" style="margin-right: 15px;">🪙 0</span>
+          <button id="btnCloseShop" class="btn outline-btn" style="padding: 4px 10px;">X</button>
+        </div>
+      </div>
+      <div id="shopGridContainer" class="shop-grid">
+        <!-- Dynamic Weapon Cards Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. OPERATOR DOSSIER MODAL -->
+  <div id="profileModal" class="screen hidden">
     <div class="modal-box">
-      <h2>MATCH TERMINATED</h2>
-      <div class="rewards-box">
-        <div class="reward-item"><span id="rewardXp">+0 XP</span></div>
-        <div class="reward-item"><span id="rewardCurrency">+0 🪙 COINS</span></div>
+      <div class="modal-header">
+        <h2>OPERATOR DOSSIER</h2>
+        <button id="closeProfileBtn" class="btn outline-btn" style="padding: 4px 10px;">X</button>
+      </div>
+      <div class="profile-avatar-preview">
+        <svg class="avatar-svg-large" width="64" height="96" viewBox="0 0 32 48">
+          <use href="#svgAvatarP1" />
+        </svg>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">MATCHES PLAYED</span>
+          <span id="statMatches" class="stat-val">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">TOTAL WINS</span>
+          <span id="statWins" class="stat-val">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">CONFIRMED KILLS</span>
+          <span id="statKills" class="stat-val">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">TOTAL DEATHS</span>
+          <span id="statDeaths" class="stat-val">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">BEST KILL STREAK</span>
+          <span id="statBestStreak" class="stat-val">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">COMBAT ACCURACY</span>
+          <span id="statAccuracy" class="stat-val">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. MATCH RESULTS & SCOREBOARD -->
+  <div id="matchResultsScreen" class="screen hidden">
+    <div class="modal-box" style="width: 600px;">
+      <div class="modal-header">
+        <h2>AFTER ACTION REPORT</h2>
       </div>
       <table class="scoreboard-table">
         <thead>
           <tr>
-            <th>POS</th>
+            <th>RANK</th>
             <th>OPERATOR</th>
             <th>KILLS</th>
             <th>DEATHS</th>
@@ -233,14 +250,19 @@
           </tr>
         </thead>
         <tbody id="scoreboardBody">
-          <!-- Dynamically populated post match -->
+          <!-- Injected dynamically via JS -->
         </tbody>
       </table>
-      <button id="btnResultsContinue" class="btn primary-btn full-width">RETURN TO MAIN MENU</button>
+      <div class="rewards-box">
+        <div>EARNED XP: <span id="rewardXp" style="color: #fff;">+0 XP</span></div>
+        <div>BOUNTY COINS: <span id="rewardCurrency" style="color: #fff;">+0 🪙</span></div>
+      </div>
+      <button id="btnResultsContinue" class="btn primary-btn full-width" style="margin-top: 20px;">RETURN TO BASE</button>
     </div>
   </div>
 
-  <!-- MAIN ENGINE APPLICATION MODULE -->
+  <!-- Phaser Engine Library & Application Entry Point -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
