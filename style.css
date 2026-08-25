@@ -1,6 +1,6 @@
 /* ==========================================================================
-   2D MONOCHROME COMBAT ARENA - STYLESHEET
-   Aesthetic: Stark Monochrome / Retro High-Contrast
+   2D MONOCHROME COMBAT ARENA - FULL PACKAGE STYLESHEET
+   Aesthetic: High-Contrast Stark Monochrome / Retro Arcade
    ========================================================================== */
 
 :root {
@@ -33,7 +33,7 @@ body, html {
   overflow: hidden;
 }
 
-/* CRT Scanline Screen Overlay FX */
+/* CRT Scanline Overlay FX */
 body::after {
   content: " ";
   display: block;
@@ -46,7 +46,10 @@ body::after {
   opacity: 0.6;
 }
 
-/* SCREENS & OVERLAYS */
+/* ==========================================================================
+   SCREENS, CONTAINERS & OVERLAYS
+   ========================================================================== */
+
 .screen {
   position: absolute;
   top: 0;
@@ -65,12 +68,13 @@ body::after {
 }
 
 .overlay {
-  background: rgba(5, 5, 5, 0.95);
+  background: rgba(5, 5, 5, 0.92);
   flex-direction: column;
   z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
-/* MONOCHROME LOADER */
+/* MONOCHROME SYSTEM LOADER */
 .loader {
   width: 48px;
   height: 48px;
@@ -86,7 +90,7 @@ body::after {
   100% { transform: rotate(360deg); }
 }
 
-/* MAIN MENU & CONTAINERS */
+/* MAIN CONTAINERS */
 .menu-container {
   background: var(--mono-dark-gray);
   border: 2px solid var(--mono-pure-white);
@@ -121,7 +125,7 @@ body::after {
   margin-bottom: 30px;
 }
 
-/* USER PROFILE WIDGET */
+/* USER PROFILE SUMMARY WIDGET */
 .user-card-widget {
   background: var(--mono-black);
   border: 1px solid var(--mono-border);
@@ -189,7 +193,10 @@ body::after {
   background: var(--mono-mid-gray);
 }
 
-/* BUTTONS */
+/* ==========================================================================
+   BUTTONS & CONTROLS
+   ========================================================================== */
+
 .menu-actions {
   display: flex;
   flex-direction: column;
@@ -248,7 +255,10 @@ body::after {
 
 .full-width { width: 100%; }
 
-/* FIGHTING GAME HUD HEADER (MONOCHROME) */
+/* ==========================================================================
+   FIGHTING GAME HUD HEADER
+   ========================================================================== */
+
 .fight-hud {
   position: absolute;
   top: 0;
@@ -310,12 +320,17 @@ body::after {
 }
 
 .health-meter .meter-fill {
+  height: 100%;
   background: var(--mono-pure-white);
   transition: width 0.1s linear;
 }
 
-.shield-meter { height: 6px; border-color: var(--mono-light-gray); }
+.shield-meter { 
+  height: 6px; 
+  border-color: var(--mono-light-gray); 
+}
 .shield-meter .meter-fill {
+  height: 100%;
   background: var(--mono-light-gray);
   transition: width 0.1s linear;
 }
@@ -386,7 +401,10 @@ body::after {
   background: var(--mono-mid-gray);
 }
 
-/* MODALS, ARMORY & SHOP */
+/* ==========================================================================
+   MODALS, LOBBY & ARMORY
+   ========================================================================== */
+
 .modal-box {
   background: var(--mono-dark-gray);
   border: 2px solid var(--mono-pure-white);
@@ -502,7 +520,10 @@ body::after {
   font-weight: bold;
 }
 
-/* TOAST SYSTEM (MONOCHROME) */
+/* ==========================================================================
+   TOAST SYSTEM & RENDER CANVAS
+   ========================================================================== */
+
 #toastContainer {
   position: absolute;
   bottom: 20px;
@@ -531,7 +552,6 @@ body::after {
   to { transform: translateX(0); }
 }
 
-/* RENDER CANVAS CONTAINER */
 #phaserRenderCanvas {
   width: 100vw;
   height: 100vh;
