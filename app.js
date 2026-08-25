@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MINI COMBAT 2D - ADVANCED GAMEPLAY & SERVER-AUTHORITATIVE ARCHITECTURE
+   MONOCHROME COMBAT 2D - ADVANCED GAMEPLAY & MULTIPLAYER ENGINE
    ========================================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -11,7 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 // --------------------------------------------------------------------------
-// 1. FIREBASE CONFIG & INITIALIZATION
+// 1. FIREBASE CONFIGURATION & INITIALIZATION
 // --------------------------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -28,10 +28,10 @@ const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
 // --------------------------------------------------------------------------
-// 2. CONFIGURATIONS, WEAPONS & POWER DROPS
+// 2. GLOBAL STATE & CONFIGURATIONS
 // --------------------------------------------------------------------------
 const AppState = {
-  userId: localStorage.getItem("userId") || null,
+  userId: localStorage.getItem("mono_userId") || null,
   profile: null,
   activeRoomId: null,
   isHost: false,
@@ -40,19 +40,19 @@ const AppState = {
 };
 
 const WEAPONS = {
-  PISTOL: { id: "PISTOL", name: "Pistol", damage: 15, fireRate: 350, ammoMax: 12, speed: 850, spread: 0.02, cost: 0 },
-  SMG: { id: "SMG", name: "SMG", damage: 12, fireRate: 90, ammoMax: 30, speed: 900, spread: 0.08, cost: 100 },
-  SHOTGUN: { id: "SHOTGUN", name: "Shotgun", damage: 14, fireRate: 750, ammoMax: 6, speed: 750, pellets: 5, spread: 0.22, cost: 250 },
-  AK47: { id: "AK47", name: "Assault Rifle", damage: 24, fireRate: 140, ammoMax: 30, speed: 950, spread: 0.05, cost: 500 },
-  SNIPER: { id: "SNIPER", name: "Sniper Rifle", damage: 85, fireRate: 1200, ammoMax: 5, speed: 1400, spread: 0.002, cost: 750 },
-  ROCKET: { id: "ROCKET", name: "Rocket Launcher", damage: 110, fireRate: 1500, ammoMax: 1, speed: 500, splashRadius: 100, cost: 1000 }
+  PISTOL: { id: "PISTOL", name: "Pistol", damage: 15, fireRate: 350, ammoMax: 12, speed: 900, spread: 0.02, cost: 0 },
+  SMG: { id: "SMG", name: "SMG", damage: 12, fireRate: 90, ammoMax: 30, speed: 950, spread: 0.08, cost: 100 },
+  SHOTGUN: { id: "SHOTGUN", name: "Shotgun", damage: 14, fireRate: 750, ammoMax: 6, speed: 800, pellets: 5, spread: 0.22, cost: 250 },
+  AK47: { id: "AK47", name: "Assault Rifle", damage: 24, fireRate: 140, ammoMax: 30, speed: 1000, spread: 0.04, cost: 500 },
+  SNIPER: { id: "SNIPER", name: "Sniper Rifle", damage: 85, fireRate: 1200, ammoMax: 5, speed: 1500, spread: 0.001, cost: 750 },
+  ROCKET: { id: "ROCKET", name: "Rocket Launcher", damage: 110, fireRate: 1500, ammoMax: 1, speed: 550, splashRadius: 120, cost: 1000 }
 };
 
 const POWERS = {
-  HEALTH_BOOST: { id: "HEALTH_BOOST", name: "Health Boost (+40%)" },
-  FULL_HEAL: { id: "FULL_HEAL", name: "Full Heal (100%)" },
-  DAMAGE_BOOST: { id: "DAMAGE_BOOST", name: "Damage Boost (+50% 10s)" },
-  SHIELD: { id: "SHIELD", name: "Shield (Absorb Damage)" }
+  HEALTH_BOOST: { id: "HEALTH_BOOST", name: "HEALTH BOOST (+40%)" },
+  FULL_HEAL: { id: "FULL_HEAL", name: "FULL HEAL (100%)" },
+  DAMAGE_BOOST: { id: "DAMAGE_BOOST", name: "DAMAGE BOOST (+50% 10S)" },
+  SHIELD: { id: "SHIELD", name: "REINFORCE SHIELD" }
 };
 
 const ESCALATION_RANKS = [
@@ -65,7 +65,7 @@ const ESCALATION_RANKS = [
 ];
 
 // --------------------------------------------------------------------------
-// 3. UI HELPER FUNCTIONS
+// 3. UI HELPER UTILITIES
 // --------------------------------------------------------------------------
 function showScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -73,7 +73,7 @@ function showScreen(screenId) {
   if (target) target.classList.remove('hidden');
 }
 
-function showLoading(show, text = "LOADING...") {
+function showLoading(show, text = "INITIALIZING SYSTEM...") {
   const overlay = document.getElementById('loadingOverlay');
   document.getElementById('loadingText').innerText = text;
   if (show) overlay.classList.remove('hidden');
@@ -86,22 +86,22 @@ function showToast(message) {
   toast.className = 'toast';
   toast.innerText = message;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(() => toast.remove(), 2800);
 }
 
 // --------------------------------------------------------------------------
-// 4. USER AUTHENTICATION & PROFILE DATA
+// 4. USER AUTHENTICATION & PROFILE PERSISTENCE
 // --------------------------------------------------------------------------
 function initAuth() {
   if (!AppState.userId) {
-    AppState.userId = "user_" + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem("userId", AppState.userId);
+    AppState.userId = "op_" + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem("mono_userId", AppState.userId);
   }
   listenToUserProfile();
 }
 
 function listenToUserProfile() {
-  showLoading(true, "CONNECTING OPERATOR...");
+  showLoading(true, "CONNECTING OPERATOR DATABASE...");
   const userDocRef = doc(db, "accounts", AppState.userId);
 
   onSnapshot(userDocRef, async (snapshot) => {
@@ -112,7 +112,7 @@ function listenToUserProfile() {
       showScreen('mainMenuScreen');
     } else {
       const defaultProfile = {
-        customName: "Operator_" + AppState.userId.substring(5, 9),
+        customName: "OPERATOR_" + AppState.userId.substring(3, 7).toUpperCase(),
         level: 1,
         xp: 0,
         coins: 150,
@@ -146,10 +146,15 @@ function updateProfileUI(data) {
   document.getElementById('statKills').innerText = stats.kills || 0;
   document.getElementById('statDeaths').innerText = stats.deaths || 0;
   document.getElementById('statBestStreak').innerText = stats.bestStreak || 0;
+
+  const k = stats.kills || 0;
+  const d = stats.deaths || 1;
+  const acc = Math.min(100, Math.floor((k / (k + d)) * 100));
+  document.getElementById('statAccuracy').innerText = `${acc}%`;
 }
 
 // --------------------------------------------------------------------------
-// 5. SHOP ENGINE
+// 5. SHOP & ARMORY SYSTEM
 // --------------------------------------------------------------------------
 function renderShopUI() {
   const container = document.getElementById('shopGridContainer');
@@ -161,9 +166,9 @@ function renderShopUI() {
     card.className = `shop-card ${isOwned ? 'owned' : ''}`;
     card.innerHTML = `
       <h3>${wpn.name}</h3>
-      <p>Damage: ${wpn.damage} | Mag: ${wpn.ammoMax}</p>
-      <div>${isOwned ? '<strong>OWNED</strong>' : `🪙 ${wpn.cost}`}</div>
-      ${!isOwned ? `<button class="btn primary-btn btn-sm" onclick="buyWeapon('${wpn.id}')">BUY</button>` : ''}
+      <p style="font-size: 0.75rem; color: #8c8c8c;">DMG: ${wpn.damage} | MAG: ${wpn.ammoMax}</p>
+      <div>${isOwned ? '<strong style="color:#fff;">[OWNED]</strong>' : `🪙 ${wpn.cost}`}</div>
+      ${!isOwned ? `<button class="btn primary-btn" style="padding: 6px 12px; margin-top: 5px;" onclick="buyWeapon('${wpn.id}')">PURCHASE</button>` : ''}
     `;
     container.appendChild(card);
   });
@@ -172,7 +177,7 @@ function renderShopUI() {
 window.buyWeapon = async function(weaponId) {
   const wpn = WEAPONS[weaponId];
   if (AppState.profile.coins < wpn.cost) {
-    showToast("NOT ENOUGH COINS!");
+    showToast("INSUFFICIENT FUNDS!");
     return;
   }
 
@@ -190,17 +195,17 @@ window.buyWeapon = async function(weaponId) {
 };
 
 // --------------------------------------------------------------------------
-// 6. PHASER 3 ADVANCED COMBAT SCENE
+// 6. PHASER 3 MONOCHROME ARENA SCENE (SINGLE FLAT PLATFORM)
 // --------------------------------------------------------------------------
-class AdvancedArenaScene extends Phaser.Scene {
+class MonochromeArenaScene extends Phaser.Scene {
   constructor() {
-    super({ key: 'AdvancedArenaScene' });
+    super({ key: 'MonochromeArenaScene' });
   }
 
   init(data) {
     this.isMultiplayer = data.isMultiplayer || false;
 
-    // Player State
+    // Player 1 State
     this.p1 = {
       sprite: null,
       health: 100,
@@ -209,21 +214,23 @@ class AdvancedArenaScene extends Phaser.Scene {
       maxShield: 50,
       weapon: WEAPONS.PISTOL,
       ammo: WEAPONS.PISTOL.ammoMax,
-      reserveAmmo: 90,
       score: 0,
       kills: 0,
       deaths: 0,
       killStreak: 0,
       storedPower: null,
-      damageMultiplier: 1.0
+      damageMultiplier: 1.0,
+      facing: 'right'
     };
 
+    // Bot Opponent State
     this.bot = {
       sprite: null,
       health: 100,
       shield: 50,
       score: 0,
-      weapon: WEAPONS.PISTOL
+      weapon: WEAPONS.PISTOL,
+      facing: 'left'
     };
 
     this.bullets = null;
@@ -232,58 +239,117 @@ class AdvancedArenaScene extends Phaser.Scene {
   }
 
   preload() {
-    const drawRect = (key, color, w, h) => {
-      const g = this.make.graphics({ x: 0, y: 0, add: false });
-      g.fillStyle(color, 1);
-      g.fillRect(0, 0, w, h);
-      g.generateTexture(key, w, h);
+    // GENERATE MONOCHROME TEXTURES DYNAMICALLY
+    const createTexture = (key, width, height, drawCallback) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      drawCallback(ctx, width, height);
+      this.textures.addBase64(key, canvas.toDataURL());
     };
 
-    drawRect('p1_skin', 0x00f0ff, 28, 42);
-    drawRect('bot_skin', 0xff2a6d, 28, 42);
-    drawRect('bullet_norm', 0xffff00, 8, 4);
-    drawRect('coin_drop', 0xffb703, 16, 16);
-    drawRect('power_drop', 0x05ffa1, 20, 20);
-    drawRect('plat_metal', 0x2e3846, 200, 20);
-    drawRect('ground_metal', 0x161c26, 1600, 40);
+    // 1. Single Flat Ground Platform (Pure Monochrome Flat Floor)
+    createTexture('mono_ground', 1600, 60, (ctx, w, h) => {
+      ctx.fillStyle = '#121212';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, 2);
+      ctx.lineTo(w, 2);
+      ctx.stroke();
+    });
+
+    // 2. Monochromatic Humanoid Body Avatar (Player 1 - White Silhouette with Visor)
+    createTexture('p1_avatar_body', 32, 48, (ctx, w, h) => {
+      // Head
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(10, 4, 12, 12);
+      // Visor
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(16, 8, 6, 3);
+      // Torso & Arms
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(8, 18, 16, 16);
+      // Legs
+      ctx.fillRect(10, 36, 5, 12);
+      ctx.fillRect(17, 36, 5, 12);
+    });
+
+    // 3. Monochromatic Humanoid Body Avatar (Opponent Bot - Charcoal/Gray Silhouette)
+    createTexture('bot_avatar_body', 32, 48, (ctx, w, h) => {
+      // Head
+      ctx.fillStyle = '#8c8c8c';
+      ctx.fillRect(10, 4, 12, 12);
+      // Visor
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(10, 8, 6, 3);
+      // Torso & Arms
+      ctx.fillStyle = '#8c8c8c';
+      ctx.fillRect(8, 18, 16, 16);
+      // Legs
+      ctx.fillRect(10, 36, 5, 12);
+      ctx.fillRect(17, 36, 5, 12);
+    });
+
+    // 4. Projectiles and Drops
+    createTexture('mono_bullet', 10, 4, (ctx, w, h) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+    });
+
+    createTexture('coin_pickup', 16, 16, (ctx, w, h) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(8, 8, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#050505';
+      ctx.font = 'bold 10px monospace';
+      ctx.fillText('C', 5, 11);
+    });
+
+    createTexture('power_pickup', 18, 18, (ctx, w, h) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(3, 3, w - 6, h - 6);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(7, 7, 4, 4);
+    });
   }
 
   create() {
     AppState.activeScene = this;
     this.physics.world.setBounds(0, 0, 1600, 900);
 
-    // Map Design with Vertical Combat Structures
-    const platforms = this.physics.add.staticGroup();
-    platforms.create(800, 880, 'ground_metal').refreshBody();
-    platforms.create(350, 680, 'plat_metal');
-    platforms.create(1250, 680, 'plat_metal');
-    platforms.create(800, 500, 'plat_metal');
-    platforms.create(350, 320, 'plat_metal');
-    platforms.create(1250, 320, 'plat_metal');
+    // Create Single Plain Flat Platform Floor
+    const ground = this.physics.add.staticGroup();
+    ground.create(800, 870, 'mono_ground').refreshBody();
 
     // Spawn Player 1
-    this.p1.sprite = this.physics.add.sprite(200, 750, 'p1_skin');
+    this.p1.sprite = this.physics.add.sprite(200, 800, 'p1_avatar_body');
     this.p1.sprite.setCollideWorldBounds(true);
-    this.physics.add.collider(this.p1.sprite, platforms);
+    this.physics.add.collider(this.p1.sprite, ground);
 
-    // Spawn Enemy Bot (Single Player mode)
+    // Spawn Opponent Bot on the single platform
     if (!this.isMultiplayer) {
-      this.bot.sprite = this.physics.add.sprite(1400, 750, 'bot_skin');
+      this.bot.sprite = this.physics.add.sprite(1400, 800, 'bot_avatar_body');
       this.bot.sprite.setCollideWorldBounds(true);
-      this.physics.add.collider(this.bot.sprite, platforms);
+      this.physics.add.collider(this.bot.sprite, ground);
     }
 
-    // Groups & Collisions
+    // Weapon Projectiles & Drops Setup
     this.bullets = this.physics.add.group();
     this.enemyBullets = this.physics.add.group();
     this.dropsGroup = this.physics.add.group();
 
-    this.physics.add.collider(this.dropsGroup, platforms);
+    this.physics.add.collider(this.dropsGroup, ground);
     this.physics.add.overlap(this.bullets, this.bot.sprite, this.handleBotHit, null, this);
     this.physics.add.overlap(this.enemyBullets, this.p1.sprite, this.handlePlayerHit, null, this);
     this.physics.add.overlap(this.p1.sprite, this.dropsGroup, this.collectDrop, null, this);
 
-    // Controls
+    // Key Controls
     this.keys = this.input.keyboard.addKeys('A,D,W,S,R,E');
     this.input.on('pointerdown', (pointer) => this.fireWeapon(pointer.worldX, pointer.worldY));
 
@@ -305,19 +371,27 @@ class AdvancedArenaScene extends Phaser.Scene {
   update(time) {
     if (!this.p1.sprite || !this.p1.sprite.body) return;
 
-    // Movement Loop
-    if (this.keys.A.isDown) this.p1.sprite.setVelocityX(-260);
-    else if (this.keys.D.isDown) this.p1.sprite.setVelocityX(260);
-    else this.p1.sprite.setVelocityX(0);
+    // Movement Controls on Plain Flat Platform
+    if (this.keys.A.isDown) {
+      this.p1.sprite.setVelocityX(-280);
+      this.p1.sprite.setFlipX(true);
+      this.p1.facing = 'left';
+    } else if (this.keys.D.isDown) {
+      this.p1.sprite.setVelocityX(280);
+      this.p1.sprite.setFlipX(false);
+      this.p1.facing = 'right';
+    } else {
+      this.p1.sprite.setVelocityX(0);
+    }
 
     if (this.keys.W.isDown && this.p1.sprite.body.touching.down) {
-      this.p1.sprite.setVelocityY(-500);
+      this.p1.sprite.setVelocityY(-520);
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.R)) this.reloadWeapon();
     if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.activateStoredPower();
 
-    // AI Logic Engine
+    // AI Bot Behavior Logic
     if (!this.isMultiplayer && this.bot.sprite) {
       this.updateBotAI(time);
     }
@@ -332,7 +406,7 @@ class AdvancedArenaScene extends Phaser.Scene {
     }
 
     this.p1.ammo--;
-    const bullet = this.bullets.create(this.p1.sprite.x, this.p1.sprite.y, 'bullet_norm');
+    const bullet = this.bullets.create(this.p1.sprite.x, this.p1.sprite.y - 4, 'mono_bullet');
     bullet.damage = this.p1.weapon.damage * this.p1.damageMultiplier;
 
     let angle = Phaser.Math.Angle.Between(this.p1.sprite.x, this.p1.sprite.y, targetX, targetY);
@@ -341,20 +415,27 @@ class AdvancedArenaScene extends Phaser.Scene {
     this.physics.velocityFromRotation(angle, this.p1.weapon.speed, bullet.body.velocity);
     bullet.setRotation(angle);
 
-    this.time.delayedCall(1800, () => { if (bullet.active) bullet.destroy(); });
+    this.time.delayedCall(1600, () => { if (bullet.active) bullet.destroy(); });
   }
 
   updateBotAI(time) {
     const dist = Phaser.Math.Distance.Between(this.bot.sprite.x, this.bot.sprite.y, this.p1.sprite.x, this.p1.sprite.y);
-    if (dist < 500) {
-      if (this.bot.sprite.x < this.p1.sprite.x - 100) this.bot.sprite.setVelocityX(120);
-      else if (this.bot.sprite.x > this.p1.sprite.x + 100) this.bot.sprite.setVelocityX(-120);
+    if (dist < 700) {
+      if (this.bot.sprite.x < this.p1.sprite.x - 120) {
+        this.bot.sprite.setVelocityX(140);
+        this.bot.sprite.setFlipX(false);
+      } else if (this.bot.sprite.x > this.p1.sprite.x + 120) {
+        this.bot.sprite.setVelocityX(-140);
+        this.bot.sprite.setFlipX(true);
+      } else {
+        this.bot.sprite.setVelocityX(0);
+      }
 
-      if (Phaser.Math.Between(0, 100) < 2) {
-        const b = this.enemyBullets.create(this.bot.sprite.x, this.bot.sprite.y, 'bullet_norm');
+      if (Phaser.Math.Between(0, 100) < 3) {
+        const b = this.enemyBullets.create(this.bot.sprite.x, this.bot.sprite.y - 4, 'mono_bullet');
         b.damage = 10;
         const angle = Phaser.Math.Angle.Between(this.bot.sprite.x, this.bot.sprite.y, this.p1.sprite.x, this.p1.sprite.y);
-        this.physics.velocityFromRotation(angle, 700, b.body.velocity);
+        this.physics.velocityFromRotation(angle, 750, b.body.velocity);
       }
     }
   }
@@ -365,7 +446,7 @@ class AdvancedArenaScene extends Phaser.Scene {
 
     if (bot.health <= 0) {
       bot.health = 100;
-      bot.setPosition(Phaser.Math.Between(200, 1400), 100);
+      bot.setPosition(Phaser.Math.Between(300, 1300), 800);
 
       this.p1.score += 100;
       this.p1.kills++;
@@ -392,8 +473,8 @@ class AdvancedArenaScene extends Phaser.Scene {
       this.p1.killStreak = 0;
       this.p1.health = 100;
       this.p1.shield = 50;
-      this.p1.sprite.setPosition(200, 100);
-      showToast("ELIMINATED!");
+      this.p1.sprite.setPosition(200, 800);
+      showToast("OPERATOR ELIMINATED!");
     }
   }
 
@@ -402,53 +483,53 @@ class AdvancedArenaScene extends Phaser.Scene {
     if (unlockedRank && unlockedRank.weapon !== this.p1.weapon) {
       this.p1.weapon = unlockedRank.weapon;
       this.p1.ammo = this.p1.weapon.ammoMax;
-      showToast(`MATCH ESCALATION: UNLOCKED ${this.p1.weapon.name}!`);
+      showToast(`ESCALATION: UNLOCKED ${this.p1.weapon.name}!`);
     }
   }
 
   triggerKillStreakBanner() {
     const banner = document.getElementById('hudKillStreakBanner');
     let text = "";
-    if (this.p1.killStreak === 2) text = "DOUBLE KILL!";
-    else if (this.p1.killStreak === 3) text = "TRIPLE KILL!";
-    else if (this.p1.killStreak === 5) text = "KILLING SPREE!";
-    else if (this.p1.killStreak === 7) text = "RAMPAGE!";
-    else if (this.p1.killStreak >= 10) text = "UNSTOPPABLE!";
+    if (this.p1.killStreak === 2) text = "DOUBLE KILL";
+    else if (this.p1.killStreak === 3) text = "TRIPLE KILL";
+    else if (this.p1.killStreak === 5) text = "KILLING SPREE";
+    else if (this.p1.killStreak === 7) text = "RAMPAGE";
+    else if (this.p1.killStreak >= 10) text = "UNSTOPPABLE";
 
     if (text) {
       banner.innerText = text;
       banner.classList.remove('hidden');
-      this.time.delayedCall(2000, () => banner.classList.add('hidden'));
+      this.time.delayedCall(2200, () => banner.classList.add('hidden'));
     }
   }
 
   rollDropSpawns(x, y) {
-    // 25% Chance rare coin drop
-    if (Phaser.Math.Between(1, 100) <= 25) {
-      const coin = this.dropsGroup.create(x, y, 'coin_drop');
+    // 30% Chance rare coin drop on platform floor
+    if (Phaser.Math.Between(1, 100) <= 30) {
+      const coin = this.dropsGroup.create(x, y, 'coin_pickup');
       coin.dropType = 'COIN';
-      coin.setBounce(0.5);
+      coin.setBounce(0.3);
     }
 
-    // 10% Chance power drop
-    if (Phaser.Math.Between(1, 100) <= 10) {
+    // 15% Chance power drop
+    if (Phaser.Math.Between(1, 100) <= 15) {
       const powerKeys = Object.keys(POWERS);
-      const power = this.dropsGroup.create(x + 10, y, 'power_drop');
+      const power = this.dropsGroup.create(x + 12, y, 'power_pickup');
       power.dropType = 'POWER';
       power.powerData = POWERS[powerKeys[Math.floor(Math.random() * powerKeys.length)]];
-      power.setBounce(0.5);
+      power.setBounce(0.3);
     }
   }
 
   collectDrop(p, drop) {
     if (drop.dropType === 'COIN') {
       AppState.profile.coins = (AppState.profile.coins || 0) + 25;
-      showToast("COLLECTED 🪙 25 COINS!");
+      showToast("ACQUIRED 🪙 25 COINS!");
     } else if (drop.dropType === 'POWER') {
       this.p1.storedPower = drop.powerData;
-      document.getElementById('hudPowerSlot').innerText = `POWER: ${drop.powerData.name} [E]`;
+      document.getElementById('hudPowerSlot').innerText = `${drop.powerData.name} [E]`;
       document.getElementById('hudPowerSlot').classList.add('active');
-      showToast(`ACQUIRED POWER: ${drop.powerData.name}`);
+      showToast(`POWER LOADED: ${drop.powerData.name}`);
     }
     drop.destroy();
   }
@@ -497,10 +578,10 @@ class AdvancedArenaScene extends Phaser.Scene {
 }
 
 // --------------------------------------------------------------------------
-// 7. PERSISTENCE & RESULTS ENGINE
+// 7. PERSISTENCE & RESULTS TERMINATION LOOP
 // --------------------------------------------------------------------------
 async function finishMatchAndSaveResults(score, kills, deaths, streak) {
-  showLoading(true, "SAVING PROGRESS...");
+  showLoading(true, "WRITING MATCH RESULTS...");
 
   const xpEarned = Math.floor(score * 1.5) + 50;
   const userDocRef = doc(db, "accounts", AppState.userId);
@@ -529,7 +610,7 @@ async function finishMatchAndSaveResults(score, kills, deaths, streak) {
   showLoading(false);
 
   document.getElementById('rewardXp').innerText = `+${xpEarned} XP`;
-  document.getElementById('rewardCurrency').innerText = `+0 🪙 (COLLECTED IN MATCH)`;
+  document.getElementById('rewardCurrency').innerText = `+0 🪙 (IN-MATCH PICKUPS SAVED)`;
   document.getElementById('scoreboardBody').innerHTML = `
     <tr>
       <td>1</td>
@@ -560,17 +641,17 @@ function launchPhaserGame(isMultiplayer = false) {
     parent: 'phaserRenderCanvas',
     physics: {
       default: 'arcade',
-      arcade: { gravity: { y: 800 }, debug: false }
+      arcade: { gravity: { y: 900 }, debug: false }
     },
-    scene: [AdvancedArenaScene]
+    scene: [MonochromeArenaScene]
   };
 
   AppState.currentGame = new Phaser.Game(config);
-  AppState.currentGame.scene.start('AdvancedArenaScene', { isMultiplayer });
+  AppState.currentGame.scene.start('MonochromeArenaScene', { isMultiplayer });
 }
 
 // --------------------------------------------------------------------------
-// 9. EVENT LISTENERS
+// 9. UI EVENT LISTENERS
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
