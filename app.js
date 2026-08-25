@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MINI COMBAT 2D - APPLICATION ENGINE & MULTIPLAYER LOGIC (app.js)
+   MINI COMBAT 2D - ADVANCED GAMEPLAY ENGINE (app.js)
    ========================================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -7,11 +7,11 @@ import {
   getFirestore, doc, onSnapshot, updateDoc, setDoc, getDoc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { 
-  getDatabase, ref, set, get, child, onValue, update, remove, push, onDisconnect 
+  getDatabase, ref, set, get, onValue, update, remove, onDisconnect 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 // --------------------------------------------------------------------------
-// 1. FIREBASE INITIALIZATION
+// 1. FIREBASE CONFIG & INITIALIZATION
 // --------------------------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
@@ -29,7 +29,7 @@ const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
 // --------------------------------------------------------------------------
-// 2. GLOBAL APP STATE & ASSETS
+// 2. ADVANCED GAME CONFIGURATION & WEAPON DATABASE
 // --------------------------------------------------------------------------
 const AppState = {
   userId: localStorage.getItem("userId") || null,
@@ -38,17 +38,20 @@ const AppState = {
   isHost: false,
   currentGame: null,
   isMultiplayer: false,
+  isLocalTwoPlayer: false,
   activeScene: null
 };
 
-const DefaultAvatars = {
-  "avatar-m1": "https://api.dicebear.com/7.x/bottts/svg?seed=Operator1",
-  "avatar-m2": "https://api.dicebear.com/7.x/bottts/svg?seed=Operator2",
-  "avatar-m3": "https://api.dicebear.com/7.x/bottts/svg?seed=Operator3"
+const WEAPONS = {
+  PISTOL: { name: "Pistol", damage: 15, fireRate: 350, ammoMax: 12, speed: 850, spread: 0.02 },
+  AK47: { name: "Assault Rifle", damage: 24, fireRate: 120, ammoMax: 30, speed: 950, spread: 0.05 },
+  SHOTGUN: { name: "Shotgun", damage: 14, fireRate: 750, ammoMax: 6, speed: 750, pellets: 5, spread: 0.22 },
+  SNIPER: { name: "Sniper Rifle", damage: 85, fireRate: 1200, ammoMax: 4, speed: 1400, spread: 0.005 },
+  ROCKET: { name: "Rocket Launcher", damage: 110, fireRate: 1500, ammoMax: 2, speed: 500, splashRadius: 100 }
 };
 
 // --------------------------------------------------------------------------
-// 3. UI SCREEN MANAGEMENT & NOTIFICATIONS
+// 3. UI ENGINE & NAVIGATION
 // --------------------------------------------------------------------------
 function showScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -72,13 +75,8 @@ function showToast(message) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Check for touch interface support
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-  document.body.classList.add('touch-device');
-}
-
 // --------------------------------------------------------------------------
-// 4. USER AUTHENTICATION & PROFILE ENGINE
+// 4. FIRESTORE AUTHENTICATION & PROFILES
 // --------------------------------------------------------------------------
 function initAuth() {
   if (!AppState.userId) {
@@ -89,7 +87,7 @@ function initAuth() {
 }
 
 function listenToUserProfile() {
-  showLoading(true, "LOADING PROFILE...");
+  showLoading(true, "CONNECTING OPERATOR...");
   const userDocRef = doc(db, "accounts", AppState.userId);
 
   onSnapshot(userDocRef, async (snapshot) => {
@@ -99,20 +97,13 @@ function listenToUserProfile() {
       showLoading(false);
       showScreen('mainMenuScreen');
     } else {
-      // Create default account profile
       const defaultProfile = {
         customName: "Operator_" + AppState.userId.substring(5, 9),
         avatarUrl: "avatar-m1",
         level: 1,
         xp: 0,
-        currency: 250,
-        stats: {
-          matches: 0,
-          wins: 0,
-          kills: 0,
-          deaths: 0,
-          bestStreak: 0
-        }
+        currency: 500,
+        stats: { matches: 0, wins: 0, kills: 0, deaths: 0, bestStreak: 0 }
       };
       await setDoc(userDocRef, defaultProfile);
       AppState.profile = defaultProfile;
@@ -120,20 +111,12 @@ function listenToUserProfile() {
       showLoading(false);
       showScreen('mainMenuScreen');
     }
-  }, (error) => {
-    console.error("Firestore error:", error);
-    showLoading(false);
-    showScreen('authScreen');
   });
 }
 
 function updateProfileUI(data) {
   const name = data.customName || "Operator";
-  const avatarKey = data.avatarUrl || "avatar-m1";
-  const avatarSrc = DefaultAvatars[avatarKey] || avatarKey;
-
   document.getElementById('userDisplayName').innerText = name.split(' ')[0];
-  document.getElementById('userDisplayAvatar').src = avatarSrc;
   document.getElementById('userLevel').innerText = data.level || 1;
   document.getElementById('userCurrency').innerText = `🪙 ${data.currency || 0}`;
 
@@ -143,23 +126,353 @@ function updateProfileUI(data) {
   document.getElementById('userXpFill').style.width = `${xpPct}%`;
   document.getElementById('userXpText').innerText = `${currentXp} / ${nextLevelXp} XP`;
 
-  // Update Profile Modal Details
-  document.getElementById('profileModalName').innerText = name;
-  document.getElementById('profileModalAvatar').src = avatarSrc;
-  
   const stats = data.stats || {};
   document.getElementById('statMatches').innerText = stats.matches || 0;
   document.getElementById('statWins').innerText = stats.wins || 0;
   document.getElementById('statKills').innerText = stats.kills || 0;
   document.getElementById('statDeaths').innerText = stats.deaths || 0;
   document.getElementById('statBestStreak').innerText = stats.bestStreak || 0;
-  
-  const kd = stats.deaths > 0 ? (stats.kills / stats.deaths).toFixed(2) : (stats.kills || 0).toFixed(2);
-  document.getElementById('statKD').innerText = kd;
 }
 
 // --------------------------------------------------------------------------
-// 5. LOBBY & MULTIPLAYER MATCHMAKING (REALTIME DB)
+// 5. PHASER 3 ADVANCED MULTIPLAYER & DUAL-PLAYER GAMEPLAY SCENE
+// --------------------------------------------------------------------------
+class AdvancedArenaScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'AdvancedArenaScene' });
+  }
+
+  init(data) {
+    this.isMultiplayer = data.isMultiplayer || false;
+    this.isLocalTwoPlayer = data.isLocalTwoPlayer || false;
+    this.roomData = data.roomData || null;
+
+    this.remotePlayers = new Map();
+    this.pickupsGroup = null;
+
+    // Player 1 Config
+    this.p1 = {
+      sprite: null,
+      health: 100,
+      jetpackFuel: 100,
+      weapon: WEAPONS.AK47,
+      ammo: WEAPONS.AK47.ammoMax,
+      reserveAmmo: 90,
+      score: 0,
+      lastFired: 0,
+      kills: 0
+    };
+
+    // Player 2 Config (For local 2-Player Versus Mode)
+    this.p2 = {
+      sprite: null,
+      health: 100,
+      jetpackFuel: 100,
+      weapon: WEAPONS.SHOTGUN,
+      ammo: WEAPONS.SHOTGUN.ammoMax,
+      reserveAmmo: 30,
+      score: 0,
+      lastFired: 0,
+      kills: 0
+    };
+  }
+
+  preload() {
+    // Generate Visual Procedural Textures
+    const drawRect = (key, color, w, h) => {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(color, 1);
+      g.fillRect(0, 0, w, h);
+      g.generateTexture(key, w, h);
+    };
+
+    drawRect('p1_skin', 0x00ffcc, 28, 42);
+    drawRect('p2_skin', 0xffaa00, 28, 42);
+    drawRect('bot_skin', 0xff3366, 28, 42);
+    drawRect('bullet_norm', 0xffff00, 8, 4);
+    drawRect('bullet_rocket', 0xff4400, 14, 8);
+    drawRect('pickup_wpn', 0x00a2ff, 20, 20);
+    drawRect('plat_metal', 0x2a3646, 200, 20);
+    drawRect('ground_metal', 0x151c24, 1600, 40);
+  }
+
+  create() {
+    AppState.activeScene = this;
+    this.physics.world.setBounds(0, 0, 1600, 900);
+
+    // Map Construction
+    const platforms = this.physics.add.staticGroup();
+    platforms.create(800, 880, 'ground_metal').refreshBody();
+    platforms.create(350, 680, 'plat_metal');
+    platforms.create(1250, 680, 'plat_metal');
+    platforms.create(800, 500, 'plat_metal');
+    platforms.create(350, 320, 'plat_metal');
+    platforms.create(1250, 320, 'plat_metal');
+
+    // Create Player 1
+    this.p1.sprite = this.physics.add.sprite(150, 750, 'p1_skin');
+    this.p1.sprite.setCollideWorldBounds(true);
+    this.physics.add.collider(this.p1.sprite, platforms);
+
+    // Projectiles & Pickups
+    this.bullets = this.physics.add.group();
+    this.pickupsGroup = this.physics.add.group();
+    this.physics.add.collider(this.pickupsGroup, platforms);
+
+    // Create Local Player 2 if Local Dual-Player Enabled
+    if (this.isLocalTwoPlayer) {
+      this.p2.sprite = this.physics.add.sprite(1450, 750, 'p2_skin');
+      this.p2.sprite.setCollideWorldBounds(true);
+      this.physics.add.collider(this.p2.sprite, platforms);
+
+      this.physics.add.overlap(this.bullets, this.p1.sprite, (p1, bullet) => this.handleHit(p1, bullet, 1));
+      this.physics.add.overlap(this.bullets, this.p2.sprite, (p2, bullet) => this.handleHit(p2, bullet, 2));
+    }
+
+    // Single Player Bots
+    this.bots = this.physics.add.group();
+    if (!this.isMultiplayer && !this.isLocalTwoPlayer) {
+      for (let i = 0; i < 4; i++) {
+        const bot = this.bots.create(400 + i * 250, 200, 'bot_skin');
+        bot.setCollideWorldBounds(true);
+        bot.health = 100;
+        bot.weapon = WEAPONS.AK47;
+      }
+      this.physics.add.collider(this.bots, platforms);
+      this.physics.add.overlap(this.bullets, this.bots, this.handleBotHit, null, this);
+    }
+
+    this.physics.add.collider(this.bullets, platforms, (b) => b.destroy());
+
+    // Input Controllers
+    this.keysP1 = this.input.keyboard.addKeys('A,D,W,S,R,F');
+    this.keysP2 = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.UP,
+      down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+      left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+      right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+      shoot: Phaser.Input.Keyboard.KeyCodes.NUMPAD_ZERO,
+      reload: Phaser.Input.Keyboard.KeyCodes.NUMPAD_DECIMAL
+    });
+
+    this.input.on('pointerdown', (pointer) => {
+      if (!this.isLocalTwoPlayer) {
+        this.fireWeapon(this.p1, pointer.worldX, pointer.worldY);
+      }
+    });
+
+    // Weapon Drop Spawner Loop
+    this.time.addEvent({
+      delay: 10000,
+      callback: () => this.spawnWeaponDrop(),
+      loop: true
+    });
+
+    this.physics.add.overlap(this.p1.sprite, this.pickupsGroup, (p, pickup) => this.collectPickup(this.p1, pickup));
+    if (this.isLocalTwoPlayer) {
+      this.physics.add.overlap(this.p2.sprite, this.pickupsGroup, (p, pickup) => this.collectPickup(this.p2, pickup));
+    }
+
+    // Match Timer
+    this.matchTimer = 180;
+    this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        this.matchTimer--;
+        const m = Math.floor(this.matchTimer / 60).toString().padStart(2, '0');
+        const s = (this.matchTimer % 60).toString().padStart(2, '0');
+        document.getElementById('hudMatchTimer').innerText = `${m}:${s}`;
+        if (this.matchTimer <= 0) this.endMatch();
+      },
+      loop: true
+    });
+  }
+
+  update(time) {
+    this.updatePlayerPhysics(this.p1, this.keysP1, time);
+
+    if (this.isLocalTwoPlayer) {
+      this.updatePlayerPhysicsP2(this.p2, this.keysP2, time);
+    } else if (!this.isMultiplayer) {
+      this.updateBotAI();
+    }
+
+    // Network Syncing in Multiplayer
+    if (this.isMultiplayer && AppState.activeRoomId) {
+      const stateRef = ref(rtdb, `rooms/${AppState.activeRoomId}/states/${AppState.userId}`);
+      set(stateRef, {
+        x: this.p1.sprite.x,
+        y: this.p1.sprite.y,
+        vx: this.p1.sprite.body.velocity.x,
+        vy: this.p1.sprite.body.velocity.y,
+        hp: this.p1.health
+      });
+    }
+
+    this.updateHUDDisplay();
+  }
+
+  updatePlayerPhysics(p, keys, time) {
+    if (!p.sprite || !p.sprite.body) return;
+
+    // Lateral Movement
+    if (keys.A.isDown) p.sprite.setVelocityX(-240);
+    else if (keys.D.isDown) p.sprite.setVelocityX(240);
+    else p.sprite.setVelocityX(0);
+
+    // Jetpack Flying Engine
+    if (keys.W.isDown && p.jetpackFuel > 0) {
+      p.sprite.setVelocityY(-380);
+      p.jetpackFuel = Math.max(0, p.jetpackFuel - 0.6);
+    } else if (p.sprite.body.touching.down) {
+      p.jetpackFuel = Math.min(100, p.jetpackFuel + 0.8); // Recharge fuel on ground
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(keys.R)) this.reloadWeapon(p);
+  }
+
+  updatePlayerPhysicsP2(p, keys, time) {
+    if (!p.sprite || !p.sprite.body) return;
+
+    if (keys.left.isDown) p.sprite.setVelocityX(-240);
+    else if (keys.right.isDown) p.sprite.setVelocityX(240);
+    else p.sprite.setVelocityX(0);
+
+    if (keys.up.isDown && p.jetpackFuel > 0) {
+      p.sprite.setVelocityY(-380);
+      p.jetpackFuel = Math.max(0, p.jetpackFuel - 0.6);
+    } else if (p.sprite.body.touching.down) {
+      p.jetpackFuel = Math.min(100, p.jetpackFuel + 0.8);
+    }
+
+    if (keys.shoot.isDown && time > p.lastFired) {
+      const aimX = p.sprite.x + (p.sprite.body.velocity.x >= 0 ? 300 : -300);
+      this.fireWeapon(p, aimX, p.sprite.y);
+      p.lastFired = time + p.weapon.fireRate;
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(keys.reload)) this.reloadWeapon(p);
+  }
+
+  updateBotAI() {
+    this.bots.getChildren().forEach(bot => {
+      if (!bot.active) return;
+      const distToP1 = Phaser.Math.Distance.Between(bot.x, bot.y, this.p1.sprite.x, this.p1.sprite.y);
+      if (distToP1 < 450) {
+        bot.setVelocityX(bot.x < this.p1.sprite.x ? 120 : -120);
+        if (Phaser.Math.Between(0, 100) < 2) {
+          this.fireWeapon({ sprite: bot, weapon: WEAPONS.AK47, ammo: 99 }, this.p1.sprite.x, this.p1.sprite.y);
+        }
+      }
+    });
+  }
+
+  fireWeapon(p, targetX, targetY) {
+    if (p.ammo <= 0) {
+      this.reloadWeapon(p);
+      return;
+    }
+
+    p.ammo--;
+    const pellets = p.weapon.pellets || 1;
+
+    for (let i = 0; i < pellets; i++) {
+      const key = p.weapon === WEAPONS.ROCKET ? 'bullet_rocket' : 'bullet_norm';
+      const bullet = this.bullets.create(p.sprite.x, p.sprite.y, key);
+      bullet.damage = p.weapon.damage;
+      bullet.owner = p;
+
+      let angle = Phaser.Math.Angle.Between(p.sprite.x, p.sprite.y, targetX, targetY);
+      if (p.weapon.spread) angle += Phaser.Math.FloatBetween(-p.weapon.spread, p.weapon.spread);
+
+      this.physics.velocityFromRotation(angle, p.weapon.speed, bullet.body.velocity);
+      bullet.setRotation(angle);
+
+      this.time.delayedCall(1800, () => { if (bullet.active) bullet.destroy(); });
+    }
+  }
+
+  reloadWeapon(p) {
+    if (p.ammo === p.weapon.ammoMax || p.reserveAmmo <= 0) return;
+    const needed = p.weapon.ammoMax - p.ammo;
+    const taken = Math.min(needed, p.reserveAmmo);
+    p.reserveAmmo -= taken;
+    p.ammo += taken;
+  }
+
+  handleHit(targetSprite, bullet, targetPlayerNum) {
+    if (bullet.owner.sprite === targetSprite) return; // Prevent self-harm
+    const dmg = bullet.damage || 20;
+    bullet.destroy();
+
+    const victim = targetPlayerNum === 1 ? this.p1 : this.p2;
+    const attacker = targetPlayerNum === 1 ? this.p2 : this.p1;
+
+    victim.health -= dmg;
+
+    if (victim.health <= 0) {
+      attacker.score += 100;
+      attacker.kills++;
+      victim.health = 100;
+
+      // Respawn Victim
+      victim.sprite.setPosition(Phaser.Math.Between(200, 1400), 100);
+      showToast(`PLAYER ${targetPlayerNum} ELIMINATED!`);
+    }
+  }
+
+  handleBotHit(bullet, bot) {
+    if (bullet.owner !== this.p1) return;
+    bot.health -= bullet.damage || 25;
+    bullet.destroy();
+
+    if (bot.health <= 0) {
+      bot.destroy();
+      this.p1.score += 100;
+      this.p1.kills++;
+
+      this.time.delayedCall(4000, () => {
+        const b = this.bots.create(Phaser.Math.Between(200, 1400), 100, 'bot_skin');
+        b.setCollideWorldBounds(true);
+        b.health = 100;
+      });
+    }
+  }
+
+  spawnWeaponDrop() {
+    const keys = Object.keys(WEAPONS);
+    const selectedKey = keys[Math.floor(Math.random() * keys.length)];
+    const x = Phaser.Math.Between(200, 1400);
+
+    const pickup = this.pickupsGroup.create(x, 50, 'pickup_wpn');
+    pickup.weaponData = WEAPONS[selectedKey];
+    pickup.setBounce(0.3);
+  }
+
+  collectPickup(p, pickup) {
+    p.weapon = pickup.weaponData;
+    p.ammo = p.weapon.ammoMax;
+    p.reserveAmmo += 30;
+    showToast(`EQUIPPED: ${p.weapon.name}`);
+    pickup.destroy();
+  }
+
+  updateHUDDisplay() {
+    document.getElementById('hudHealthFill').style.width = `${this.p1.health}%`;
+    document.getElementById('hudHealthText').innerText = this.p1.health;
+    document.getElementById('hudAmmoText').innerText = `${this.p1.ammo} / ${this.p1.reserveAmmo}`;
+    document.getElementById('hudScoreValue').innerText = this.p1.score;
+  }
+
+  endMatch() {
+    this.scene.stop();
+    document.getElementById('gameContainer').classList.add('hidden');
+    finishMatchAndSaveResults(this.p1.score);
+  }
+}
+
+// --------------------------------------------------------------------------
+// 6. MULTIPLAYER LOBBY SYSTEM
 // --------------------------------------------------------------------------
 function initLobbySystem() {
   document.getElementById('btnMultiplayer').addEventListener('click', () => {
@@ -173,8 +486,6 @@ function initLobbySystem() {
     const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
     if (code) joinRoom(code);
   });
-  document.getElementById('btnToggleReady').addEventListener('click', toggleReadyState);
-  document.getElementById('btnStartMatch').addEventListener('click', startMultiplayerMatch);
 }
 
 function listenToPublicRooms() {
@@ -182,9 +493,9 @@ function listenToPublicRooms() {
   onValue(roomsRef, (snapshot) => {
     const roomList = document.getElementById('roomList');
     roomList.innerHTML = '';
-    
+
     if (!snapshot.exists()) {
-      roomList.innerHTML = '<p class="subtitle">No active rooms. Create one!</p>';
+      roomList.innerHTML = '<p class="subtitle">No open matches. Create one!</p>';
       return;
     }
 
@@ -197,7 +508,7 @@ function listenToPublicRooms() {
         row.innerHTML = `
           <div>
             <strong>${room.name}</strong> (${room.mode})
-            <br><small>Map: ${room.map} | Players: ${Object.keys(room.players || {}).length}/${room.maxPlayers}</small>
+            <br><small>Players: ${Object.keys(room.players || {}).length}/${room.maxPlayers}</small>
           </div>
           <button class="btn primary-btn btn-sm">JOIN</button>
         `;
@@ -212,24 +523,20 @@ async function createRoom() {
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
   const roomRef = ref(rtdb, `rooms/${roomId}`);
 
-  const initialRoom = {
+  await set(roomRef, {
     hostId: AppState.userId,
-    name: `${AppState.profile.customName}'s Room`,
+    name: `${AppState.profile.customName}'s Arena`,
     mode: "deathmatch",
-    map: "jungle_base",
     maxPlayers: 4,
     status: "waiting",
     players: {
       [AppState.userId]: {
         name: AppState.profile.customName,
-        avatar: AppState.profile.avatarUrl || "avatar-m1",
-        isReady: true,
         isHost: true
       }
     }
-  };
+  });
 
-  await set(roomRef, initialRoom);
   onDisconnect(ref(rtdb, `rooms/${roomId}/players/${AppState.userId}`)).remove();
   enterRoomView(roomId, true);
 }
@@ -243,18 +550,8 @@ async function joinRoom(roomId) {
     return;
   }
 
-  const room = snap.val();
-  const playerLength = Object.keys(room.players || {}).length;
-
-  if (playerLength >= room.maxPlayers) {
-    showToast("Room is full!");
-    return;
-  }
-
   await update(ref(rtdb, `rooms/${roomId}/players/${AppState.userId}`), {
     name: AppState.profile.customName,
-    avatar: AppState.profile.avatarUrl || "avatar-m1",
-    isReady: false,
     isHost: false
   });
 
@@ -270,64 +567,15 @@ function enterRoomView(roomId, isHost) {
   document.getElementById('activeRoomView').classList.remove('hidden');
   document.getElementById('roomCodeDisplay').innerText = `CODE: ${roomId}`;
 
-  // Listen to room modifications
-  const roomRef = ref(rtdb, `rooms/${roomId}`);
-  onValue(roomRef, (snapshot) => {
+  onValue(ref(rtdb, `rooms/${roomId}`), (snapshot) => {
     if (!snapshot.exists()) {
       leaveActiveRoom();
-      showToast("Room closed by host.");
       return;
     }
-
-    const room = snapshot.data ? snapshot.data() : snapshot.val();
-    renderRoomPlayers(room.players);
-
+    const room = snapshot.val();
     if (room.status === 'starting') {
-      launchPhaserGame(true, room);
+      launchPhaserGame(true, false, room);
     }
-  });
-}
-
-function renderRoomPlayers(players = {}) {
-  const list = document.getElementById('connectedPlayersList');
-  list.innerHTML = '';
-
-  let allReady = true;
-  Object.entries(players).forEach(([pid, pdata]) => {
-    if (!pdata.isReady && !pdata.isHost) allReady = false;
-
-    const li = document.createElement('li');
-    li.className = `player-card ${pdata.isReady ? 'ready' : ''}`;
-    li.innerHTML = `
-      <span>${pdata.name} ${pdata.isHost ? '👑 (Host)' : ''}</span>
-      <span>${pdata.isReady ? 'READY' : 'WAITING'}</span>
-    `;
-    list.appendChild(li);
-  });
-
-  const startBtn = document.getElementById('btnStartMatch');
-  if (AppState.isHost) {
-    startBtn.classList.remove('hidden');
-    startBtn.disabled = !allReady;
-  } else {
-    startBtn.classList.add('hidden');
-  }
-}
-
-async function toggleReadyState() {
-  if (!AppState.activeRoomId) return;
-  const pRef = ref(rtdb, `rooms/${AppState.activeRoomId}/players/${AppState.userId}`);
-  const snap = await get(pRef);
-  if (snap.exists()) {
-    const cur = snap.val().isReady;
-    await update(pRef, { isReady: !cur });
-  }
-}
-
-async function startMultiplayerMatch() {
-  if (!AppState.isHost || !AppState.activeRoomId) return;
-  await update(ref(rtdb, `rooms/${AppState.activeRoomId}`), {
-    status: 'starting'
   });
 }
 
@@ -335,7 +583,6 @@ async function leaveActiveRoom() {
   if (AppState.activeRoomId) {
     await remove(ref(rtdb, `rooms/${AppState.activeRoomId}/players/${AppState.userId}`));
     AppState.activeRoomId = null;
-    AppState.isHost = false;
   }
   document.getElementById('activeRoomView').classList.add('hidden');
   document.getElementById('roomBrowser').classList.remove('hidden');
@@ -343,254 +590,9 @@ async function leaveActiveRoom() {
 }
 
 // --------------------------------------------------------------------------
-// 6. PHASER 3 ARENA SHOOTER ENGINE
+// 7. LAUNCH ENGINE & FIRESTORE SAVE ENGINE
 // --------------------------------------------------------------------------
-class MainArenaScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'MainArenaScene' });
-  }
-
-  init(data) {
-    this.isMultiplayer = data.isMultiplayer || false;
-    this.roomData = data.roomData || null;
-    this.playerMap = new Map();
-    this.bullets = null;
-    this.score = 0;
-    this.health = 100;
-    this.ammo = 30;
-    this.maxAmmo = 30;
-    this.reserveAmmo = 120;
-  }
-
-  preload() {
-    // Generate procedural colored textures for sprites
-    const createTexture = (key, color, w = 32, h = 48) => {
-      const g = this.make.graphics({ x: 0, y: 0, add: false });
-      g.fillStyle(color, 1);
-      g.fillRect(0, 0, w, h);
-      g.generateTexture(key, w, h);
-    };
-
-    createTexture('player', 0x00ffcc, 28, 40);
-    createTexture('bot', 0xff3366, 28, 40);
-    createTexture('bullet', 0xffd700, 8, 4);
-    createTexture('platform', 0x2a3646, 200, 20);
-    createTexture('ground', 0x151c24, 1280, 40);
-  }
-
-  create() {
-    AppState.activeScene = this;
-
-    // Arena World & Physics Boundaries
-    this.physics.world.setBounds(0, 0, 1280, 720);
-
-    // Static Environment
-    const platforms = this.physics.add.staticGroup();
-    platforms.create(640, 700, 'ground').refreshBody();
-    platforms.create(300, 520, 'platform');
-    platforms.create(980, 520, 'platform');
-    platforms.create(640, 360, 'platform');
-    platforms.create(200, 200, 'platform');
-    platforms.create(1080, 200, 'platform');
-
-    // Local Player Creation
-    this.player = this.physics.add.sprite(100, 600, 'player');
-    this.player.setCollideWorldBounds(true);
-    this.player.setBounce(0.1);
-    this.physics.add.collider(this.player, platforms);
-
-    // Weapon Projectiles
-    this.bullets = this.physics.add.group({
-      defaultKey: 'bullet',
-      maxSize: 60
-    });
-
-    // Keyboard Controls
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.keys = this.input.keyboard.addKeys('A,D,W,S,R,F');
-
-    // Single Player Bots Initialization
-    this.bots = this.physics.add.group();
-    if (!this.isMultiplayer) {
-      for (let i = 0; i < 3; i++) {
-        const bot = this.bots.create(300 + i * 300, 100, 'bot');
-        bot.setCollideWorldBounds(true);
-        bot.setBounce(0.1);
-        bot.health = 100;
-      }
-      this.physics.add.collider(this.bots, platforms);
-    }
-
-    // Bullet Collisions
-    this.physics.add.overlap(this.bullets, this.bots, this.handleBulletBotHit, null, this);
-    this.physics.add.collider(this.bullets, platforms, (bullet) => bullet.destroy());
-
-    // Mouse Aim & Fire
-    this.input.on('pointerdown', (pointer) => {
-      this.fireBullet(pointer.worldX, pointer.worldY);
-    });
-
-    // Mobile Joystick Setup
-    this.setupMobileControls();
-
-    // Match Countdown Timer
-    this.matchTime = 180; // 3 minutes
-    this.time.addEvent({
-      delay: 1000,
-      callback: () => {
-        this.matchTime--;
-        const mins = Math.floor(this.matchTime / 60).toString().padStart(2, '0');
-        const secs = (this.matchTime % 60).toString().padStart(2, '0');
-        document.getElementById('hudMatchTimer').innerText = `${mins}:${secs}`;
-
-        if (this.matchTime <= 0) this.endMatch();
-      },
-      loop: true
-    });
-  }
-
-  update() {
-    if (!this.player || !this.player.body) return;
-
-    // Movement Physics
-    if (this.keys.A.isDown || this.cursors.left.isDown) {
-      this.player.setVelocityX(-220);
-    } else if (this.keys.D.isDown || this.cursors.right.isDown) {
-      this.player.setVelocityX(220);
-    } else {
-      this.player.setVelocityX(0);
-    }
-
-    // Jetpack / Jump
-    if ((this.keys.W.isDown || this.cursors.up.isDown) && this.player.body.touching.down) {
-      this.player.setVelocityY(-450);
-    }
-
-    // Reloading
-    if (Phaser.Input.Keyboard.JustDown(this.keys.R)) {
-      this.reloadWeapon();
-    }
-
-    // Bot AI Logic Loop
-    if (!this.isMultiplayer) {
-      this.bots.getChildren().forEach(bot => {
-        if (Phaser.Math.Between(0, 100) < 2) {
-          bot.setVelocityX(Phaser.Math.Between(-150, 150));
-        }
-        if (Phaser.Math.Between(0, 100) < 1 && bot.body.touching.down) {
-          bot.setVelocityY(-400);
-        }
-      });
-    }
-
-    // Update Network Position (Multiplayer Sync)
-    if (this.isMultiplayer && AppState.activeRoomId) {
-      const posRef = ref(rtdb, `rooms/${AppState.activeRoomId}/states/${AppState.userId}`);
-      set(posRef, {
-        x: this.player.x,
-        y: this.player.y,
-        vx: this.player.body.velocity.x,
-        vy: this.player.body.velocity.y
-      });
-    }
-  }
-
-  fireBullet(targetX, targetY) {
-    if (this.ammo <= 0) {
-      this.reloadWeapon();
-      return;
-    }
-
-    const bullet = this.bullets.get(this.player.x, this.player.y);
-    if (bullet) {
-      this.ammo--;
-      this.updateHUD();
-
-      bullet.setActive(true);
-      bullet.setVisible(true);
-
-      const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
-      this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
-      bullet.setRotation(angle);
-
-      // Auto destroy bullet after 2 seconds
-      this.time.delayedCall(2000, () => {
-        if (bullet.active) bullet.destroy();
-      });
-    }
-  }
-
-  reloadWeapon() {
-    if (this.reserveAmmo <= 0 || this.ammo === this.maxAmmo) return;
-    const needed = this.maxAmmo - this.ammo;
-    const reloaded = Math.min(needed, this.reserveAmmo);
-    this.reserveAmmo -= reloaded;
-    this.ammo += reloaded;
-    this.updateHUD();
-    showToast("RELOADED!");
-  }
-
-  handleBulletBotHit(bullet, bot) {
-    bullet.destroy();
-    bot.health -= 35;
-
-    if (bot.health <= 0) {
-      bot.destroy();
-      this.score += 100;
-      this.updateHUD();
-      this.addKillLog(`You eliminated Bot`);
-
-      // Respawn Bot
-      this.time.delayedCall(3000, () => {
-        const newBot = this.bots.create(Phaser.Math.Between(200, 1080), 100, 'bot');
-        newBot.setCollideWorldBounds(true);
-        newBot.health = 100;
-      });
-    }
-  }
-
-  updateHUD() {
-    document.getElementById('hudHealthFill').style.width = `${this.health}%`;
-    document.getElementById('hudHealthText').innerText = this.health;
-    document.getElementById('hudAmmoText').innerText = `${this.ammo} / ${this.reserveAmmo}`;
-    document.getElementById('hudScoreValue').innerText = this.score;
-  }
-
-  addKillLog(text) {
-    const log = document.getElementById('hudKillLog');
-    const entry = document.createElement('div');
-    entry.className = 'kill-entry';
-    entry.innerText = text;
-    log.appendChild(entry);
-    setTimeout(() => entry.remove(), 4000);
-  }
-
-  setupMobileControls() {
-    const btnJump = document.getElementById('btnTouchJump');
-    const btnReload = document.getElementById('btnTouchReload');
-    
-    btnJump.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (this.player.body.touching.down) this.player.setVelocityY(-450);
-    });
-
-    btnReload.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      this.reloadWeapon();
-    });
-  }
-
-  endMatch() {
-    this.scene.stop();
-    document.getElementById('gameContainer').classList.add('hidden');
-    finishMatchAndSaveResults(this.score);
-  }
-}
-
-// --------------------------------------------------------------------------
-// 7. MATCH LIFECYCLE & DATABASE SAVE ENGINE
-// --------------------------------------------------------------------------
-function launchPhaserGame(isMultiplayer = false, roomData = null) {
+function launchPhaserGame(isMultiplayer = false, isLocalTwoPlayer = false, roomData = null) {
   showScreen('gameContainer');
   document.getElementById('gameContainer').classList.remove('hidden');
 
@@ -605,64 +607,50 @@ function launchPhaserGame(isMultiplayer = false, roomData = null) {
     parent: 'gameContainer',
     physics: {
       default: 'arcade',
-      arcade: {
-        gravity: { y: 800 },
-        debug: false
-      }
+      arcade: { gravity: { y: 750 }, debug: false }
     },
-    scene: [MainArenaScene]
+    scene: [AdvancedArenaScene]
   };
 
   AppState.currentGame = new Phaser.Game(config);
-  AppState.currentGame.scene.start('MainArenaScene', { isMultiplayer, roomData });
+  AppState.currentGame.scene.start('AdvancedArenaScene', { isMultiplayer, isLocalTwoPlayer, roomData });
 }
 
 async function finishMatchAndSaveResults(score) {
   showLoading(true, "SAVING PROGRESS...");
 
   const xpEarned = Math.floor(score * 1.5) + 50;
-  const currencyEarned = Math.floor(score * 0.2) + 20;
+  const currencyEarned = Math.floor(score * 0.2) + 25;
 
   const userDocRef = doc(db, "accounts", AppState.userId);
-
-  // Read latest profile data to prevent overwriting
   const currentSnap = await getDoc(userDocRef);
   const currentData = currentSnap.data();
 
   const newXp = (currentData.xp || 0) + xpEarned;
   let newLevel = currentData.level || 1;
-  if (newXp >= newLevel * 1000) {
-    newLevel++;
-    showToast(`LEVEL UP! You are now Level ${newLevel}`);
-  }
+  if (newXp >= newLevel * 1000) newLevel++;
 
   const stats = currentData.stats || { matches: 0, wins: 0, kills: 0, deaths: 0, bestStreak: 0 };
   const killsInMatch = Math.floor(score / 100);
 
-  const updatedStats = {
-    matches: stats.matches + 1,
-    wins: stats.wins + (score > 300 ? 1 : 0),
-    kills: stats.kills + killsInMatch,
-    deaths: stats.deaths + 1,
-    bestStreak: Math.max(stats.bestStreak, killsInMatch)
-  };
-
-  // Perform Firestore Transaction/Update
   await updateDoc(userDocRef, {
     xp: newXp,
     level: newLevel,
     currency: (currentData.currency || 0) + currencyEarned,
-    stats: updatedStats
+    stats: {
+      matches: stats.matches + 1,
+      wins: stats.wins + (score >= 200 ? 1 : 0),
+      kills: stats.kills + killsInMatch,
+      deaths: stats.deaths + 1,
+      bestStreak: Math.max(stats.bestStreak, killsInMatch)
+    }
   });
 
   showLoading(false);
 
-  // Render Post-Match Results Overlay
   document.getElementById('rewardXp').innerText = `+${xpEarned} XP`;
   document.getElementById('rewardCurrency').innerText = `+${currencyEarned} 🪙`;
-
-  const scoreboardBody = document.getElementById('scoreboardBody');
-  scoreboardBody.innerHTML = `
+  document.getElementById('scoreboardBody').innerHTML = `
     <tr>
       <td>1</td>
       <td>${AppState.profile.customName}</td>
@@ -676,38 +664,25 @@ async function finishMatchAndSaveResults(score) {
 }
 
 // --------------------------------------------------------------------------
-// 8. EVENT LISTENERS & APPLICATION BOOTSTRAP
+// 8. BOOTSTRAP INITIALIZATION
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initLobbySystem();
 
-  // Menu Button Listeners
-  document.getElementById('btnQuickPlay').addEventListener('click', () => {
-    launchPhaserGame(false);
-  });
+  // Mode Selection Listeners
+  document.getElementById('btnQuickPlay').addEventListener('click', () => launchPhaserGame(false, false));
+  document.getElementById('btnSinglePlayer').addEventListener('click', () => launchPhaserGame(false, false));
+  
+  // Inject Local 2-Player Button Dyno Listener
+  const menuActions = document.querySelector('.menu-actions');
+  const twoPlayerBtn = document.createElement('button');
+  twoPlayerBtn.className = 'btn action-btn';
+  twoPlayerBtn.innerText = '⚔️ 2-PLAYER VERSUS (LOCAL)';
+  twoPlayerBtn.addEventListener('click', () => launchPhaserGame(false, true));
+  menuActions.insertBefore(twoPlayerBtn, menuActions.children[2]);
 
-  document.getElementById('btnSinglePlayer').addEventListener('click', () => {
-    launchPhaserGame(false);
-  });
-
-  document.getElementById('btnProfile').addEventListener('click', () => {
-    showScreen('profileModal');
-  });
-
-  document.getElementById('closeProfileBtn').addEventListener('click', () => {
-    showScreen('mainMenuScreen');
-  });
-
-  document.getElementById('guestLoginBtn').addEventListener('click', () => {
-    const inputName = document.getElementById('authUsernameInput').value.trim();
-    if (inputName) {
-      updateDoc(doc(db, "accounts", AppState.userId), { customName: inputName });
-    }
-    showScreen('mainMenuScreen');
-  });
-
-  document.getElementById('btnResultsContinue').addEventListener('click', () => {
-    showScreen('mainMenuScreen');
-  });
+  document.getElementById('btnProfile').addEventListener('click', () => showScreen('profileModal'));
+  document.getElementById('closeProfileBtn').addEventListener('click', () => showScreen('mainMenuScreen'));
+  document.getElementById('btnResultsContinue').addEventListener('click', () => showScreen('mainMenuScreen'));
 });
