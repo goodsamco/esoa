@@ -1,9 +1,8 @@
-// Monochrome Line Duel - Complete Online Multiplayer Game Engine
+// Monochrome Line Duel - Full Arena Multiplayer Engine
 
 let canvas, ctx;
 let currentRoomId = null;
 let roomListener = null;
-let playerIndex = -1;
 let isHost = false;
 
 // Game State
@@ -17,7 +16,7 @@ let gameState = {
     timer: 180
 };
 
-// Local Player Physics & Input State
+// Local Player Physics & Controls
 let localInput = {
     left: false,
     right: false,
@@ -27,9 +26,9 @@ let localInput = {
 
 const PHYSICS = {
     gravity: 0.45,
-    moveSpeed: 3.2,
+    moveSpeed: 3.5,
     jumpForce: -9.5,
-    bulletSpeed: 7,
+    bulletSpeed: 8,
     maxLives: 5,
     playerWidth: 18,
     playerHeight: 28,
@@ -57,7 +56,6 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
-    // Initialize Lucide icons
     if (window.lucide) {
         window.lucide.createIcons();
     }
@@ -72,7 +70,7 @@ function setupEventListeners() {
     document.getElementById('leaveRoomBtn').addEventListener('click', leaveRoom);
     document.getElementById('playAgainBtn').addEventListener('click', resetToLobby);
 
-    // Keyboard Events
+    // Keyboard Input
     window.addEventListener('keydown', (e) => handleKey(e, true));
     window.addEventListener('keyup', (e) => handleKey(e, false));
 }
@@ -83,7 +81,7 @@ function handleKey(e, isPressed) {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') localInput.left = isPressed;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') localInput.right = isPressed;
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
-        if (isPressed && localInput.jump !== true) localInput.jump = true;
+        if (isPressed && !localInput.jump) localInput.jump = true;
         if (!isPressed) localInput.jump = false;
     }
     if (e.key === 'f' || e.key === 'F' || e.key === 'e' || e.key === 'E' || e.key === 'Shift') {
@@ -108,7 +106,6 @@ function setupTouchControls() {
     bindBtn('btnFire', 'fire');
 }
 
-// Generate Random Room Code
 function generateRoomCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -129,7 +126,7 @@ async function createRoom() {
         createdAt: Date.now()
     };
 
-    const { ref, set, onDisconnect } = window.rtdbUtils;
+    const { ref, set } = window.rtdbUtils;
     const roomRef = ref(window.rtdb, 'rooms/' + currentRoomId);
     
     await set(roomRef, initialRoomData);
@@ -146,7 +143,7 @@ async function joinRoom() {
 }
 
 async function joinRoomById(roomCode, hostFlag) {
-    const { ref, get, update, onDisconnect, onValue } = window.rtdbUtils;
+    const { ref, get, update, onDisconnect } = window.rtdbUtils;
     const roomRef = ref(window.rtdb, 'rooms/' + roomCode);
     const snapshot = await get(roomRef);
 
@@ -167,12 +164,10 @@ async function joinRoomById(roomCode, hostFlag) {
     currentRoomId = roomCode;
     isHost = hostFlag;
 
-    // Assign team based on index
     const assignedIndex = playerCount;
     const team = (assignedIndex % 2 === 0) ? 'left' : 'right';
     
-    // Spawn Positions
-    const spawnX = team === 'left' ? 80 + (assignedIndex * 30) : 720 - (assignedIndex * 30);
+    const spawnX = team === 'left' ? 100 + (assignedIndex * 40) : 700 - (assignedIndex * 40);
     localPlayerPos = {
         x: spawnX,
         y: PHYSICS.groundY - PHYSICS.playerHeight,
@@ -186,14 +181,10 @@ async function joinRoomById(roomCode, hostFlag) {
         name: document.getElementById('userDisplayName').innerText || 'Player'
     };
 
-    // Save player state to Firebase
     const playerRef = ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`);
     await update(playerRef, localPlayerPos);
-
-    // Setup disconnect cleanup
     onDisconnect(playerRef).remove();
 
-    // UI Updates
     document.getElementById('roomCodeDisplay').innerText = `ROOM: ${currentRoomId}`;
     document.getElementById('leaveRoomBtn').style.display = 'flex';
     document.getElementById('lobbyOverlay').style.display = 'none';
@@ -229,7 +220,6 @@ function listenToRoomUpdates() {
             endGameUI();
         }
 
-        // Host logic: Start game if room full
         if (isHost && gameState.status === 'waiting') {
             const count = Object.keys(gameState.players).length;
             if (count === gameState.maxPlayers) {
@@ -277,7 +267,7 @@ function startGameplay() {
 
 function triggerFire() {
     const now = Date.now();
-    if (now - lastFireTime < 250) return; // Cooldown 250ms
+    if (now - lastFireTime < 220) return; // Fire rate limit (220ms cooldown)
     if (localPlayerPos.lives <= 0) return;
 
     lastFireTime = now;
@@ -296,7 +286,6 @@ function triggerFire() {
     if (isHost) {
         gameState.bullets.push(newBullet);
     } else {
-        // Send bullet event to Host/Firebase
         const { ref, set } = window.rtdbUtils;
         set(ref(window.rtdb, `rooms/${currentRoomId}/bullets/${gameState.bullets.length}`), newBullet);
     }
@@ -305,7 +294,7 @@ function triggerFire() {
 function updatePhysics() {
     if (localPlayerPos.lives <= 0) return;
 
-    // Horizontal Movement
+    // Movement Physics
     if (localInput.left) {
         localPlayerPos.vx = -PHYSICS.moveSpeed;
         localPlayerPos.facing = -1;
@@ -316,16 +305,13 @@ function updatePhysics() {
         localPlayerPos.vx = 0;
     }
 
-    // Jumping
+    // Jump Physics
     if (localInput.jump && localPlayerPos.isGrounded) {
         localPlayerPos.vy = PHYSICS.jumpForce;
         localPlayerPos.isGrounded = false;
     }
 
-    // Apply Gravity
     localPlayerPos.vy += PHYSICS.gravity;
-
-    // Apply Movement
     localPlayerPos.x += localPlayerPos.vx;
     localPlayerPos.y += localPlayerPos.vy;
 
@@ -336,16 +322,13 @@ function updatePhysics() {
         localPlayerPos.isGrounded = true;
     }
 
-    // Boundary & Center Line Constraints
-    if (localPlayerPos.team === 'left') {
-        if (localPlayerPos.x < 10) localPlayerPos.x = 10;
-        if (localPlayerPos.x > 380 - PHYSICS.playerWidth) localPlayerPos.x = 380 - PHYSICS.playerWidth;
-    } else {
-        if (localPlayerPos.x < 420) localPlayerPos.x = 420;
-        if (localPlayerPos.x > 790 - PHYSICS.playerWidth) localPlayerPos.x = 790 - PHYSICS.playerWidth;
+    // Full Screen Boundaries (No Divider Line Constraint)
+    if (localPlayerPos.x < 10) localPlayerPos.x = 10;
+    if (localPlayerPos.x > PHYSICS.canvasWidth - 10 - PHYSICS.playerWidth) {
+        localPlayerPos.x = PHYSICS.canvasWidth - 10 - PHYSICS.playerWidth;
     }
 
-    // Sync Local Position to RTDB
+    // Sync to Realtime DB
     const { ref, update } = window.rtdbUtils;
     update(ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`), {
         x: localPlayerPos.x,
@@ -359,7 +342,6 @@ function updatePhysics() {
 function updateHostLogic() {
     if (!isHost || gameState.status !== 'playing') return;
 
-    // Bullet Physics and Collision Detection
     let updatedBullets = [];
     let updatedScoreLeft = gameState.scoreLeft || 0;
     let updatedScoreRight = gameState.scoreRight || 0;
@@ -367,11 +349,10 @@ function updateHostLogic() {
     (gameState.bullets || []).forEach(b => {
         b.x += b.vx;
 
-        // Check canvas bounds
+        // Check horizontal bounds
         if (b.x < 0 || b.x > PHYSICS.canvasWidth) return;
 
         let hit = false;
-        // Collision against opposing players
         Object.keys(gameState.players).forEach(pId => {
             const p = gameState.players[pId];
             if (p.team !== b.team && p.lives > 0) {
@@ -392,7 +373,6 @@ function updateHostLogic() {
         if (!hit) updatedBullets.push(b);
     });
 
-    // Check Win Conditions
     let leftAlive = 0, rightAlive = 0;
     Object.values(gameState.players).forEach(p => {
         if (p.lives > 0) {
@@ -417,11 +397,11 @@ function updateHostLogic() {
 }
 
 function render() {
-    // Clear Canvas
+    // Clear Screen
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, PHYSICS.canvasWidth, PHYSICS.canvasHeight);
 
-    // Draw Ground Line
+    // Draw Ground
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -429,34 +409,24 @@ function render() {
     ctx.lineTo(PHYSICS.canvasWidth, PHYSICS.groundY);
     ctx.stroke();
 
-    // Draw Center Divider Line (No-Crossing Zone)
-    ctx.setLineDash([6, 6]);
-    ctx.strokeStyle = '#666666';
-    ctx.beginPath();
-    ctx.moveTo(400, 0);
-    ctx.lineTo(400, PHYSICS.groundY);
-    ctx.stroke();
-    ctx.setLineDash([]); // Reset dash
-
     // Draw Players
     const players = gameState.players || {};
     Object.keys(players).forEach(pId => {
         const p = players[pId];
         if (p.lives <= 0) return;
 
-        // Player Body Box
         ctx.strokeStyle = '#ffffff';
         ctx.fillStyle = pId === window.currentUserId ? '#ffffff' : '#000000';
         ctx.lineWidth = 2;
         ctx.fillRect(p.x, p.y, PHYSICS.playerWidth, PHYSICS.playerHeight);
         ctx.strokeRect(p.x, p.y, PHYSICS.playerWidth, PHYSICS.playerHeight);
 
-        // Player Facing Indicator Eye
+        // Eyes (Direction Indicator)
         ctx.fillStyle = pId === window.currentUserId ? '#000000' : '#ffffff';
         const eyeX = p.facing === 1 ? p.x + 12 : p.x + 2;
         ctx.fillRect(eyeX, p.y + 4, 4, 4);
 
-        // Health Bar above player
+        // Health Bar
         const barWidth = 24;
         const healthPercent = p.lives / PHYSICS.maxLives;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
@@ -471,7 +441,7 @@ function render() {
         ctx.fillText(p.name || 'Player', p.x + (PHYSICS.playerWidth / 2), p.y - 16);
     });
 
-    // Draw Bullets
+    // Draw Fired Bullets
     ctx.fillStyle = '#ffffff';
     (gameState.bullets || []).forEach(b => {
         ctx.fillRect(b.x, b.y, 6, 2);
