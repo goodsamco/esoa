@@ -1,601 +1,619 @@
-// Monochrome Duel Engine - Health, Powerups, Mouse Aim/Shoot & Continuation
+/* ==========================================================================
+   Monochrome Line Duel - Main Game Logic
+   Handles: Firebase Synchronization, Local Prediction, LERP Movement, Controls,
+            Bullets, HUD, and State Transitions.
+   ========================================================================== */
 
-let canvas, ctx;
-let currentRoomId = null;
-let roomListener = null;
-let isHost = false;
+class GameEngine {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
 
-// Game State
-let gameState = {
-    status: 'lobby', // 'lobby', 'waiting', 'playing', 'ended'
-    maxPlayers: 2,
-    players: {},
-    bullets: [],
-    powerups: [],
-    scoreLeft: 0,
-    scoreRight: 0,
-    timer: 180
-};
+        // State Tracking
+        this.currentRoomCode = null;
+        this.mySlotIndex = -1;
+        this.isHost = false;
+        this.maxPlayers = 2;
+        this.gameState = 'LOBBY'; // 'LOBBY', 'WAITING', 'PLAYING', 'ENDED'
 
-// Local Player Controls
-let localInput = {
-    left: false,
-    right: false,
-    jump: false,
-    fire: false
-};
+        // Local Player State & Input Tracking
+        this.localPlayer = null;
+        this.keys = { left: false, right: false, up: false, fire: false };
+        this.touchControls = { left: false, right: false, up: false, fire: false };
+        this.canShoot = true;
+        this.lastShotTime = 0;
 
-const PHYSICS = {
-    gravity: 0.45,
-    moveSpeed: 4.0,
-    acceleration: 0.6,
-    friction: 0.82,
-    jumpForce: -9.8,
-    bulletSpeed: 8.5,
-    maxLives: 5,
-    playerWidth: 18,
-    playerHeight: 28,
-    groundY: 340,
-    canvasWidth: 800,
-    canvasHeight: 400
-};
+        // Synchronized Entities (Room Data)
+        this.players = {};   // Index -> Player Object
+        this.bullets = [];   // Array of active bullets
+        this.scores = { left: 0, right: 0 };
+        this.timerSeconds = 180;
 
-let localPlayerPos = {
-    x: 100,
-    y: PHYSICS.groundY - PHYSICS.playerHeight,
-    vx: 0,
-    vy: 0,
-    isGrounded: true,
-    facing: 1, // 1 for right, -1 for left
-    lives: PHYSICS.maxLives, // 5 Health Units
-    kills: 0,
-    team: 'left'
-};
+        // Firebase References & Listeners
+        this.roomRef = null;
+        this.roomListener = null;
 
-let gameLoopId = null;
-let lastFireTime = 0;
-let lastPowerupSpawnTime = Date.now();
-
-window.addEventListener('DOMContentLoaded', () => {
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    
-    if (window.lucide) {
-        window.lucide.createIcons();
+        // Bindings & Initialization
+        this.initDOM();
+        this.initControls();
+        this.gameLoop = this.gameLoop.bind(this);
+        requestAnimationFrame(this.gameLoop);
     }
 
-    setupEventListeners();
-    setupTouchControls();
-});
+    /* ----------------------------------------------------------------------
+       1. DOM & UI LISTENERS
+       ---------------------------------------------------------------------- */
+    initDOM() {
+        // Overlay DOM Elements
+        this.lobbyOverlay = document.getElementById('lobbyOverlay');
+        this.waitingOverlay = document.getElementById('waitingOverlay');
+        this.gameOverOverlay = document.getElementById('gameOverOverlay');
+        this.gameHud = document.getElementById('gameHud');
+        
+        // HUD Elements
+        this.roomCodeDisplay = document.getElementById('roomCodeDisplay');
+        this.playerCountDisplay = document.getElementById('playerCountDisplay');
+        this.waitingStatus = document.getElementById('waitingStatus');
+        this.playerListGrid = document.getElementById('playerList');
+        this.scoreLeft = document.getElementById('scoreLeft');
+        this.scoreRight = document.getElementById('scoreRight');
+        this.gameTimer = document.getElementById('gameTimer');
+        this.winnerText = document.getElementById('winnerText');
 
-function setupEventListeners() {
-    document.getElementById('createRoomBtn').addEventListener('click', createRoom);
-    document.getElementById('joinRoomBtn').addEventListener('click', joinRoom);
-    document.getElementById('leaveRoomBtn').addEventListener('click', leaveRoom);
-    document.getElementById('playAgainBtn').addEventListener('click', continueGame);
-
-    // Keyboard Input (Arrow keys & WASD with smooth velocity acceleration)
-    window.addEventListener('keydown', (e) => handleKey(e, true));
-    window.addEventListener('keyup', (e) => handleKey(e, false));
-
-    // Mouse Click to Shoot
-    window.addEventListener('mousedown', (e) => {
-        if (gameState.status === 'playing' && e.button === 0) { // Left click
-            triggerFire();
-        }
-    });
-}
-
-function handleKey(e, isPressed) {
-    if (gameState.status !== 'playing') return;
-
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') localInput.left = isPressed;
-    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') localInput.right = isPressed;
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
-        if (isPressed && !localInput.jump) localInput.jump = true;
-        if (!isPressed) localInput.jump = false;
-    }
-    if (e.key === 'f' || e.key === 'F' || e.key === 'e' || e.key === 'E' || e.key === 'Shift') {
-        if (isPressed && !localInput.fire) triggerFire();
-        localInput.fire = isPressed;
-    }
-}
-
-function setupTouchControls() {
-    const bindBtn = (id, key) => {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); localInput[key] = true; if(key==='fire') triggerFire(); });
-        btn.addEventListener('touchend', (e) => { e.preventDefault(); localInput[key] = false; });
-    };
-
-    bindBtn('btnLeft', 'left');
-    bindBtn('btnRight', 'right');
-    bindBtn('btnJump', 'jump');
-    bindBtn('btnFire', 'fire');
-}
-
-function generateRoomCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-async function createRoom() {
-    const maxPlayers = parseInt(document.getElementById('maxPlayersSelect').value, 10);
-    const roomCode = generateRoomCode();
-    currentRoomId = roomCode;
-    isHost = true;
-
-    const initialRoomData = {
-        maxPlayers: maxPlayers,
-        status: 'waiting',
-        scoreLeft: 0,
-        scoreRight: 0,
-        timer: 180,
-        bullets: [],
-        powerups: [],
-        createdAt: Date.now()
-    };
-
-    const { ref, set } = window.rtdbUtils;
-    const roomRef = ref(window.rtdb, 'rooms/' + currentRoomId);
-    
-    await set(roomRef, initialRoomData);
-    await joinRoomById(currentRoomId, true);
-}
-
-async function joinRoom() {
-    const roomCode = document.getElementById('joinRoomInput').value.trim().toUpperCase();
-    if (!roomCode || roomCode.length < 4) {
-        alert('Please enter a valid Room Code.');
-        return;
-    }
-    await joinRoomById(roomCode, false);
-}
-
-async function joinRoomById(roomCode, hostFlag) {
-    const { ref, get, update, onDisconnect } = window.rtdbUtils;
-    const roomRef = ref(window.rtdb, 'rooms/' + roomCode);
-    const snapshot = await get(roomRef);
-
-    if (!snapshot.exists()) {
-        alert('Room does not exist!');
-        return;
+        // Buttons
+        document.getElementById('createRoomBtn').addEventListener('click', () => this.createRoom());
+        document.getElementById('joinRoomBtn').addEventListener('click', () => this.joinRoom());
+        document.getElementById('leaveRoomBtn').addEventListener('click', () => this.leaveRoom());
+        document.getElementById('playAgainBtn').addEventListener('click', () => this.leaveRoom());
     }
 
-    const roomData = snapshot.val();
-    const players = roomData.players || {};
-    const playerCount = Object.keys(players).length;
-
-    if (playerCount >= roomData.maxPlayers && !players[window.currentUserId]) {
-        alert('Room is full!');
-        return;
-    }
-
-    currentRoomId = roomCode;
-    isHost = hostFlag;
-
-    const assignedIndex = playerCount;
-    const team = (assignedIndex % 2 === 0) ? 'left' : 'right';
-    
-    const spawnX = team === 'left' ? 100 + (assignedIndex * 40) : 700 - (assignedIndex * 40);
-    localPlayerPos = {
-        x: spawnX,
-        y: PHYSICS.groundY - PHYSICS.playerHeight,
-        vx: 0,
-        vy: 0,
-        isGrounded: true,
-        facing: team === 'left' ? 1 : -1,
-        lives: PHYSICS.maxLives, // 5 Health Units max
-        kills: 0,
-        team: team,
-        name: document.getElementById('userDisplayName').innerText || 'Player'
-    };
-
-    const playerRef = ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`);
-    await update(playerRef, localPlayerPos);
-    onDisconnect(playerRef).remove();
-
-    document.getElementById('roomCodeDisplay').innerText = `ROOM: ${currentRoomId}`;
-    document.getElementById('leaveRoomBtn').style.display = 'flex';
-    document.getElementById('lobbyOverlay').style.display = 'none';
-    document.getElementById('waitingOverlay').style.display = 'flex';
-
-    listenToRoomUpdates();
-}
-
-function listenToRoomUpdates() {
-    const { ref, onValue } = window.rtdbUtils;
-    const roomRef = ref(window.rtdb, 'rooms/' + currentRoomId);
-
-    if (roomListener) roomListener();
-
-    roomListener = onValue(roomRef, (snapshot) => {
-        if (!snapshot.exists()) {
-            alert('Room closed');
-            resetToLobby();
-            return;
-        }
-
-        gameState = snapshot.val();
-        if (!gameState.players) gameState.players = {};
-        if (!gameState.bullets) gameState.bullets = [];
-        if (!gameState.powerups) gameState.powerups = [];
-
-        updateWaitingRoomUI();
-
-        if (gameState.status === 'playing' && document.getElementById('waitingOverlay').style.display !== 'none') {
-            startGameplay();
-        }
-
-        if (gameState.status === 'playing' && document.getElementById('gameOverOverlay').style.display !== 'none') {
-            // Continued game restarted
-            document.getElementById('gameOverOverlay').style.display = 'none';
-            document.getElementById('gameHud').style.display = 'flex';
-            if (!gameLoopId) gameLoopId = requestAnimationFrame(gameLoop);
-        }
-
-        if (gameState.status === 'ended') {
-            endGameUI();
-        }
-
-        if (isHost && gameState.status === 'waiting') {
-            const count = Object.keys(gameState.players).length;
-            if (count === gameState.maxPlayers) {
-                window.rtdbUtils.update(ref(window.rtdb, 'rooms/' + currentRoomId), { status: 'playing' });
-            }
-        }
-    });
-}
-
-function updateWaitingRoomUI() {
-    const players = gameState.players || {};
-    const count = Object.keys(players).length;
-    
-    document.getElementById('playerCountDisplay').innerText = `PLAYERS: ${count}/${gameState.maxPlayers}`;
-    document.getElementById('waitingStatus').innerText = `${count} / ${gameState.maxPlayers} Players Connected`;
-
-    const slotsGrid = document.getElementById('playerList');
-    slotsGrid.innerHTML = '';
-
-    for (let i = 0; i < gameState.maxPlayers; i++) {
-        const pKeys = Object.keys(players);
-        const player = pKeys[i] ? players[pKeys[i]] : null;
-
-        const slot = document.createElement('div');
-        slot.className = `player-slot ${player ? 'occupied' : ''}`;
-        slot.innerHTML = player ? `
-            <span class="slot-team">${player.team.toUpperCase()} TEAM</span>
-            <strong>${player.name}</strong>
-        ` : `
-            <span class="slot-team">EMPTY</span>
-            <span>Waiting...</span>
-        `;
-        slotsGrid.appendChild(slot);
-    }
-}
-
-function startGameplay() {
-    document.getElementById('waitingOverlay').style.display = 'none';
-    document.getElementById('gameHud').style.display = 'flex';
-
-    if (!gameLoopId) {
-        gameLoopId = requestAnimationFrame(gameLoop);
-    }
-}
-
-function triggerFire() {
-    const now = Date.now();
-    if (now - lastFireTime < 200) return; // Fire rate limit 200ms
-    if (localPlayerPos.lives <= 0) return;
-
-    lastFireTime = now;
-    const bulletX = localPlayerPos.facing === 1 ? localPlayerPos.x + PHYSICS.playerWidth + 4 : localPlayerPos.x - 8;
-    const bulletY = localPlayerPos.y + 10;
-
-    const newBullet = {
-        id: window.currentUserId + '_' + now,
-        ownerId: window.currentUserId,
-        team: localPlayerPos.team,
-        x: bulletX,
-        y: bulletY,
-        vx: localPlayerPos.facing * PHYSICS.bulletSpeed
-    };
-
-    if (isHost) {
-        gameState.bullets.push(newBullet);
-    } else {
-        const { ref, set } = window.rtdbUtils;
-        set(ref(window.rtdb, `rooms/${currentRoomId}/bullets/${gameState.bullets.length}`), newBullet);
-    }
-}
-
-function updatePhysics() {
-    if (localPlayerPos.lives <= 0) return;
-
-    // Movement Velocity Acceleration & Friction
-    if (localInput.left) {
-        localPlayerPos.vx -= PHYSICS.acceleration;
-        if (localPlayerPos.vx < -PHYSICS.moveSpeed) localPlayerPos.vx = -PHYSICS.moveSpeed;
-        localPlayerPos.facing = -1;
-    } else if (localInput.right) {
-        localPlayerPos.vx += PHYSICS.acceleration;
-        if (localPlayerPos.vx > PHYSICS.moveSpeed) localPlayerPos.vx = PHYSICS.moveSpeed;
-        localPlayerPos.facing = 1;
-    } else {
-        localPlayerPos.vx *= PHYSICS.friction;
-        if (Math.abs(localPlayerPos.vx) < 0.05) localPlayerPos.vx = 0;
-    }
-
-    // Jump Physics
-    if (localInput.jump && localPlayerPos.isGrounded) {
-        localPlayerPos.vy = PHYSICS.jumpForce;
-        localPlayerPos.isGrounded = false;
-    }
-
-    localPlayerPos.vy += PHYSICS.gravity;
-    localPlayerPos.x += localPlayerPos.vx;
-    localPlayerPos.y += localPlayerPos.vy;
-
-    // Ground Collision
-    if (localPlayerPos.y + PHYSICS.playerHeight >= PHYSICS.groundY) {
-        localPlayerPos.y = PHYSICS.groundY - PHYSICS.playerHeight;
-        localPlayerPos.vy = 0;
-        localPlayerPos.isGrounded = true;
-    }
-
-    // Full Arena Bounds
-    if (localPlayerPos.x < 10) localPlayerPos.x = 10;
-    if (localPlayerPos.x > PHYSICS.canvasWidth - 10 - PHYSICS.playerWidth) {
-        localPlayerPos.x = PHYSICS.canvasWidth - 10 - PHYSICS.playerWidth;
-    }
-
-    // Check Life Powerup Pickup locally
-    (gameState.powerups || []).forEach((p) => {
-        if (!p.collected && 
-            localPlayerPos.x < p.x + 12 && localPlayerPos.x + PHYSICS.playerWidth > p.x &&
-            localPlayerPos.y < p.y + 12 && localPlayerPos.y + PHYSICS.playerHeight > p.y) {
-            
-            p.collected = true;
-            if (localPlayerPos.lives < PHYSICS.maxLives) {
-                localPlayerPos.lives += 1; // Gain +1 Life Health
-            }
-        }
-    });
-
-    // Sync state to Firebase
-    const { ref, update } = window.rtdbUtils;
-    update(ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`), {
-        x: localPlayerPos.x,
-        y: localPlayerPos.y,
-        facing: localPlayerPos.facing,
-        lives: localPlayerPos.lives,
-        kills: localPlayerPos.kills
-    });
-}
-
-function updateHostLogic() {
-    if (!isHost || gameState.status !== 'playing') return;
-
-    let updatedBullets = [];
-    let updatedScoreLeft = gameState.scoreLeft || 0;
-    let updatedScoreRight = gameState.scoreRight || 0;
-
-    // Rare Life Powerup Drop Logic (Every 15-25 seconds)
-    const now = Date.now();
-    if (now - lastPowerupSpawnTime > 18000 && Math.random() < 0.005) {
-        lastPowerupSpawnTime = now;
-        gameState.powerups.push({
-            id: 'powerup_' + now,
-            x: 100 + Math.random() * 600,
-            y: PHYSICS.groundY - 16,
-            collected: false
+    /* ----------------------------------------------------------------------
+       2. CONTROLS (DESKTOP KEYBOARD & MOBILE TOUCH)
+       ---------------------------------------------------------------------- */
+    initControls() {
+        // Keyboard Controls
+        window.addEventListener('keydown', (e) => {
+            if (this.gameState !== 'PLAYING') return;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = true;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') this.keys.right = true;
+            if (e.code === 'KeyW' || e.code === 'Space' || e.code === 'ArrowUp') this.keys.up = true;
+            if (e.code === 'KeyF' || e.code === 'KeyJ') this.keys.fire = true;
         });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = false;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') this.keys.right = false;
+            if (e.code === 'KeyW' || e.code === 'Space' || e.code === 'ArrowUp') this.keys.up = false;
+            if (e.code === 'KeyF' || e.code === 'KeyJ') this.keys.fire = false;
+        });
+
+        // Touch Control Listeners
+        const setupTouch = (id, keyName) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            
+            const startHandler = (e) => {
+                e.preventDefault();
+                this.touchControls[keyName] = true;
+            };
+            const endHandler = (e) => {
+                e.preventDefault();
+                this.touchControls[keyName] = false;
+            };
+
+            btn.addEventListener('touchstart', startHandler);
+            btn.addEventListener('touchend', endHandler);
+            btn.addEventListener('mousedown', startHandler);
+            btn.addEventListener('mouseup', endHandler);
+            btn.addEventListener('mouseleave', endHandler);
+        };
+
+        setupTouch('btnLeft', 'left');
+        setupTouch('btnRight', 'right');
+        setupTouch('btnJump', 'up');
+        setupTouch('btnFire', 'fire');
     }
 
-    // Bullet Physics and Hit Detection
-    (gameState.bullets || []).forEach(b => {
-        b.x += b.vx;
+    /* ----------------------------------------------------------------------
+       3. FIREBASE ROOM MANAGEMENT (CREATE, JOIN, LEAVE)
+       ---------------------------------------------------------------------- */
+    async createRoom() {
+        if (!window.rtdb || !window.rtdbUtils) return alert("Firebase is still initializing. Please wait...");
 
-        if (b.x < 0 || b.x > PHYSICS.canvasWidth) return;
+        const select = document.getElementById('maxPlayersSelect');
+        this.maxPlayers = parseInt(select.value, 10);
+        this.currentRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        this.isHost = true;
+        this.mySlotIndex = 0;
 
-        let hit = false;
-        Object.keys(gameState.players).forEach(pId => {
-            const p = gameState.players[pId];
-            if (p.team !== b.team && p.lives > 0) {
-                if (b.x >= p.x && b.x <= p.x + PHYSICS.playerWidth &&
-                    b.y >= p.y && b.y <= p.y + PHYSICS.playerHeight) {
-                    
-                    hit = true;
-                    p.lives -= 1; // Reduce 1 of 5 health
-                    if (p.lives <= 0) {
-                        p.lives = 0;
-                        if (b.team === 'left') updatedScoreLeft += 100;
-                        else updatedScoreRight += 100;
-                    }
+        const userName = document.getElementById('userDisplayName').innerText;
+        const avatarUrl = document.getElementById('userDisplayAvatar').src;
+
+        const roomData = {
+            code: this.currentRoomCode,
+            maxPlayers: this.maxPlayers,
+            state: 'WAITING',
+            scores: { left: 0, right: 0 },
+            timer: 180,
+            players: {
+                0: {
+                    id: window.currentUserId,
+                    name: userName,
+                    avatar: avatarUrl,
+                    x: 100,
+                    y: 300,
+                    vx: 0,
+                    vy: 0,
+                    side: 'left',
+                    isGrounded: true,
+                    facing: 'right'
                 }
             }
-        });
+        };
 
-        if (!hit) updatedBullets.push(b);
-    });
+        const { ref, set, onDisconnect } = window.rtdbUtils;
+        this.roomRef = ref(window.rtdb, `rooms/${this.currentRoomCode}`);
+        
+        await set(this.roomRef, roomData);
+        onDisconnect(ref(window.rtdb, `rooms/${this.currentRoomCode}/players/0`)).remove();
 
-    // Filter uncollected powerups
-    let activePowerups = (gameState.powerups || []).filter(p => !p.collected);
-
-    // Win condition: check if a side is wiped out
-    let leftAlive = 0, rightAlive = 0;
-    Object.values(gameState.players).forEach(p => {
-        if (p.lives > 0) {
-            if (p.team === 'left') leftAlive++;
-            else rightAlive++;
-        }
-    });
-
-    let newStatus = 'playing';
-    if (leftAlive === 0 || rightAlive === 0) {
-        newStatus = 'ended';
+        this.listenToRoom();
+        this.showWaitingOverlay();
     }
 
-    const { ref, update } = window.rtdbUtils;
-    update(ref(window.rtdb, 'rooms/' + currentRoomId), {
-        bullets: updatedBullets,
-        powerups: activePowerups,
-        scoreLeft: updatedScoreLeft,
-        scoreRight: updatedScoreRight,
-        status: newStatus,
-        players: gameState.players
-    });
-}
+    async joinRoom() {
+        if (!window.rtdb || !window.rtdbUtils) return alert("Firebase is still initializing. Please wait...");
 
-function render() {
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, PHYSICS.canvasWidth, PHYSICS.canvasHeight);
+        const input = document.getElementById('joinRoomInput');
+        const code = input.value.trim().toUpperCase();
+        if (code.length !== 6) return alert("Please enter a valid 6-character Room Code.");
 
-    // Ground Line
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, PHYSICS.groundY);
-    ctx.lineTo(PHYSICS.canvasWidth, PHYSICS.groundY);
-    ctx.stroke();
+        const { ref, get, update, onDisconnect } = window.rtdbUtils;
+        const targetRef = ref(window.rtdb, `rooms/${code}`);
+        const snapshot = await get(targetRef);
 
-    // Draw Rare Life Drops (+ Icon)
-    (gameState.powerups || []).forEach(p => {
-        if (p.collected) return;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(p.x, p.y, 12, 12);
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(p.x + 5, p.y + 2, 2, 8);
-        ctx.fillRect(p.x + 2, p.y + 5, 8, 2);
-    });
+        if (!snapshot.exists()) return alert("Room does not exist.");
+        const data = snapshot.val();
 
-    // Draw Players
-    const players = gameState.players || {};
-    Object.keys(players).forEach(pId => {
-        const p = players[pId];
-        if (p.lives <= 0) return;
+        if (data.state !== 'WAITING') return alert("Room has already started or finished.");
 
-        ctx.strokeStyle = '#ffffff';
-        ctx.fillStyle = pId === window.currentUserId ? '#ffffff' : '#000000';
-        ctx.lineWidth = 2;
-        ctx.fillRect(p.x, p.y, PHYSICS.playerWidth, PHYSICS.playerHeight);
-        ctx.strokeRect(p.x, p.y, PHYSICS.playerWidth, PHYSICS.playerHeight);
+        const existingSlots = data.players ? Object.keys(data.players).map(Number) : [];
+        if (existingSlots.length >= data.maxPlayers) return alert("Room is full.");
 
-        // Direction Indicator Eye
-        ctx.fillStyle = pId === window.currentUserId ? '#000000' : '#ffffff';
-        const eyeX = p.facing === 1 ? p.x + 12 : p.x + 2;
-        ctx.fillRect(eyeX, p.y + 4, 4, 4);
-
-        // 5 Health Bars Indicator (5 pips)
-        const totalBarWidth = 26;
-        const pipWidth = (totalBarWidth / PHYSICS.maxLives) - 1;
-        for (let i = 0; i < PHYSICS.maxLives; i++) {
-            ctx.fillStyle = i < p.lives ? '#ffffff' : 'rgba(255,255,255,0.2)';
-            ctx.fillRect(p.x - 4 + i * (pipWidth + 1), p.y - 10, pipWidth, 4);
+        // Find available slot index
+        let freeSlot = -1;
+        for (let i = 0; i < data.maxPlayers; i++) {
+            if (!existingSlots.includes(i)) {
+                freeSlot = i;
+                break;
+            }
         }
 
-        // Name tag
-        ctx.fillStyle = '#888888';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(p.name || 'Player', p.x + (PHYSICS.playerWidth / 2), p.y - 16);
-    });
+        if (freeSlot === -1) return alert("Unable to assign player slot.");
 
-    // Draw Bullets
-    ctx.fillStyle = '#ffffff';
-    (gameState.bullets || []).forEach(b => {
-        ctx.fillRect(b.x, b.y, 6, 2);
-    });
+        this.currentRoomCode = code;
+        this.maxPlayers = data.maxPlayers;
+        this.isHost = false;
+        this.mySlotIndex = freeSlot;
+        this.roomRef = targetRef;
 
-    // Update Scores HUD
-    document.getElementById('scoreLeft').innerText = gameState.scoreLeft || 0;
-    document.getElementById('scoreRight').innerText = gameState.scoreRight || 0;
-}
+        const userName = document.getElementById('userDisplayName').innerText;
+        const avatarUrl = document.getElementById('userDisplayAvatar').src;
+        const side = freeSlot % 2 === 0 ? 'left' : 'right';
+        const startX = side === 'left' ? 100 + (freeSlot * 40) : 700 - (freeSlot * 40);
 
-function gameLoop() {
-    updatePhysics();
-    updateHostLogic();
-    render();
+        const newPlayerData = {
+            id: window.currentUserId,
+            name: userName,
+            avatar: avatarUrl,
+            x: startX,
+            y: 300,
+            vx: 0,
+            vy: 0,
+            side: side,
+            isGrounded: true,
+            facing: side === 'left' ? 'right' : 'left'
+        };
 
-    if (gameState.status === 'playing') {
-        gameLoopId = requestAnimationFrame(gameLoop);
-    }
-}
+        await update(ref(window.rtdb, `rooms/${code}/players/${freeSlot}`), newPlayerData);
+        onDisconnect(ref(window.rtdb, `rooms/${code}/players/${freeSlot}`)).remove();
 
-function endGameUI() {
-    cancelAnimationFrame(gameLoopId);
-    gameLoopId = null;
-
-    document.getElementById('gameOverOverlay').style.display = 'flex';
-    document.getElementById('gameHud').style.display = 'none';
-
-    // Update Continue Button text
-    const playAgainBtn = document.getElementById('playAgainBtn');
-    if (playAgainBtn) playAgainBtn.innerText = 'CONTINUE MATCH';
-
-    const winnerText = document.getElementById('winnerText');
-    if (gameState.scoreLeft > gameState.scoreRight) {
-        winnerText.innerText = 'LEFT SIDE WINS!';
-    } else if (gameState.scoreRight > gameState.scoreLeft) {
-        winnerText.innerText = 'RIGHT SIDE WINS!';
-    } else {
-        winnerText.innerText = 'DRAW MATCH!';
+        this.listenToRoom();
+        this.showWaitingOverlay();
     }
 
-    document.getElementById('finalStats').innerHTML = `
-        <p style="margin-top:10px; font-size: 0.85rem; color:#888;">
-            GAME OVER - ALL 5 HEALTH EXHAUSTED
-        </p>
-    `;
-}
+    listenToRoom() {
+        const { onValue } = window.rtdbUtils;
+        this.roomListener = onValue(this.roomRef, (snapshot) => {
+            if (!snapshot.exists()) {
+                this.leaveRoom();
+                return;
+            }
 
-async function continueGame() {
-    // Reset local player health & position
-    localPlayerPos.lives = PHYSICS.maxLives;
-    localPlayerPos.x = localPlayerPos.team === 'left' ? 100 : 700;
-    localPlayerPos.y = PHYSICS.groundY - PHYSICS.playerHeight;
-    localPlayerPos.vx = 0;
-    localPlayerPos.vy = 0;
-
-    const { ref, update } = window.rtdbUtils;
-    await update(ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`), localPlayerPos);
-
-    if (isHost) {
-        // Reset Room Healths and state for Continuation
-        Object.keys(gameState.players).forEach(pId => {
-            gameState.players[pId].lives = PHYSICS.maxLives;
-        });
-        await update(ref(window.rtdb, 'rooms/' + currentRoomId), {
-            status: 'playing',
-            bullets: [],
-            powerups: [],
-            players: gameState.players
+            const data = snapshot.val();
+            this.handleRoomUpdate(data);
         });
     }
-}
 
-async function leaveRoom() {
-    if (currentRoomId) {
-        const { ref, remove } = window.rtdbUtils;
-        await remove(ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`));
+    leaveRoom() {
+        if (this.roomRef && this.mySlotIndex !== -1) {
+            const { ref, remove } = window.rtdbUtils;
+            remove(ref(window.rtdb, `rooms/${this.currentRoomCode}/players/${this.mySlotIndex}`));
+        }
+
+        this.currentRoomCode = null;
+        this.mySlotIndex = -1;
+        this.isHost = false;
+        this.gameState = 'LOBBY';
+        this.players = {};
+        this.bullets = [];
+
+        // Reset UI
+        this.lobbyOverlay.style.display = 'flex';
+        this.waitingOverlay.style.display = 'none';
+        this.gameOverOverlay.style.display = 'none';
+        this.gameHud.style.display = 'none';
+        document.getElementById('leaveRoomBtn').style.display = 'none';
+        this.roomCodeDisplay.innerText = "ROOM: ----";
+        this.playerCountDisplay.innerText = "PLAYERS: 0/6";
     }
-    resetToLobby();
+
+    /* ----------------------------------------------------------------------
+       4. SYNCHRONIZATION & INTERPOLATION (LERP)
+       ---------------------------------------------------------------------- */
+    handleRoomUpdate(data) {
+        this.maxPlayers = data.maxPlayers;
+        this.scores = data.scores || { left: 0, right: 0 };
+        this.timerSeconds = data.timer || 180;
+
+        // Sync Player Count Display
+        const activePlayers = data.players ? Object.keys(data.players) : [];
+        this.playerCountDisplay.innerText = `PLAYERS: ${activePlayers.length}/${this.maxPlayers}`;
+        this.roomCodeDisplay.innerText = `ROOM: ${this.currentRoomCode}`;
+
+        // Host handles match start transition
+        if (this.isHost && data.state === 'WAITING' && activePlayers.length === this.maxPlayers) {
+            const { ref, update } = window.rtdbUtils;
+            update(this.roomRef, { state: 'PLAYING' });
+        }
+
+        // Room state transition handling
+        if (data.state === 'PLAYING' && this.gameState !== 'PLAYING') {
+            this.startGame();
+        } else if (data.state === 'ENDED' && this.gameState !== 'ENDED') {
+            this.endGame(data.winnerText);
+        }
+
+        // Update Remote Players State (with target coords for interpolation)
+        if (data.players) {
+            Object.keys(data.players).forEach((slot) => {
+                const pData = data.players[slot];
+                const slotIdx = parseInt(slot, 10);
+
+                if (slotIdx !== this.mySlotIndex) {
+                    if (!this.players[slotIdx]) {
+                        // Spawn Remote Player
+                        this.players[slotIdx] = { ...pData, targetX: pData.x, targetY: pData.y };
+                    } else {
+                        // Update target positions for smoothing
+                        this.players[slotIdx].targetX = pData.x;
+                        this.players[slotIdx].targetY = pData.y;
+                        this.players[slotIdx].vx = pData.vx;
+                        this.players[slotIdx].vy = pData.vy;
+                        this.players[slotIdx].facing = pData.facing;
+                    }
+                } else if (!this.localPlayer) {
+                    // Initialize local player instance
+                    this.localPlayer = { ...pData };
+                    this.players[this.mySlotIndex] = this.localPlayer;
+                }
+            });
+        }
+
+        // Remove disconnected slots
+        Object.keys(this.players).forEach((slot) => {
+            if (!data.players || !data.players[slot]) {
+                delete this.players[slot];
+            }
+        });
+
+        // Sync Bullets array if supplied by server/host
+        if (data.bullets) {
+            this.bullets = data.bullets;
+        }
+
+        // Update Waiting Room Grid
+        this.updateWaitingSlotGrid(data.players);
+    }
+
+    showWaitingOverlay() {
+        this.lobbyOverlay.style.display = 'none';
+        this.waitingOverlay.style.display = 'flex';
+        document.getElementById('leaveRoomBtn').style.display = 'block';
+    }
+
+    updateWaitingSlotGrid(playersData = {}) {
+        this.playerListGrid.innerHTML = '';
+        const connectedCount = Object.keys(playersData).length;
+        this.waitingStatus.innerText = `${connectedCount} / ${this.maxPlayers} Players Connected`;
+
+        for (let i = 0; i < this.maxPlayers; i++) {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'player-slot';
+
+            if (playersData[i]) {
+                slotDiv.classList.add('occupied');
+                slotDiv.innerHTML = `
+                    <img src="${playersData[i].avatar}" class="avatar-img" width="28" height="28" alt="">
+                    <span>${playersData[i].name}</span>
+                `;
+            } else {
+                slotDiv.innerHTML = `<span>SLOT ${i + 1}</span><small>Empty</small>`;
+            }
+            this.playerListGrid.appendChild(slotDiv);
+        }
+    }
+
+    startGame() {
+        this.gameState = 'PLAYING';
+        this.lobbyOverlay.style.display = 'none';
+        this.waitingOverlay.style.display = 'none';
+        this.gameHud.style.display = 'flex';
+
+        if (this.isHost) {
+            this.startHostTimer();
+        }
+    }
+
+    startHostTimer() {
+        this.hostTimerInterval = setInterval(() => {
+            if (this.gameState !== 'PLAYING') {
+                clearInterval(this.hostTimerInterval);
+                return;
+            }
+            this.timerSeconds--;
+            const { ref, update } = window.rtdbUtils;
+            update(this.roomRef, { timer: this.timerSeconds });
+
+            if (this.timerSeconds <= 0) {
+                clearInterval(this.hostTimerInterval);
+                const winner = this.scores.left > this.scores.right ? "LEFT SIDE WINS!" :
+                              (this.scores.right > this.scores.left ? "RIGHT SIDE WINS!" : "DRAW MATCH!");
+                update(this.roomRef, { state: 'ENDED', winnerText: winner });
+            }
+        }, 1000);
+    }
+
+    endGame(winnerText) {
+        this.gameState = 'ENDED';
+        this.gameHud.style.display = 'none';
+        this.gameOverOverlay.style.display = 'flex';
+        this.winnerText.innerText = winnerText || "GAME OVER";
+        document.getElementById('finalStats').innerText = `Final Score: ${this.scores.left} - ${this.scores.right}`;
+    }
+
+    /* ----------------------------------------------------------------------
+       5. PHYSICS, LOCAL PREDICTION & BULLET LOGIC
+       ---------------------------------------------------------------------- */
+    updateLocalPlayerPhysics() {
+        if (!this.localPlayer || this.gameState !== 'PLAYING') return;
+
+        const isLeft = this.keys.left || this.touchControls.left;
+        const isRight = this.keys.right || this.touchControls.right;
+        const isUp = this.keys.up || this.touchControls.up;
+        const isFire = this.keys.fire || this.touchControls.fire;
+
+        const speed = 4.5;
+        const gravity = 0.45;
+        const jumpForce = -9.5;
+
+        // Horizontal Movement
+        if (isLeft) {
+            this.localPlayer.vx = -speed;
+            this.localPlayer.facing = 'left';
+        } else if (isRight) {
+            this.localPlayer.vx = speed;
+            this.localPlayer.facing = 'right';
+        } else {
+            this.localPlayer.vx = 0;
+        }
+
+        // Jump Mechanics
+        if (isUp && this.localPlayer.isGrounded) {
+            this.localPlayer.vy = jumpForce;
+            this.localPlayer.isGrounded = false;
+        }
+
+        // Apply Gravity
+        this.localPlayer.vy += gravity;
+
+        // Apply Velocity
+        this.localPlayer.x += this.localPlayer.vx;
+        this.localPlayer.y += this.localPlayer.vy;
+
+        // Canvas Floor Collision
+        if (this.localPlayer.y >= 330) {
+            this.localPlayer.y = 330;
+            this.localPlayer.vy = 0;
+            this.localPlayer.isGrounded = true;
+        }
+
+        // Canvas Boundary Collisions
+        if (this.localPlayer.x < 16) this.localPlayer.x = 16;
+        if (this.localPlayer.x > 780) this.localPlayer.x = 780;
+
+        // Firing Mechanics
+        const now = Date.now();
+        if (isFire && now - this.lastShotTime > 300) {
+            this.spawnBullet(this.localPlayer);
+            this.lastShotTime = now;
+        }
+
+        // Send Updated State to Firebase
+        this.broadcastLocalPosition();
+    }
+
+    spawnBullet(shooter) {
+        const bulletSpeed = 10;
+        const dir = shooter.facing === 'left' ? -1 : 1;
+        const newBullet = {
+            id: Math.random().toString(36).substring(2, 7),
+            x: shooter.x + (dir * 18),
+            y: shooter.y - 12,
+            vx: dir * bulletSpeed,
+            shooterSlot: this.mySlotIndex,
+            side: shooter.side
+        };
+
+        this.bullets.push(newBullet);
+        this.broadcastBullets();
+    }
+
+    updateBullets() {
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            const b = this.bullets[i];
+            b.x += b.vx;
+
+            // Remove out-of-bounds bullets
+            if (b.x < 0 || b.x > 800) {
+                this.bullets.splice(i, 1);
+                continue;
+            }
+
+            // Bullet - Player Collision Detection (Handled by Host)
+            if (this.isHost) {
+                Object.keys(this.players).forEach((slot) => {
+                    const slotIdx = parseInt(slot, 10);
+                    const p = this.players[slotIdx];
+
+                    // Cannot hit teammates or self
+                    if (p.side !== b.side) {
+                        const dist = Math.hypot(b.x - p.x, b.y - (p.y - 16));
+                        if (dist < 20) {
+                            // Hit registered! Increase opposing team score
+                            if (b.side === 'left') this.scores.left += 10;
+                            else this.scores.right += 10;
+
+                            // Reset hit player position
+                            p.x = p.side === 'left' ? 100 : 700;
+                            p.y = 300;
+
+                            this.bullets.splice(i, 1);
+
+                            // Sync score updates to Firebase
+                            const { ref, update } = window.rtdbUtils;
+                            update(this.roomRef, {
+                                scores: this.scores,
+                                [`players/${slotIdx}/x`]: p.x,
+                                [`players/${slotIdx}/y`]: p.y
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    broadcastLocalPosition() {
+        if (!this.roomRef || this.mySlotIndex === -1) return;
+        const { ref, update } = window.rtdbUtils;
+        
+        update(ref(window.rtdb, `rooms/${this.currentRoomCode}/players/${this.mySlotIndex}`), {
+            x: Math.round(this.localPlayer.x),
+            y: Math.round(this.localPlayer.y),
+            vx: this.localPlayer.vx,
+            vy: this.localPlayer.vy,
+            facing: this.localPlayer.facing
+        });
+    }
+
+    broadcastBullets() {
+        if (!this.isHost || !this.roomRef) return;
+        const { ref, update } = window.rtdbUtils;
+        update(this.roomRef, { bullets: this.bullets });
+    }
+
+    /* ----------------------------------------------------------------------
+       6. RENDER LOOP
+       ---------------------------------------------------------------------- */
+    gameLoop() {
+        // Physics logic
+        this.updateLocalPlayerPhysics();
+        this.updateBullets();
+
+        // Clear Canvas
+        this.ctx.fillStyle = '#050505';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Render Ground Line
+        this.ctx.strokeStyle = '#262626';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 346);
+        this.ctx.lineTo(800, 346);
+        this.ctx.stroke();
+
+        // Smooth Interpolation & Draw Remote Players
+        Object.keys(this.players).forEach((slot) => {
+            const slotIdx = parseInt(slot, 10);
+            const p = this.players[slotIdx];
+
+            if (slotIdx !== this.mySlotIndex) {
+                // Apply LERP (Factor 0.25) to prevent stuttering
+                p.x += (p.targetX - p.x) * 0.25;
+                p.y += (p.targetY - p.y) * 0.25;
+            }
+
+            this.drawPlayer(p, slotIdx === this.mySlotIndex);
+        });
+
+        // Draw Bullets
+        this.ctx.fillStyle = '#ffffff';
+        this.bullets.forEach((b) => {
+            this.ctx.beginPath();
+            this.ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+
+        // Update HUD Values
+        if (this.gameState === 'PLAYING') {
+            this.scoreLeft.innerText = this.scores.left;
+            this.scoreRight.innerText = this.scores.right;
+            const mins = Math.floor(this.timerSeconds / 60).toString().padStart(2, '0');
+            const secs = (this.timerSeconds % 60).toString().padStart(2, '0');
+            this.gameTimer.innerText = `${mins}:${secs}`;
+        }
+
+        requestAnimationFrame(this.gameLoop);
+    }
+
+    drawPlayer(player, isLocal) {
+        this.ctx.save();
+
+        // Player Body Box
+        this.ctx.fillStyle = isLocal ? '#ffffff' : (player.side === 'left' ? '#a3a3a3' : '#525252');
+        this.ctx.fillRect(player.x - 12, player.y - 32, 24, 32);
+
+        // Facing Line/Gun
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        const gunOffset = player.facing === 'left' ? -16 : 16;
+        this.ctx.moveTo(player.x, player.y - 18);
+        this.ctx.lineTo(player.x + gunOffset, player.y - 18);
+        this.ctx.stroke();
+
+        // Name Tag Above Head
+        this.ctx.fillStyle = '#a3a3a3';
+        this.ctx.font = '10px monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(player.name || 'Player', player.x, player.y - 38);
+
+        this.ctx.restore();
+    }
 }
 
-function resetToLobby() {
-    if (roomListener) roomListener();
-    if (gameLoopId) cancelAnimationFrame(gameLoopId);
-
-    currentRoomId = null;
-    isHost = false;
-    gameLoopId = null;
-    gameState.status = 'lobby';
-
-    document.getElementById('lobbyOverlay').style.display = 'flex';
-    document.getElementById('waitingOverlay').style.display = 'none';
-    document.getElementById('gameOverOverlay').style.display = 'none';
-    document.getElementById('gameHud').style.display = 'none';
-    document.getElementById('leaveRoomBtn').style.display = 'none';
-    document.getElementById('roomCodeDisplay').innerText = 'ROOM: ----';
-    document.getElementById('playerCountDisplay').innerText = 'PLAYERS: 0/6';
-}
+// Instantiate engine when window completes loading
+window.addEventListener('load', () => {
+    window.gameEngine = new GameEngine();
+});
