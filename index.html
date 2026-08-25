@@ -102,13 +102,12 @@
 
     </div>
 
-    <!-- Firebase Modular SDK -->
+    <!-- Firebase Modular SDK & Global Bridge -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Global Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
             authDomain: "svls-289ee.firebaseapp.com",
@@ -144,9 +143,14 @@
                 }
             });
         }
+
+        // Initialize Lucide Icons after DOM loads
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     </script>
 
-    <!-- Game Script Imports -->
+    <!-- Game Engine Script -->
     <script src="game.js" defer></script>
 </body>
 </html>
