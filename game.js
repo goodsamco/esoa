@@ -1,4 +1,4 @@
-// Monochrome Line Duel - Full Arena Multiplayer Engine
+// Monochrome Duel Engine - Health, Powerups, Mouse Aim/Shoot & Continuation
 
 let canvas, ctx;
 let currentRoomId = null;
@@ -11,12 +11,13 @@ let gameState = {
     maxPlayers: 2,
     players: {},
     bullets: [],
+    powerups: [],
     scoreLeft: 0,
     scoreRight: 0,
     timer: 180
 };
 
-// Local Player Physics & Controls
+// Local Player Controls
 let localInput = {
     left: false,
     right: false,
@@ -26,9 +27,11 @@ let localInput = {
 
 const PHYSICS = {
     gravity: 0.45,
-    moveSpeed: 3.5,
-    jumpForce: -9.5,
-    bulletSpeed: 8,
+    moveSpeed: 4.0,
+    acceleration: 0.6,
+    friction: 0.82,
+    jumpForce: -9.8,
+    bulletSpeed: 8.5,
     maxLives: 5,
     playerWidth: 18,
     playerHeight: 28,
@@ -44,13 +47,14 @@ let localPlayerPos = {
     vy: 0,
     isGrounded: true,
     facing: 1, // 1 for right, -1 for left
-    lives: PHYSICS.maxLives,
+    lives: PHYSICS.maxLives, // 5 Health Units
     kills: 0,
     team: 'left'
 };
 
 let gameLoopId = null;
 let lastFireTime = 0;
+let lastPowerupSpawnTime = Date.now();
 
 window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('gameCanvas');
@@ -68,11 +72,18 @@ function setupEventListeners() {
     document.getElementById('createRoomBtn').addEventListener('click', createRoom);
     document.getElementById('joinRoomBtn').addEventListener('click', joinRoom);
     document.getElementById('leaveRoomBtn').addEventListener('click', leaveRoom);
-    document.getElementById('playAgainBtn').addEventListener('click', resetToLobby);
+    document.getElementById('playAgainBtn').addEventListener('click', continueGame);
 
-    // Keyboard Input
+    // Keyboard Input (Arrow keys & WASD with smooth velocity acceleration)
     window.addEventListener('keydown', (e) => handleKey(e, true));
     window.addEventListener('keyup', (e) => handleKey(e, false));
+
+    // Mouse Click to Shoot
+    window.addEventListener('mousedown', (e) => {
+        if (gameState.status === 'playing' && e.button === 0) { // Left click
+            triggerFire();
+        }
+    });
 }
 
 function handleKey(e, isPressed) {
@@ -96,8 +107,6 @@ function setupTouchControls() {
         if (!btn) return;
         btn.addEventListener('touchstart', (e) => { e.preventDefault(); localInput[key] = true; if(key==='fire') triggerFire(); });
         btn.addEventListener('touchend', (e) => { e.preventDefault(); localInput[key] = false; });
-        btn.addEventListener('mousedown', () => { localInput[key] = true; if(key==='fire') triggerFire(); });
-        btn.addEventListener('mouseup', () => { localInput[key] = false; });
     };
 
     bindBtn('btnLeft', 'left');
@@ -123,6 +132,7 @@ async function createRoom() {
         scoreRight: 0,
         timer: 180,
         bullets: [],
+        powerups: [],
         createdAt: Date.now()
     };
 
@@ -175,7 +185,7 @@ async function joinRoomById(roomCode, hostFlag) {
         vy: 0,
         isGrounded: true,
         facing: team === 'left' ? 1 : -1,
-        lives: PHYSICS.maxLives,
+        lives: PHYSICS.maxLives, // 5 Health Units max
         kills: 0,
         team: team,
         name: document.getElementById('userDisplayName').innerText || 'Player'
@@ -209,11 +219,19 @@ function listenToRoomUpdates() {
         gameState = snapshot.val();
         if (!gameState.players) gameState.players = {};
         if (!gameState.bullets) gameState.bullets = [];
+        if (!gameState.powerups) gameState.powerups = [];
 
         updateWaitingRoomUI();
 
         if (gameState.status === 'playing' && document.getElementById('waitingOverlay').style.display !== 'none') {
             startGameplay();
+        }
+
+        if (gameState.status === 'playing' && document.getElementById('gameOverOverlay').style.display !== 'none') {
+            // Continued game restarted
+            document.getElementById('gameOverOverlay').style.display = 'none';
+            document.getElementById('gameHud').style.display = 'flex';
+            if (!gameLoopId) gameLoopId = requestAnimationFrame(gameLoop);
         }
 
         if (gameState.status === 'ended') {
@@ -267,7 +285,7 @@ function startGameplay() {
 
 function triggerFire() {
     const now = Date.now();
-    if (now - lastFireTime < 220) return; // Fire rate limit (220ms cooldown)
+    if (now - lastFireTime < 200) return; // Fire rate limit 200ms
     if (localPlayerPos.lives <= 0) return;
 
     lastFireTime = now;
@@ -294,15 +312,18 @@ function triggerFire() {
 function updatePhysics() {
     if (localPlayerPos.lives <= 0) return;
 
-    // Movement Physics
+    // Movement Velocity Acceleration & Friction
     if (localInput.left) {
-        localPlayerPos.vx = -PHYSICS.moveSpeed;
+        localPlayerPos.vx -= PHYSICS.acceleration;
+        if (localPlayerPos.vx < -PHYSICS.moveSpeed) localPlayerPos.vx = -PHYSICS.moveSpeed;
         localPlayerPos.facing = -1;
     } else if (localInput.right) {
-        localPlayerPos.vx = PHYSICS.moveSpeed;
+        localPlayerPos.vx += PHYSICS.acceleration;
+        if (localPlayerPos.vx > PHYSICS.moveSpeed) localPlayerPos.vx = PHYSICS.moveSpeed;
         localPlayerPos.facing = 1;
     } else {
-        localPlayerPos.vx = 0;
+        localPlayerPos.vx *= PHYSICS.friction;
+        if (Math.abs(localPlayerPos.vx) < 0.05) localPlayerPos.vx = 0;
     }
 
     // Jump Physics
@@ -322,13 +343,26 @@ function updatePhysics() {
         localPlayerPos.isGrounded = true;
     }
 
-    // Full Screen Boundaries (No Divider Line Constraint)
+    // Full Arena Bounds
     if (localPlayerPos.x < 10) localPlayerPos.x = 10;
     if (localPlayerPos.x > PHYSICS.canvasWidth - 10 - PHYSICS.playerWidth) {
         localPlayerPos.x = PHYSICS.canvasWidth - 10 - PHYSICS.playerWidth;
     }
 
-    // Sync to Realtime DB
+    // Check Life Powerup Pickup locally
+    (gameState.powerups || []).forEach((p) => {
+        if (!p.collected && 
+            localPlayerPos.x < p.x + 12 && localPlayerPos.x + PHYSICS.playerWidth > p.x &&
+            localPlayerPos.y < p.y + 12 && localPlayerPos.y + PHYSICS.playerHeight > p.y) {
+            
+            p.collected = true;
+            if (localPlayerPos.lives < PHYSICS.maxLives) {
+                localPlayerPos.lives += 1; // Gain +1 Life Health
+            }
+        }
+    });
+
+    // Sync state to Firebase
     const { ref, update } = window.rtdbUtils;
     update(ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`), {
         x: localPlayerPos.x,
@@ -346,10 +380,22 @@ function updateHostLogic() {
     let updatedScoreLeft = gameState.scoreLeft || 0;
     let updatedScoreRight = gameState.scoreRight || 0;
 
+    // Rare Life Powerup Drop Logic (Every 15-25 seconds)
+    const now = Date.now();
+    if (now - lastPowerupSpawnTime > 18000 && Math.random() < 0.005) {
+        lastPowerupSpawnTime = now;
+        gameState.powerups.push({
+            id: 'powerup_' + now,
+            x: 100 + Math.random() * 600,
+            y: PHYSICS.groundY - 16,
+            collected: false
+        });
+    }
+
+    // Bullet Physics and Hit Detection
     (gameState.bullets || []).forEach(b => {
         b.x += b.vx;
 
-        // Check horizontal bounds
         if (b.x < 0 || b.x > PHYSICS.canvasWidth) return;
 
         let hit = false;
@@ -360,7 +406,7 @@ function updateHostLogic() {
                     b.y >= p.y && b.y <= p.y + PHYSICS.playerHeight) {
                     
                     hit = true;
-                    p.lives -= 1;
+                    p.lives -= 1; // Reduce 1 of 5 health
                     if (p.lives <= 0) {
                         p.lives = 0;
                         if (b.team === 'left') updatedScoreLeft += 100;
@@ -373,6 +419,10 @@ function updateHostLogic() {
         if (!hit) updatedBullets.push(b);
     });
 
+    // Filter uncollected powerups
+    let activePowerups = (gameState.powerups || []).filter(p => !p.collected);
+
+    // Win condition: check if a side is wiped out
     let leftAlive = 0, rightAlive = 0;
     Object.values(gameState.players).forEach(p => {
         if (p.lives > 0) {
@@ -389,6 +439,7 @@ function updateHostLogic() {
     const { ref, update } = window.rtdbUtils;
     update(ref(window.rtdb, 'rooms/' + currentRoomId), {
         bullets: updatedBullets,
+        powerups: activePowerups,
         scoreLeft: updatedScoreLeft,
         scoreRight: updatedScoreRight,
         status: newStatus,
@@ -397,17 +448,26 @@ function updateHostLogic() {
 }
 
 function render() {
-    // Clear Screen
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, PHYSICS.canvasWidth, PHYSICS.canvasHeight);
 
-    // Draw Ground
+    // Ground Line
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, PHYSICS.groundY);
     ctx.lineTo(PHYSICS.canvasWidth, PHYSICS.groundY);
     ctx.stroke();
+
+    // Draw Rare Life Drops (+ Icon)
+    (gameState.powerups || []).forEach(p => {
+        if (p.collected) return;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(p.x, p.y, 12, 12);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(p.x + 5, p.y + 2, 2, 8);
+        ctx.fillRect(p.x + 2, p.y + 5, 8, 2);
+    });
 
     // Draw Players
     const players = gameState.players || {};
@@ -421,18 +481,18 @@ function render() {
         ctx.fillRect(p.x, p.y, PHYSICS.playerWidth, PHYSICS.playerHeight);
         ctx.strokeRect(p.x, p.y, PHYSICS.playerWidth, PHYSICS.playerHeight);
 
-        // Eyes (Direction Indicator)
+        // Direction Indicator Eye
         ctx.fillStyle = pId === window.currentUserId ? '#000000' : '#ffffff';
         const eyeX = p.facing === 1 ? p.x + 12 : p.x + 2;
         ctx.fillRect(eyeX, p.y + 4, 4, 4);
 
-        // Health Bar
-        const barWidth = 24;
-        const healthPercent = p.lives / PHYSICS.maxLives;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(p.x - 3, p.y - 12, barWidth, 4);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(p.x - 3, p.y - 12, barWidth * healthPercent, 4);
+        // 5 Health Bars Indicator (5 pips)
+        const totalBarWidth = 26;
+        const pipWidth = (totalBarWidth / PHYSICS.maxLives) - 1;
+        for (let i = 0; i < PHYSICS.maxLives; i++) {
+            ctx.fillStyle = i < p.lives ? '#ffffff' : 'rgba(255,255,255,0.2)';
+            ctx.fillRect(p.x - 4 + i * (pipWidth + 1), p.y - 10, pipWidth, 4);
+        }
 
         // Name tag
         ctx.fillStyle = '#888888';
@@ -441,7 +501,7 @@ function render() {
         ctx.fillText(p.name || 'Player', p.x + (PHYSICS.playerWidth / 2), p.y - 16);
     });
 
-    // Draw Fired Bullets
+    // Draw Bullets
     ctx.fillStyle = '#ffffff';
     (gameState.bullets || []).forEach(b => {
         ctx.fillRect(b.x, b.y, 6, 2);
@@ -469,6 +529,10 @@ function endGameUI() {
     document.getElementById('gameOverOverlay').style.display = 'flex';
     document.getElementById('gameHud').style.display = 'none';
 
+    // Update Continue Button text
+    const playAgainBtn = document.getElementById('playAgainBtn');
+    if (playAgainBtn) playAgainBtn.innerText = 'CONTINUE MATCH';
+
     const winnerText = document.getElementById('winnerText');
     if (gameState.scoreLeft > gameState.scoreRight) {
         winnerText.innerText = 'LEFT SIDE WINS!';
@@ -480,9 +544,34 @@ function endGameUI() {
 
     document.getElementById('finalStats').innerHTML = `
         <p style="margin-top:10px; font-size: 0.85rem; color:#888;">
-            FINAL SCORES: LEFT ${gameState.scoreLeft} - ${gameState.scoreRight} RIGHT
+            GAME OVER - ALL 5 HEALTH EXHAUSTED
         </p>
     `;
+}
+
+async function continueGame() {
+    // Reset local player health & position
+    localPlayerPos.lives = PHYSICS.maxLives;
+    localPlayerPos.x = localPlayerPos.team === 'left' ? 100 : 700;
+    localPlayerPos.y = PHYSICS.groundY - PHYSICS.playerHeight;
+    localPlayerPos.vx = 0;
+    localPlayerPos.vy = 0;
+
+    const { ref, update } = window.rtdbUtils;
+    await update(ref(window.rtdb, `rooms/${currentRoomId}/players/${window.currentUserId}`), localPlayerPos);
+
+    if (isHost) {
+        // Reset Room Healths and state for Continuation
+        Object.keys(gameState.players).forEach(pId => {
+            gameState.players[pId].lives = PHYSICS.maxLives;
+        });
+        await update(ref(window.rtdb, 'rooms/' + currentRoomId), {
+            status: 'playing',
+            bullets: [],
+            powerups: [],
+            players: gameState.players
+        });
+    }
 }
 
 async function leaveRoom() {
