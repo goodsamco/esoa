@@ -1,295 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Militia Style 2D Arena Shooter</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Phaser 3 Framework for Arcade Physics & 2D Canvas Engine -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2D Combat Arena - Advanced Online Engine</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Phaser 3 Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
 
-    <!-- ========================================== -->
-    <!-- 1. LOADING & NOTIFICATION OVERLAYS         -->
-    <!-- ========================================== -->
-    <div id="loadingOverlay" class="overlay active">
-        <div class="spinner-box">
-            <div class="spinner"></div>
-            <p id="loadingText">CONNECTING TO DATABASE...</p>
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div id="toastContainer"></div>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="screen overlay hidden">
+    <div class="loader"></div>
+    <div id="loadingText">CONNECTING OPERATOR...</div>
+  </div>
+
+  <!-- MAIN MENU SCREEN -->
+  <div id="mainMenuScreen" class="screen">
+    <div class="menu-container">
+      <h1 class="game-title">MINI COMBAT <span>2D</span></h1>
+      <p class="subtitle">Match Escalation & Competitive Arena</p>
+
+      <div class="user-card-widget">
+        <div class="avatar-box" id="hudAvatar">👤</div>
+        <div class="user-info">
+          <div class="user-name-line">
+            <span id="userDisplayName">Operator</span>
+            <span class="user-level-badge">LVL <span id="userLevel">1</span></span>
+          </div>
+          <div class="xp-bar-container">
+            <div id="userXpFill" class="xp-bar-fill"></div>
+          </div>
+          <div class="xp-text" id="userXpText">0 / 1000 XP</div>
         </div>
+        <div class="currency-display" id="userCurrency">🪙 0</div>
+      </div>
+
+      <div class="menu-actions">
+        <button id="btnSinglePlayer" class="btn primary-btn">🎮 PLAY VS AI (SINGLE PLAYER)</button>
+        <button id="btnMultiplayer" class="btn secondary-btn">🌐 ONLINE MULTIPLAYER</button>
+        <button id="btnShop" class="btn shop-btn">🛒 WEAPON & POWER SHOP</button>
+        <button id="btnProfile" class="btn outline-btn">📊 OPERATOR PROFILE</button>
+      </div>
     </div>
+  </div>
 
-    <div id="toastContainer" class="toast-container"></div>
+  <!-- WEAPON & POWER SHOP MODAL -->
+  <div id="shopModal" class="screen hidden">
+    <div class="modal-box shop-box">
+      <div class="modal-header">
+        <h2>WEAPON & POWER SHOP</h2>
+        <div class="currency-display" id="shopCurrency">🪙 0</div>
+      </div>
+      <div class="shop-grid" id="shopGridContainer">
+        <!-- Dynamically injected via JavaScript -->
+      </div>
+      <button id="btnCloseShop" class="btn outline-btn full-width">RETURN TO MENU</button>
+    </div>
+  </div>
 
-    <!-- Modal Dialog (Errors / Confirmations) -->
-    <div id="modalOverlay" class="overlay hidden">
-        <div class="modal-card">
-            <h3 id="modalTitle">Notice</h3>
-            <p id="modalBody">Something happened.</p>
-            <button id="modalCloseBtn" class="btn primary-btn">OK</button>
+  <!-- OPERATOR PROFILE MODAL -->
+  <div id="profileModal" class="screen hidden">
+    <div class="modal-box">
+      <h2>OPERATOR PROFILE</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">MATCHES</span>
+          <span id="statMatches" class="stat-val">0</span>
         </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 2. AUTHENTICATION & INITIAL PROFILE SCREEN -->
-    <!-- ========================================== -->
-    <div id="authScreen" class="screen hidden">
-        <div class="auth-card">
-            <h1 class="game-logo">MINI COMBAT 2D</h1>
-            <p class="subtitle">Tactical Multiplayer Arena</p>
-
-            <div id="authForm" class="auth-form">
-                <input type="text" id="authUsernameInput" placeholder="Enter Call-sign / Username" maxlength="16" />
-                <button id="guestLoginBtn" class="btn action-btn">PLAY AS GUEST</button>
-                <div class="divider"><span>OR LINK ACCOUNT</span></div>
-                <button id="googleAuthBtn" class="btn google-btn">Sign in with Google</button>
-            </div>
+        <div class="stat-card">
+          <span class="stat-label">WINS</span>
+          <span id="statWins" class="stat-val">0</span>
         </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 3. MAIN MENU & PERSONALIZED PROFILE        -->
-    <!-- ========================================== -->
-    <div id="mainMenuScreen" class="screen hidden">
-        <header class="top-bar">
-            <!-- Dynamic User Profile Header -->
-            <div class="profile-card">
-                <img id="userDisplayAvatar" class="avatar-img" src="" alt="Avatar" />
-                <div class="profile-info">
-                    <span id="userDisplayName" class="user-name">Operator</span>
-                    <div class="level-badge">LVL <span id="userLevel">1</span></div>
-                    <div class="xp-bar-container">
-                        <div id="userXpFill" class="xp-bar-fill" style="width: 0%;"></div>
-                        <span id="userXpText" class="xp-text">0 / 1000 XP</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="currency-display">
-                <span id="userCurrency">🪙 0</span>
-            </div>
-        </header>
-
-        <main class="menu-body">
-            <h1 class="menu-title">ARENA OPERATIONS</h1>
-            <div class="menu-actions">
-                <button id="btnQuickPlay" class="btn primary-btn large">⚡ QUICK MATCH</button>
-                <button id="btnMultiplayer" class="btn secondary-btn">🌐 MULTIPLAYER LOBBY</button>
-                <button id="btnSinglePlayer" class="btn secondary-btn">🤖 PRACTICE / BOTS</button>
-                <div class="menu-row">
-                    <button id="btnProfile" class="btn icon-btn">👤 STATS</button>
-                    <button id="btnInventory" class="btn icon-btn">🎒 LOADOUT</button>
-                    <button id="btnSettings" class="btn icon-btn">⚙️ SETTINGS</button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 4. PROFILE & DETAILED STATISTICS MODAL     -->
-    <!-- ========================================== -->
-    <div id="profileModal" class="screen modal-screen hidden">
-        <div class="profile-details-card">
-            <button class="close-btn" id="closeProfileBtn">&times;</button>
-            <h2>OPERATOR PROFILE</h2>
-            
-            <div class="profile-header-main">
-                <img id="profileModalAvatar" src="" class="avatar-large" alt="Avatar" />
-                <div>
-                    <h3 id="profileModalName">Operator</h3>
-                    <p id="profileStatusNote" class="status-note"></p>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box"><span class="stat-value" id="statMatches">0</span><span class="stat-label">Matches</span></div>
-                <div class="stat-box"><span class="stat-value" id="statWins">0</span><span class="stat-label">Wins</span></div>
-                <div class="stat-box"><span class="stat-value" id="statKills">0</span><span class="stat-label">Kills</span></div>
-                <div class="stat-box"><span class="stat-value" id="statDeaths">0</span><span class="stat-label">Deaths</span></div>
-                <div class="stat-box"><span class="stat-value" id="statKD">0.00</span><span class="stat-label">K/D Ratio</span></div>
-                <div class="stat-box"><span class="stat-value" id="statBestStreak">0</span><span class="stat-label">Best Streak</span></div>
-            </div>
+        <div class="stat-card">
+          <span class="stat-label">KILLS</span>
+          <span id="statKills" class="stat-val">0</span>
         </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 5. LOBBY & MATCHMAKING SCREEN              -->
-    <!-- ========================================== -->
-    <div id="lobbyScreen" class="screen hidden">
-        <div class="lobby-container">
-            <div class="lobby-header">
-                <button id="btnLobbyBack" class="btn back-btn">&larr; LEAVE</button>
-                <h2>MULTIPLAYER LOBBY</h2>
-            </div>
-
-            <div class="lobby-body">
-                <!-- Room List View -->
-                <div id="roomBrowser" class="room-browser">
-                    <div class="browser-controls">
-                        <button id="btnCreateRoom" class="btn action-btn">+ CREATE ROOM</button>
-                        <input type="text" id="joinRoomCodeInput" placeholder="ENTER ROOM CODE" maxlength="6" />
-                        <button id="btnJoinByCode" class="btn secondary-btn">JOIN</button>
-                    </div>
-
-                    <h3>AVAILABLE ROOMS</h3>
-                    <div id="roomList" class="room-list">
-                        <!-- Dynamic Room Rows Injected Here -->
-                    </div>
-                </div>
-
-                <!-- Inside Room View -->
-                <div id="activeRoomView" class="active-room hidden">
-                    <div class="room-meta">
-                        <h3 id="roomTitle">ROOM: Desert Outpost</h3>
-                        <span id="roomCodeDisplay" class="room-code">CODE: AB12CD</span>
-                    </div>
-
-                    <div class="room-settings-panel">
-                        <label>Game Mode:
-                            <select id="selectGameMode" disabled>
-                                <option value="deathmatch">Free-For-All Deathmatch</option>
-                                <option value="teamDeathmatch">Team Deathmatch</option>
-                            </select>
-                        </label>
-                        <label>Map:
-                            <select id="selectMap" disabled>
-                                <option value="jungle_base">Jungle Base</option>
-                                <option value="desert_outpost">Desert Outpost</option>
-                                <option value="industrial_factory">Industrial Factory</option>
-                            </select>
-                        </label>
-                        <label>Max Players:
-                            <select id="selectMaxPlayers" disabled>
-                                <option value="2">2 Players (1v1)</option>
-                                <option value="4" selected>4 Players</option>
-                                <option value="6">6 Players</option>
-                                <option value="8">8 Players</option>
-                            </select>
-                        </label>
-                    </div>
-
-                    <div class="players-list-panel">
-                        <h4>CONNECTED OPERATORS</h4>
-                        <ul id="connectedPlayersList" class="players-list">
-                            <!-- Injected Player Cards -->
-                        </ul>
-                    </div>
-
-                    <div class="room-footer">
-                        <button id="btnToggleReady" class="btn primary-btn">READY UP</button>
-                        <button id="btnStartMatch" class="btn action-btn hidden">START MATCH</button>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+          <span class="stat-label">DEATHS</span>
+          <span id="statDeaths" class="stat-val">0</span>
         </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 6. GAME CANVAS & MATCH HUD                 -->
-    <!-- ========================================== -->
-    <div id="gameContainer" class="game-container hidden">
-        <!-- Phaser 3 injects canvas here -->
-
-        <!-- Match HUD Overlay -->
-        <div id="matchHUD" class="match-hud">
-            <!-- Top HUD Bar -->
-            <div class="hud-top-bar">
-                <div class="hud-score-box">
-                    <span id="hudScoreLabel">SCORE</span>
-                    <span id="hudScoreValue">0</span>
-                </div>
-                <div class="hud-timer-box">
-                    <span id="hudMatchTimer">05:00</span>
-                </div>
-                <div class="hud-minimap-box">
-                    <canvas id="minimapCanvas" width="100" height="60"></canvas>
-                </div>
-            </div>
-
-            <!-- Health & Ammo Indicator -->
-            <div class="hud-status-bottom">
-                <div class="health-container">
-                    <span class="hud-label">HP</span>
-                    <div class="health-bar-outer">
-                        <div id="hudHealthFill" class="health-bar-fill" style="width: 100%;"></div>
-                    </div>
-                    <span id="hudHealthText" class="status-num">100</span>
-                </div>
-
-                <div class="ammo-container">
-                    <span class="hud-label">AMMO</span>
-                    <span id="hudAmmoText" class="ammo-num">30 / 120</span>
-                </div>
-            </div>
-
-            <!-- Kill Log Feed -->
-            <div id="hudKillLog" class="kill-log"></div>
-
-            <!-- Mobile Touch Controls overlay (Auto-hidden on Desktop) -->
-            <div id="mobileControls" class="mobile-controls">
-                <div id="joystickMove" class="touch-joystick"></div>
-                <div id="joystickAim" class="touch-joystick aim-joystick"></div>
-                
-                <div class="touch-buttons-cluster">
-                    <button id="btnTouchJump" class="touch-btn">JUMP</button>
-                    <button id="btnTouchReload" class="touch-btn">RELOAD</button>
-                    <button id="btnTouchSwitch" class="touch-btn">WEAPON</button>
-                    <button id="btnTouchMelee" class="touch-btn">MELEE</button>
-                    <button id="btnTouchGrenade" class="touch-btn">💣</button>
-                </div>
-            </div>
+        <div class="stat-card">
+          <span class="stat-label">BEST STREAK</span>
+          <span id="statBestStreak" class="stat-val">0</span>
         </div>
-
-        <!-- Countdown Banner -->
-        <div id="countdownOverlay" class="countdown-overlay hidden">
-            <span id="countdownNumber">3</span>
-        </div>
+      </div>
+      <button id="closeProfileBtn" class="btn primary-btn full-width">CLOSE</button>
     </div>
+  </div>
 
-    <!-- ========================================== -->
-    <!-- 7. POST-MATCH RESULTS SCREEN               -->
-    <!-- ========================================== -->
-    <div id="matchResultsScreen" class="screen hidden">
-        <div class="results-card">
-            <h1 id="resultsHeader">MATCH COMPLETE</h1>
-            <div id="winnerBadge" class="winner-badge">1ST PLACE</div>
-
-            <div class="results-scoreboard">
-                <table id="scoreboardTable">
-                    <thead>
-                        <tr>
-                            <th>RANK</th>
-                            <th>PLAYER</th>
-                            <th>KILLS</th>
-                            <th>DEATHS</th>
-                            <th>SCORE</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scoreboardBody">
-                        <!-- Dynamic Match Results Rows -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="rewards-summary">
-                <div class="reward-box">
-                    <span>XP GAINED</span>
-                    <span id="rewardXp">+0 XP</span>
-                </div>
-                <div class="reward-box">
-                    <span>CURRENCY</span>
-                    <span id="rewardCurrency">+0 🪙</span>
-                </div>
-            </div>
-
-            <button id="btnResultsContinue" class="btn primary-btn large">CONTINUE TO LOBBY</button>
+  <!-- MULTIPLAYER LOBBY SCREEN -->
+  <div id="lobbyScreen" class="screen hidden">
+    <div class="lobby-container">
+      <h2>MULTIPLAYER LOBBY</h2>
+      <div id="roomBrowser">
+        <div class="lobby-actions">
+          <button id="btnCreateRoom" class="btn primary-btn">CREATE ROOM</button>
+          <div class="join-code-box">
+            <input type="text" id="joinRoomCodeInput" placeholder="ROOM CODE" maxlength="6" />
+            <button id="btnJoinByCode" class="btn secondary-btn">JOIN</button>
+          </div>
         </div>
-    </div>
+        <div id="roomList" class="room-list">
+          <!-- Active public rooms listed here -->
+        </div>
+      </div>
 
-    <!-- ========================================== -->
-    <!-- 8. APPLICATION SCRIPT ENTRY POINT          -->
-    <!-- ========================================== -->
-    <script type="module" src="app.js"></script>
+      <div id="activeRoomView" class="hidden">
+        <h3 id="roomCodeDisplay">CODE: ------</h3>
+        <div id="playerLobbyList" class="player-lobby-list"></div>
+        <button id="btnStartMatch" class="btn primary-btn hidden">START MATCH</button>
+      </div>
+
+      <button id="btnLobbyBack" class="btn outline-btn">LEAVE LOBBY</button>
+    </div>
+  </div>
+
+  <!-- GAME CONTAINER AND FIGHTING GAME FIGHT-HEADER HUD -->
+  <div id="gameContainer" class="screen hidden">
+    <!-- FIGHTING-GAME-INSPIRED HUD HEADER -->
+    <header class="fight-hud">
+      <!-- LEFT: PLAYER 1 -->
+      <div class="hud-side left-side">
+        <div class="avatar-frame">👤</div>
+        <div class="bars-container">
+          <div class="hud-username" id="hudP1Name">Player 1</div>
+          <div class="meter health-meter">
+            <div class="meter-fill" id="hudP1HealthFill" style="width: 100%;"></div>
+          </div>
+          <div class="meter shield-meter">
+            <div class="meter-fill" id="hudP1ShieldFill" style="width: 100%;"></div>
+          </div>
+          <div class="weapon-indicator">
+            WEAPON: <span id="hudP1Weapon">PISTOL</span> | AMMO: <span id="hudP1Ammo">12/90</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: MATCH INFO -->
+      <div class="hud-center">
+        <div class="hud-timer" id="hudMatchTimer">03:00</div>
+        <div class="center-stats">
+          <span>KILLS: <strong id="hudP1Kills">0</strong></span>
+          <span>SCORE: <strong id="hudP1Score">0</strong></span>
+        </div>
+        <div id="hudKillStreakBanner" class="killstreak-banner hidden">DOUBLE KILL!</div>
+        <div id="hudPowerSlot" class="power-slot empty">ABILITY: NONE [E]</div>
+      </div>
+
+      <!-- RIGHT: OPPONENT / LEADER -->
+      <div class="hud-side right-side">
+        <div class="bars-container">
+          <div class="hud-username" id="hudP2Name">Opponent AI</div>
+          <div class="meter health-meter">
+            <div class="meter-fill" id="hudP2HealthFill" style="width: 100%;"></div>
+          </div>
+          <div class="meter shield-meter">
+            <div class="meter-fill" id="hudP2ShieldFill" style="width: 100%;"></div>
+          </div>
+          <div class="weapon-indicator">
+            SCORE: <span id="hudP2Score">0</span>
+          </div>
+        </div>
+        <div class="avatar-frame">🤖</div>
+      </div>
+    </header>
+
+    <!-- PHASER CANVAS CONTAINER -->
+    <div id="phaserRenderCanvas"></div>
+  </div>
+
+  <!-- MATCH RESULTS SCREEN -->
+  <div id="matchResultsScreen" class="screen hidden">
+    <div class="modal-box">
+      <h2>MATCH COMPLETED</h2>
+      <div class="rewards-box">
+        <div class="reward-item"><span id="rewardXp">+0 XP</span></div>
+        <div class="reward-item"><span id="rewardCurrency">+0 🪙</span></div>
+      </div>
+      <table class="scoreboard-table">
+        <thead>
+          <tr>
+            <th>RANK</th>
+            <th>NAME</th>
+            <th>KILLS</th>
+            <th>DEATHS</th>
+            <th>SCORE</th>
+          </tr>
+        </thead>
+        <tbody id="scoreboardBody">
+          <!-- Generated post match -->
+        </tbody>
+      </table>
+      <button id="btnResultsContinue" class="btn primary-btn full-width">CONTINUE TO MENU</button>
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
