@@ -1,5 +1,6 @@
 /* ==========================================================================
-   MONOCHROME COMBAT 2D - ADVANCED GAMEPLAY & MULTIPLAYER ENGINE
+   2D MONOCHROME ARENA - FULL GAMEPLAY & MULTIPLAYER ENGINE
+   Engine: Phaser 3 + Firebase Realtime Database + Cloud Firestore
    ========================================================================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -28,7 +29,7 @@ const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
 // --------------------------------------------------------------------------
-// 2. GLOBAL STATE & CONFIGURATIONS
+// 2. GLOBAL ENGINE STATE & CONFIGURATIONS
 // --------------------------------------------------------------------------
 const AppState = {
   userId: localStorage.getItem("mono_userId") || null,
@@ -36,7 +37,8 @@ const AppState = {
   activeRoomId: null,
   isHost: false,
   currentGame: null,
-  activeScene: null
+  activeScene: null,
+  roomListener: null
 };
 
 const WEAPONS = {
@@ -65,7 +67,7 @@ const ESCALATION_RANKS = [
 ];
 
 // --------------------------------------------------------------------------
-// 3. UI HELPER UTILITIES
+// 3. UI NAVIGATION & HELPER UTILITIES
 // --------------------------------------------------------------------------
 function showScreen(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -195,7 +197,136 @@ window.buyWeapon = async function(weaponId) {
 };
 
 // --------------------------------------------------------------------------
-// 6. PHASER 3 MONOCHROME ARENA SCENE (SINGLE FLAT PLATFORM)
+// 6. MULTIPLAYER LOBBY & MATCHMAKING ENGINE
+// --------------------------------------------------------------------------
+async function createOnlineRoom() {
+  showLoading(true, "CREATING NETWORK ROOM...");
+  const roomId = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const roomRef = ref(rtdb, `rooms/${roomId}`);
+
+  const initialRoomState = {
+    hostId: AppState.userId,
+    status: "WAITING",
+    created: Date.now(),
+    players: {
+      [AppState.userId]: {
+        name: AppState.profile.customName,
+        x: 200,
+        y: 800,
+        facing: 'right',
+        health: 100,
+        shield: 50,
+        score: 0,
+        kills: 0,
+        deaths: 0,
+        weapon: "PISTOL"
+      }
+    }
+  };
+
+  await set(roomRef, initialRoomState);
+  onDisconnect(ref(rtdb, `rooms/${roomId}/players/${AppState.userId}`)).remove();
+
+  AppState.activeRoomId = roomId;
+  AppState.isHost = true;
+
+  showLoading(false);
+  showToast(`ROOM CREATED: ${roomId}`);
+  listenToRoomState(roomId);
+}
+
+async function joinOnlineRoom(roomId) {
+  showLoading(true, "JOINING NETWORK ROOM...");
+  const roomRef = ref(rtdb, `rooms/${roomId}`);
+  const snap = await get(roomRef);
+
+  if (!snap.exists()) {
+    showLoading(false);
+    showToast("ERROR: ROOM NOT FOUND!");
+    return;
+  }
+
+  const roomData = snap.val();
+  const playerRef = ref(rtdb, `rooms/${roomId}/players/${AppState.userId}`);
+
+  await update(playerRef, {
+    name: AppState.profile.customName,
+    x: 1400,
+    y: 800,
+    facing: 'left',
+    health: 100,
+    shield: 50,
+    score: 0,
+    kills: 0,
+    deaths: 0,
+    weapon: "PISTOL"
+  });
+
+  onDisconnect(playerRef).remove();
+  AppState.activeRoomId = roomId;
+  AppState.isHost = false;
+
+  await update(roomRef, { status: "PLAYING" });
+
+  showLoading(false);
+  listenToRoomState(roomId);
+}
+
+function listenToRoomState(roomId) {
+  const roomRef = ref(rtdb, `rooms/${roomId}`);
+
+  AppState.roomListener = onValue(roomRef, (snapshot) => {
+    if (!snapshot.exists()) {
+      showToast("ROOM CLOSED BY HOST");
+      exitToMenu();
+      return;
+    }
+
+    const roomData = snapshot.val();
+
+    if (roomData.status === "PLAYING" && (!AppState.currentGame || !AppState.currentGame.scene.isActive('MonochromeArenaScene'))) {
+      showScreen('lobbyScreen');
+      launchPhaserGame(true);
+    }
+
+    if (AppState.activeScene && AppState.activeScene.isMultiplayer) {
+      AppState.activeScene.syncRemotePlayers(roomData.players);
+    }
+  });
+}
+
+function syncLocalPlayerState(x, y, facing, health, shield, score, kills, deaths, weaponId) {
+  if (!AppState.activeRoomId) return;
+  const pRef = ref(rtdb, `rooms/${AppState.activeRoomId}/players/${AppState.userId}`);
+  update(pRef, { x, y, facing, health, shield, score, kills, deaths, weapon: weaponId });
+}
+
+function syncBulletShot(bulletData) {
+  if (!AppState.activeRoomId) return;
+  const bulletsRef = ref(rtdb, `rooms/${AppState.activeRoomId}/bullets/${Date.now()}_${AppState.userId}`);
+  set(bulletsRef, bulletData);
+}
+
+function exitToMenu() {
+  if (AppState.activeRoomId) {
+    remove(ref(rtdb, `rooms/${AppState.activeRoomId}/players/${AppState.userId}`));
+    AppState.activeRoomId = null;
+  }
+  if (AppState.roomListener) {
+    AppState.roomListener();
+    AppState.roomListener = null;
+  }
+  if (AppState.currentGame) {
+    AppState.currentGame.destroy(true);
+    AppState.currentGame = null;
+  }
+
+  showScreen('mainMenuScreen');
+  showToast("RETURNED TO MAIN MENU");
+}
+
+// --------------------------------------------------------------------------
+// 7. PHASER 3 MONOCHROME ARENA SCENE
 // --------------------------------------------------------------------------
 class MonochromeArenaScene extends Phaser.Scene {
   constructor() {
@@ -205,7 +336,7 @@ class MonochromeArenaScene extends Phaser.Scene {
   init(data) {
     this.isMultiplayer = data.isMultiplayer || false;
 
-    // Player 1 State
+    // Local Player (P1)
     this.p1 = {
       sprite: null,
       health: 100,
@@ -220,10 +351,11 @@ class MonochromeArenaScene extends Phaser.Scene {
       killStreak: 0,
       storedPower: null,
       damageMultiplier: 1.0,
-      facing: 'right'
+      facing: 'right',
+      lastFired: 0
     };
 
-    // Bot Opponent State
+    // Bot Opponent (Single Player Mode)
     this.bot = {
       sprite: null,
       health: 100,
@@ -233,9 +365,13 @@ class MonochromeArenaScene extends Phaser.Scene {
       facing: 'left'
     };
 
+    // Remote Players Group (Multiplayer Mode)
+    this.remotePlayers = {};
+
     this.bullets = null;
     this.enemyBullets = null;
     this.dropsGroup = null;
+    this.lastSyncTime = 0;
   }
 
   preload() {
@@ -249,7 +385,7 @@ class MonochromeArenaScene extends Phaser.Scene {
       this.textures.addBase64(key, canvas.toDataURL());
     };
 
-    // 1. Single Flat Ground Platform (Pure Monochrome Flat Floor)
+    // 1. Platform Floor
     createTexture('mono_ground', 1600, 60, (ctx, w, h) => {
       ctx.fillStyle = '#121212';
       ctx.fillRect(0, 0, w, h);
@@ -261,39 +397,31 @@ class MonochromeArenaScene extends Phaser.Scene {
       ctx.stroke();
     });
 
-    // 2. Monochromatic Humanoid Body Avatar (Player 1 - White Silhouette with Visor)
+    // 2. Player 1 White Silhouette Body Avatar
     createTexture('p1_avatar_body', 32, 48, (ctx, w, h) => {
-      // Head
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(10, 4, 12, 12);
-      // Visor
       ctx.fillStyle = '#050505';
       ctx.fillRect(16, 8, 6, 3);
-      // Torso & Arms
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(8, 18, 16, 16);
-      // Legs
       ctx.fillRect(10, 36, 5, 12);
       ctx.fillRect(17, 36, 5, 12);
     });
 
-    // 3. Monochromatic Humanoid Body Avatar (Opponent Bot - Charcoal/Gray Silhouette)
+    // 3. Opponent / P2 Gray Body Avatar
     createTexture('bot_avatar_body', 32, 48, (ctx, w, h) => {
-      // Head
       ctx.fillStyle = '#8c8c8c';
       ctx.fillRect(10, 4, 12, 12);
-      // Visor
       ctx.fillStyle = '#050505';
       ctx.fillRect(10, 8, 6, 3);
-      // Torso & Arms
       ctx.fillStyle = '#8c8c8c';
       ctx.fillRect(8, 18, 16, 16);
-      // Legs
       ctx.fillRect(10, 36, 5, 12);
       ctx.fillRect(17, 36, 5, 12);
     });
 
-    // 4. Projectiles and Drops
+    // 4. Projectiles and Pickups
     createTexture('mono_bullet', 10, 4, (ctx, w, h) => {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, w, h);
@@ -328,29 +456,34 @@ class MonochromeArenaScene extends Phaser.Scene {
     ground.create(800, 870, 'mono_ground').refreshBody();
 
     // Spawn Player 1
-    this.p1.sprite = this.physics.add.sprite(200, 800, 'p1_avatar_body');
+    const spawnX = AppState.isHost || !this.isMultiplayer ? 200 : 1400;
+    this.p1.sprite = this.physics.add.sprite(spawnX, 800, 'p1_avatar_body');
     this.p1.sprite.setCollideWorldBounds(true);
     this.physics.add.collider(this.p1.sprite, ground);
 
-    // Spawn Opponent Bot on the single platform
+    // Single Player Bot Opponent
     if (!this.isMultiplayer) {
       this.bot.sprite = this.physics.add.sprite(1400, 800, 'bot_avatar_body');
       this.bot.sprite.setCollideWorldBounds(true);
       this.physics.add.collider(this.bot.sprite, ground);
     }
 
-    // Weapon Projectiles & Drops Setup
+    // Groups
     this.bullets = this.physics.add.group();
     this.enemyBullets = this.physics.add.group();
     this.dropsGroup = this.physics.add.group();
 
     this.physics.add.collider(this.dropsGroup, ground);
-    this.physics.add.overlap(this.bullets, this.bot.sprite, this.handleBotHit, null, this);
-    this.physics.add.overlap(this.enemyBullets, this.p1.sprite, this.handlePlayerHit, null, this);
+
+    if (!this.isMultiplayer) {
+      this.physics.add.overlap(this.bullets, this.bot.sprite, this.handleBotHit, null, this);
+      this.physics.add.overlap(this.enemyBullets, this.p1.sprite, this.handlePlayerHit, null, this);
+    }
+
     this.physics.add.overlap(this.p1.sprite, this.dropsGroup, this.collectDrop, null, this);
 
-    // Key Controls
-    this.keys = this.input.keyboard.addKeys('A,D,W,S,R,E');
+    // Key Binds
+    this.keys = this.input.keyboard.addKeys('A,D,W,S,R,E,ESC');
     this.input.on('pointerdown', (pointer) => this.fireWeapon(pointer.worldX, pointer.worldY));
 
     // Match Timer
@@ -368,10 +501,10 @@ class MonochromeArenaScene extends Phaser.Scene {
     });
   }
 
-  update(time) {
+  update(time, delta) {
     if (!this.p1.sprite || !this.p1.sprite.body) return;
 
-    // Movement Controls on Plain Flat Platform
+    // Movement Logic
     if (this.keys.A.isDown) {
       this.p1.sprite.setVelocityX(-280);
       this.p1.sprite.setFlipX(true);
@@ -390,22 +523,43 @@ class MonochromeArenaScene extends Phaser.Scene {
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.R)) this.reloadWeapon();
     if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.activateStoredPower();
+    if (Phaser.Input.Keyboard.JustDown(this.keys.ESC)) togglePauseMenu();
 
-    // AI Bot Behavior Logic
+    // AI Bot Behavior (Single Player)
     if (!this.isMultiplayer && this.bot.sprite) {
       this.updateBotAI(time);
+    }
+
+    // Network Sync Throttle (Multiplayer)
+    if (this.isMultiplayer && time > this.lastSyncTime + 50) {
+      this.lastSyncTime = time;
+      syncLocalPlayerState(
+        this.p1.sprite.x,
+        this.p1.sprite.y,
+        this.p1.facing,
+        this.p1.health,
+        this.p1.shield,
+        this.p1.score,
+        this.p1.kills,
+        this.p1.deaths,
+        this.p1.weapon.id
+      );
     }
 
     this.updateHUDDisplay();
   }
 
   fireWeapon(targetX, targetY) {
+    const now = this.time.now;
+    if (now - this.p1.lastFired < this.p1.weapon.fireRate) return;
     if (this.p1.ammo <= 0) {
       this.reloadWeapon();
       return;
     }
 
+    this.p1.lastFired = now;
     this.p1.ammo--;
+
     const bullet = this.bullets.create(this.p1.sprite.x, this.p1.sprite.y - 4, 'mono_bullet');
     bullet.damage = this.p1.weapon.damage * this.p1.damageMultiplier;
 
@@ -414,6 +568,17 @@ class MonochromeArenaScene extends Phaser.Scene {
 
     this.physics.velocityFromRotation(angle, this.p1.weapon.speed, bullet.body.velocity);
     bullet.setRotation(angle);
+
+    if (this.isMultiplayer) {
+      syncBulletShot({
+        x: this.p1.sprite.x,
+        y: this.p1.sprite.y,
+        angle: angle,
+        speed: this.p1.weapon.speed,
+        damage: bullet.damage,
+        ownerId: AppState.userId
+      });
+    }
 
     this.time.delayedCall(1600, () => { if (bullet.active) bullet.destroy(); });
   }
@@ -438,6 +603,35 @@ class MonochromeArenaScene extends Phaser.Scene {
         this.physics.velocityFromRotation(angle, 750, b.body.velocity);
       }
     }
+  }
+
+  syncRemotePlayers(playersData) {
+    if (!playersData) return;
+
+    Object.keys(playersData).forEach(id => {
+      if (id === AppState.userId) return;
+
+      const pData = playersData[id];
+      if (!this.remotePlayers[id]) {
+        const sprite = this.physics.add.sprite(pData.x, pData.y, 'bot_avatar_body');
+        sprite.setCollideWorldBounds(true);
+        this.remotePlayers[id] = { sprite, data: pData };
+
+        this.physics.add.overlap(this.bullets, sprite, (bullet) => {
+          bullet.destroy();
+          showToast("HIT CONFIRMED!");
+        }, null, this);
+      } else {
+        const rPlayer = this.remotePlayers[id];
+        rPlayer.sprite.setPosition(pData.x, pData.y);
+        rPlayer.sprite.setFlipX(pData.facing === 'left');
+        rPlayer.data = pData;
+
+        document.getElementById('hudP2HealthFill').style.width = `${pData.health}%`;
+        document.getElementById('hudP2Score').innerText = pData.score;
+        document.getElementById('hudP2Name').innerText = pData.name;
+      }
+    });
   }
 
   handleBotHit(bullet, bot) {
@@ -504,15 +698,13 @@ class MonochromeArenaScene extends Phaser.Scene {
   }
 
   rollDropSpawns(x, y) {
-    // 30% Chance rare coin drop on platform floor
-    if (Phaser.Math.Between(1, 100) <= 30) {
+    if (Phaser.Math.Between(1, 100) <= 35) {
       const coin = this.dropsGroup.create(x, y, 'coin_pickup');
       coin.dropType = 'COIN';
       coin.setBounce(0.3);
     }
 
-    // 15% Chance power drop
-    if (Phaser.Math.Between(1, 100) <= 15) {
+    if (Phaser.Math.Between(1, 100) <= 20) {
       const powerKeys = Object.keys(POWERS);
       const power = this.dropsGroup.create(x + 12, y, 'power_pickup');
       power.dropType = 'POWER';
@@ -564,7 +756,7 @@ class MonochromeArenaScene extends Phaser.Scene {
     document.getElementById('hudP1Kills').innerText = this.p1.kills;
     document.getElementById('hudP1Score').innerText = this.p1.score;
 
-    if (this.bot.sprite) {
+    if (!this.isMultiplayer && this.bot.sprite) {
       document.getElementById('hudP2HealthFill').style.width = `${this.bot.health}%`;
       document.getElementById('hudP2Score').innerText = this.bot.score;
     }
@@ -578,7 +770,21 @@ class MonochromeArenaScene extends Phaser.Scene {
 }
 
 // --------------------------------------------------------------------------
-// 7. PERSISTENCE & RESULTS TERMINATION LOOP
+// 8. PAUSE & OVERLAY CONTROL SYSTEM
+// --------------------------------------------------------------------------
+function togglePauseMenu() {
+  const pauseModal = document.getElementById('pauseModal');
+  if (pauseModal.classList.contains('hidden')) {
+    pauseModal.classList.remove('hidden');
+    if (AppState.activeScene) AppState.activeScene.scene.pause();
+  } else {
+    pauseModal.classList.add('hidden');
+    if (AppState.activeScene) AppState.activeScene.scene.resume();
+  }
+}
+
+// --------------------------------------------------------------------------
+// 9. PERSISTENCE & RESULTS TERMINATION LOOP
 // --------------------------------------------------------------------------
 async function finishMatchAndSaveResults(score, kills, deaths, streak) {
   showLoading(true, "WRITING MATCH RESULTS...");
@@ -625,7 +831,7 @@ async function finishMatchAndSaveResults(score, kills, deaths, streak) {
 }
 
 // --------------------------------------------------------------------------
-// 8. LAUNCH ENGINE
+// 10. LAUNCH ENGINE
 // --------------------------------------------------------------------------
 function launchPhaserGame(isMultiplayer = false) {
   showScreen('gameContainer');
@@ -651,12 +857,29 @@ function launchPhaserGame(isMultiplayer = false) {
 }
 
 // --------------------------------------------------------------------------
-// 9. UI EVENT LISTENERS
+// 11. UI EVENT BINDINGS
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
 
   document.getElementById('btnSinglePlayer').addEventListener('click', () => launchPhaserGame(false));
+  document.getElementById('btnLobby').addEventListener('click', () => showScreen('lobbyScreen'));
+  document.getElementById('btnCloseLobby').addEventListener('click', () => showScreen('mainMenuScreen'));
+  
+  document.getElementById('btnCreateRoom').addEventListener('click', createOnlineRoom);
+  document.getElementById('btnJoinRoom').addEventListener('click', () => {
+    const code = document.getElementById('inputRoomCode').value.trim();
+    if (code) joinOnlineRoom(code);
+    else showToast("ENTER ROOM CODE!");
+  });
+
+  document.getElementById('btnInGamePause').addEventListener('click', togglePauseMenu);
+  document.getElementById('btnResumeGame').addEventListener('click', togglePauseMenu);
+  document.getElementById('btnQuitMatch').addEventListener('click', () => {
+    document.getElementById('pauseModal').classList.add('hidden');
+    exitToMenu();
+  });
+
   document.getElementById('btnShop').addEventListener('click', () => {
     renderShopUI();
     showScreen('shopModal');
