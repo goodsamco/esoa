@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2D Combat Arena - Advanced Online Engine</title>
-  <link rel="stylesheet" href="style.css" />
-  <!-- Phaser 3 Engine -->
+  <title>Monochrome Combat 2D</title>
+  <!-- Engine Dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -16,20 +15,28 @@
   <!-- LOADING OVERLAY -->
   <div id="loadingOverlay" class="screen overlay hidden">
     <div class="loader"></div>
-    <div id="loadingText">CONNECTING OPERATOR...</div>
+    <div id="loadingText">INITIALIZING SYSTEM...</div>
   </div>
 
   <!-- MAIN MENU SCREEN -->
   <div id="mainMenuScreen" class="screen">
     <div class="menu-container">
-      <h1 class="game-title">MINI COMBAT <span>2D</span></h1>
-      <p class="subtitle">Match Escalation & Competitive Arena</p>
+      <h1 class="game-title">MONO<span>COMBAT</span></h1>
+      <p class="subtitle">Monochrome Arena Escalation</p>
 
+      <!-- USER PROFILE & AVATAR CARD -->
       <div class="user-card-widget">
-        <div class="avatar-box" id="hudAvatar">👤</div>
+        <div class="avatar-box" id="hudAvatar">
+          <!-- Monochromatic SVG Silhouette Avatar -->
+          <svg class="avatar-svg" viewBox="0 0 100 100" width="48" height="48">
+            <circle cx="50" cy="32" r="18" fill="#ffffff" />
+            <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#ffffff" />
+            <rect x="38" y="28" w="24" h="6" fill="#000000" />
+          </svg>
+        </div>
         <div class="user-info">
           <div class="user-name-line">
-            <span id="userDisplayName">Operator</span>
+            <span id="userDisplayName">OPERATOR</span>
             <span class="user-level-badge">LVL <span id="userLevel">1</span></span>
           </div>
           <div class="xp-bar-container">
@@ -40,11 +47,12 @@
         <div class="currency-display" id="userCurrency">🪙 0</div>
       </div>
 
+      <!-- MAIN MENU ACTIONS -->
       <div class="menu-actions">
-        <button id="btnSinglePlayer" class="btn primary-btn">🎮 PLAY VS AI (SINGLE PLAYER)</button>
-        <button id="btnMultiplayer" class="btn secondary-btn">🌐 ONLINE MULTIPLAYER</button>
-        <button id="btnShop" class="btn shop-btn">🛒 WEAPON & POWER SHOP</button>
-        <button id="btnProfile" class="btn outline-btn">📊 OPERATOR PROFILE</button>
+        <button id="btnSinglePlayer" class="btn primary-btn">SINGLE PLAYER (VS AI)</button>
+        <button id="btnMultiplayer" class="btn secondary-btn">ONLINE MATCH</button>
+        <button id="btnShop" class="btn shop-btn">ARMORY & SHOP</button>
+        <button id="btnProfile" class="btn outline-btn">OPERATOR PROFILE</button>
       </div>
     </div>
   </div>
@@ -53,12 +61,15 @@
   <div id="shopModal" class="screen hidden">
     <div class="modal-box shop-box">
       <div class="modal-header">
-        <h2>WEAPON & POWER SHOP</h2>
+        <h2>ARMORY & SHOP</h2>
         <div class="currency-display" id="shopCurrency">🪙 0</div>
       </div>
+      
+      <!-- ITEM SECTIONS -->
       <div class="shop-grid" id="shopGridContainer">
         <!-- Dynamically injected via JavaScript -->
       </div>
+      
       <button id="btnCloseShop" class="btn outline-btn full-width">RETURN TO MENU</button>
     </div>
   </div>
@@ -67,6 +78,17 @@
   <div id="profileModal" class="screen hidden">
     <div class="modal-box">
       <h2>OPERATOR PROFILE</h2>
+      
+      <!-- AVATAR PREVIEW -->
+      <div class="profile-avatar-preview">
+        <svg class="avatar-svg-large" viewBox="0 0 100 100" width="80" height="80">
+          <circle cx="50" cy="32" r="18" fill="#ffffff" />
+          <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#ffffff" />
+          <rect x="38" y="28" w="24" h="6" fill="#000000" />
+        </svg>
+      </div>
+
+      <!-- STATISTICS GRID -->
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-label">MATCHES</span>
@@ -88,6 +110,10 @@
           <span class="stat-label">BEST STREAK</span>
           <span id="statBestStreak" class="stat-val">0</span>
         </div>
+        <div class="stat-card">
+          <span class="stat-label">ACCURACY</span>
+          <span id="statAccuracy" class="stat-val">0%</span>
+        </div>
       </div>
       <button id="closeProfileBtn" class="btn primary-btn full-width">CLOSE</button>
     </div>
@@ -96,7 +122,7 @@
   <!-- MULTIPLAYER LOBBY SCREEN -->
   <div id="lobbyScreen" class="screen hidden">
     <div class="lobby-container">
-      <h2>MULTIPLAYER LOBBY</h2>
+      <h2>ONLINE LOBBY</h2>
       <div id="roomBrowser">
         <div class="lobby-actions">
           <button id="btnCreateRoom" class="btn primary-btn">CREATE ROOM</button>
@@ -111,8 +137,10 @@
       </div>
 
       <div id="activeRoomView" class="hidden">
-        <h3 id="roomCodeDisplay">CODE: ------</h3>
-        <div id="playerLobbyList" class="player-lobby-list"></div>
+        <h3 id="roomCodeDisplay">ROOM: ------</h3>
+        <div id="playerLobbyList" class="player-lobby-list">
+          <!-- Player slots dynamically populated -->
+        </div>
         <button id="btnStartMatch" class="btn primary-btn hidden">START MATCH</button>
       </div>
 
@@ -120,15 +148,21 @@
     </div>
   </div>
 
-  <!-- GAME CONTAINER AND FIGHTING GAME FIGHT-HEADER HUD -->
+  <!-- GAME CONTAINER AND FIGHTING GAME HUD -->
   <div id="gameContainer" class="screen hidden">
-    <!-- FIGHTING-GAME-INSPIRED HUD HEADER -->
+    <!-- FIGHTING-GAME-INSPIRED MONOCHROME HUD HEADER -->
     <header class="fight-hud">
-      <!-- LEFT: PLAYER 1 -->
+      <!-- LEFT SIDE: PLAYER 1 PROFILE & METERS -->
       <div class="hud-side left-side">
-        <div class="avatar-frame">👤</div>
+        <div class="avatar-frame">
+          <svg viewBox="0 0 100 100" width="40" height="40">
+            <circle cx="50" cy="32" r="18" fill="#ffffff" />
+            <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#ffffff" />
+            <rect x="38" y="28" w="24" h="6" fill="#000000" />
+          </svg>
+        </div>
         <div class="bars-container">
-          <div class="hud-username" id="hudP1Name">Player 1</div>
+          <div class="hud-username" id="hudP1Name">PLAYER 1</div>
           <div class="meter health-meter">
             <div class="meter-fill" id="hudP1HealthFill" style="width: 100%;"></div>
           </div>
@@ -141,21 +175,21 @@
         </div>
       </div>
 
-      <!-- CENTER: MATCH INFO -->
+      <!-- CENTER: MATCH TIMER, SCORE, KILL STREAK & POWER SLOT -->
       <div class="hud-center">
         <div class="hud-timer" id="hudMatchTimer">03:00</div>
         <div class="center-stats">
           <span>KILLS: <strong id="hudP1Kills">0</strong></span>
           <span>SCORE: <strong id="hudP1Score">0</strong></span>
         </div>
-        <div id="hudKillStreakBanner" class="killstreak-banner hidden">DOUBLE KILL!</div>
-        <div id="hudPowerSlot" class="power-slot empty">ABILITY: NONE [E]</div>
+        <div id="hudKillStreakBanner" class="killstreak-banner hidden">DOUBLE KILL</div>
+        <div id="hudPowerSlot" class="power-slot empty">POWER: NONE [E]</div>
       </div>
 
-      <!-- RIGHT: OPPONENT / LEADER -->
+      <!-- RIGHT SIDE: OPPONENT PROFILE & METERS -->
       <div class="hud-side right-side">
         <div class="bars-container">
-          <div class="hud-username" id="hudP2Name">Opponent AI</div>
+          <div class="hud-username" id="hudP2Name">BOT_01</div>
           <div class="meter health-meter">
             <div class="meter-fill" id="hudP2HealthFill" style="width: 100%;"></div>
           </div>
@@ -163,44 +197,50 @@
             <div class="meter-fill" id="hudP2ShieldFill" style="width: 100%;"></div>
           </div>
           <div class="weapon-indicator">
-            SCORE: <span id="hudP2Score">0</span>
+            WEAPON: <span id="hudP2Weapon">PISTOL</span> | SCORE: <span id="hudP2Score">0</span>
           </div>
         </div>
-        <div class="avatar-frame">🤖</div>
+        <div class="avatar-frame">
+          <svg viewBox="0 0 100 100" width="40" height="40">
+            <circle cx="50" cy="32" r="18" fill="#888888" />
+            <path d="M 20 85 C 20 55, 80 55, 80 85 Z" fill="#888888" />
+            <rect x="38" y="28" w="24" h="6" fill="#000000" />
+          </svg>
+        </div>
       </div>
     </header>
 
-    <!-- PHASER CANVAS CONTAINER -->
+    <!-- MONOCHROME CANVAS VIEWPORT -->
     <div id="phaserRenderCanvas"></div>
   </div>
 
   <!-- MATCH RESULTS SCREEN -->
   <div id="matchResultsScreen" class="screen hidden">
     <div class="modal-box">
-      <h2>MATCH COMPLETED</h2>
+      <h2>MATCH TERMINATED</h2>
       <div class="rewards-box">
         <div class="reward-item"><span id="rewardXp">+0 XP</span></div>
-        <div class="reward-item"><span id="rewardCurrency">+0 🪙</span></div>
+        <div class="reward-item"><span id="rewardCurrency">+0 🪙 COINS</span></div>
       </div>
       <table class="scoreboard-table">
         <thead>
           <tr>
-            <th>RANK</th>
-            <th>NAME</th>
+            <th>POS</th>
+            <th>OPERATOR</th>
             <th>KILLS</th>
             <th>DEATHS</th>
             <th>SCORE</th>
           </tr>
         </thead>
         <tbody id="scoreboardBody">
-          <!-- Generated post match -->
+          <!-- Dynamically populated post match -->
         </tbody>
       </table>
-      <button id="btnResultsContinue" class="btn primary-btn full-width">CONTINUE TO MENU</button>
+      <button id="btnResultsContinue" class="btn primary-btn full-width">RETURN TO MAIN MENU</button>
     </div>
   </div>
 
-  <!-- APPLICATION SCRIPTS -->
+  <!-- MAIN ENGINE APPLICATION MODULE -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
