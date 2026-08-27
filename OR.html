@@ -918,7 +918,9 @@
   box-shadow:none !important;
 }
 
-\n  /* ===== RECORDS HOMEPAGE / ONLINE DATABASE ===== */\n  .records-home{min-height:100vh;padding:34px;background:#f4f3f0;color:#111;}\n  .records-home-inner{width:min(1180px,100%);margin:0 auto;}\n  .home-topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px;}\n  .home-kicker{font-size:11px;letter-spacing:.14em;font-weight:800;color:#777;margin-bottom:6px;}\n  .home-topbar h1{font-family:Georgia,"Times New Roman",serif;font-size:34px;margin:0 0 6px;}\n  .home-topbar p{margin:0;color:#666;font-size:14px;}\n  .records-status{font-size:12px;color:#777;margin:12px 2px 14px;}\n  .records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}\n  .record-card{border:1px solid rgba(0,0,0,.09);border-radius:18px;padding:19px;min-height:190px;box-shadow:0 8px 26px rgba(0,0,0,.06);position:relative;overflow:hidden;}\n  .record-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}\n  .patient-name{font-family:Georgia,"Times New Roman",serif;font-size:21px;font-weight:700;line-height:1.1;}\n  .record-date{font-size:11px;font-weight:700;white-space:nowrap;color:#555;}\n  .record-doctor{font-size:12px;font-weight:800;margin-top:12px;letter-spacing:.03em;}\n  .record-operation{font-size:13px;margin-top:8px;line-height:1.35;}\n  .record-meta{display:flex;gap:8px;margin-top:14px;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.08em;}\n  .record-meta span{background:rgba(255,255,255,.55);padding:5px 7px;border-radius:999px;}\n  .record-open{margin-top:15px;padding:8px 11px;border:1px solid rgba(0,0,0,.13);background:rgba(255,255,255,.7);color:#111;font-size:12px;}\n  .record-open:hover{background:#fff;}\n  .records-empty{padding:48px 20px;text-align:center;background:#fff;border:1px dashed #ccc;border-radius:16px;color:#777;}\n  @media(max-width:700px){.records-home{padding:20px}.home-topbar{align-items:flex-start;flex-direction:column}.home-topbar h1{font-size:28px}}\n
+
+  /* ===== RECORDS HOMEPAGE / ONLINE DATABASE ===== */
+  .records-home{min-height:100vh;padding:34px;background:#f4f3f0;color:#111;}\n  .records-home-inner{width:min(1180px,100%);margin:0 auto;}\n  .home-topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px;}\n  .home-kicker{font-size:11px;letter-spacing:.14em;font-weight:800;color:#777;margin-bottom:6px;}\n  .home-topbar h1{font-family:Georgia,"Times New Roman",serif;font-size:34px;margin:0 0 6px;}\n  .home-topbar p{margin:0;color:#666;font-size:14px;}\n  .records-status{font-size:12px;color:#777;margin:12px 2px 14px;}\n  .records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}\n  .record-card{border:1px solid rgba(0,0,0,.09);border-radius:18px;padding:19px;min-height:190px;box-shadow:0 8px 26px rgba(0,0,0,.06);position:relative;overflow:hidden;}\n  .record-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}\n  .patient-name{font-family:Georgia,"Times New Roman",serif;font-size:21px;font-weight:700;line-height:1.1;}\n  .record-date{font-size:11px;font-weight:700;white-space:nowrap;color:#555;}\n  .record-doctor{font-size:12px;font-weight:800;margin-top:12px;letter-spacing:.03em;}\n  .record-operation{font-size:13px;margin-top:8px;line-height:1.35;}\n  .record-meta{display:flex;gap:8px;margin-top:14px;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.08em;}\n  .record-meta span{background:rgba(255,255,255,.55);padding:5px 7px;border-radius:999px;}\n  .record-open{margin-top:15px;padding:8px 11px;border:1px solid rgba(0,0,0,.13);background:rgba(255,255,255,.7);color:#111;font-size:12px;}\n  .record-open:hover{background:#fff;}\n  .records-empty{padding:48px 20px;text-align:center;background:#fff;border:1px dashed #ccc;border-radius:16px;color:#777;}\n  @media(max-width:700px){.records-home{padding:20px}.home-topbar{align-items:flex-start;flex-direction:column}.home-topbar h1{font-size:28px}}\n
 </style>
 
 <!-- Firebase: Firestore + Realtime Database -->
@@ -1880,7 +1882,261 @@ document.addEventListener("input", e => {
 });
 showStep(0);
 </script>
-\n<script>\n/* ===== ONLINE RECORDS / FIREBASE LAYER ===== */\n(function(){\n  const firebaseConfig = {\n    apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",\n    authDomain: "svls-289ee.firebaseapp.com",\n    databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",\n    projectId: "svls-289ee",\n    storageBucket: "svls-289ee.firebasestorage.app",\n    messagingSenderId: "500705386198",\n    appId: "1:500705386198:web:96f189662bc2aa99cf7377",\n    measurementId: "G-5TNBMQ2HN5"\n  };\n\n  let db = null, rtdb = null, auth = null;\n  try {\n    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);\n    db = firebase.firestore(app);\n    rtdb = firebase.database(app);\n    auth = firebase.auth(app);\n    window.__firebaseOnline = true;\n  } catch(e) {\n    console.warn("Firebase initialization failed; local fallback active.", e);\n    window.__firebaseOnline = false;\n  }\n  window.__operationDb = db;\n  window.__operationAuth = auth;\n\n  const home = document.getElementById('recordsHome');\n  const appView = document.getElementById('recordApp');\n  const grid = document.getElementById('recordsGrid');\n  const status = document.getElementById('recordsStatus');\n  const empty = document.getElementById('recordsEmpty');\n\n  const pastelPalette = [\n    '#FBE7E7','#FCEEDC','#FFF6CC','#EAF5E2','#E3F2EE','#E4EFFA','#ECE8F8','#F4E6F5','#FBE9DD','#E9F0E8'\n  ];\n  function doctorKey(name){\n    return String(name||'').trim().toUpperCase().replace(/\\s+/g,' ');\n  }\n  function doctorColor(name){\n    const key=doctorKey(name); let h=0;\n    for(let i=0;i<key.length;i++) h=(h*31+key.charCodeAt(i))>>>0;\n    return pastelPalette[h % pastelPalette.length];\n  }\n  function esc(v){\n    return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;',"'":'&#39;'}[c]));\n  }\n  function displayDate(v){\n    if(!v) return 'Date not entered';\n    const d=new Date(v+'T00:00:00');\n    return isNaN(d) ? v : d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});\n  }\n\n  function collectRecord(){\n    const data={};\n    baseIds.forEach(id=>{ const el=document.getElementById(id); if(el) data[id]=el.value; });\n    data.materials=getAllMaterialEntries();\n    data.materialCounts=Object.fromEntries(Object.keys(materialTypes).map(t=>[t,data.materials[t].length]));\n    data.patientName=val('name');\n    data.doctorName=val('surgeon');\n    data.operationDate=val('operationDate');\n    data.updatedAt=Date.now();\n    data.status='draft';\n    return data;\n  }\n\n  async function ensureAuth(){\n    if(!auth) return null;\n    if(auth.currentUser) return auth.currentUser;\n    try { return (await auth.signInAnonymously()).user; }\n    catch(e){ console.warn('Anonymous Firebase auth is not enabled or failed.',e); return null; }\n  }\n\n  async function saveOnlineRecord(finalRecord=false){\n    const data=collectRecord();\n    data.status=finalRecord?'saved':'draft';\n    data.savedAt=finalRecord?Date.now():(window.__recordSavedAt||null);\n    let id=window.__recordId || sessionStorage.getItem('mlangOperationRecordId') || '';\n    if(db){\n      try {\n        await ensureAuth();\n        const ref=id ? db.collection('operationRecords').doc(id) : db.collection('operationRecords').doc();\n        id=ref.id;\n        data.id=id;\n        await ref.set(data,{merge:true});\n        window.__recordId=id;\n        sessionStorage.setItem('mlangOperationRecordId',id);\n        window.__recordSavedAt=Date.now();\n        return {id,data,online:true};\n      } catch(e){\n        console.error('Database save failed',e);\n        showExportStatus('Database save failed. The record remains on this device.',true);\n      }\n    }\n    data.id=id || ('local-'+Date.now());\n    window.__recordId=data.id;\n    localStorage.setItem('operationRecord:'+data.id,JSON.stringify(data));\n    return {id:data.id,data,online:false};\n  }\n\n  async function updateRecordOnNext(){\n    try{\n      saveState(); buildPrint();\n      await saveOnlineRecord(false);\n    }catch(e){ console.warn('Draft update failed',e); }\n  }\n\n  // Replace Next so every page transition pushes the latest complete form state.\n  window.nextStep=async function(){\n    const btn=document.getElementById('nextBtn');\n    if(btn) btn.disabled=true;\n    try{\n      compileCurrentDetails();\n      await updateRecordOnNext();\n      if(step < totalSteps-1){\n        showStep(step+1);\n        if(step===totalSteps-1) buildPreview();\n      }\n    }finally{ if(btn) btn.disabled=false; }\n  };\n\n  window.startNewRecord=function(){\n    baseIds.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});\n    materialCounts={drug:3,suture:3,sponge:3}; renderMaterials();\n    window.__recordId=''; sessionStorage.removeItem('mlangOperationRecordId');\n    sessionStorage.removeItem('mlangOperationRecord');\n    appView.style.display='flex'; home.style.display='none';\n    showStep(0);\n  };\n\n  window.goHome=async function(){\n    try{ saveState(); }catch(e){}\n    appView.style.display='none'; home.style.display='block';\n    await loadRecords();\n  };\n\n  async function loadRecord(id){\n    let data=null;\n    if(db){\n      try{\n        await ensureAuth();\n        const snap=await db.collection('operationRecords').doc(id).get();\n        if(snap.exists) data=snap.data();\n      }catch(e){console.warn('Could not read online record',e);}\n    }\n    if(!data){\n      try{ data=JSON.parse(localStorage.getItem('operationRecord:'+id)||'null'); }catch(e){}\n    }\n    if(!data) return;\n    baseIds.forEach(key=>{const el=document.getElementById(key);if(el && data[key]!==undefined)el.value=data[key];});\n    materialCounts=Object.fromEntries(Object.keys(materialTypes).map(t=>[t,Array.isArray(data.materials?.[t])?data.materials[t].length:3]));\n    renderMaterials(data);\n    window.__recordId=id;\n    sessionStorage.setItem('mlangOperationRecordId',id);\n    saveState();\n    appView.style.display='flex'; home.style.display='none'; showStep(0);\n  }\n\n  window.editRecord=function(id){ loadRecord(id); };\n\n  window.saveRecordToDatabase=async function(){\n    const btn=document.getElementById('saveBtn');\n    if(btn) {btn.disabled=true; btn.textContent='Saving…';}\n    try{\n      compileCurrentDetails();\n      const result=await saveOnlineRecord(true);\n      if(result.online){\n        showExportStatus('Record saved to the database.');\n      }else{\n        showExportStatus('Saved locally. Connect Firebase to save online.');\n      }\n      await loadRecords();\n    }catch(e){\n      console.error(e); showExportStatus('Unable to save the record.',true);\n    }finally{ if(btn){btn.disabled=false;btn.textContent='Save Record';} }\n  };\n\n  async function loadRecords(){\n    status.textContent='Loading records…'; grid.innerHTML=''; empty.style.display='none';\n    let records=[];\n    if(db){\n      try{\n        await ensureAuth();\n        const snap=await db.collection('operationRecords').orderBy('operationDate','desc').get();\n        records=snap.docs.map(d=>({id:d.id,...d.data()}));\n      }catch(e){\n        console.warn('Online record list failed',e);\n        status.textContent='Online database unavailable — showing records stored on this device.';\n      }\n    }\n    if(!records.length){\n      for(let i=0;i<localStorage.length;i++){\n        const k=localStorage.key(i);\n        if(k && k.indexOf('operationRecord:')===0){try{records.push(JSON.parse(localStorage.getItem(k)));}catch(e){}}\n      }\n      records.sort((a,b)=>String(b.operationDate||'').localeCompare(String(a.operationDate||'')));\n    }\n    if(!records.length){ empty.style.display='block'; status.textContent='No saved records'; return; }\n    status.textContent=records.length+' record'+(records.length===1?'':'s')+' · latest first';\n    records.forEach(r=>{\n      const card=document.createElement('article'); card.className='record-card';\n      const color=doctorColor(r.doctorName||r.surgeon);\n      card.style.background=color;\n      card.innerHTML=`<div class="record-card-head"><div class="patient-name">${esc(r.patientName||r.name||'Unnamed Patient')}</div><div class="record-date">${esc(displayDate(r.operationDate))}</div></div>\n        <div class="record-doctor">${esc(r.doctorName||r.surgeon||'DOCTOR NOT ENTERED')}</div>\n        <div class="record-operation">${esc(r.operationName||r.case||'Operation not entered')}</div>\n        <div class="record-meta"><span>${esc(r.case||'No case no.')}</span><span>${esc(r.status==='saved'?'SAVED':'DRAFT')}</span></div>\n        <button class="record-open" type="button">Open record →</button>`;\n      card.querySelector('.record-open').addEventListener('click',()=>loadRecord(r.id));\n      grid.appendChild(card);\n    });\n  }\n\n  // Add a Home button to the wizard actions.\n  const actionsLeft=document.querySelector('.actions-left');\n  if(actionsLeft && !document.getElementById('homeBtn')){\n    const b=document.createElement('button'); b.id='homeBtn'; b.className='btn-secondary'; b.type='button'; b.textContent='Records'; b.onclick=goHome; actionsLeft.prepend(b);\n  }\n\n  // Start on homepage.\n  appView.style.display='none'; home.style.display='block';\n  loadRecords();\n})();\n</script>\n
+
+<script>
+/* ===== ONLINE RECORDS / FIREBASE LAYER ===== */
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyDaeNQF4qmW0vvwxUPp_NztnT0hoLzm1BQ",
+    authDomain: "svls-289ee.firebaseapp.com",
+    databaseURL: "https://svls-289ee-default-rtdb.firebaseio.com",
+    projectId: "svls-289ee",
+    storageBucket: "svls-289ee.firebasestorage.app",
+    messagingSenderId: "500705386198",
+    appId: "1:500705386198:web:96f189662bc2aa99cf7377",
+    measurementId: "G-5TNBMQ2HN5"
+  };
+
+  let db = null, rtdb = null, auth = null;
+  try {
+    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore(app);
+    rtdb = firebase.database(app);
+    auth = firebase.auth(app);
+    window.__firebaseOnline = true;
+  } catch(e) {
+    console.warn("Firebase initialization failed; local fallback active.", e);
+    window.__firebaseOnline = false;
+  }
+  window.__operationDb = db;
+  window.__operationAuth = auth;
+
+  const home = document.getElementById('recordsHome');
+  const appView = document.getElementById('recordApp');
+  const grid = document.getElementById('recordsGrid');
+  const status = document.getElementById('recordsStatus');
+  const empty = document.getElementById('recordsEmpty');
+
+  const pastelPalette = [
+    '#FBE7E7','#FCEEDC','#FFF6CC','#EAF5E2','#E3F2EE','#E4EFFA','#ECE8F8','#F4E6F5','#FBE9DD','#E9F0E8'
+  ];
+  function doctorKey(name){
+    return String(name||'').trim().toUpperCase().replace(/\\s+/g,' ');
+  }
+  function doctorColor(name){
+    const key=doctorKey(name); let h=0;
+    for(let i=0;i<key.length;i++) h=(h*31+key.charCodeAt(i))>>>0;
+    return pastelPalette[h % pastelPalette.length];
+  }
+  function esc(v){
+    return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function displayDate(v){
+    if(!v) return 'Date not entered';
+    const d=new Date(v+'T00:00:00');
+    return isNaN(d) ? v : d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+  }
+
+  function collectRecord(){
+    const data={};
+    baseIds.forEach(id=>{ const el=document.getElementById(id); if(el) data[id]=el.value; });
+    data.materials=getAllMaterialEntries();
+    data.materialCounts=Object.fromEntries(Object.keys(materialTypes).map(t=>[t,data.materials[t].length]));
+    data.patientName=val('name');
+    data.doctorName=val('surgeon');
+    data.operationDate=val('operationDate');
+    data.updatedAt=Date.now();
+    data.status='draft';
+    return data;
+  }
+
+  async function ensureAuth(){
+    if(!auth) return null;
+    if(auth.currentUser) return auth.currentUser;
+    try { return (await auth.signInAnonymously()).user; }
+    catch(e){ console.warn('Anonymous Firebase auth is not enabled or failed.',e); return null; }
+  }
+
+  async function saveOnlineRecord(finalRecord=false){
+    const data=collectRecord();
+    data.status=finalRecord?'saved':'draft';
+    data.savedAt=finalRecord?Date.now():(window.__recordSavedAt||null);
+    let id=window.__recordId || sessionStorage.getItem('mlangOperationRecordId') || '';
+    if(db){
+      try {
+        await ensureAuth();
+        const ref=id ? db.collection('operationRecords').doc(id) : db.collection('operationRecords').doc();
+        id=ref.id;
+        data.id=id;
+        await ref.set(data,{merge:true});
+        window.__recordId=id;
+        sessionStorage.setItem('mlangOperationRecordId',id);
+        window.__recordSavedAt=Date.now();
+        return {id,data,online:true};
+      } catch(e){
+        console.error('Database save failed',e);
+        showExportStatus('Database save failed. The record remains on this device.',true);
+      }
+    }
+    data.id=id || ('local-'+Date.now());
+    window.__recordId=data.id;
+    localStorage.setItem('operationRecord:'+data.id,JSON.stringify(data));
+    return {id:data.id,data,online:false};
+  }
+
+  async function updateRecordOnNext(){
+    try{
+      saveState(); buildPrint();
+      await saveOnlineRecord(false);
+    }catch(e){ console.warn('Draft update failed',e); }
+  }
+
+  // Replace Next so every page transition pushes the latest complete form state.
+  window.nextStep=async function(){
+    const btn=document.getElementById('nextBtn');
+    if(btn) btn.disabled=true;
+    try{
+      compileCurrentDetails();
+      await updateRecordOnNext();
+      if(step < totalSteps-1){
+        showStep(step+1);
+        if(step===totalSteps-1) buildPreview();
+      }
+    }finally{ if(btn) btn.disabled=false; }
+  };
+
+  window.startNewRecord=function(){
+    baseIds.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    materialCounts={drug:3,suture:3,sponge:3}; renderMaterials();
+    window.__recordId=''; sessionStorage.removeItem('mlangOperationRecordId');
+    sessionStorage.removeItem('mlangOperationRecord');
+    appView.style.display='flex'; home.style.display='none';
+    showStep(0);
+  };
+
+  window.goHome=async function(){
+    try{ saveState(); }catch(e){}
+    appView.style.display='none'; home.style.display='block';
+    await loadRecords();
+  };
+
+  async function loadRecord(id){
+    let data=null;
+    if(db){
+      try{
+        await ensureAuth();
+        const snap=await db.collection('operationRecords').doc(id).get();
+        if(snap.exists) data=snap.data();
+      }catch(e){console.warn('Could not read online record',e);}
+    }
+    if(!data){
+      try{ data=JSON.parse(localStorage.getItem('operationRecord:'+id)||'null'); }catch(e){}
+    }
+    if(!data) return;
+    baseIds.forEach(key=>{const el=document.getElementById(key);if(el && data[key]!==undefined)el.value=data[key];});
+    materialCounts=Object.fromEntries(Object.keys(materialTypes).map(t=>[t,Array.isArray(data.materials?.[t])?data.materials[t].length:3]));
+    renderMaterials(data);
+    window.__recordId=id;
+    sessionStorage.setItem('mlangOperationRecordId',id);
+    saveState();
+    appView.style.display='flex'; home.style.display='none'; showStep(0);
+  }
+
+  window.editRecord=function(id){ loadRecord(id); };
+
+  window.deleteRecord=async function(id, patientName){
+    const confirmed=window.confirm('DELETE the record for '+patientName+'?\n\nThis cannot be undone.');
+    if(!confirmed) return;
+    try{
+      if(db){
+        await ensureAuth();
+        await db.collection('operationRecords').doc(id).delete();
+      }
+      localStorage.removeItem('operationRecord:'+id);
+      if(window.__recordId===id){
+        window.__recordId='';
+        sessionStorage.removeItem('mlangOperationRecordId');
+      }
+      status.textContent='Record deleted.';
+      await loadRecords();
+    }catch(e){
+      console.error('Delete failed',e);
+      window.alert('Unable to delete this record. Please check the database connection.');
+    }
+  };
+
+  window.saveRecordToDatabase=async function(){
+    const btn=document.getElementById('saveBtn');
+    if(btn) {btn.disabled=true; btn.textContent='Saving…';}
+    try{
+      compileCurrentDetails();
+      const result=await saveOnlineRecord(true);
+      if(result.online){
+        showExportStatus('Record saved to the database.');
+      }else{
+        showExportStatus('Saved locally. Connect Firebase to save online.');
+      }
+      await loadRecords();
+    }catch(e){
+      console.error(e); showExportStatus('Unable to save the record.',true);
+    }finally{ if(btn){btn.disabled=false;btn.textContent='Save Record';} }
+  };
+
+  async function loadRecords(){
+    status.textContent='Loading records…'; grid.innerHTML=''; empty.style.display='none';
+    let records=[];
+    if(db){
+      try{
+        await ensureAuth();
+        const snap=await db.collection('operationRecords').orderBy('operationDate','desc').get();
+        records=snap.docs.map(d=>({id:d.id,...d.data()}));
+      }catch(e){
+        console.warn('Online record list failed',e);
+        status.textContent='Online database unavailable — showing records stored on this device.';
+      }
+    }
+    if(!records.length){
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k && k.indexOf('operationRecord:')===0){try{records.push(JSON.parse(localStorage.getItem(k)));}catch(e){}}
+      }
+      records.sort((a,b)=>String(b.operationDate||'').localeCompare(String(a.operationDate||'')));
+    }
+    if(!records.length){ empty.style.display='block'; status.textContent='No saved records'; return; }
+    status.textContent=records.length+' record'+(records.length===1?'':'s')+' · latest first';
+    records.forEach(r=>{
+      const card=document.createElement('article'); card.className='record-card';
+      const color=doctorColor(r.doctorName||r.surgeon);
+      card.style.background=color;
+      card.innerHTML=`<div class="record-card-head"><div class="patient-name">${esc(r.patientName||r.name||'Unnamed Patient')}</div><div class="record-date">${esc(displayDate(r.operationDate))}</div></div>
+        <div class="record-doctor">${esc(r.doctorName||r.surgeon||'DOCTOR NOT ENTERED')}</div>
+        <div class="record-operation">${esc(r.operationName||r.case||'Operation not entered')}</div>
+        <div class="record-meta"><span>${esc(r.case||'No case no.')}</span><span>${esc(r.status==='saved'?'SAVED':'DRAFT')}</span></div>
+        <div class="record-actions">
+          <button class="record-action record-open" type="button">Update</button>
+          <button class="record-action delete" type="button">Delete</button>
+        </div>`;
+      card.querySelector('.record-open').addEventListener('click',()=>{
+        const patient = r.patientName||r.name||'this patient';
+        if(window.confirm('Update the record for '+patient+'? The record will open for editing.')) loadRecord(r.id);
+      });
+      card.querySelector('.delete').addEventListener('click',()=>deleteRecord(r.id, r.patientName||r.name||'this patient'));
+      grid.appendChild(card);
+    });
+  }
+
+  // Add a Home button to the wizard actions.
+  const actionsLeft=document.querySelector('.actions-left');
+  if(actionsLeft && !document.getElementById('homeBtn')){
+    const b=document.createElement('button'); b.id='homeBtn'; b.className='btn-secondary'; b.type='button'; b.textContent='Records'; b.onclick=goHome; actionsLeft.prepend(b);
+  }
+
+  // Start on homepage.
+  appView.style.display='none'; home.style.display='block';
+  loadRecords();
+})();
+</script>
+
 </body>
 </html>
 
