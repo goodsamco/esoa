@@ -1,54 +1,39 @@
 /* ==========================================================================
-   FLAT, SHARP-EDGED LIGHT MODE
-   All glassmorphism (backdrop-filter/blur), drop shadows, glows, and
-   gradients are removed in favor of solid fills and flat surfaces.
-   All border-radius values are set to 0 for hard, sharp corners.
-   The palette is inverted to a light theme, keeping the same variable
-   roles/handling as before (bg / surface / primary / success / text-main /
-   glass / modal-bg) so every rule that referenced them still behaves the
-   same way, just against light values.
+   1. DESIGN TOKENS & SYSTEM VARIABLES (LIGHT HARD-EDGE CORPORATE ADMIN)
    ========================================================================== */
-
-/* ==========================================================================
-   1. DESIGN TOKENS & SYSTEM VARIABLES
-   ========================================================================== */
-
 :root {
-    --bg: #f2f2f2;
+    --bg: #e2e8f0;
     --surface: #ffffff;
-    --primary: #111111;
-    --success: #fbff00;
-    --text-main: #111111;
-    --glass: rgba(0, 0, 0, 0.06);
-    --modal-bg: rgba(255, 255, 255, 0.98);
-    /* Dedicated foreground for the always-dark standby ambient overlay,
-       independent of the light page theme */
-    --standby-fg: #ffffff;
+    --primary: #0f172a;
+    --success: #15803d;
+    --text-main: #0f172a;
+    --glass: #cbd5e1;
+    --modal-bg: #ffffff;
 }
+
 /* ==========================================================================
    2. BASE SYSTEM RESET & SCROLLBAR CONFIGURATION
    ========================================================================== */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: var(--bg);
     color: var(--text-main);
     margin: 0;
-    /* Generous breathing room for centered top layouts */
-    padding: 260px 10px 25vh 10px; 
+    padding: 260px 10px 25vh 10px;
     display: flex;
     justify-content: center;
     overflow-x: hidden;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.15s ease;
 }
 
-/* Flash effect triggered during copy actions */
 body.copy-flash {
     background-color: var(--primary);
+    color: #ffffff;
 }
 
-/* Webkit Scrollbar overrides */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -56,66 +41,46 @@ body.copy-flash {
 }
 
 ::-webkit-scrollbar-thumb {
-    background:  #424242;
-    border-radius: 0;
+    background: #94a3b8;
+    border-radius: 0px;
 }
-
 
 /* ==========================================================================
    3. PEER PRESENCE DISPLAY & HUB
-   VISUALLY MATCHES .container
    ========================================================================== */
-
 .peer-wrapper-row {
     position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-
     width: 100%;
     max-width: 400px;
-
     height: 130px;
-
     display: flex;
     align-items: center;
-
-    border-radius: 0;
-    border: 1px solid rgba(58, 58, 58, 0.1);
-
+    border-radius: 0px;
+    border: 2px solid var(--primary);
+    box-shadow: none;
     background: var(--surface);
-
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-sizing: border-box;
-
     z-index: 3100;
-
-    /* allow nav buttons outside */
     overflow: visible;
 }
-
-/* ==========================================================================
-   HUB
-   ========================================================================== */
 
 .peer-active-hub {
     width: 100%;
     height: 100%;
-
     display: flex;
     align-items: center;
-
     overflow-x: auto;
     overflow-y: hidden;
-
     white-space: nowrap;
-
     scroll-behavior: smooth;
-
     scrollbar-width: none;
     -ms-overflow-style: none;
-
-    border-radius: 0;
-
+    border-radius: 0px;
     padding: 0;
     margin: 0;
 }
@@ -128,41 +93,28 @@ body.copy-flash {
     display: none;
 }
 
-/* ==========================================================================
-   NAV BUTTONS
-   ========================================================================== */
-
 .scroll-nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-
     width: 36px;
     height: 36px;
-
-    border-radius: 0;
-
-    background: rgba(255, 115, 0, 0.08);
-
-    border: 1px solid rgba(78, 78, 78, 0.15);
-
+    border-radius: 0px;
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 2px solid var(--primary);
     color: var(--primary);
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     cursor: pointer;
-
     z-index: 3200;
-
     opacity: 0;
     pointer-events: none;
-
-    transition: all 0.25s ease;
+    transition: none;
 }
 
-/* Half inside / half outside */
 .scroll-nav-btn.prev {
     left: -18px;
 }
@@ -177,9 +129,10 @@ body.copy-flash {
 }
 
 .scroll-nav-btn:hover {
-    background: rgba(255, 230, 209, 0.18);
-    border-color: rgba(66, 66, 66, 0.35);
-    transform: translateY(-50%) scale(1.08);
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    transform: translateY(-50%);
 }
 
 .scroll-nav-btn svg {
@@ -188,212 +141,158 @@ body.copy-flash {
     stroke-width: 2.5;
 }
 
-/* ==========================================================================
-   PEER WRAPPER
-   ========================================================================== */
-
 .peer-wrapper {
     position: relative;
-
     display: inline-flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-
     flex-shrink: 0;
-
     width: 78px;
     height: 115px;
-
-    transition:
-        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
 }
 
 .peer-wrapper.is-offline {
     filter: grayscale(100%);
-    transform: scale(0.82);
+    opacity: 0.5;
+    transform: none;
 }
-
-/* ==========================================================================
-   AVATARS
-   ========================================================================== */
 
 .peer-avatar-bubble,
 .group-chat-bubble {
-    width: 70px;
-    height: 70px;
-
-    border-radius: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 0px;
     object-fit: cover;
-
     flex-shrink: 0;
 }
 
 .peer-avatar-bubble {
-    border: 2px solid #666;
+    border: 2px solid #94a3b8;
     cursor: pointer;
-    transition: all .2s ease;
+    transition: none;
 }
 
 .peer-avatar-bubble:hover {
     border-color: var(--primary);
-    transform: scale(1.06);
+    transform: none;
 }
 
 .group-chat-bubble {
     background: var(--primary);
-    color: #fff;
-
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-
     border: 2px solid var(--primary);
-
-    transition: all .2s ease;
+    transition: none;
+    font-weight: 700;
 }
 
 .group-chat-bubble:hover {
-    transform: scale(1.06);
-    background: #000;
-    border-color: #000;
+    transform: none;
+    background: #334155;
+    border-color: #334155;
+    color: #ffffff;
 }
-
-/* ==========================================================================
-   NOTIFICATION DOT
-   ==========================================================================
 
 .peer-notif-dot {
     position: absolute;
-    top: 4px;
-    right: 8px;
-
-    width: 12px;
-    height: 12px;
-
-    background: var(--primary);
-    border: 2px solid var(--surface);
-
-    border-radius: 0;
-
-    display: none;
-
-    box-shadow: 0 0 8px var(--primary);
-}
-
-.peer-wrapper.has-unread .peer-notif-dot {
-    display: block;
-}
-*/
-.peer-notif-dot {
-    position: absolute;
-
     top: 6px;
     right: 2px;
-
-    width: 14px;
-    height: 14px;
-
-    background: var(--primary);
+    width: 12px;
+    height: 12px;
+    background: var(--success);
     border: 2px solid var(--surface);
-
-    border-radius: 0;
-
+    border-radius: 0px;
     display: none;
-
     z-index: 99999;
-
+    box-shadow: none;
     pointer-events: none;
 }
 
 .peer-wrapper.has-unread .peer-notif-dot {
     display: block !important;
 }
-/* ==========================================================================
-   USER NAME
-   ========================================================================== */
 
 .peer-name-hover {
     margin-top: 6px;
-
     width: 100%;
-
     font-size: 0.65rem;
     font-weight: 700;
-
     color: var(--text-main);
-
     text-align: center;
-
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-transform: uppercase;
 }
 
 /* ==========================================================================
    4. NAVIGATION CONTROL BARS
    ========================================================================== */
-/* Shifted layout coordinate down slightly to compensate for the smaller container above */
 .top-nav {
     position: fixed;
-    top: 165px; /* Safely clears the new 130px container bounds beautifully */
+    top: 165px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     z-index: 3000;
     background: var(--surface);
-    padding: 6px 18px; 
-    border-radius: 0; 
-    border: 1px solid var(--glass);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 6px 12px;
+    border-radius: 0px;
+    border: 2px solid var(--primary);
 }
 
-/* Operational Buttons (sharp square edges) */
 .top-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     background: var(--surface);
-    border: 1px solid rgba(83, 83, 83, 0.2);
-    border-radius: 0; 
+    backdrop-filter: none;
+    border: 1px solid #cbd5e1;
+    border-radius: 0px;
     color: var(--text-main);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: none;
 }
 
 .top-btn:hover {
     background: var(--primary);
-    color: #fff;
-    transform: translateY(-2px);
+    color: #ffffff;
+    border-color: var(--primary);
+    transform: none;
 }
 
 /* ==========================================================================
    5. PERSONAL PROFILE FLOATING TARGETS
    ========================================================================== */
-/* Isolated Bottom-Right Profile Node (Containerless layout) */
 .profile-avatar-node {
     position: fixed;
     bottom: 45px;
     right: 25px;
     width: 48px;
     height: 48px;
-    border-radius: 0;
+    border-radius: 0px;
     object-fit: cover;
-    background: var(--surface);
+    background: #e2e8f0;
     border: 2px solid var(--primary);
     cursor: pointer;
-    transition: transform 0.2s ease;
-    /* Directly layered over background content spaces */
-    z-index: 2500; 
+    transition: none;
+    z-index: 2500;
 }
 
 .profile-avatar-node:hover {
-    transform: scale(1.05);
+    transform: none;
+    border-color: #334155;
 }
 
 .name-string {
@@ -405,8 +304,7 @@ body.copy-flash {
     color: var(--text-main);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    /* Balanced perfectly underneath the avatar width */
-    width: 48px; 
+    width: 48px;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -415,91 +313,64 @@ body.copy-flash {
     pointer-events: none;
 }
 
-
 /* ==========================================================================
    6. REAL-TIME SESSION CHAT PANEL DOCK
    ========================================================================== */
-/* ==========================================================================
-   CHAT DOCKING PANEL
-   ========================================================================== */
-
 .chat-docking-panel {
     position: fixed;
-
     bottom: 26vh;
     right: 20px;
-
     width: 340px;
     height: 440px;
-
     display: none;
     flex-direction: column;
-
     z-index: 3500;
-
     overflow: hidden;
-
-    /* Match Sections 3 & 8 */
     background: var(--surface);
-
-    border: 1px solid rgba(0, 0, 0, 0.1);
-
-    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 2px solid var(--primary);
+    border-radius: 0px;
+    box-shadow: none;
 }
-
-/* ==========================================================================
-   CHAT HEADER
-   ========================================================================== */
 
 .chat-header-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    padding: 14px 16px;
-
-    background: rgba(0, 0, 0, 0.03);
-
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 10px 14px;
+    background: #f1f5f9;
+    border-bottom: 2px solid var(--primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .chat-header-bar span {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 800;
-
     color: var(--primary);
-
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
 
-/* Close button consistency */
 .chat-close-trigger {
-    width: 32px;
-    height: 32px;
-
-    border: none;
-    border-radius: 0;
-
-    background: rgba(116, 116, 116, 0.05);
-
-    border: 1px solid rgba(78, 78, 78, 0.15);
-
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--primary);
+    border-radius: 0px;
+    background: var(--surface);
     color: var(--primary);
-
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
-    transition: all 0.2s ease;
+    transition: none;
 }
 
 .chat-close-trigger:hover {
     background: var(--primary);
-    color: #fff;
-    transform: scale(1.05);
+    color: #ffffff;
+    transform: none;
 }
 
 .chat-scroller-view {
@@ -508,9 +379,9 @@ body.copy-flash {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
+    background: #f8fafc;
 }
-
 
 /* ==========================================================================
    7. CHAT MESSAGE COMPONENT OBJECTS & REACTION SYSTEM
@@ -545,26 +416,27 @@ body.copy-flash {
 .msg-gc-avatar {
     width: 20px;
     height: 20px;
-    border-radius: 0;
+    border-radius: 0px;
     object-fit: cover;
     border: 1px solid var(--primary);
 }
 
 .msg-author-tag {
     font-size: 0.65rem;
-    color: #767676;
+    color: #475569;
     font-weight: 700;
+    text-transform: uppercase;
 }
 
 .msg-time-tag {
     font-size: 0.6rem;
-    color: #666;
-    font-weight: 400;
+    color: #64748b;
+    font-weight: 500;
 }
 
 .msg-bubble {
     padding: 8px 12px;
-    border-radius: 0;
+    border-radius: 0px;
     font-size: 0.85rem;
     word-wrap: break-word;
     position: relative;
@@ -573,72 +445,51 @@ body.copy-flash {
 }
 
 .msg-bubble.incoming {
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--surface);
     color: var(--text-main);
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid #cbd5e1;
 }
 
 .msg-bubble.outgoing {
     background: var(--primary);
-    color: #fff;
-    font-weight: 600;
+    color: #ffffff;
+    font-weight: 500;
+    border: 1px solid var(--primary);
 }
-
-/* =========================================================
-   REACTIONS CONTAINER (VISUALLY HIDDEN BUT STRUCTURE KEPT)
-   ========================================================= */
 
 .msg-reaction-container {
     display: flex;
     gap: 4px;
-    margin-top: -4px;
+    margin-top: 2px;
     z-index: 10;
-
-    /* invisible container */
     background: transparent;
     border: none;
     box-shadow: none;
     padding: 0;
-
     align-items: center;
 }
-
-/* =========================================================
-   REACTION PILL (INDIVIDUAL REACTION ITEM)
-   ========================================================= */
 
 .reaction-pill {
     display: flex;
     align-items: center;
     gap: 2px;
     cursor: pointer;
-
-    /* keep it minimal */
-    padding: 0;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    padding: 1px 4px;
+    background: var(--surface);
+    border: 1px solid #cbd5e1;
+    border-radius: 0px;
+    transition: none;
 }
 
 .reaction-pill:hover {
-    transform: scale(1.1);
+    transform: none;
+    border-color: var(--primary);
 }
-
-/* =========================================================
-   USER VOTED STATE (SUBTLE HIGHLIGHT ONLY)
-   ========================================================= */
 
 .reaction-pill.user-voted {
-    background: rgba(168, 168, 168, 0.12);
-    padding: 0 2px;
-    border-radius: 0;
+    background: #e2e8f0;
+    border-color: var(--primary);
 }
-
-/* =========================================================
-   REACTION COUNT TEXT
-   ========================================================= */
 
 .reaction-count {
     font-size: 0.65rem;
@@ -646,29 +497,21 @@ body.copy-flash {
     color: var(--primary);
 }
 
-/* =========================================================
-   FLOATING REACTION PICKER (POPOVER)
-   ========================================================= */
-
 .reaction-picker-tray {
     position: absolute;
-
-    /* keep visible but lightweight */
     background: var(--surface);
-    border: 1px solid rgba(32, 32, 32, 0.25);
-
+    border: 1px solid var(--primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     padding: 4px 8px;
-    border-radius: 0;
-
+    border-radius: 0px;
     display: flex;
     gap: 6px;
-
+    box-shadow: none;
     z-index: 4000;
-
     top: -35px;
 }
 
-/* position based on message side */
 .msg-wrapper.incoming .reaction-picker-tray {
     left: 0;
 }
@@ -677,35 +520,33 @@ body.copy-flash {
     right: 0;
 }
 
-/* =========================================================
-   REACTION OPTIONS (EMOJIS)
-   ========================================================= */
-
 .reaction-option {
     cursor: pointer;
-    font-size: 1.1rem;
-    transition: transform 0.12s ease, filter 0.12s ease;
+    font-size: 1rem;
+    transition: none;
 }
 
 .reaction-option:hover {
-    transform: scale(1.25);
-    filter: brightness(1.2);
+    transform: none;
+    filter: none;
+    background: #e2e8f0;
 }
 
 .chat-input-row {
-    padding: 10px;
+    padding: 8px;
     display: flex;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.03);
-    /* 🔥 FIX: Anchors layout to the bottom so elements don't jitter when the textarea grows */
+    gap: 6px;
+    background: #f1f5f9;
+    border-top: 2px solid var(--primary);
     align-items: flex-end; 
 }
 
-.chat-input-row input {
+.chat-input-row input,
+.chat-input-row textarea {
     flex: 1;
-    background: var(--bg);
-    border: 1px solid rgba(83, 83, 83, 0.2);
-    border-radius: 0;
+    background: var(--surface);
+    border: 1px solid #cbd5e1;
+    border-radius: 0px;
     color: var(--text-main);
     padding: 8px;
     font-size: 0.81rem;
@@ -713,43 +554,38 @@ body.copy-flash {
 }
 
 .chat-input-row textarea {
-    flex: 1;
     display: block;
-    background: var(--bg);
-    border: 1px solid rgba(83, 83, 83, 0.2);
-    border-radius: 0;
-    color: var(--text-main);
-    padding: 8px;
-    font-size: 0.81rem;
     line-height: 1.2rem;
-    outline: none;
-    
     resize: none;
     height: 37px;
-    max-height: 150px; /* The stopping point */
+    max-height: 150px;
     font-family: inherit;
     box-sizing: border-box;
-
-    overflow-y: hidden; /* Keep it hidden until JS flips it */
+    overflow-y: hidden;
 }
 
-.chat-input-row input:focus {
+.chat-input-row input:focus,
+.chat-input-row textarea:focus {
     border-color: var(--primary);
 }
 
 .chat-input-row button {
     background: var(--primary);
-    color: #fff;
+    color: #ffffff;
     border: none;
-    border-radius: 0;
+    border-radius: 0px;
     padding: 0 14px;
     font-weight: 800;
     cursor: pointer;
-
-    /* 🔥 FIX: Keeps the button from growing/stretching vertically or horizontally */
-    height: 34px; 
+    height: 37px; 
     flex-shrink: 0; 
+    text-transform: uppercase;
+    font-size: 0.75rem;
 } 
+
+.chat-input-row button:hover {
+    background: #334155;
+}
 
 /* ==========================================================================
    8. CORE LAYOUT CONTAINERS & GRID LINES
@@ -758,24 +594,25 @@ body.copy-flash {
     position: relative;
     width: 100%;
     max-width: 400px;
-    border-radius: 0;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    /* MATCH SECTION 3 */
+    border-radius: 0px;
+    border: 2px solid var(--primary);
+    box-shadow: none;
     background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     padding: 20px;
     box-sizing: border-box;
 }
 
-/* Dynamic Selection Tracking Mask */
 #highlighter {
     position: absolute;
     left: 8px;
     right: 8px;
     border: 2px solid var(--primary);
-    background-color: rgba(0, 0, 0, 0.04);
-    border-radius: 0;
+    background-color: #f1f5f9;
+    border-radius: 0px;
     pointer-events: none;
-    transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    transition: all 0.1s ease;
     z-index: 1;
     opacity: 0;
 }
@@ -785,8 +622,9 @@ h2 {
     color: var(--primary);
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    margin: 30px 0 10px 10px;
-    opacity: 0.6;
+    margin: 20px 0 10px 4px;
+    opacity: 1;
+    font-weight: 800;
 }
 
 .item-row {
@@ -795,52 +633,55 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px;
+    padding: 12px;
     margin: 4px 0;
     cursor: pointer;
-    border-radius: 0;
-    transition: all 0.3s ease;
+    border-radius: 0px;
+    border: 1px solid #e2e8f0;
+    transition: none;
 }
 
 .item-row:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: #f8fafc;
+    border-color: #cbd5e1;
 }
 
 .text-content {
-    font-size: 0.95rem;
-    font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .text-active {
     color: var(--primary);
+    text-shadow: none;
+    font-weight: 800;
 }
 
 .add-btn-circle {
-    width: 38px;
-    height: 38px;
-    border-radius: 0;
-    background: rgba(116, 116, 116, 0.05);
+    width: 36px;
+    height: 36px;
+    border-radius: 0px;
+    background: var(--surface);
     border: 1px dashed var(--primary);
     color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    margin: 10px 0 20px 10px;
-    transition: all 0.2s ease;
+    margin: 12px 0 12px 0px;
+    transition: none;
 }
 
 .add-btn-circle:hover {
     background: var(--primary);
-    color: #fff;
-    transform: scale(1.1);
+    color: #ffffff;
+    border-style: solid;
+    transform: none;
 }
-
 
 /* ==========================================================================
    9. MAGNETIC COPY ZONE LAYERS (BOTTOM INTERACTIVE PANEL)
    ========================================================================== */
-/* Broadened & Flattened Copy Button */
 .bottom-zone {
     position: fixed;
     bottom: 0;
@@ -856,65 +697,48 @@ h2 {
 
 .btn-main-copy {
     width: 160px;
-    height: 70px;
-    border: none;
-    border-radius: 0;
+    height: 60px;
+    border: 2px solid var(--primary);
+    border-radius: 0px;
     font-weight: 800;
-    font-size: 1rem;
+    font-size: 0.875rem;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     position: relative;
     overflow: hidden;
-
     background-color: var(--primary);
-    color: #fff;
-
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: #ffffff;
+    transition: none;
     pointer-events: none;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
+    filter: none;
 }
 
 .bottom-zone:hover .btn-main-copy:not(.success-state) {
-    width: 250px;
-    height: 120px;
+    width: 220px;
+    height: 70px;
+    background-color: #334155;
 }
-
-/*.btn-main-copy.success-state {
-    background-image: none !important;
-    background-color: #fbff00;
-    color: #000;
-    text-shadow: none;
-    border-radius: 0;
-    box-shadow: 0 0 30px rgba(255, 212, 0, 0.9);
-    transform: scale(1.05);
-}
-}*/
 
 .btn-main-copy.success-state {
-    background: #fbff00 !important;
+    background: var(--success) !important;
     background-image: none !important;
-    color: #000 !important;
-
+    color: #ffffff !important;
+    border-color: var(--success) !important;
     opacity: 1 !important;
-
-    animation: flashFade 0.9s ease-out forwards;
+    filter: none !important;
+    animation: flashFade 0.4s ease-out forwards;
 }
 
 @keyframes flashFade {
     0% {
         transform: scale(1);
     }
-
-    20% {
-        transform: scale(1.12);
+    50% {
+        transform: scale(1.02);
     }
-
-    60% {
-        transform: scale(1.05);
-    }
-
     100% {
         transform: scale(1);
     }
@@ -926,73 +750,64 @@ h2 {
 .modal-overlay {
     position: fixed;
     inset: 0;
-
     display: none;
     justify-content: center;
     align-items: center;
-
     z-index: 4000;
-
-    background: rgba(0, 0, 0, 0);
-
-    /* Animate opacity and background color only */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(15, 23, 42, 0.4);
     opacity: 0;
-    transition: 
-        opacity 0.22s ease, 
-        background-color 0.22s ease;
+    transition: opacity 0.1s ease;
 }
 
-/* Use a separate utility class or handle display state in tandem with JS */
 .modal-overlay.active {
     display: flex;
     opacity: 1;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(15, 23, 42, 0.4);
 }
 
 .modal-content {
     position: relative;
     width: 90%;
     max-width: 400px;
-    padding: 30px 24px;
+    padding: 24px;
     text-align: center;
     background: var(--surface);
-
-    border: 1px solid rgba(78, 78, 78, 0.15);
-    border-radius: 0;
+    border: 2px solid var(--primary);
+    border-radius: 0px;
+    box-shadow: none;
     box-sizing: border-box;
     max-height: 80vh;
     overflow-y: auto;
-    
-    /* 3. Keep performance properties entirely isolated */
     opacity: 0;
-    transform: scale(0.92) translateY(15px);
-    will-change: transform, opacity; /* Hints GPU to separate this layer */
-    
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: none;
+    will-change: opacity;
+    transition: opacity 0.1s ease;
 }
 
 .modal-overlay.active .modal-content {
     opacity: 1;
-    transform: scale(1) translateY(0);
-   
-}.list-item {
-    padding: 16px;
-    margin: 8px 0;
-    border-radius: 0;
+    transform: none;
+}
+
+.list-item {
+    padding: 12px;
+    margin: 6px 0;
+    border-radius: 0px;
     text-align: left;
     cursor: pointer;
-    transition: 0.2s;
+    transition: none;
     color: var(--text-main);
-    background: rgba(82, 82, 82, 0.02);
-    border: 1px solid rgba(116, 116, 116, 0.05);
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    font-size: 0.875rem;
 }
 
 .list-item:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--primary);
     border-color: var(--primary);
-    color: var(--text-main);
+    color: #ffffff;
 }
 
 .input-group {
@@ -1003,19 +818,20 @@ h2 {
 .input-group label {
     font-size: 0.65rem;
     color: var(--primary);
-    margin-left: 10px;
+    margin-left: 0px;
     font-weight: 800;
+    text-transform: uppercase;
 }
 
 .modal-content input {
     width: 100%;
-    background: var(--bg);
-    border: 1px solid rgba(83, 83, 83, 0.2);
-    padding: 16px;
-    margin-top: 5px;
-    border-radius: 0;
+    background: var(--surface);
+    border: 1px solid #cbd5e1;
+    padding: 12px;
+    margin-top: 4px;
+    border-radius: 0px;
     color: var(--text-main);
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     box-sizing: border-box;
     text-align: center;
     font-weight: 700;
@@ -1027,45 +843,58 @@ h2 {
 }
 
 .modal-result {
-    margin: 25px 0;
-    padding: 20px;
-    background-color: rgba(0, 0, 0, 0.04);
-    border-radius: 0;
+    margin: 20px 0;
+    padding: 16px;
+    background-color: #f1f5f9;
+    border-radius: 0px;
     border: 1px dashed var(--primary);
 }
 
 #finalDiscount {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     color: var(--primary);
 }
 
 .modal-copy-zone {
-    height: 60px;
+    height: 48px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     background: var(--primary);
-    color: #fff;
-    border-radius: 0;
+    color: #ffffff;
+    border-radius: 0px;
     font-weight: 800;
-    transition: 0.2s;
+    transition: none;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.modal-copy-zone:hover {
+    background: #334155;
 }
 
 .modal-copy-zone.success-state {
-    background: var(--primary);
-    color: #fff;
+    background: var(--success);
+    color: #ffffff;
 }
 
 .modal-close-btn {
-    margin-top: 20px;
+    margin-top: 16px;
     background: transparent;
     border: none;
-    color: #666;
+    color: #64748b;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-decoration: underline;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.modal-close-btn:hover {
+    color: var(--primary);
 }
 
 /* ==========================================================================
@@ -1073,63 +902,24 @@ h2 {
    ========================================================================== */
 @keyframes idleFloat {
     0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(0, -5px); }
+    50% { transform: translate(0, 0); }
 }
 
 .btn-main-copy.idle {
-    animation: idleFloat 3.5s ease-in-out infinite;
+    animation: none;
 }
 
-
-
-
-
-
-/* ==========================================================================
-   HUB TYPING INDICATOR
-   MATCHES PEER-NAME-HOVER WITHOUT SHIFTING LAYOUT
-   ========================================================================== */
-/*
-.peer-name-hover {
-    margin-top: 6px;
-
-    width: 100%;
-
-    font-size: 0.65rem;
-    font-weight: 700;
-
-    color: white;
-
-    text-align: center;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-}
-*/
-
-/* typing dots */
 .typing-dot {
-    width: 10px;
-    height: 10px;
-   color: var(--primary);
+    width: 6px;
+    height: 6px;
+    color: var(--primary);
     flex-shrink: 0;
-
-    border-radius: 0;
+    border-radius: 0px;
     background: currentColor;
-
     display: inline-block;
-
     opacity: 0.35;
-
     animation: typingPulse 1.2s infinite ease-in-out;
 }
-
 
 .typing-dot:nth-child(2) {
     animation-delay: .2s;
@@ -1139,68 +929,58 @@ h2 {
     animation-delay: .4s;
 }
 
-
 @keyframes typingPulse {
-
     0%, 60%, 100% {
-        opacity: .35;
+        opacity: .2;
     }
-
     30% {
         opacity: 1;
     }
-
 }
-
-
-
 
 /* ==========================================================================
    12. REACTION TRAY EXTENSIONS (EDIT & DELETE INLINE CONTROLS)
    ========================================================================== */
-
-/* Custom operational tools added alongside the reaction picker option row */
 .reaction-picker-tray .msg-action-btn {
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 0;
+    padding: 2px 4px;
+    border-radius: 0px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: none;
     user-select: none;
+    text-transform: uppercase;
 }
 
 .reaction-picker-tray .edit-btn {
-    color: #409eff;
+    color: #2563eb;
 }
 
 .reaction-picker-tray .edit-btn:hover {
-    background-color: rgba(64, 158, 255, 0.15);
-    color: #66b1ff;
+    background-color: #dbeafe;
+    color: #1d4ed8;
 }
 
 .reaction-picker-tray .delete-btn {
-    color: #f56c6c;
+    color: #dc2626;
 }
 
 .reaction-picker-tray .delete-btn:hover {
-    background-color: rgba(245, 108, 108, 0.15);
-    color: #feb2b2;
+    background-color: #fee2e2;
+    color: #b91c1c;
 }
 
-/* Clear vertical divider dividing reactions from action buttons */
 .reaction-picker-tray .msg-action-btn:first-of-type {
-    margin-left: 8px !important;
-    border-left: 1px solid rgba(0, 0, 0, 0.12);
-    padding-left: 10px;
+    margin-left: 6px !important;
+    border-left: 1px solid #cbd5e1;
+    padding-left: 8px;
 }
 
-/* --- DM Metadata Layout Adjustments --- */
 .msg-wrapper.outgoing .dm-meta {
     justify-content: flex-end;
     margin-top: 4px;
@@ -1212,57 +992,55 @@ h2 {
     margin-top: 4px;
     margin-left: 4px;
 }
-/* --- Soft-Deleted Message Bubble Modification Layouts --- */
+
 .msg-bubble.msg-deleted-state {
     background: transparent !important;
-    border: 1px dashed rgba(0, 0, 0, 0.35) !important;
-    color: rgba(0, 0, 0, 0.4) !important;
+    border: 1px dashed #94a3b8 !important;
+    color: #94a3b8 !important;
     font-style: italic !important;
     text-shadow: none !important;
     box-shadow: none !important;
     cursor: default !important;
-    pointer-events: none; /* Block selection/clicking behaviors */
+    pointer-events: none;
 }
 
-/* --- Global Layout Alignment for DM Metadata Header Rows --- */
 .msg-wrapper.outgoing .msg-meta-row:not(.dm-meta) {
     justify-content: flex-end;
     margin-bottom: 4px;
 }
+
 .msg-wrapper.incoming .msg-meta-row:not(.dm-meta) {
     justify-content: flex-start;
     margin-bottom: 4px;
 }
 
-/* --- Inline Reaction Plus Trigger Custom Adjustments --- */
 .expansion-trigger-node {
-    background-color: rgba(0, 0, 0, 0.07) !important;
-    border: 1px dashed rgba(0, 0, 0, 0.2) !important;
-    font-size: 0.78rem;
-    opacity: 0.7;
-    transition: opacity 0.15s ease, background-color 0.15s ease;
+    background-color: #f1f5f9 !important;
+    border: 1px dashed #94a3b8 !important;
+    font-size: 0.75rem;
+    opacity: 1;
+    transition: none;
+    border-radius: 0px !important;
 }
+
 .expansion-trigger-node:hover {
     opacity: 1;
-    background-color: rgba(0, 0, 0, 0.15) !important;
+    background-color: #e2e8f0 !important;
     border-style: solid !important;
 }
 
-
 /* ==========================================================================
-   13.REPLY LAYOUT ARCHITECTURES (MESSENGER STYLINGS)
+   13. REPLY LAYOUT ARCHITECTURES
    ========================================================================== */
-
-/* Ghost Preview In Scroller List Layer */
 .msg-ghost-reply-preview {
-    font-size: 0.72rem;
-    color: rgba(0, 0, 0, 0.45);
-    background: rgba(0, 0, 0, 0.04);
-    border-left: 2px solid rgba(0, 0, 0, 0.25);
-    padding: 4px 10px;
+    font-size: 0.7rem;
+    color: #475569;
+    background: #f1f5f9;
+    border-left: 2px solid var(--primary);
+    padding: 4px 8px;
     margin-bottom: -2px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
     max-width: 85%;
     white-space: nowrap;
     overflow: hidden;
@@ -1275,26 +1053,26 @@ h2 {
     border-right: 2px solid var(--primary);
 }
 
-/* Staging Bar Injected Above Input Field Row */
 #chatReplyTrackIndicator {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.04);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 8px 14px;
+    background: #f1f5f9;
+    border-top: 2px solid var(--primary);
+    padding: 6px 12px;
 }
 
 .reply-track-contents span {
     font-size: 0.65rem;
     color: var(--primary);
     text-transform: uppercase;
+    font-weight: 800;
 }
 
 .reply-track-contents p {
     margin: 2px 0 0 0;
-    font-size: 0.78rem;
-    color: #555;
+    font-size: 0.75rem;
+    color: #334155;
     max-width: 260px;
     white-space: nowrap;
     overflow: hidden;
@@ -1304,184 +1082,161 @@ h2 {
 #chatReplyTrackIndicator button {
     background: transparent;
     border: none;
-    color: #888;
+    color: #64748b;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
+
 #chatReplyTrackIndicator button:hover {
-    color: var(--text-main);
+    color: var(--primary);
 }
 
-/* Operational Tray Action Buttons Layout */
 .reaction-picker-tray .reply-btn {
-    color: #a855f7;
-}
-.reaction-picker-tray .reply-btn:hover {
-    background-color: rgba(168, 85, 247, 0.15);
-    color: #c084fc;
+    color: #7e22ce;
 }
 
-/* Divider separator placement rules */
+.reaction-picker-tray .reply-btn:hover {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
 .reaction-picker-tray .tray-plus-trigger {
     cursor: pointer;
     padding-right: 6px;
-    border-right: 1px solid rgba(0, 0, 0, 0.15);
+    border-right: 1px solid #cbd5e1;
 }
+
 .reaction-picker-tray .msg-action-btn:first-of-type {
     margin-left: 4px !important;
 }
 
-/* --- Floating Native Emoji Matrix Grid --- */
 .native-emoji-matrix-panel {
     position: absolute;
     bottom: 42px;
     left: 10px;
     background: var(--surface);
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 0;
-    padding: 8px;
+    border: 2px solid var(--primary);
+    border-radius: 0px;
+    padding: 6px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: 4px;
     z-index: 8000;
-    animation: fadeInTray 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    box-shadow: none;
+    animation: none;
 }
 
 .matrix-emoji-node {
     background: transparent;
     border: none;
-    font-size: 1.25rem;
-    padding: 6px;
+    font-size: 1.1rem;
+    padding: 4px;
     cursor: pointer;
-    border-radius: 0;
-    transition: background-color 0.1s ease, transform 0.1s ease;
+    border-radius: 0px;
+    transition: none;
 }
 
 .matrix-emoji-node:hover {
-    background-color: rgba(0, 0, 0, 0.08);
-    transform: scale(1.15);
+    background-color: #f1f5f9;
+    transform: none;
 }
 
 .matrix-emoji-node:active {
-    transform: scale(0.95);
+    transform: none;
 }
 
-/* Ensure outgoing message wrappers place the panel appropriately */
 .msg-wrapper.outgoing .native-emoji-matrix-panel {
     left: auto;
     right: 10px;
 }
 
-
 /* ==========================================================================
-   14.ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES (WRAPPING)
+   14. ADDITIONAL PEER HUB & SELF-PROFILE STATUS NOTE STYLES
    ========================================================================== */
-
-/* Sits close on top of individual peer avatar bubbles and wraps text downward 
 .peer-status-note {
     position: absolute;
     top: -6px; 
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(var(--surface-rgb, 20, 20, 20), 0.7); 
-    backdrop-filter: blur(12px) saturate(180%); 
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     font-size: 0.48rem; 
     letter-spacing: 0.3px;
     font-weight: 800;
-    padding: 3px 6px;
-    border-radius: 0;
+    padding: 2px 4px;
+    border-radius: 0px;
     width: 50px; 
     white-space: normal;
     word-break: break-word;
-    border: 0.5px solid rgba(0, 0, 0, 0.08); 
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--primary);
+    box-shadow: none;
     z-index: 3300;
     pointer-events: none;
     text-align: center;
     text-transform: none;
-}
-*/
-
-/* Sits close on top of individual peer avatar bubbles and wraps text downward */
-.peer-status-note {
-    position: absolute;
-    top: -6px; 
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--surface); /* Flat solid background */
-    font-size: 0.48rem; 
-    letter-spacing: 0.3px;
-    font-weight: 800;
-    padding: 3px 6px;
-    border-radius: 0;
-    width: 50px; /* Locked width to force downward stacking */
-    white-space: normal;
-    word-break: break-word;
-    border: 0.5px solid currentColor; /* Automatically mirrors the exact dynamic text color variable */
-    z-index: 3300;
-    pointer-events: none;
-    text-align: center;
-    text-transform: none; /* Allows any typed casing (mix, lower, upper) */
+    color: var(--text-main);
 }
 
-/* Shared baseline settings for thought trail bubbles - matching identical background/glass/border aesthetics */
 .peer-status-note::before,
 .peer-status-note::after {
     content: '';
     position: absolute;
     background: var(--surface);
-    border: 0.5px solid currentColor; /* Forces child trail bubbles to inherit the same text color from the parent */
-    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--primary);
+    border-radius: 0px;
+    box-shadow: none;
     pointer-events: none;
 }
 
-/* Top Trail Bubble: Attached directly at the far bottom-left corner */
 .peer-status-note::before {
-    width: 6px;
-    height: 6px;
-    bottom: -4px;
-    left: 0px; /* Outermost point on the left side */
-}
-
-/* Bottom Trail Bubble: Steps further down and inward towards the right */
-.peer-status-note::after {
     width: 4px;
     height: 4px;
-    bottom: -8px;
-    left: 5px; /* Shifted inward towards the right/inner core */
+    bottom: -4px;
+    left: 0px;
 }
 
-/* Sits close on top of your own bottom-right profile avatar node and wraps downward */
+.peer-status-note::after {
+    width: 3px;
+    height: 3px;
+    bottom: -7px;
+    left: 4px;
+}
+
 .profile-status-note-bubble {
     position: fixed;
-    bottom: 118px; /* Stacked up cleanly on top of your avatar */
+    bottom: 118px;
     right: 25px;
-    width: 48px; /* Perfectly inline with profile avatar width boundaries */
-    background: var(--surface); /* Flat solid background */
+    width: 48px;
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     color: var(--text-main);
     font-size: 0.65rem;
     font-weight: 700;
     padding: 4px 4px;
-    border-radius: 0;
+    border-radius: 0px;
     white-space: normal;
     word-break: break-word;
-    border: 0.5px solid rgba(0, 0, 0, 0.08); /* Thinner hairline border */
+    border: 1px solid var(--primary);
+    box-shadow: none;
     z-index: 2505;
     text-align: center;
-    text-transform: none; /* Allows any typed casing (mix, lower, upper) */
+    text-transform: none;
 }
 
-/* Plus (+) trigger node placed persistently on top of your profile avatar head line */
 .profile-note-action-trigger {
     position: fixed;
-    bottom: 96px; /* Positioned directly touching the head of your 48px profile avatar */
-    right: 39px;  /* Centered perfectly over your 48px avatar width line */
+    bottom: 96px;
+    right: 39px;
     background: var(--primary);
     color: #ffffff;
     width: 20px;
     height: 20px;
-    border-radius: 0;
+    border-radius: 0px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1489,31 +1244,30 @@ h2 {
     font-weight: 900;
     cursor: pointer;
     z-index: 2510;
-    opacity: 1; /* Forced fully visible and persistent on load */
-    transform: scale(1);
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 1;
+    transform: none;
+    box-shadow: none;
+    transition: none;
+    border: 1px solid var(--primary);
 }
 
-/* Subtle feedback accent scale up when interacting directly with the trigger */
 .profile-note-action-trigger:hover {
-    transform: scale(1.15);
+    transform: none;
+    background: #334155;
 }
 
-/* Character counter preview element indicator inside your single-themed layout */
 .modal-char-counter {
     font-size: 0.7rem;
     color: var(--primary);
     text-align: right;
     margin-top: 6px;
     font-weight: 700;
-    opacity: 0.8;
+    opacity: 1;
 }
 
 /* ==========================================================================
-   15. STANDBY AMBIENT MODE (COLON-CENTERED 12H CLOCK + HIDDEN HOVER ICON)
+   15. STANDBY AMBIENT MODE
    ========================================================================== */
-
-/* Stealth Corner Boundary Box for easy hover selection */
 .standby-trigger-boundary-box {
     position: fixed;
     top: 0;
@@ -1523,36 +1277,38 @@ h2 {
     z-index: 999999;
 }
 
-/* Small, minimal square button concealed until hovered over the boundary area */
 .standby-manual-trigger-btn {
     position: absolute;
     top: 20px;
     right: 20px;
     width: 32px;
     height: 32px;
-    background: var(--glass);
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: var(--surface);
+    border: 1px solid var(--primary);
     color: var(--text-main);
-    border-radius: 0;
+    border-radius: 0px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease, background 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: opacity 0.2s ease;
     padding: 0;
 }
 
-/* Reveal when hovering over the top-right zone */
 .standby-trigger-boundary-box:hover .standby-manual-trigger-btn {
-    opacity: 0.6;
+    opacity: 0.8;
     pointer-events: auto;
 }
+
 .standby-manual-trigger-btn:hover {
     opacity: 1 !important;
-    background: rgba(0, 0, 0, 0.18);
-    transform: scale(1.08);
+    background: var(--primary);
+    color: #ffffff;
+    transform: none;
 }
 
 #standby-overlay {
@@ -1561,19 +1317,28 @@ h2 {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(10, 10, 10, 0.9);
+    background: #f8fafc;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     z-index: 99999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: opacity 0.2s ease;
 }
 
 body.standby-active #standby-overlay {
     opacity: 1;
     pointer-events: auto;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
-/* Colon Centered Grid Architecture Layout */
+body.standby-active > :not(#standby-overlay):not(.standby-trigger-boundary-box) {
+    filter: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
 .standby-clock-container {
     position: absolute;
     top: 12%;
@@ -1589,35 +1354,32 @@ body.standby-active #standby-overlay {
 }
 
 .standby-time-display {
-    font-family: "Big Shoulders Display", sans-serif;
-    font-size: 200px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 160px;
     font-weight: 900;
-    line-height: 0.75;
-    color: var(--standby-fg);
+    line-height: 0.8;
+    color: var(--primary);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
     display: flex;
     align-items: baseline;
     justify-content: center;
-    letter-spacing: 1px;
+    letter-spacing: -2px;
 }
 
-/* Keeps hours tracking completely balanced to the left side of the colon */
 .standby-hours-box {
     text-align: right;
     width: 160px;
     display: inline-block;
 }
 
-/* The exact mathematical center axis of the display viewport layout */
 .standby-colon-separator {
     width: 32px;
     text-align: center;
     display: inline-block;
-    border-radius: 0; 
+    border-radius: 0px; 
 }
 
-/* Keeps minutes tracking completely balanced to the right side of the colon */
 .standby-minutes-box {
     text-align: left;
     width: 160px;
@@ -1627,39 +1389,37 @@ body.standby-active #standby-overlay {
 
 .standby-digit-minutes {
     display: inline-block;
-    transition: filter 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+    transition: none;
 }
+
 .standby-digit-minutes.is-shifting {
-    opacity: 0.3;
+    filter: none;
+    opacity: 0.5;
 }
 
-/* Placed tight directly following the minute numbers string line container */
 .standby-am-pm-side {
-    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 700;
     text-transform: uppercase;
-    opacity: 0.7;
+    opacity: 0.8;
     letter-spacing: 0.5px;
-    margin-left: 4px;
+    margin-left: 8px;
 }
 
-/* Normal weight date presentation layer text */
 .standby-date-display {
-    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--standby-fg);
-    opacity: 0.65;
-    letter-spacing: 0.5px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    opacity: 0.8;
+    letter-spacing: 1px;
     margin-top: 14px;
     text-transform: uppercase;
 }
 
-/* Constellation Stage Component Layers */
 .standby-stage {
     position: absolute;
-    /* Normal View: Safe space margin pushed down to clear the 200px font zone */
     top: 72%; 
     left: 50%;
     transform: translate(-50%, -50%);
@@ -1668,15 +1428,12 @@ body.standby-active #standby-overlay {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: top 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: none;
 }
 
-/* NARROW VIEWPORTS ONLY: 
-   Preserves full 200px/160px dimensions, brings stage up into tight overlapping alignment 
-*/
 @media (max-width: 768px) {
     .standby-stage {
-        top: 60%; /* Original placement setting allowing overlap on compact devices */
+        top: 60%;
     }
 }
 
@@ -1684,18 +1441,19 @@ body.standby-active #standby-overlay {
     position: absolute;
     width: 84px;
     height: 84px;
-    border-radius: 0;
-    border: 2px solid var(--standby-fg);
+    border-radius: 0px;
+    border: 2px solid var(--primary);
+    box-shadow: none;
     z-index: 50;
-    transform: translate(-50%, -50%) scale(0.3);
+    transform: translate(-50%, -50%);
     left: 50%;
     top: 50%;
     opacity: 0;
-    transition: transform 0.9s cubic-bezier(0.34, 1.6, 0.64, 1), opacity 0.5s ease;
+    transition: opacity 0.2s ease;
 }
 
 body.standby-active .standby-center-profile {
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%);
     opacity: 1;
 }
 
@@ -1716,7 +1474,7 @@ body.standby-active .standby-center-profile {
     justify-content: center;
     align-items: center;
     transform: translate(var(--tx), var(--ty));
-    transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: none;
 }
 
 .standby-ambient-dot {
@@ -1725,24 +1483,25 @@ body.standby-active .standby-center-profile {
     left: 50%;
     width: var(--dot-size, 6px);
     height: var(--dot-size, 6px);
-    border-radius: 0;
-    background-color: var(--standby-fg);
-    opacity: 0.25;
+    border-radius: 0px;
+    background-color: var(--primary);
+    opacity: 0.4;
+    box-shadow: none;
     transform: translate(-50%, -50%) rotate(360deg);
     animation: standbyCounterClockwiseRotation 120s linear infinite;
-    transition: width 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
-                height 0.6s cubic-bezier(0.34, 1.7, 0.64, 1),
-                opacity 0.4s ease;
+    transition: none;
 }
 
 .standby-node-slot.is-active .standby-ambient-dot {
-    width: 50px;   
-    height: 50px;
+    width: 48px;   
+    height: 48px;
     opacity: 1;
     background-image: var(--avatar-img);
     background-size: cover;
     background-position: center;
-    border: 2px solid var(--standby-fg);
+    border: 2px solid var(--primary);
+    box-shadow: none;
+    border-radius: 0px;
 }
 
 @keyframes standbyClockwiseRotation {
