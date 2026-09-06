@@ -1,32 +1,29 @@
 /* ==========================================================================
-   FLAT DESIGN REVISION
+   FLAT, SHARP-EDGED LIGHT MODE
    All glassmorphism (backdrop-filter/blur), drop shadows, glows, and
-   gradients have been removed in favor of solid fills and flat surfaces.
-   Elements, layout, structure, and the original color tokens are unchanged.
+   gradients are removed in favor of solid fills and flat surfaces.
+   All border-radius values are set to 0 for hard, sharp corners.
+   The palette is inverted to a light theme, keeping the same variable
+   roles/handling as before (bg / surface / primary / success / text-main /
+   glass / modal-bg) so every rule that referenced them still behaves the
+   same way, just against light values.
    ========================================================================== */
 
 /* ==========================================================================
    1. DESIGN TOKENS & SYSTEM VARIABLES
-   ========================================================================== 
-:root {
-    --bg: #1a0f0b;
-    --surface: #140700;
-    --primary: #ff7300;
-    --success: #f97316;
-    --text-main: #fff7ed;
-    --glass: rgba(78, 78, 78, 0.15);
-    --modal-bg: rgba(20, 7, 0, 0.98);
-}
-*/
+   ========================================================================== */
 
 :root {
-    --bg: #111111;
-    --surface: #1b1b1b;
-    --primary: #e5e5e5;
+    --bg: #f2f2f2;
+    --surface: #ffffff;
+    --primary: #111111;
     --success: #fbff00;
-    --text-main: #fafafa;
-    --glass: rgba(255, 255, 255, 0.08);
-    --modal-bg: rgba(17, 17, 17, 0.98);
+    --text-main: #111111;
+    --glass: rgba(0, 0, 0, 0.06);
+    --modal-bg: rgba(255, 255, 255, 0.98);
+    /* Dedicated foreground for the always-dark standby ambient overlay,
+       independent of the light page theme */
+    --standby-fg: #ffffff;
 }
 /* ==========================================================================
    2. BASE SYSTEM RESET & SCROLLBAR CONFIGURATION
@@ -60,7 +57,7 @@ body.copy-flash {
 
 ::-webkit-scrollbar-thumb {
     background:  #424242;
-    border-radius: 10px;
+    border-radius: 0;
 }
 
 
@@ -83,7 +80,7 @@ body.copy-flash {
     display: flex;
     align-items: center;
 
-    border-radius: 45px;
+    border-radius: 0;
     border: 1px solid rgba(58, 58, 58, 0.1);
 
     background: var(--surface);
@@ -117,7 +114,7 @@ body.copy-flash {
     scrollbar-width: none;
     -ms-overflow-style: none;
 
-    border-radius: 24px;
+    border-radius: 0;
 
     padding: 0;
     margin: 0;
@@ -143,7 +140,7 @@ body.copy-flash {
     width: 36px;
     height: 36px;
 
-    border-radius: 50%;
+    border-radius: 0;
 
     background: rgba(255, 115, 0, 0.08);
 
@@ -227,7 +224,7 @@ body.copy-flash {
     width: 70px;
     height: 70px;
 
-    border-radius: 50%;
+    border-radius: 0;
     object-fit: cover;
 
     flex-shrink: 0;
@@ -246,7 +243,7 @@ body.copy-flash {
 
 .group-chat-bubble {
     background: var(--primary);
-    color: #000;
+    color: #fff;
 
     display: flex;
     align-items: center;
@@ -259,8 +256,8 @@ body.copy-flash {
 
 .group-chat-bubble:hover {
     transform: scale(1.06);
-    background: #fff;
-    border-color: #fff;
+    background: #000;
+    border-color: #000;
 }
 
 /* ==========================================================================
@@ -278,7 +275,7 @@ body.copy-flash {
     background: var(--primary);
     border: 2px solid var(--surface);
 
-    border-radius: 50%;
+    border-radius: 0;
 
     display: none;
 
@@ -301,7 +298,7 @@ body.copy-flash {
     background: var(--primary);
     border: 2px solid var(--surface);
 
-    border-radius: 50%;
+    border-radius: 0;
 
     display: none;
 
@@ -325,7 +322,7 @@ body.copy-flash {
     font-size: 0.65rem;
     font-weight: 700;
 
-    color: white;
+    color: var(--text-main);
 
     text-align: center;
 
@@ -350,18 +347,18 @@ body.copy-flash {
     z-index: 3000;
     background: var(--surface);
     padding: 6px 18px; 
-    border-radius: 32px; 
+    border-radius: 0; 
     border: 1px solid var(--glass);
 }
 
-/* Perfect Circle Operational Buttons */
+/* Operational Buttons (sharp square edges) */
 .top-btn {
     width: 38px;
     height: 38px;
     background: var(--surface);
     border: 1px solid rgba(83, 83, 83, 0.2);
-    border-radius: 50%; 
-    color: white;
+    border-radius: 0; 
+    color: var(--text-main);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -371,7 +368,7 @@ body.copy-flash {
 
 .top-btn:hover {
     background: var(--primary);
-    color: #000;
+    color: #fff;
     transform: translateY(-2px);
 }
 
@@ -385,7 +382,7 @@ body.copy-flash {
     right: 25px;
     width: 48px;
     height: 48px;
-    border-radius: 50%;
+    border-radius: 0;
     object-fit: cover;
     background: var(--surface);
     border: 2px solid var(--primary);
@@ -447,7 +444,7 @@ body.copy-flash {
 
     border: 1px solid rgba(0, 0, 0, 0.1);
 
-    border-radius: 24px;
+    border-radius: 0;
 }
 
 /* ==========================================================================
@@ -461,7 +458,7 @@ body.copy-flash {
 
     padding: 14px 16px;
 
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.03);
 
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -482,7 +479,7 @@ body.copy-flash {
     height: 32px;
 
     border: none;
-    border-radius: 50%;
+    border-radius: 0;
 
     background: rgba(116, 116, 116, 0.05);
 
@@ -501,7 +498,7 @@ body.copy-flash {
 
 .chat-close-trigger:hover {
     background: var(--primary);
-    color: #000;
+    color: #fff;
     transform: scale(1.05);
 }
 
@@ -548,14 +545,14 @@ body.copy-flash {
 .msg-gc-avatar {
     width: 20px;
     height: 20px;
-    border-radius: 50%;
+    border-radius: 0;
     object-fit: cover;
     border: 1px solid var(--primary);
 }
 
 .msg-author-tag {
     font-size: 0.65rem;
-    color: #aaa;
+    color: #767676;
     font-weight: 700;
 }
 
@@ -567,7 +564,7 @@ body.copy-flash {
 
 .msg-bubble {
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: 0;
     font-size: 0.85rem;
     word-wrap: break-word;
     position: relative;
@@ -576,14 +573,14 @@ body.copy-flash {
 }
 
 .msg-bubble.incoming {
-    background: rgba(255, 255, 255, 0.06);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-main);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .msg-bubble.outgoing {
     background: var(--primary);
-    color: #000;
+    color: #fff;
     font-weight: 600;
 }
 
@@ -620,7 +617,7 @@ body.copy-flash {
     padding: 0;
     background: transparent;
     border: none;
-    border-radius: 4px;
+    border-radius: 0;
 
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
@@ -636,7 +633,7 @@ body.copy-flash {
 .reaction-pill.user-voted {
     background: rgba(168, 168, 168, 0.12);
     padding: 0 2px;
-    border-radius: 4px;
+    border-radius: 0;
 }
 
 /* =========================================================
@@ -661,7 +658,7 @@ body.copy-flash {
     border: 1px solid rgba(32, 32, 32, 0.25);
 
     padding: 4px 8px;
-    border-radius: 20px;
+    border-radius: 0;
 
     display: flex;
     gap: 6px;
@@ -699,17 +696,17 @@ body.copy-flash {
     padding: 10px;
     display: flex;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.03);
     /* 🔥 FIX: Anchors layout to the bottom so elements don't jitter when the textarea grows */
     align-items: flex-end; 
 }
 
 .chat-input-row input {
     flex: 1;
-    background: #000;
+    background: var(--bg);
     border: 1px solid rgba(83, 83, 83, 0.2);
-    border-radius: 8px;
-    color: white;
+    border-radius: 0;
+    color: var(--text-main);
     padding: 8px;
     font-size: 0.81rem;
     outline: none;
@@ -718,10 +715,10 @@ body.copy-flash {
 .chat-input-row textarea {
     flex: 1;
     display: block;
-    background: #000;
+    background: var(--bg);
     border: 1px solid rgba(83, 83, 83, 0.2);
-    border-radius: 8px;
-    color: white;
+    border-radius: 0;
+    color: var(--text-main);
     padding: 8px;
     font-size: 0.81rem;
     line-height: 1.2rem;
@@ -742,9 +739,9 @@ body.copy-flash {
 
 .chat-input-row button {
     background: var(--primary);
-    color: #000;
+    color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 0;
     padding: 0 14px;
     font-weight: 800;
     cursor: pointer;
@@ -761,7 +758,7 @@ body.copy-flash {
     position: relative;
     width: 100%;
     max-width: 400px;
-    border-radius: 45px;
+    border-radius: 0;
     border: 1px solid rgba(0, 0, 0, 0.1);
     /* MATCH SECTION 3 */
     background: var(--surface);
@@ -775,8 +772,8 @@ body.copy-flash {
     left: 8px;
     right: 8px;
     border: 2px solid var(--primary);
-    background-color: rgba(255,255,255,0.04);
-    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 0;
     pointer-events: none;
     transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     z-index: 1;
@@ -801,12 +798,12 @@ h2 {
     padding: 14px;
     margin: 4px 0;
     cursor: pointer;
-    border-radius: 12px;
+    border-radius: 0;
     transition: all 0.3s ease;
 }
 
 .item-row:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .text-content {
@@ -821,7 +818,7 @@ h2 {
 .add-btn-circle {
     width: 38px;
     height: 38px;
-    border-radius: 50%;
+    border-radius: 0;
     background: rgba(116, 116, 116, 0.05);
     border: 1px dashed var(--primary);
     color: var(--primary);
@@ -835,7 +832,7 @@ h2 {
 
 .add-btn-circle:hover {
     background: var(--primary);
-    color: #000;
+    color: #fff;
     transform: scale(1.1);
 }
 
@@ -861,7 +858,7 @@ h2 {
     width: 160px;
     height: 70px;
     border: none;
-    border-radius: 35px;
+    border-radius: 0;
     font-weight: 800;
     font-size: 1rem;
     text-transform: uppercase;
@@ -870,7 +867,7 @@ h2 {
     overflow: hidden;
 
     background-color: var(--primary);
-    color: #000;
+    color: #fff;
 
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
@@ -889,7 +886,7 @@ h2 {
     background-color: #fbff00;
     color: #000;
     text-shadow: none;
-    border-radius: 35px;
+    border-radius: 0;
     box-shadow: 0 0 30px rgba(255, 212, 0, 0.9);
     transform: scale(1.05);
 }
@@ -961,7 +958,7 @@ h2 {
     background: var(--surface);
 
     border: 1px solid rgba(78, 78, 78, 0.15);
-    border-radius: 24px;
+    border-radius: 0;
     box-sizing: border-box;
     max-height: 80vh;
     overflow-y: auto;
@@ -983,7 +980,7 @@ h2 {
 }.list-item {
     padding: 16px;
     margin: 8px 0;
-    border-radius: 16px;
+    border-radius: 0;
     text-align: left;
     cursor: pointer;
     transition: 0.2s;
@@ -993,9 +990,9 @@ h2 {
 }
 
 .list-item:hover {
-    background-color: rgba(255,255,255,0.04);
+    background-color: rgba(0, 0, 0, 0.04);
     border-color: var(--primary);
-    color: #fff;
+    color: var(--text-main);
 }
 
 .input-group {
@@ -1012,12 +1009,12 @@ h2 {
 
 .modal-content input {
     width: 100%;
-    background: #000;
+    background: var(--bg);
     border: 1px solid rgba(83, 83, 83, 0.2);
     padding: 16px;
     margin-top: 5px;
-    border-radius: 16px;
-    color: white;
+    border-radius: 0;
+    color: var(--text-main);
     font-size: 1.3rem;
     box-sizing: border-box;
     text-align: center;
@@ -1032,8 +1029,8 @@ h2 {
 .modal-result {
     margin: 25px 0;
     padding: 20px;
-    background-color: rgba(255,255,255,0.04);
-    border-radius: 20px;
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 0;
     border: 1px dashed var(--primary);
 }
 
@@ -1050,8 +1047,8 @@ h2 {
     align-items: center;
     cursor: pointer;
     background: var(--primary);
-    color: #000;
-    border-radius: 16px;
+    color: #fff;
+    border-radius: 0;
     font-weight: 800;
     transition: 0.2s;
 }
@@ -1123,7 +1120,7 @@ h2 {
    color: var(--primary);
     flex-shrink: 0;
 
-    border-radius: 50%;
+    border-radius: 0;
     background: currentColor;
 
     display: inline-block;
@@ -1170,7 +1167,7 @@ h2 {
     font-size: 0.72rem;
     font-weight: 700;
     padding: 2px 6px;
-    border-radius: 12px;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1199,7 +1196,7 @@ h2 {
 /* Clear vertical divider dividing reactions from action buttons */
 .reaction-picker-tray .msg-action-btn:first-of-type {
     margin-left: 8px !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
     padding-left: 10px;
 }
 
@@ -1218,8 +1215,8 @@ h2 {
 /* --- Soft-Deleted Message Bubble Modification Layouts --- */
 .msg-bubble.msg-deleted-state {
     background: transparent !important;
-    border: 1px dashed rgba(255, 255, 255, 0.35) !important;
-    color: rgba(255, 255, 255, 0.4) !important;
+    border: 1px dashed rgba(0, 0, 0, 0.35) !important;
+    color: rgba(0, 0, 0, 0.4) !important;
     font-style: italic !important;
     text-shadow: none !important;
     box-shadow: none !important;
@@ -1239,15 +1236,15 @@ h2 {
 
 /* --- Inline Reaction Plus Trigger Custom Adjustments --- */
 .expansion-trigger-node {
-    background-color: rgba(255, 255, 255, 0.07) !important;
-    border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+    background-color: rgba(0, 0, 0, 0.07) !important;
+    border: 1px dashed rgba(0, 0, 0, 0.2) !important;
     font-size: 0.78rem;
     opacity: 0.7;
     transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 .expansion-trigger-node:hover {
     opacity: 1;
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(0, 0, 0, 0.15) !important;
     border-style: solid !important;
 }
 
@@ -1259,13 +1256,13 @@ h2 {
 /* Ghost Preview In Scroller List Layer */
 .msg-ghost-reply-preview {
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.45);
-    background: rgba(255, 255, 255, 0.04);
-    border-left: 2px solid rgba(255, 255, 255, 0.25);
+    color: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.04);
+    border-left: 2px solid rgba(0, 0, 0, 0.25);
     padding: 4px 10px;
     margin-bottom: -2px;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
     max-width: 85%;
     white-space: nowrap;
     overflow: hidden;
@@ -1283,8 +1280,8 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(20, 20, 20, 0.95);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.04);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
     padding: 8px 14px;
 }
 
@@ -1297,7 +1294,7 @@ h2 {
 .reply-track-contents p {
     margin: 2px 0 0 0;
     font-size: 0.78rem;
-    color: #ccc;
+    color: #555;
     max-width: 260px;
     white-space: nowrap;
     overflow: hidden;
@@ -1312,7 +1309,7 @@ h2 {
     font-size: 0.9rem;
 }
 #chatReplyTrackIndicator button:hover {
-    color: #fff;
+    color: var(--text-main);
 }
 
 /* Operational Tray Action Buttons Layout */
@@ -1328,7 +1325,7 @@ h2 {
 .reaction-picker-tray .tray-plus-trigger {
     cursor: pointer;
     padding-right: 6px;
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(0, 0, 0, 0.15);
 }
 .reaction-picker-tray .msg-action-btn:first-of-type {
     margin-left: 4px !important;
@@ -1339,9 +1336,9 @@ h2 {
     position: absolute;
     bottom: 42px;
     left: 10px;
-    background: #18181b;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 0;
     padding: 8px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1356,12 +1353,12 @@ h2 {
     font-size: 1.25rem;
     padding: 6px;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 0;
     transition: background-color 0.1s ease, transform 0.1s ease;
 }
 
 .matrix-emoji-node:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(0, 0, 0, 0.08);
     transform: scale(1.15);
 }
 
@@ -1393,11 +1390,11 @@ h2 {
     letter-spacing: 0.3px;
     font-weight: 800;
     padding: 3px 6px;
-    border-radius: 8px;
+    border-radius: 0;
     width: 50px; 
     white-space: normal;
     word-break: break-word;
-    border: 0.5px solid rgba(255, 255, 255, 0.08); 
+    border: 0.5px solid rgba(0, 0, 0, 0.08); 
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 3300;
     pointer-events: none;
@@ -1417,7 +1414,7 @@ h2 {
     letter-spacing: 0.3px;
     font-weight: 800;
     padding: 3px 6px;
-    border-radius: 8px; /* Smoother rounded radius */
+    border-radius: 0;
     width: 50px; /* Locked width to force downward stacking */
     white-space: normal;
     word-break: break-word;
@@ -1435,7 +1432,7 @@ h2 {
     position: absolute;
     background: var(--surface);
     border: 0.5px solid currentColor; /* Forces child trail bubbles to inherit the same text color from the parent */
-    border-radius: 50%;
+    border-radius: 0;
     pointer-events: none;
 }
 
@@ -1466,10 +1463,10 @@ h2 {
     font-size: 0.65rem;
     font-weight: 700;
     padding: 4px 4px;
-    border-radius: 10px; /* Smoother rounded radius */
+    border-radius: 0;
     white-space: normal;
     word-break: break-word;
-    border: 0.5px solid rgba(255, 255, 255, 0.08); /* Thinner hairline border */
+    border: 0.5px solid rgba(0, 0, 0, 0.08); /* Thinner hairline border */
     z-index: 2505;
     text-align: center;
     text-transform: none; /* Allows any typed casing (mix, lower, upper) */
@@ -1481,10 +1478,10 @@ h2 {
     bottom: 96px; /* Positioned directly touching the head of your 48px profile avatar */
     right: 39px;  /* Centered perfectly over your 48px avatar width line */
     background: var(--primary);
-    color: #000000;
+    color: #ffffff;
     width: 20px;
     height: 20px;
-    border-radius: 50%;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1526,7 +1523,7 @@ h2 {
     z-index: 999999;
 }
 
-/* Small, minimal circled button concealed until hovered over the boundary area */
+/* Small, minimal square button concealed until hovered over the boundary area */
 .standby-manual-trigger-btn {
     position: absolute;
     top: 20px;
@@ -1534,9 +1531,9 @@ h2 {
     width: 32px;
     height: 32px;
     background: var(--glass);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.12);
     color: var(--text-main);
-    border-radius: 50%;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1554,7 +1551,7 @@ h2 {
 }
 .standby-manual-trigger-btn:hover {
     opacity: 1 !important;
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.18);
     transform: scale(1.08);
 }
 
@@ -1596,7 +1593,7 @@ body.standby-active #standby-overlay {
     font-size: 200px;
     font-weight: 900;
     line-height: 0.75;
-    color: var(--primary);
+    color: var(--standby-fg);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
     display: flex;
@@ -1617,7 +1614,7 @@ body.standby-active #standby-overlay {
     width: 32px;
     text-align: center;
     display: inline-block;
-    border-radius: 50%; 
+    border-radius: 0; 
 }
 
 /* Keeps minutes tracking completely balanced to the right side of the colon */
@@ -1652,7 +1649,7 @@ body.standby-active #standby-overlay {
     font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
     font-size: 16px;
     font-weight: 400;
-    color: var(--primary);
+    color: var(--standby-fg);
     opacity: 0.65;
     letter-spacing: 0.5px;
     margin-top: 14px;
@@ -1687,8 +1684,8 @@ body.standby-active #standby-overlay {
     position: absolute;
     width: 84px;
     height: 84px;
-    border-radius: 50%;
-    border: 2px solid var(--primary);
+    border-radius: 0;
+    border: 2px solid var(--standby-fg);
     z-index: 50;
     transform: translate(-50%, -50%) scale(0.3);
     left: 50%;
@@ -1728,8 +1725,8 @@ body.standby-active .standby-center-profile {
     left: 50%;
     width: var(--dot-size, 6px);
     height: var(--dot-size, 6px);
-    border-radius: 50%;
-    background-color: var(--primary);
+    border-radius: 0;
+    background-color: var(--standby-fg);
     opacity: 0.25;
     transform: translate(-50%, -50%) rotate(360deg);
     animation: standbyCounterClockwiseRotation 120s linear infinite;
@@ -1745,7 +1742,7 @@ body.standby-active .standby-center-profile {
     background-image: var(--avatar-img);
     background-size: cover;
     background-position: center;
-    border: 2px solid var(--primary);
+    border: 2px solid var(--standby-fg);
 }
 
 @keyframes standbyClockwiseRotation {
